@@ -36,7 +36,12 @@ class PdfGeneratorService
      */
     public function generateFromView(string $view, array $data, string $filename): Response
     {
-        $html = view($view, $data)->render();
+        // _pdf=true lets templates hide screen-only elements (toolbars, flex wrappers)
+        $html = view($view, array_merge($data, ['_pdf' => true]))->render();
+
+        if (config('app.debug')) {
+            file_put_contents(storage_path('logs/last-pdf-debug.html'), $html);
+        }
 
         $mpdf = $this->makeMpdf();
         $mpdf->SetTitle($filename);
@@ -57,6 +62,8 @@ class PdfGeneratorService
      */
     public function generateMultiPage(array $views, array $data, string $filename): Response
     {
+        $pdfData = array_merge($data, ['_pdf' => true]);
+
         $mpdf = $this->makeMpdf();
         $mpdf->SetTitle($filename);
 
@@ -64,7 +71,7 @@ class PdfGeneratorService
             if ($index > 0) {
                 $mpdf->AddPage();
             }
-            $html = view($view, $data)->render();
+            $html = view($view, $pdfData)->render();
             $mpdf->WriteHTML($html);
         }
 

@@ -45,8 +45,12 @@ class GeneratedDocument extends Model
         ?EmbassyList $embassyList = null
     ): void {
         $user = auth()->user();
+        // Use document owner's agency (super admin has agency_id=null but
+        // the download still belongs to the HR/list's agency for quota tracking)
+        $agencyId = $hr?->agency_id ?? $embassyList?->agency_id ?? $user?->agency_id;
+
         static::create([
-            'agency_id'       => $user?->agency_id,
+            'agency_id'       => $agencyId,
             'hr_profile_id'   => $hr?->id,
             'embassy_list_id' => $embassyList?->id,
             'document_type'   => $type,

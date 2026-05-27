@@ -3,12 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
 body {
     font-family: 'DejaVu Sans', Arial, sans-serif;
     font-size: 10pt;
     color: #000;
     background: #fff;
+    margin: 0;
+    padding: 0;
 }
 .ar { font-family: 'DejaVu Sans', Arial, sans-serif; direction: rtl; }
 table { width: 100%; border-collapse: collapse; }
@@ -23,7 +24,7 @@ td, th { padding: 4px 6px; vertical-align: middle; }
 .data-table tbody tr:nth-child(even) td { background: #f9f9f9; }
 .totals-row td { font-weight: bold; background: #ececec !important; border-top: 2px solid #666; }
 .sl-col { width: 32px; text-align: center; }
-.grand-total { margin-top: 8px; padding: 7px 10px; border: 2px solid #000; display: inline-block; font-size: 10.5pt; }
+.grand-total { margin-top: 8px; padding: 7px 10px; border: 2px solid #000; font-size: 10.5pt; }
 .sig-line { border-top: 1px solid #000; margin-top: 40px; padding-top: 3px; font-size: 8.5pt; text-align: center; }
 @page { size: A4 portrait; margin: 10mm; }
 </style>

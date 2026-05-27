@@ -3,13 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
 body {
     font-family: 'DejaVu Sans', Arial, sans-serif;
     font-size: 10pt;
     color: #000;
     background: #fff;
     line-height: 1.4;
+    margin: 0;
+    padding: 0;
 }
 .ar {
     font-family: 'DejaVu Sans', Arial, sans-serif;

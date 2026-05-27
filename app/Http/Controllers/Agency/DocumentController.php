@@ -73,10 +73,11 @@ class DocumentController extends Controller
         $this->authorizeHr($hr);
         $this->enforcePdfLimit();
         $hr->load(['agent', 'passport', 'visa', 'clearance', 'otherInfo', 'agency']);
-        $data = PrintDataMapper::forHr($hr);
-        GeneratedDocument::log('application', 'download', $hr);
+        $data     = PrintDataMapper::forHr($hr);
         $filename = 'application-' . str_replace(' ', '-', strtolower($hr->full_name_en));
-        return $this->pdf->generateFromView('prints.hr.application', $data, $filename);
+        $response = $this->pdf->generateFromView('prints.hr.application', $data, $filename);
+        GeneratedDocument::log('application', 'download', $hr);
+        return $response;
     }
 
     public function downloadForwardingLetter(HrProfile $hr)
@@ -84,10 +85,11 @@ class DocumentController extends Controller
         $this->authorizeHr($hr);
         $this->enforcePdfLimit();
         $hr->load(['agent', 'passport', 'visa', 'clearance', 'otherInfo', 'agency']);
-        $data = PrintDataMapper::forHr($hr);
-        GeneratedDocument::log('forwarding_letter', 'download', $hr);
+        $data     = PrintDataMapper::forHr($hr);
         $filename = 'forwarding-letter-' . str_replace(' ', '-', strtolower($hr->full_name_en));
-        return $this->pdf->generateFromView('prints.hr.forwarding-letter', $data, $filename);
+        $response = $this->pdf->generateFromView('prints.hr.forwarding-letter', $data, $filename);
+        GeneratedDocument::log('forwarding_letter', 'download', $hr);
+        return $response;
     }
 
     public function downloadEmploymentAgreement(HrProfile $hr)
@@ -95,10 +97,11 @@ class DocumentController extends Controller
         $this->authorizeHr($hr);
         $this->enforcePdfLimit();
         $hr->load(['agent', 'passport', 'visa', 'clearance', 'otherInfo', 'agency']);
-        $data = PrintDataMapper::forHr($hr);
-        GeneratedDocument::log('employment_agreement', 'download', $hr);
+        $data     = PrintDataMapper::forHr($hr);
         $filename = 'employment-agreement-' . str_replace(' ', '-', strtolower($hr->full_name_en));
-        return $this->pdf->generateFromView('prints.hr.employment-agreement', $data, $filename);
+        $response = $this->pdf->generateFromView('prints.hr.employment-agreement', $data, $filename);
+        GeneratedDocument::log('employment_agreement', 'download', $hr);
+        return $response;
     }
 
     public function downloadChecklist(HrProfile $hr)
@@ -106,10 +109,11 @@ class DocumentController extends Controller
         $this->authorizeHr($hr);
         $this->enforcePdfLimit();
         $hr->load(['agent', 'passport', 'visa', 'clearance', 'otherInfo', 'agency']);
-        $data = PrintDataMapper::forHr($hr);
-        GeneratedDocument::log('checklist', 'download', $hr);
+        $data     = PrintDataMapper::forHr($hr);
         $filename = 'checklist-' . str_replace(' ', '-', strtolower($hr->full_name_en));
-        return $this->pdf->generateFromView('prints.hr.checklist', $data, $filename);
+        $response = $this->pdf->generateFromView('prints.hr.checklist', $data, $filename);
+        GeneratedDocument::log('checklist', 'download', $hr);
+        return $response;
     }
 
     public function downloadFullFile(HrProfile $hr)
@@ -117,15 +121,16 @@ class DocumentController extends Controller
         $this->authorizeHr($hr);
         $this->enforcePdfLimit();
         $hr->load(['agent', 'passport', 'visa', 'clearance', 'otherInfo', 'agency']);
-        $data = PrintDataMapper::forHr($hr);
-        GeneratedDocument::log('full_file', 'download', $hr);
+        $data     = PrintDataMapper::forHr($hr);
         $filename = 'full-file-' . str_replace(' ', '-', strtolower($hr->full_name_en));
-        return $this->pdf->generateMultiPage([
+        $response = $this->pdf->generateMultiPage([
             'prints.hr.application',
             'prints.hr.forwarding-letter',
             'prints.hr.employment-agreement',
             'prints.hr.checklist',
         ], $data, $filename);
+        GeneratedDocument::log('full_file', 'download', $hr);
+        return $response;
     }
 
     public function downloadEmbassyList(EmbassyList $embassyList)
@@ -134,11 +139,11 @@ class DocumentController extends Controller
         $this->enforcePdfLimit();
 
         $embassyList->load(['agency', 'createdBy']);
-        $data = PrintDataMapper::forEmbassyList($embassyList);
-        GeneratedDocument::log('embassy_list', 'download', null, $embassyList);
-
+        $data     = PrintDataMapper::forEmbassyList($embassyList);
         $filename = 'embassy-list-' . $embassyList->list_no;
-        return $this->pdf->generateFromView('prints.embassy-list', $data, $filename);
+        $response = $this->pdf->generateFromView('prints.embassy-list', $data, $filename);
+        GeneratedDocument::log('embassy_list', 'download', null, $embassyList);
+        return $response;
     }
 
     // ──────────────────────────────────────────────────────────────────────
