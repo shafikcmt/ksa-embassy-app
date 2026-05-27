@@ -3,6 +3,7 @@
 @section('content')
 <div class="page">
 
+@if(empty($_pdf))
 <div class="no-print" style="background:#1a1f2e;color:#fff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
     <span style="font-size:.85rem;"><strong>Checklist / Attachment</strong> — {{ $full_name_en }}</span>
     <div style="display:flex;gap:8px;">
@@ -10,6 +11,7 @@
         <a href="{{ url()->previous() }}" style="background:#374151;color:#fff;border:none;padding:6px 16px;border-radius:4px;cursor:pointer;font-size:.8rem;text-decoration:none;">&#8592; Back</a>
     </div>
 </div>
+@endif
 
 {{-- Arabic heading --}}
 <div class="text-center" style="margin-bottom:8px;">
@@ -167,7 +169,7 @@
 
 {{-- PC QR Code if available --}}
 @if($pc_qr_code)
-<div style="margin-top:8px;display:inline-block;text-align:center;">
+<div style="margin-top:8px;text-align:left;">
     <div style="font-size:7.5pt;color:#666;margin-bottom:2px;">Police Clearance QR Code</div>
     <barcode code="{{ $pc_qr_code }}" type="QR" size="0.8" />
     <div style="font-size:7pt;color:#888;">{{ $pc_number }}</div>

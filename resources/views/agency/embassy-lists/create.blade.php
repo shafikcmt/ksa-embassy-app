@@ -53,6 +53,27 @@
                 </div>
             </div>
 
+            {{-- Quick Add by Passport Number --}}
+            <div class="card mb-3">
+                <div class="card-header py-2">
+                    <i class="bi bi-upc-scan me-1"></i> Quick Add by Passport Number
+                </div>
+                <div class="card-body py-2">
+                    <div class="row g-2 align-items-start">
+                        <div class="col-md-4">
+                            <input type="text" id="passportLookupInput" class="form-control form-control-sm"
+                                placeholder="Enter passport number..." maxlength="50">
+                        </div>
+                        <div class="col-auto">
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="passportLookupBtn">
+                                <i class="bi bi-search me-1"></i> Find
+                            </button>
+                        </div>
+                        <div class="col-12 mt-1" id="passportLookupResult" style="display:none;"></div>
+                    </div>
+                </div>
+            </div>
+
             {{-- HR Selection --}}
             <div class="card">
                 <div class="card-header py-2 d-flex justify-content-between align-items-center">
@@ -316,6 +337,84 @@
     });
 
     updateCounts();
+
+    // ── Passport lookup ──────────────────────────────────────────────────
+    const lookupInput  = document.getElementById('passportLookupInput');
+    const lookupBtn    = document.getElementById('passportLookupBtn');
+    const lookupResult = document.getElementById('passportLookupResult');
+
+    function runPassportLookup() {
+        const passportNo = lookupInput.value.trim();
+        if (!passportNo) return;
+        lookupResult.style.display = 'block';
+        lookupResult.innerHTML = '<span class="text-muted" style="font-size:.85rem;"><i class="bi bi-hourglass me-1"></i>Searching...</span>';
+
+        fetch('{{ route("hr.lookup-by-passport") }}', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json'},
+            body: JSON.stringify({passport_no: passportNo})
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.found) {
+                lookupResult.innerHTML = `<div class="alert alert-warning py-2 mb-0" style="font-size:.85rem;"><i class="bi bi-exclamation-circle me-1"></i>${data.message}</div>`;
+                return;
+            }
+            if (selected[data.id]) {
+                lookupResult.innerHTML = `<div class="alert alert-info py-2 mb-0" style="font-size:.85rem;"><i class="bi bi-info-circle me-1"></i><strong>${data.full_name_en}</strong> is already in the list.</div>`;
+                return;
+            }
+            lookupResult.innerHTML = `
+                <div class="border rounded p-2" style="font-size:.85rem;">
+                    <div class="d-flex justify-content-between align-items-start gap-2">
+                        <div>
+                            <strong>${data.full_name_en}</strong>${data.full_name_ar ? ' <span class="text-muted">'+data.full_name_ar+'</span>' : ''}
+                            <span class="text-muted ms-2">${data.nationality}</span>
+                            <br><small class="text-muted">Passport: ${data.passport_no||'—'} &nbsp; Visa: ${data.visa_no||'—'} &nbsp; Agent: ${data.agent_name||'—'}</small>
+                        </div>
+                        <div class="d-flex gap-2 align-items-center flex-shrink-0">
+                            <select id="lookupCategory" class="form-select form-select-sm" style="width:140px;">
+                                <option value="new">New</option>
+                                <option value="restamping">Re-stamping</option>
+                                <option value="cancellation">Cancellation</option>
+                            </select>
+                            <button type="button" class="btn btn-sm btn-success" id="addFoundBtn"
+                                data-hr-id="${data.id}" data-name="${data.full_name_en}">
+                                <i class="bi bi-plus me-1"></i>Add
+                            </button>
+                        </div>
+                    </div>
+                </div>`;
+
+            document.getElementById('addFoundBtn').addEventListener('click', function() {
+                const hrId    = this.dataset.hrId;
+                const name    = this.dataset.name;
+                const cat     = document.getElementById('lookupCategory').value;
+                selected[hrId] = {name, category: cat};
+                const cb = document.querySelector(`.hr-checkbox[data-hr-id="${hrId}"]`);
+                if (cb && !cb.checked) {
+                    cb.checked = true;
+                    const row = cb.closest('tr');
+                    row.classList.add('selected');
+                    const catSel = row.querySelector('.category-select');
+                    catSel.style.display = 'block';
+                    catSel.value = cat;
+                    catSel.addEventListener('change', function() {
+                        if (selected[hrId]) { selected[hrId].category = this.value; updateCounts(); renderSelectedList(); rebuildHiddenInputs(); }
+                    });
+                }
+                updateCounts(); renderSelectedList(); rebuildHiddenInputs();
+                lookupResult.innerHTML = `<div class="alert alert-success py-2 mb-0" style="font-size:.85rem;"><i class="bi bi-check-circle me-1"></i><strong>${name}</strong> added as ${categoryLabel(cat)}.</div>`;
+                lookupInput.value = '';
+            });
+        })
+        .catch(() => {
+            lookupResult.innerHTML = '<div class="alert alert-danger py-2 mb-0" style="font-size:.85rem;"><i class="bi bi-x-circle me-1"></i>Lookup failed. Please try again.</div>';
+        });
+    }
+
+    lookupBtn.addEventListener('click', runPassportLookup);
+    lookupInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); runPassportLookup(); } });
 })();
 </script>
 @endpush

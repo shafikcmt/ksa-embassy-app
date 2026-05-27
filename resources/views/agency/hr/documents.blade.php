@@ -23,7 +23,7 @@
     <span class="badge {{ $badgeClass }} ms-1">{{ ucfirst($hr->status) }}</span>
 </div>
 
-{{-- PDF limit notice --}}
+{{-- PDF limit notice + Document Readiness --}}
 @php
     $sub = auth()->user()->agency?->activeSubscription;
     $pdfLimit = $sub?->plan->max_pdf_monthly ?? 0;
@@ -32,7 +32,34 @@
         ->whereMonth('created_at', now()->month)
         ->whereYear('created_at', now()->year)
         ->count();
+    $readiness = $hr->documentReadiness();
 @endphp
+
+{{-- Document Readiness Banner --}}
+@if($readiness['ready'])
+<div class="alert alert-success py-2 mb-3 d-flex align-items-center gap-2">
+    <i class="bi bi-check-circle-fill fs-5"></i>
+    <div>
+        <strong>Ready to Print</strong> — All required fields are complete.
+    </div>
+</div>
+@else
+<div class="alert alert-warning py-2 mb-3">
+    <div class="d-flex align-items-center gap-2 mb-1">
+        <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+        <strong>Missing Fields — Documents may be incomplete</strong>
+        <a href="{{ route('hr.edit', $hr) }}" class="btn btn-sm btn-warning ms-auto">
+            <i class="bi bi-pencil me-1"></i> Edit Profile
+        </a>
+    </div>
+    <div style="font-size:.85rem;">
+        @foreach($readiness['missing'] as $field)
+        <span class="badge bg-warning text-dark me-1 mb-1">{{ $field }}</span>
+        @endforeach
+    </div>
+</div>
+@endif
+
 @if($pdfLimit < 9999)
 <div class="alert alert-info py-2 mb-3">
     <i class="bi bi-info-circle me-1"></i>
@@ -192,16 +219,11 @@
                 {{ $hr->visa?->musaned_no ?? '—' }} / {{ $hr->visa?->wakala_no ?? '—' }}
             </div>
         </div>
-        @php $missingFields = []; @endphp
-        @if(!$hr->passport?->passport_number) @php $missingFields[] = 'Passport Number'; @endphp @endif
-        @if(!$hr->visa?->visa_number) @php $missingFields[] = 'Visa Number'; @endphp @endif
-        @if(!$hr->visa?->profession_en && !$hr->occupation) @php $missingFields[] = 'Profession'; @endphp @endif
-        @if(count($missingFields))
-        <div class="alert alert-warning py-2 mt-2 mb-0">
+        @if(!$readiness['ready'])
+        <div class="mt-2 mb-0" style="font-size:.82rem;color:#856404;">
             <i class="bi bi-exclamation-triangle me-1"></i>
-            Missing data for complete documents:
-            <strong>{{ implode(', ', $missingFields) }}</strong>
-            — <a href="{{ route('hr.edit', $hr) }}">Edit profile</a> to fill them in.
+            {{ count($readiness['missing']) }} field(s) missing —
+            <a href="{{ route('hr.edit', $hr) }}">edit profile</a> to complete them.
         </div>
         @endif
     </div>

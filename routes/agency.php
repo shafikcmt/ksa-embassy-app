@@ -43,6 +43,9 @@ Route::middleware(['auth', 'agency-access'])->group(function () {
         Route::post('/hr', [HrProfileController::class, 'store'])->name('hr.store');
     });
 
+    // HR passport lookup for embassy list quick-add (no subscription gate)
+    Route::post('/hr/lookup-by-passport', [HrProfileController::class, 'lookupByPassport'])->name('hr.lookup-by-passport');
+
     // HR/Candidates — list, view, edit, delete (no subscription gate needed)
     Route::get('/hr', [HrProfileController::class, 'index'])->name('hr.index');
     Route::get('/hr/{hr}', [HrProfileController::class, 'show'])->name('hr.show');

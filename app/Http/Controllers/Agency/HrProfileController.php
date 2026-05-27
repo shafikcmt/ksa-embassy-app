@@ -266,6 +266,41 @@ class HrProfileController extends Controller
             ->with('success', 'HR profile deleted successfully.');
     }
 
+    public function lookupByPassport(Request $request)
+    {
+        $request->validate(['passport_no' => 'required|string|max:50']);
+
+        $agencyId = auth()->user()->agency_id;
+
+        $hr = HrProfile::with([
+                'agent:id,name',
+                'passport:id,hr_profile_id,passport_number',
+                'visa:id,hr_profile_id,visa_number,profession_en',
+            ])
+            ->forAgency($agencyId)
+            ->whereHas('passport', fn($q) => $q->where('passport_number', $request->passport_no))
+            ->first();
+
+        if (! $hr) {
+            return response()->json([
+                'found'   => false,
+                'message' => 'No candidate found with that passport number in your agency.',
+            ]);
+        }
+
+        return response()->json([
+            'found'        => true,
+            'id'           => $hr->id,
+            'full_name_en' => $hr->full_name_en,
+            'full_name_ar' => $hr->full_name_ar ?? '',
+            'nationality'  => $hr->nationality,
+            'passport_no'  => $hr->passport?->passport_number ?? '',
+            'visa_no'      => $hr->visa?->visa_number ?? '',
+            'agent_name'   => $hr->agent?->name ?? '',
+            'profession'   => $hr->visa?->profession_en ?? ($hr->occupation ?? ''),
+        ]);
+    }
+
     private function enforcePlanLimit(): void
     {
         $user         = auth()->user();

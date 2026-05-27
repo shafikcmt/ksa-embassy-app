@@ -80,4 +80,28 @@ class HrProfile extends Model
     {
         return $this->status === 'active';
     }
+
+    public function documentReadiness(): array
+    {
+        $missing = [];
+
+        if (empty($this->full_name_en))   $missing[] = 'Full Name (EN)';
+        if (empty($this->date_of_birth))  $missing[] = 'Date of Birth';
+        if (empty($this->nationality))    $missing[] = 'Nationality';
+        if (empty($this->gender))         $missing[] = 'Gender';
+        if (empty($this->religion))       $missing[] = 'Religion';
+
+        if (!$this->passport || empty($this->passport->passport_number)) $missing[] = 'Passport Number';
+        if (!$this->passport || empty($this->passport->issue_place))     $missing[] = 'Passport Issue Place';
+        if (!$this->passport || empty($this->passport->issue_date))      $missing[] = 'Passport Issue Date';
+        if (!$this->passport || empty($this->passport->expiry_date))     $missing[] = 'Passport Expiry Date';
+
+        if (!$this->visa || empty($this->visa->visa_number))    $missing[] = 'Visa Number';
+        if (!$this->visa || empty($this->visa->sponsor_name))   $missing[] = 'Sponsor Name';
+        if (!$this->visa || empty($this->visa->sponsor_id))     $missing[] = 'Sponsor ID';
+        if (!$this->visa || (empty($this->visa->profession_en) && empty($this->occupation))) $missing[] = 'Profession';
+        if (!$this->visa || empty($this->visa->travel_purpose)) $missing[] = 'Travel Purpose';
+
+        return ['ready' => empty($missing), 'missing' => $missing];
+    }
 }
