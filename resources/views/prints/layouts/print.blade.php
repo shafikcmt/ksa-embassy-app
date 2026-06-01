@@ -53,7 +53,12 @@ td, th { padding: 3px 5px; vertical-align: top; }
     display: inline-block; vertical-align: top;
     padding-top: 38px;
 }
+{{-- @page is emitted ONLY for the browser. If this layout is ever rendered to
+     PDF via mPDF, an @page rule makes that mPDF version spray blank pages, so it
+     must be hidden from the PDF render. ($_pdf is undefined here → empty() = true). --}}
+@if(empty($_pdf))
 @page { size: A4 portrait; margin: 10mm; }
+@endif
 @media print {
     .no-print { display: none !important; }
     body { font-size: 9.5pt; }

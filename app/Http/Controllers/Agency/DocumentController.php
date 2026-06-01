@@ -6,12 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Models\EmbassyList;
 use App\Models\GeneratedDocument;
 use App\Models\HrProfile;
+use App\Services\BarcodeService;
 use App\Services\PdfGeneratorService;
 use App\Support\PrintDataMapper;
 
 class DocumentController extends Controller
 {
-    public function __construct(private PdfGeneratorService $pdf) {}
+    public function __construct(
+        private PdfGeneratorService $pdf,
+        private BarcodeService $barcode,
+    ) {}
 
     // ──────────────────────────────────────────────────────────────────────
     // HR DOCUMENTS HUB
@@ -32,7 +36,7 @@ class DocumentController extends Controller
     {
         $this->authorizeHr($hr);
         $hr->load(['agent', 'passport', 'visa', 'clearance', 'otherInfo', 'agency']);
-        $data = PrintDataMapper::forHr($hr);
+        $data = $this->withBarcodes(PrintDataMapper::forHr($hr));
         GeneratedDocument::log('application', 'preview', $hr);
         return view('prints.hr.application', $data);
     }
@@ -64,6 +68,15 @@ class DocumentController extends Controller
         return view('prints.hr.checklist', $data);
     }
 
+    public function previewFullFile(HrProfile $hr)
+    {
+        $this->authorizeHr($hr);
+        $hr->load(['agent', 'passport', 'visa', 'clearance', 'otherInfo', 'agency']);
+        $data = $this->withBarcodes(PrintDataMapper::forHr($hr));
+        GeneratedDocument::log('full_file', 'preview', $hr);
+        return view('prints.hr.full-file', $data);
+    }
+
     // ──────────────────────────────────────────────────────────────────────
     // DOWNLOADS (mPDF — counted against plan limit)
     // ──────────────────────────────────────────────────────────────────────
@@ -73,7 +86,7 @@ class DocumentController extends Controller
         $this->authorizeHr($hr);
         $this->enforcePdfLimit();
         $hr->load(['agent', 'passport', 'visa', 'clearance', 'otherInfo', 'agency']);
-        $data     = PrintDataMapper::forHr($hr);
+        $data     = $this->withBarcodes(PrintDataMapper::forHr($hr));
         $filename = 'application-' . str_replace(' ', '-', strtolower($hr->full_name_en));
         $response = $this->pdf->generateFromView('prints.hr.application', $data, $filename);
         GeneratedDocument::log('application', 'download', $hr);
@@ -121,14 +134,9 @@ class DocumentController extends Controller
         $this->authorizeHr($hr);
         $this->enforcePdfLimit();
         $hr->load(['agent', 'passport', 'visa', 'clearance', 'otherInfo', 'agency']);
-        $data     = PrintDataMapper::forHr($hr);
+        $data     = $this->withBarcodes(PrintDataMapper::forHr($hr));
         $filename = 'full-file-' . str_replace(' ', '-', strtolower($hr->full_name_en));
-        $response = $this->pdf->generateMultiPage([
-            'prints.hr.application',
-            'prints.hr.forwarding-letter',
-            'prints.hr.employment-agreement',
-            'prints.hr.checklist',
-        ], $data, $filename);
+        $response = $this->pdf->generateFromView('prints.hr.full-file', $data, $filename);
         GeneratedDocument::log('full_file', 'download', $hr);
         return $response;
     }
@@ -149,6 +157,19 @@ class DocumentController extends Controller
     // ──────────────────────────────────────────────────────────────────────
     // HELPERS
     // ──────────────────────────────────────────────────────────────────────
+
+    private function withBarcodes(array $data): array
+    {
+        $topText    = $data['visa_no'] ?: ($data['file_number'] ?: '');
+        $bottomText = $data['passport_no'] ?: '';
+
+        return array_merge($data, [
+            'topBarcodeText'    => $topText,
+            'topBarcodeSrc'     => $this->barcode->make($topText),
+            'bottomBarcodeText' => $bottomText,
+            'bottomBarcodeSrc'  => $this->barcode->make($bottomText),
+        ]);
+    }
 
     private function authorizeHr(HrProfile $hr): void
     {

@@ -80,9 +80,14 @@
                     <h6 class="mb-1 fw-bold"><i class="bi bi-file-earmark-zip me-2 text-primary"></i>Complete File (All 4 Documents)</h6>
                     <small class="text-muted">Application + Forwarding Letter + Employment Agreement + Checklist in one PDF</small>
                 </div>
-                <a href="{{ route('hr.download.full-file', $hr) }}" class="btn btn-primary">
-                    <i class="bi bi-download me-1"></i> Download Full File PDF
-                </a>
+                <div class="d-flex gap-2">
+                    <a href="{{ route('hr.print.full-file', $hr) }}" class="btn btn-outline-secondary" target="_blank">
+                        <i class="bi bi-eye me-1"></i> Preview
+                    </a>
+                    <a href="{{ route('hr.download.full-file', $hr) }}" class="btn btn-primary">
+                        <i class="bi bi-download me-1"></i> Download Full File PDF
+                    </a>
+                </div>
             </div>
         </div>
     </div>

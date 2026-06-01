@@ -1,197 +1,191 @@
-@extends('prints.layouts.print')
-
-@section('content')
-<div class="page">
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<style>
+body { font-family: DejaVu Sans, sans-serif; font-size: 9pt; color: #000; margin: 0; padding: 0; line-height: 1.5; }
+table { width: 100%; border-collapse: collapse; }
+td, th { padding: 3pt 5pt; vertical-align: middle; font-size: 9pt; }
+.ar { direction: rtl; text-align: right; font-family: DejaVu Sans, sans-serif; }
+.ltr { direction: ltr; text-align: left; }
+@media screen {
+  body { background: #e5e7eb; }
+  .a4-page { width: 210mm; min-height: 297mm; margin: 10mm auto; background: #fff; box-shadow: 0 0 12px rgba(0,0,0,.15); padding: 10mm 12mm; box-sizing: border-box; overflow: hidden; }
+}
+{{-- @page is emitted ONLY for the browser. mPDF's constructor already sets
+     A4 + 10mm margins; feeding it an @page rule makes this mPDF version spray
+     blank pages, so it must be hidden from the PDF render. --}}
+@if(empty($_pdf))
+@page { size: A4; margin: 0; }
+@endif
+@media print {
+  body { background: #fff; margin: 0; padding: 0; }
+  .no-print { display: none !important; }
+  .a4-page { width: 100%; margin: 0; padding: 10mm 12mm; box-shadow: none; box-sizing: border-box; page-break-after: always; }
+  .a4-page:last-child { page-break-after: auto; }
+}
+</style>
+</head>
+<body>
 
 @if(empty($_pdf))
-<div class="no-print" style="background:#1a1f2e;color:#fff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-    <span style="font-size:.85rem;"><strong>Checklist / Attachment</strong> — {{ $full_name_en }}</span>
-    <div style="display:flex;gap:8px;">
-        <button onclick="window.print()" style="background:#2563eb;color:#fff;border:none;padding:6px 16px;border-radius:4px;cursor:pointer;font-size:.8rem;">&#128424; Print</button>
-        <a href="{{ url()->previous() }}" style="background:#374151;color:#fff;border:none;padding:6px 16px;border-radius:4px;cursor:pointer;font-size:.8rem;text-decoration:none;">&#8592; Back</a>
-    </div>
+<div class="no-print" style="background:#1a1f2e;color:#fff;padding:7pt 12pt;margin-bottom:6pt;font-size:8pt;">
+  <strong>Attachment Checklist</strong> — {{ $full_name_en }}
+  &nbsp;&nbsp;
+  <button onclick="window.print()" style="background:#2563eb;color:#fff;border:none;padding:3pt 10pt;border-radius:3pt;cursor:pointer;">&#128424; Print</button>
+  &nbsp;
+  <a href="{{ url()->previous() }}" style="background:#374151;color:#fff;padding:3pt 10pt;border-radius:3pt;text-decoration:none;">&#8592; Back</a>
+  &nbsp;
+  <a href="{{ route('hr.download.checklist', request()->route('hr')) }}" style="background:#16a34a;color:#fff;padding:3pt 10pt;border-radius:3pt;text-decoration:none;">&#8595; PDF</a>
 </div>
 @endif
 
-{{-- Arabic heading --}}
-<div class="text-center" style="margin-bottom:8px;">
-    <div class="ar" style="font-size:14pt;font-weight:bold;">قائمة المرفقات والمستندات المطلوبة</div>
-    <div style="font-size:11pt;font-weight:bold;margin-top:2px;">ATTACHMENT &amp; DOCUMENT CHECKLIST</div>
+@if(empty($_pdf))<div class="a4-page">@endif
+
+{{-- Arabic title --}}
+<div style="text-align:center;margin-bottom:12pt;direction:rtl;">
+  <span style="font-size:13pt;font-weight:bold;text-decoration:underline;font-family:DejaVu Sans,sans-serif;">إرفاق الجدول التالي في كل معاملة</span>
 </div>
 
-{{-- Candidate summary --}}
-<table class="bordered" style="margin-bottom:8px;font-size:9pt;">
+{{-- 4-column table: RTL order (right to left): الاجراء | المكتب | المنفذ | الملاحظات --}}
+<table style="border-collapse:collapse;direction:rtl;">
+  <colgroup>
+    <col style="width:38%">
+    <col style="width:22%">
+    <col style="width:12%">
+    <col style="width:28%">
+  </colgroup>
+  <thead>
+    <tr style="background:#2c3e50;color:#fff;">
+      <th style="border:1px solid #000;padding:4pt 5pt;text-align:right;direction:rtl;">الاجراء / Step</th>
+      <th style="border:1px solid #000;padding:4pt 5pt;text-align:center;">المكتب / Agency</th>
+      <th style="border:1px solid #000;padding:4pt 5pt;text-align:center;">المنفذ / Port</th>
+      <th style="border:1px solid #000;padding:4pt 5pt;text-align:right;direction:rtl;">الملاحظات / Notes</th>
+    </tr>
+  </thead>
+  <tbody>
     <tr>
-        <td class="label" style="width:22%;">Candidate Name</td>
-        <td class="val" style="width:28%;">{{ $full_name_en }}</td>
-        <td class="label" style="width:22%;">Passport No.</td>
-        <td class="val" style="width:28%;">{{ $passport_no ?: '—' }}</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;direction:rtl;text-align:right;">رقم الملف / File Number</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;text-align:center;direction:ltr;">{{ $file_number ?: '—' }}</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;text-align:center;">&#9744;</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;"></td>
+    </tr>
+    <tr style="background:#f9f9f9;">
+      <td style="border:1px solid #000;padding:3pt 5pt;direction:rtl;text-align:right;">رقم التأشيرة / Visa No.</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;text-align:center;direction:ltr;">{{ $visa_no ?: '—' }}</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;text-align:center;">&#9744;</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;"></td>
     </tr>
     <tr>
-        <td class="label">Visa No.</td>
-        <td class="val">{{ $visa_no ?: '—' }}</td>
-        <td class="label">Nationality</td>
-        <td class="val">{{ $nationality }}</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;direction:rtl;text-align:right;">اسم الكامل / Full Name</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;text-align:center;direction:ltr;font-size:8pt;">{{ $full_name_en }}</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;text-align:center;">&#9744;</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;"></td>
+    </tr>
+    <tr style="background:#f9f9f9;">
+      <td style="border:1px solid #000;padding:3pt 5pt;direction:rtl;text-align:right;">رقم الجواز / Passport No.</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;text-align:center;direction:ltr;">{{ $passport_no ?: '—' }}</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;text-align:center;">&#9744;</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;"></td>
     </tr>
     <tr>
-        <td class="label">Agency</td>
-        <td class="val">{{ $agency_name }}</td>
-        <td class="label">RL / License</td>
-        <td class="val">{{ $agency_rl }} / {{ $agency_license }}</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;direction:rtl;text-align:right;">انتهاء الجواز / Passport Validity</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;text-align:center;direction:ltr;">{{ $passport_expiry_date ?: '—' }}</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;text-align:center;">&#9744;</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;"></td>
     </tr>
+    <tr style="background:#f9f9f9;">
+      <td style="border:1px solid #000;padding:3pt 5pt;direction:rtl;text-align:right;">السن / Age</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;text-align:center;direction:ltr;font-size:8pt;">
+        {{ $age }} yrs
+        @if($date_of_birth) ({{ $date_of_birth }}) @endif
+      </td>
+      <td style="border:1px solid #000;padding:3pt 5pt;text-align:center;">&#9744;</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;"></td>
+    </tr>
+    <tr>
+      <td style="border:1px solid #000;padding:3pt 5pt;direction:rtl;text-align:right;">الجنس / Sex</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;text-align:center;direction:ltr;">{{ $gender ?: '—' }}</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;text-align:center;">&#9744;</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;"></td>
+    </tr>
+    <tr style="background:#f9f9f9;">
+      <td style="border:1px solid #000;padding:3pt 5pt;direction:rtl;text-align:right;">مصنع / Musaned No.</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;text-align:center;direction:ltr;">{{ $musaned_no ?: '—' }}</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;text-align:center;">&#9744;</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;"></td>
+    </tr>
+    <tr>
+      <td style="border:1px solid #000;padding:3pt 5pt;direction:rtl;text-align:right;">الوكالة / Al-Wakala No.</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;text-align:center;direction:ltr;">{{ $wakala_no ?: '—' }}</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;text-align:center;">&#9744;</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;"></td>
+    </tr>
+    <tr style="background:#f9f9f9;">
+      <td style="border:1px solid #000;padding:3pt 5pt;direction:rtl;text-align:right;">التقرير الطبي / Medical Report</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;text-align:center;direction:ltr;font-size:8pt;">
+        {{ $medical_fit ?: '—' }}
+        @if($medical_date) ({{ $medical_date }}) @endif
+      </td>
+      <td style="border:1px solid #000;padding:3pt 5pt;text-align:center;">&#9744;</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;direction:rtl;text-align:right;font-size:8pt;">{{ $medical_center ?: '' }}</td>
+    </tr>
+    <tr>
+      <td style="border:1px solid #000;padding:3pt 5pt;direction:rtl;text-align:right;">شهادة السيرة / Police Clearance</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;text-align:center;direction:ltr;font-size:8pt;">
+        {{ $pc_number ?: '—' }}
+        @if($pc_expiry_date) exp.{{ $pc_expiry_date }} @endif
+      </td>
+      <td style="border:1px solid #000;padding:3pt 5pt;text-align:center;">&#9744;</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;direction:ltr;font-size:8pt;">{{ $pc_country ?: '' }}</td>
+    </tr>
+    <tr style="background:#f9f9f9;">
+      <td style="border:1px solid #000;padding:3pt 5pt;direction:rtl;text-align:right;">نوع الرخصة / License Type</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;text-align:center;direction:ltr;">{{ $license_type ?: '—' }}</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;text-align:center;">&#9744;</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;"></td>
+    </tr>
+    <tr>
+      <td style="border:1px solid #000;padding:3pt 5pt;direction:rtl;text-align:right;">المهنة / Profession</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;text-align:center;direction:ltr;font-size:8pt;">{{ $profession_en ?: ($occupation ?: '—') }}</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;text-align:center;">&#9744;</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;"></td>
+    </tr>
+    <tr style="background:#f9f9f9;">
+      <td style="border:1px solid #000;padding:3pt 5pt;direction:rtl;text-align:right;">شهادة خبرة / Experience Cert.</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;text-align:center;direction:ltr;font-size:8pt;">{{ $qualification_en ?: '—' }}</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;text-align:center;">&#9744;</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;"></td>
+    </tr>
+    <tr>
+      <td style="border:1px solid #000;padding:3pt 5pt;direction:rtl;text-align:right;">بصمة / Fingerprint</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;text-align:center;direction:ltr;">{{ $fingerprint ?: '—' }}</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;text-align:center;">&#9744;</td>
+      <td style="border:1px solid #000;padding:3pt 5pt;"></td>
+    </tr>
+  </tbody>
 </table>
 
-{{-- Checklist table --}}
-<table class="bordered" style="font-size:9pt;">
-    <thead>
-        <tr style="background:#2c3e50;color:#fff;">
-            <th style="width:32%;">Document / المستند</th>
-            <th style="width:24%;">Value / القيمة</th>
-            <th style="width:12%;text-align:center;">Agency ✓</th>
-            <th style="width:12%;text-align:center;">Port ✓</th>
-            <th style="width:20%;">Notes / ملاحظات</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Application / File Number</td>
-            <td class="val">{{ $file_number ?: '—' }}</td>
-            <td style="text-align:center;">&#9744;</td>
-            <td style="text-align:center;">&#9744;</td>
-            <td></td>
-        </tr>
-        <tr style="background:#fafafa;">
-            <td>Visa No.</td>
-            <td class="val">{{ $visa_no ?: '—' }}</td>
-            <td style="text-align:center;">&#9744;</td>
-            <td style="text-align:center;">&#9744;</td>
-            <td></td>
-        </tr>
-        <tr>
-            <td>Passport Holder Name</td>
-            <td class="val">{{ $full_name_en }}</td>
-            <td style="text-align:center;">&#9744;</td>
-            <td style="text-align:center;">&#9744;</td>
-            <td></td>
-        </tr>
-        <tr style="background:#fafafa;">
-            <td>Passport Number</td>
-            <td class="val">{{ $passport_no ?: '—' }}</td>
-            <td style="text-align:center;">&#9744;</td>
-            <td style="text-align:center;">&#9744;</td>
-            <td></td>
-        </tr>
-        <tr>
-            <td>Passport Validity</td>
-            <td class="val">{{ $passport_expiry_date ?: '—' }}</td>
-            <td style="text-align:center;">&#9744;</td>
-            <td style="text-align:center;">&#9744;</td>
-            <td></td>
-        </tr>
-        <tr style="background:#fafafa;">
-            <td>Age</td>
-            <td class="val">{{ $age }} years</td>
-            <td style="text-align:center;">&#9744;</td>
-            <td style="text-align:center;">&#9744;</td>
-            <td></td>
-        </tr>
-        <tr>
-            <td>Sex</td>
-            <td class="val">{{ $gender }}</td>
-            <td style="text-align:center;">&#9744;</td>
-            <td style="text-align:center;">&#9744;</td>
-            <td></td>
-        </tr>
-        <tr style="background:#fafafa;">
-            <td>Musaned No.</td>
-            <td class="val">{{ $musaned_no ?: '—' }}</td>
-            <td style="text-align:center;">&#9744;</td>
-            <td style="text-align:center;">&#9744;</td>
-            <td></td>
-        </tr>
-        <tr>
-            <td>Al-Wakala No.</td>
-            <td class="val">{{ $wakala_no ?: '—' }}</td>
-            <td style="text-align:center;">&#9744;</td>
-            <td style="text-align:center;">&#9744;</td>
-            <td></td>
-        </tr>
-        <tr style="background:#fafafa;">
-            <td>Medical Report</td>
-            <td class="val">{{ $medical_fit ?: '—' }}
-                @if($medical_date) ({{ $medical_date }}) @endif
-            </td>
-            <td style="text-align:center;">&#9744;</td>
-            <td style="text-align:center;">&#9744;</td>
-            <td>{{ $medical_center ?: '' }}</td>
-        </tr>
-        <tr>
-            <td>Police Clearance (PC)</td>
-            <td class="val">{{ $pc_number ?: '—' }}
-                @if($pc_expiry_date) exp. {{ $pc_expiry_date }} @endif
-            </td>
-            <td style="text-align:center;">&#9744;</td>
-            <td style="text-align:center;">&#9744;</td>
-            <td>{{ $pc_country ?: '' }}</td>
-        </tr>
-        <tr style="background:#fafafa;">
-            <td>License Type</td>
-            <td class="val">{{ $license_type ?: '—' }}</td>
-            <td style="text-align:center;">&#9744;</td>
-            <td style="text-align:center;">&#9744;</td>
-            <td></td>
-        </tr>
-        <tr>
-            <td>Profession / Occupation</td>
-            <td class="val">{{ $profession_en ?: ($occupation ?: '—') }}
-                @if($profession_ar) <span class="ar"> / {{ $profession_ar }}</span> @endif
-            </td>
-            <td style="text-align:center;">&#9744;</td>
-            <td style="text-align:center;">&#9744;</td>
-            <td></td>
-        </tr>
-        <tr style="background:#fafafa;">
-            <td>Experience Certificate</td>
-            <td class="val">{{ $qualification_en ?: '—' }}</td>
-            <td style="text-align:center;">&#9744;</td>
-            <td style="text-align:center;">&#9744;</td>
-            <td></td>
-        </tr>
-        <tr>
-            <td>Fingerprint</td>
-            <td class="val">{{ $fingerprint ?: '—' }}</td>
-            <td style="text-align:center;">&#9744;</td>
-            <td style="text-align:center;">&#9744;</td>
-            <td></td>
-        </tr>
-    </tbody>
+{{-- Agency info and signatures (Arabic RTL) --}}
+<table style="margin-top:14pt;direction:rtl;font-size:9.5pt;">
+  <tr>
+    <td style="width:50%;text-align:right;direction:rtl;padding:3pt 0;">
+      إسم المكتب - <strong>{{ $agency_name }}</strong>
+    </td>
+    <td style="width:50%;text-align:right;direction:rtl;padding:3pt 0;">
+      رقم الرخصة - <strong>{{ $agency_rl ?: '—' }}</strong>
+    </td>
+  </tr>
+  <tr>
+    <td style="text-align:right;direction:rtl;padding:3pt 0;">
+      التوقيع - &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    </td>
+    <td style="text-align:right;direction:rtl;padding:3pt 0;">
+      الختم - &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    </td>
+  </tr>
 </table>
 
-{{-- PC QR Code if available --}}
-@if($pc_qr_code)
-<div style="margin-top:8px;text-align:left;">
-    <div style="font-size:7.5pt;color:#666;margin-bottom:2px;">Police Clearance QR Code</div>
-    <barcode code="{{ $pc_qr_code }}" type="QR" size="0.8" />
-    <div style="font-size:7pt;color:#888;">{{ $pc_number }}</div>
-</div>
-@endif
-
-<table class="signature-row">
-    <tr>
-        <td class="sig-cell">
-            <div class="sig-line">
-                Verified By (Agency)<br>
-                <small>{{ $agency_name }}</small>
-            </div>
-        </td>
-        <td class="sig-cell">
-            <div class="sig-line">Agency Stamp<br>&nbsp;</div>
-        </td>
-        <td class="sig-cell">
-            <div class="sig-line">Date / التاريخ<br>{{ now()->format('d/m/Y') }}</div>
-        </td>
-    </tr>
-</table>
-
-</div>
-@endsection
+@if(empty($_pdf))</div>@endif
+</body>
+</html>

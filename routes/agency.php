@@ -59,6 +59,7 @@ Route::middleware(['auth', 'agency-access'])->group(function () {
     Route::get('/hr/{hr}/print/forwarding-letter', [DocumentController::class, 'previewForwardingLetter'])->name('hr.print.forwarding-letter');
     Route::get('/hr/{hr}/print/employment-agreement', [DocumentController::class, 'previewEmploymentAgreement'])->name('hr.print.employment-agreement');
     Route::get('/hr/{hr}/print/checklist', [DocumentController::class, 'previewChecklist'])->name('hr.print.checklist');
+    Route::get('/hr/{hr}/print/full-file', [DocumentController::class, 'previewFullFile'])->name('hr.print.full-file');
     Route::get('/hr/{hr}/download/application', [DocumentController::class, 'downloadApplication'])->name('hr.download.application');
     Route::get('/hr/{hr}/download/forwarding-letter', [DocumentController::class, 'downloadForwardingLetter'])->name('hr.download.forwarding-letter');
     Route::get('/hr/{hr}/download/employment-agreement', [DocumentController::class, 'downloadEmploymentAgreement'])->name('hr.download.employment-agreement');

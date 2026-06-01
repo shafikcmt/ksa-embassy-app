@@ -11,6 +11,7 @@ use App\Models\EmbassyList;
 use App\Models\EmbassyListItem;
 use App\Models\HrProfile;
 use Illuminate\Http\Request;
+use App\Support\PrintDataMapper;
 use Illuminate\Support\Facades\DB;
 
 class EmbassyListController extends Controller
@@ -332,16 +333,7 @@ class EmbassyListController extends Controller
     {
         $this->authorize('view', $embassyList);
 
-        $embassyList->load('agency');
-
-        // Group: restamping first, then new, then cancellation (standard embassy order)
-        $itemsByCategory = $embassyList->items()
-            ->orderByRaw("FIELD(category, 'restamping', 'new', 'cancellation')")
-            ->orderBy('serial_no')
-            ->orderBy('sort_order')
-            ->orderBy('id')
-            ->get()
-            ->groupBy('category');
+        $embassyList->load(['agency', 'createdBy']);
 
         // Mark as printed if finalized
         if ($embassyList->isFinalized() && ! $embassyList->printed_at) {
@@ -349,7 +341,9 @@ class EmbassyListController extends Controller
             AuditLog::record('print', $embassyList, [], ['printed_at' => now()->toDateTimeString()]);
         }
 
-        return view('agency.embassy-lists.print', compact('embassyList', 'itemsByCategory'));
+        $data = PrintDataMapper::forEmbassyList($embassyList);
+
+        return view('prints.embassy-list', $data);
     }
 
     public function availableHr(Request $request)
