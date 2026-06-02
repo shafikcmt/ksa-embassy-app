@@ -20,6 +20,16 @@ class PrintDataMapper
             $passportYears = $passport->issue_date->diffInYears($passport->expiry_date);
         }
 
+        // Detailed age "X years Y months Z days" for the checklist
+        $ageDetail = '';
+        if ($hr->date_of_birth) {
+            $d = $hr->date_of_birth->diff(now());
+            $ageDetail = "{$d->y} years {$d->m} months {$d->d} days";
+        }
+
+        // Application / Enjaz number shown top-right on the form and first checklist row.
+        $applicationNo = $hr->mofa_new ?: ($hr->file_number && $hr->file_number !== '—' ? $hr->file_number : '');
+
         return [
             // ── HR Profile ──────────────────────────────────────────────
             'file_number'          => $hr->file_number ?? '—',
@@ -30,6 +40,13 @@ class PrintDataMapper
             'place_of_birth'       => $hr->place_of_birth ?? '',
             'nationality'          => $hr->nationality,
             'previous_nationality' => $hr->previous_nationality ?? '',
+            'mofa_new'             => $hr->mofa_new ?? '',
+            'mofa_old'             => $hr->mofa_old ?? '',
+            'mofa'                 => $hr->mofa_new ?: ($hr->mofa_old ?? ''),
+            'application_no'       => $applicationNo,
+            'age_detail'           => $ageDetail,
+            'sect'                 => $hr->sect ?? '',
+            'home_address'         => $hr->home_address ?? '',
             'date_of_birth'        => $hr->date_of_birth?->format('d/m/Y') ?? '—',
             'age'                  => $hr->date_of_birth ? $hr->date_of_birth->age : '—',
             'gender'               => ucfirst($hr->gender),
@@ -46,7 +63,8 @@ class PrintDataMapper
             'passport_issue_place' => $passport?->issue_place ?? '',
             'passport_issue_date'  => $passport?->issue_date?->format('d/m/Y') ?? '',
             'passport_expiry_date' => $passport?->expiry_date?->format('d/m/Y') ?? '',
-            'passport_validity_years' => $passportYears ?? '',
+            'passport_validity_years' => $passport?->validity_years ?: ($passportYears ?? ''),
+            'passport_validity_type'  => $passport?->validity_years ? $passport->validity_years . ' Years' : ($passportYears ? $passportYears . ' Years' : ''),
 
             // ── Visa ────────────────────────────────────────────────────
             'visa_no'              => $visa?->visa_number ?? '',
@@ -56,6 +74,7 @@ class PrintDataMapper
             'visa_issue_place_en'  => $visa?->issue_place ?? '',
             'visa_issue_place_ar'  => $visa?->issue_place_ar ?? '',
             'sponsor_name'         => $visa?->sponsor_name ?? '',
+            'sponsor_name_ar'      => $visa?->sponsor_name_ar ?? '',
             'sponsor_id'           => $visa?->sponsor_id ?? '',
             'border_number'        => $visa?->border_number ?? '',
             'profession_en'        => $visa?->profession_en ?? ($hr->occupation ?? ''),
@@ -69,6 +88,7 @@ class PrintDataMapper
             // ── Clearance ───────────────────────────────────────────────
             'pc_number'            => $clearance?->police_clearance_number ?? '',
             'pc_qr_code'           => $clearance?->pc_qr_code ?? '',
+            'pc_display'           => $clearance?->police_clearance_number ?: ($clearance?->pc_qr_code ?? ''),
             'pc_issue_date'        => $clearance?->clearance_issue_date?->format('d/m/Y') ?? '',
             'pc_expiry_date'       => $clearance?->clearance_expiry_date?->format('d/m/Y') ?? '',
             'pc_country'           => $clearance?->clearance_country ?? '',
@@ -89,7 +109,13 @@ class PrintDataMapper
             'carrier'              => $other?->carrier ?? '',
             'payment_mode'         => $other?->payment_mode ?? '',
             'arrival_date'         => $other?->arrival_date?->format('d/m/Y') ?? '',
+            'arrival_date_ar'      => $other?->arrival_date_ar ?? '',
             'departure_date'       => $other?->departure_date?->format('d/m/Y') ?? '',
+            'departure_date_ar'    => $other?->departure_date_ar ?? '',
+            'business_address_en'  => $other?->business_address_en ?? '',
+            'business_address_ar'  => $other?->business_address_ar ?? '',
+            'kingdom_address_en'   => $other?->kingdom_address_en ?? '',
+            'kingdom_address_ar'   => $other?->kingdom_address_ar ?? '',
             'duration_stay_en'     => $other?->duration_stay_en ?? ($other?->contract_period ?? ''),
             'duration_stay_ar'     => $other?->duration_stay_ar ?? '',
             'remarks'              => $other?->remarks ?? '',

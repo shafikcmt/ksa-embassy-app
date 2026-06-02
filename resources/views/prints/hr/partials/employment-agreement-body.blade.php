@@ -21,7 +21,7 @@
     <tr>
       <td style="width:50%;border-bottom:1px solid #000;padding:5pt 4pt;"><strong>NAME OF COMPANY :</strong></td>
       <td style="width:50%;border-bottom:1px solid #000;padding:5pt 4pt;">
-        {{ $agency_name }}
+        @if(!empty($sponsor_name_ar))<span class="ar" style="font-weight:bold;">{{ $sponsor_name_ar }}</span>@else{{ $sponsor_name ?: $agency_name }}@endif
       </td>
     </tr>
     <tr>

@@ -12,8 +12,9 @@ class HrProfile extends Model
     protected $fillable = [
         'agency_id', 'agent_id', 'file_number', 'full_name_en', 'full_name_ar',
         'father_name', 'mother_name', 'place_of_birth',
-        'nationality', 'previous_nationality', 'date_of_birth', 'gender',
-        'religion', 'marital_status', 'occupation', 'phone', 'email',
+        'nationality', 'previous_nationality', 'mofa_new', 'mofa_old',
+        'date_of_birth', 'gender', 'sect',
+        'religion', 'marital_status', 'occupation', 'phone', 'home_address', 'email',
         'status', 'notes', 'created_by', 'updated_by',
     ];
 

@@ -9,7 +9,7 @@ class Passport extends Model
 {
     protected $fillable = [
         'hr_profile_id', 'passport_number', 'passport_type',
-        'issue_date', 'expiry_date', 'issue_place',
+        'issue_date', 'expiry_date', 'validity_years', 'issue_place',
     ];
 
     protected $casts = [

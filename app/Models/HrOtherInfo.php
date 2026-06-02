@@ -12,7 +12,8 @@ class HrOtherInfo extends Model
         'salary', 'work_city', 'destination_city',
         'employer_name', 'employer_phone',
         'relationship', 'carrier', 'payment_mode',
-        'arrival_date', 'departure_date', 'remarks',
+        'arrival_date', 'arrival_date_ar', 'departure_date', 'departure_date_ar', 'remarks',
+        'business_address_en', 'business_address_ar', 'kingdom_address_en', 'kingdom_address_ar',
     ];
 
     protected $casts = [

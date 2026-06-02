@@ -31,8 +31,8 @@
       <div style="font-size:10pt;font-weight:bold;margin-top:16pt;text-align:center;">New Application</div>
     </td>
     <td style="width:30%;text-align:right;vertical-align:top;padding:4pt 0 2pt 4pt;">
-      @if($file_number && $file_number !== '—')
-      <div style="font-size:16pt;font-weight:bold;letter-spacing:0.5pt;">{{ $file_number }}</div>
+      @if(!empty($application_no))
+      <div style="font-size:16pt;font-weight:bold;letter-spacing:0.5pt;">{{ $application_no }}</div>
       @endif
       <div style="font-size:9.5pt;font-weight:bold;margin-top:4pt;">EMBASSY OF SAUDI ARABIA</div>
       <div style="font-size:8.5pt;margin-top:2pt;">CONSULAR SECTION</div>
@@ -89,7 +89,7 @@
     </tr>
     {{-- Sect + Religion --}}
     <tr>
-      <td><strong>Sect:</strong> ___________</td>
+      <td><strong>Sect:</strong> {{ $sect ?: '' }}</td>
       <td class="ar" style="font-size:7pt;">الطائفة :</td>
       <td><strong>Religion:</strong> {{ $religion ?: '' }}</td>
       <td class="ar" style="font-size:7pt;">الديانة :</td>
@@ -103,21 +103,21 @@
     </tr>
     {{-- Place of Issue | Qualification | Profession --}}
     <tr>
-      <td><strong>Place of Issue:</strong> {{ $passport_issue_place ?: '' }}</td>
+      <td><strong>Place of Issue:</strong> {{ $visa_issue_place_en ?: ($passport_issue_place ?: '') }}</td>
       <td><strong>Qualification:</strong> {{ $qualification_en ?: '' }}</td>
       <td><strong>Profession:</strong> {{ $profession_en ?: ($occupation ?: '') }}</td>
-      <td class="ar" style="font-size:7pt;">المهنة :</td>
+      <td class="ar" style="font-size:7pt;">المهنة : <strong>{{ $profession_ar ?: '' }}</strong></td>
     </tr>
     {{-- Home address --}}
     <tr>
-      <td colspan="2"><strong>Home address &amp; phone No.:</strong> {{ $phone ?: '' }}</td>
+      <td colspan="2"><strong>Home address &amp; phone No.:</strong> {{ $home_address ?: ($phone ?: '') }}</td>
       <td colspan="2" class="ar" style="font-size:7pt;">عنوان المنزل ورقم التلفون :</td>
     </tr>
     {{-- Business address --}}
     <tr>
       <td colspan="2">
         <strong>Business address &amp; phone No.:</strong>
-        {{ $agency_name }}
+        {{ $business_address_en ?: $agency_name }}
         @if($agency_rl) &nbsp; RL: {{ $agency_rl }} @endif
         @if($agency_email) &nbsp; {{ $agency_email }} @endif
       </td>
@@ -145,7 +145,7 @@
         <strong>الغاية من السفر :</strong>
         <table style="width:100%;border-collapse:collapse;margin-top:1pt;">
           <tr>
-            @foreach(['العمل'=>'work','عبور'=>'transit','زيارة'=>'visit','عمرة'=>'umrah','إقامة'=>'residence','حج'=>'hajj','دبلوماسي'=>'diplomacy'] as $lbl => $val)
+            @foreach(['الشغل'=>'work','عبور'=>'transit','زيارة'=>'visit','العمرة'=>'umrah','إقامة'=>'residence','الحج'=>'hajj','الدبلوماسية'=>'diplomacy'] as $lbl => $val)
             <td style="border:1px solid #000;text-align:center;font-size:6.5pt;padding:2pt 3pt;{{ $tp===$val ? 'background:#1a1a1a;color:#fff;font-weight:bold;' : '' }}">{{ $lbl }}</td>
             @endforeach
           </tr>
@@ -186,9 +186,9 @@
       <td colspan="2">&nbsp;</td>
     </tr>
     <tr>
-      <td><strong>Duration of stay in the kingdom:</strong> {{ $duration_stay_en ?: '' }}</td>
-      <td><strong>Date of arrival:</strong> {{ $arrival_date ?: '' }}</td>
-      <td><strong>Date of departure:</strong> {{ $departure_date ?: '' }}</td>
+      <td><strong>Duration of stay in the kingdom:</strong> {{ $duration_stay_en ?: '' }}@if(!empty($duration_stay_ar)) <span class="ar">({{ $duration_stay_ar }})</span>@endif</td>
+      <td><strong>Date of arrival:</strong> {{ $arrival_date ?: ($arrival_date_ar ?: '') }}</td>
+      <td><strong>Date of departure:</strong> {{ $departure_date ?: ($departure_date_ar ?: '') }}</td>
       <td colspan="2">&nbsp;</td>
     </tr>
     {{-- Mode of payment --}}
@@ -249,8 +249,8 @@
 <table class="bdr" style="margin-top:1pt;font-size:7.5pt;">
   <tbody>
     <tr>
-      <td style="width:50%;">Name and address of company or individual in the kingdom</td>
-      <td style="width:50%;" class="ar" style="font-size:7pt;">اسم وعنوان الشركة أو اسم الشخص وعنوانه بالمملكة :</td>
+      <td style="width:50%;">Name and address of company or individual in the kingdom: <strong>{{ $kingdom_address_en ?: '' }}</strong></td>
+      <td style="width:50%;font-size:7pt;" class="ar"><strong>{{ $kingdom_address_ar ?: '' }}</strong> اسم وعنوان الشركة أو اسم الشخص وعنوانه بالمملكة :</td>
     </tr>
   </tbody>
 </table>

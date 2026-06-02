@@ -9,8 +9,11 @@
     .metric:hover { transform: translateY(-2px); box-shadow: 0 10px 24px -14px rgba(15,23,42,.35); }
     .metric .m-ic { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; color: #fff; font-size: 1.1rem; }
     .metric .m-label { font-size: .68rem; text-transform: uppercase; letter-spacing: .05em; color: #64748b; font-weight: 600; }
-    .metric .m-value { font-size: 1.7rem; font-weight: 800; line-height: 1.1; color: #0f172a; }
-    .metric .m-sub { font-size: .72rem; }
+    .metric .m-value { font-size: 1.7rem; font-weight: 800; line-height: 1.1; color: #0f172a; position: relative; z-index: 1; }
+    .metric .m-sub { font-size: .72rem; position: relative; z-index: 1; }
+    .metric .m-wm { position: absolute; right: .35rem; bottom: -.35rem; font-size: 3rem; line-height: 1; opacity: .06; color: #0f172a; pointer-events: none; }
+    .metric .m-go { color: #cbd5e1; font-size: .85rem; transition: transform .15s, color .15s; }
+    .metric:hover .m-go { color: var(--brand-blue, #2563eb); transform: translateX(2px); }
     .m-blue{background:linear-gradient(135deg,#3b82f6,#2563eb)} .m-green{background:linear-gradient(135deg,#34d399,#059669)}
     .m-amber{background:linear-gradient(135deg,#fbbf24,#d97706)} .m-violet{background:linear-gradient(135deg,#a78bfa,#7c3aed)}
     .m-rose{background:linear-gradient(135deg,#fb7185,#e11d48)} .m-teal{background:linear-gradient(135deg,#2dd4bf,#0d9488)}
@@ -88,8 +91,10 @@
     @foreach($metrics as $m)
     <div class="col-6 col-md-4 col-xl-2">
         <a href="{{ $m['route'] }}" class="metric text-decoration-none">
+            <span class="m-wm"><i class="bi {{ $m['ic'] }}"></i></span>
             <div class="d-flex justify-content-between align-items-start mb-2">
                 <span class="m-ic {{ $m['cls'] }}"><i class="bi {{ $m['ic'] }}"></i></span>
+                <i class="bi bi-arrow-right m-go"></i>
             </div>
             <div class="m-label">{{ $m['label'] }}</div>
             <div class="m-value">{{ $m['value'] }}</div>
