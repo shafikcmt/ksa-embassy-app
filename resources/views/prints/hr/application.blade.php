@@ -14,9 +14,12 @@ td, th { padding: 2pt 3pt; vertical-align: middle; font-size: 7.5pt; }
    Guarantees the partial renders identically in single and combined views,
    independent of any host/parent CSS. */
 .ksa-app table { width: 100%; border-collapse: collapse; }
-.ksa-app td, .ksa-app th { padding: 2pt 3pt; vertical-align: middle; font-size: 7.5pt; }
+.ksa-app td, .ksa-app th { padding: 2.6pt 3pt; vertical-align: middle; font-size: 7.5pt; }
 .ksa-app .bdr td, .ksa-app .bdr th { border: 1px solid #000; }
-.ksa-app .ar { direction: rtl; text-align: right; font-family: 'DejaVu Sans', sans-serif; }
+.ksa-app .ar { direction: rtl; text-align: right; font-family: 'DejaVu Sans', sans-serif; font-size: 7pt; }
+.ksa-app .lbl { font-weight: bold; }
+.ksa-app .val { text-align: center; font-weight: bold; }
+.ksa-app .inner td { border: 0 !important; padding: 0; }
 .ksa-app img { max-width: none; }
 
 {{-- @page is emitted ONLY for the browser. mPDF's constructor already sets
