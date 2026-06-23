@@ -1,5 +1,8 @@
 * text=auto eol=lf
 
+# Shell scripts must always use LF so bash on the Linux host can run them.
+*.sh text eol=lf
+
 *.blade.php diff=html
 *.css diff=css
 *.html diff=html

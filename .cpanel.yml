@@ -1,0 +1,8 @@
+---
+# cPanel Git Version Control deployment.
+# Runs automatically on "Update from Remote → Deploy HEAD Commit".
+# All deploy logic lives in deploy.sh so it is easy to read, test and override.
+deployment:
+  tasks:
+    - export DEPLOY_ROOT=/home/heavwzih/embassy-app.heavenlymatch.net
+    - /bin/bash "$DEPLOY_ROOT/deploy.sh"

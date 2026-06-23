@@ -12,7 +12,13 @@ class RolesPermissionsSeeder extends Seeder
      */
     public function run(): void
     {
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        // Clearing the permission cache must not abort seeding if the configured
+        // cache store (e.g. database) is not yet available during a fresh deploy.
+        try {
+            app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        } catch (\Throwable $e) {
+            // Cache not ready yet — safe to ignore on first deploy.
+        }
 
         $permissions = [
             // Agency management

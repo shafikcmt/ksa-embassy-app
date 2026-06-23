@@ -1,0 +1,25 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Root .htaccess for shared hosting where the domain document root is the
+# PROJECT ROOT (not /public). All requests are internally rewritten into the
+# public/ folder so Laravel's front controller (public/index.php) handles them.
+# The browser URL never shows "/public". Static files in public/ are served too.
+# ─────────────────────────────────────────────────────────────────────────────
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Optional: force HTTPS (uncomment if you have a valid SSL certificate)
+    # RewriteCond %{HTTPS} !=on
+    # RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    # Do not rewrite requests that already point inside public/.
+    RewriteCond %{REQUEST_URI} !^/public/
+
+    # Route everything (pages + static assets) into the public/ directory.
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# Block direct browser access to sensitive dotfiles just in case.
+<FilesMatch "^\.(env|git|gitignore|cpanel\.yml)">
+    Require all denied
+</FilesMatch>
