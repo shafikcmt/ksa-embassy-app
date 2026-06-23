@@ -46,90 +46,84 @@ td, th { padding: 3pt 5pt; vertical-align: middle; font-size: 9pt; }
 {{-- ═══════════════════════════════════════ --}}
 @if(empty($_pdf))<div class="a4-page">@endif
 
-{{-- Arabic header --}}
-<div style="text-align:center;margin-bottom:10pt;direction:rtl;">
+{{-- Arabic title --}}
+<div style="text-align:center;margin-bottom:8pt;direction:rtl;">
   <div style="font-size:15pt;font-weight:bold;font-family:DejaVu Sans,sans-serif;">بيان بالجوازات المقدمة</div>
-  <div style="font-size:10pt;margin-top:4pt;font-family:DejaVu Sans,sans-serif;">
-    {{ $agency->name_ar ?? $agency->name }}
-    @if($agency->rl_number) &nbsp;&nbsp; رقم الرخصة : {{ $agency->rl_number }} @endif
-  </div>
-  <div style="font-size:9.5pt;margin-top:2pt;font-family:DejaVu Sans,sans-serif;">
-    التاريخ : {{ $list->list_date->format('d / m / Y') }}
-    &nbsp;&nbsp; رقم القائمة : {{ $list->list_no }}
-  </div>
 </div>
 
-@php $arGrandTotal = 0; @endphp
+{{-- Office / license / date / signature header grid (RTL — matches reference) --}}
+<table style="direction:rtl;font-size:10pt;margin-bottom:10pt;border-collapse:collapse;font-family:DejaVu Sans,sans-serif;">
+  <colgroup>
+    <col style="width:14%"><col style="width:38%"><col style="width:14%"><col style="width:34%">
+  </colgroup>
+  <tr>
+    <td style="text-align:right;padding:3pt 6pt;">اسم المكتب :</td>
+    <td style="text-align:center;font-weight:bold;padding:3pt 6pt;direction:ltr;">{{ $agency->name }}</td>
+    <td style="text-align:right;padding:3pt 6pt;">رقم الرخصة :</td>
+    <td style="text-align:right;font-weight:bold;padding:3pt 6pt;direction:ltr;">{{ $agency->rl_number ?: '—' }}</td>
+  </tr>
+  <tr>
+    <td style="text-align:right;padding:3pt 6pt;">توقيع :</td>
+    <td style="padding:3pt 6pt;">&nbsp;</td>
+    <td style="text-align:right;padding:3pt 6pt;">التاريخ :</td>
+    <td style="text-align:right;font-weight:bold;padding:3pt 6pt;direction:ltr;">{{ $list->list_date->format('d M, Y') }}</td>
+  </tr>
+</table>
 
-@foreach($categoryOrder as $category)
-@if(isset($itemsByCategory[$category]) && $itemsByCategory[$category]->count() > 0)
-@php $items = $itemsByCategory[$category]; $arGrandTotal += $items->count(); @endphp
-
-{{-- Arabic category heading --}}
-@php
-$arLabels = ['new' => 'تأشيرات جديدة', 'restamping' => 'تجديد التأشيرة', 'cancellation' => 'إلغاء التأشيرة'];
-$arCatLabel = $arLabels[$category] ?? $categoryLabels[$category];
-@endphp
-<div style="direction:rtl;font-size:10pt;font-weight:bold;padding:3pt 6pt;margin:8pt 0 3pt;border-right:4pt solid #000;background:#f0f0f0;font-family:DejaVu Sans,sans-serif;">{{ $arCatLabel }}</div>
-
-<table class="bdr" style="direction:rtl;font-size:8.5pt;">
+{{-- Single combined table: column header + bilingual category bars + rows + group totals --}}
+<table class="bdr" style="direction:rtl;font-size:8.5pt;font-family:DejaVu Sans,sans-serif;">
+  <colgroup>
+    <col style="width:28px"><col style="width:18%"><col><col style="width:16%"><col style="width:11%"><col style="width:16%">
+  </colgroup>
   <thead>
     <tr style="background:#ddd;">
-      <th style="border:1px solid #000;padding:3pt 4pt;text-align:center;width:28px;font-family:DejaVu Sans,sans-serif;">ت</th>
-      <th style="border:1px solid #000;padding:3pt 4pt;text-align:right;width:18%;font-family:DejaVu Sans,sans-serif;">رقم الجوازات</th>
-      <th style="border:1px solid #000;padding:3pt 4pt;text-align:right;font-family:DejaVu Sans,sans-serif;">اسم الكفيل</th>
-      <th style="border:1px solid #000;padding:3pt 4pt;text-align:right;width:16%;font-family:DejaVu Sans,sans-serif;">رقم التأشيرة</th>
-      <th style="border:1px solid #000;padding:3pt 4pt;text-align:center;width:13%;font-family:DejaVu Sans,sans-serif;">التاريخ</th>
-      <th style="border:1px solid #000;padding:3pt 4pt;text-align:right;width:16%;font-family:DejaVu Sans,sans-serif;">المهنة</th>
+      <th style="border:1px solid #000;padding:3pt 4pt;text-align:center;">ت</th>
+      <th style="border:1px solid #000;padding:3pt 4pt;text-align:center;">رقم الجوازات</th>
+      <th style="border:1px solid #000;padding:3pt 4pt;text-align:center;">اسم الكفيل</th>
+      <th style="border:1px solid #000;padding:3pt 4pt;text-align:center;">رقم التأشيرة</th>
+      <th style="border:1px solid #000;padding:3pt 4pt;text-align:center;">التاريخ</th>
+      <th style="border:1px solid #000;padding:3pt 4pt;text-align:center;">المهنة</th>
     </tr>
   </thead>
   <tbody>
+    @foreach($categoryOrder as $category)
+    @php $items = $itemsByCategory[$category] ?? collect(); @endphp
+    {{-- bilingual category bar — always shown, like the reference (incl. empty Cancellation) --}}
+    <tr>
+      <td colspan="6" style="border:1px solid #000;padding:3pt 4pt;text-align:center;font-weight:bold;background:#f0f0f0;direction:rtl;">{{ $categoryLabelsBi[$category] }}</td>
+    </tr>
     @foreach($items as $item)
     <tr @if($loop->even) style="background:#f9f9f9;" @endif>
       <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;">{{ $loop->iteration }}</td>
-      <td style="border:1px solid #000;padding:2pt 4pt;text-align:right;direction:ltr;font-weight:bold;">{{ $item->snapshot_passport_no ?? '—' }}</td>
-      <td style="border:1px solid #000;padding:2pt 4pt;text-align:right;font-family:DejaVu Sans,sans-serif;">{{ $item->snapshot_sponsor_name ?? '—' }}</td>
-      <td style="border:1px solid #000;padding:2pt 4pt;text-align:right;direction:ltr;">{{ $item->snapshot_visa_no ?? '—' }}</td>
-      <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;direction:ltr;">{{ $list->list_date->format('d/m/Y') }}</td>
-      <td style="border:1px solid #000;padding:2pt 4pt;text-align:right;font-family:DejaVu Sans,sans-serif;">{{ $item->snapshot_profession_ar ?? $item->snapshot_profession_en ?? '—' }}</td>
+      <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;direction:ltr;font-weight:bold;">{{ $item->snapshot_passport_no ?? '—' }}</td>
+      <td style="border:1px solid #000;padding:2pt 6pt;text-align:right;">{{ $item->snapshot_sponsor_name ?? '—' }}</td>
+      <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;direction:ltr;">{{ $item->snapshot_visa_no ?? '—' }}</td>
+      <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;direction:ltr;">{{ $hijriYear ?? '—' }}</td>
+      <td style="border:1px solid #000;padding:2pt 6pt;text-align:right;">{{ $item->snapshot_profession_ar ?? $item->snapshot_profession_en ?? '—' }}</td>
     </tr>
     @endforeach
+    @if($items->count() > 0)
     <tr style="font-weight:bold;background:#ececec;">
-      <td colspan="5" style="border:1px solid #000;padding:2pt 4pt;text-align:right;direction:rtl;font-family:DejaVu Sans,sans-serif;">المجموعة :</td>
-      <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;">{{ $items->count() }}</td>
+      <td colspan="6" style="border:1px solid #000;padding:2pt 6pt;text-align:right;direction:rtl;">المجموعة : {{ $items->count() }}</td>
     </tr>
+    @endif
+    @endforeach
   </tbody>
 </table>
 
-@endif
-@endforeach
-
-{{-- Arabic grand total --}}
-<div style="margin-top:8pt;direction:rtl;font-size:10pt;font-family:DejaVu Sans,sans-serif;">
-  <strong>المجموع الكلي : {{ $arGrandTotal }}</strong>
-</div>
-
-{{-- Arabic signatures --}}
-<table style="margin-top:20pt;font-size:9pt;">
+{{-- Arabic signatures — 2 columns × 3 rows (matches reference) --}}
+<table style="margin-top:22pt;direction:rtl;font-size:10pt;width:60%;font-family:DejaVu Sans,sans-serif;">
   <tr>
-    <td style="width:16%;text-align:center;vertical-align:bottom;padding:0 3pt;">
-      <div style="border-top:1px solid #000;padding-top:3pt;font-family:DejaVu Sans,sans-serif;">المستلم</div>
-    </td>
-    <td style="width:16%;text-align:center;vertical-align:bottom;padding:0 3pt;">
-      <div style="border-top:1px solid #000;padding-top:3pt;font-family:DejaVu Sans,sans-serif;">الختم</div>
-    </td>
-    <td style="width:17%;text-align:center;vertical-align:bottom;padding:0 3pt;">
-      <div style="border-top:1px solid #000;padding-top:3pt;font-family:DejaVu Sans,sans-serif;">المدقق</div>
-    </td>
-    <td style="width:17%;text-align:center;vertical-align:bottom;padding:0 3pt;">
-      <div style="border-top:1px solid #000;padding-top:3pt;font-family:DejaVu Sans,sans-serif;">التعبئة</div>
-    </td>
-    <td style="width:17%;text-align:center;vertical-align:bottom;padding:0 3pt;">
-      <div style="border-top:1px solid #000;padding-top:3pt;font-family:DejaVu Sans,sans-serif;">المسئول</div>
-    </td>
-    <td style="width:17%;text-align:center;vertical-align:bottom;padding:0 3pt;">
-      <div style="border-top:1px solid #000;padding-top:3pt;font-family:DejaVu Sans,sans-serif;">التسجيل</div>
-    </td>
+    <td style="text-align:right;padding:8pt 6pt;">المستلم :</td>
+    <td style="text-align:right;padding:8pt 6pt;">الختم :</td>
+  </tr>
+  <tr>
+    <td style="text-align:right;padding:8pt 6pt;">المدقق :</td>
+    <td style="text-align:right;padding:8pt 6pt;">التعبئة :</td>
+  </tr>
+  <tr>
+    <td style="text-align:right;padding:8pt 6pt;">المسئول :</td>
+    <td style="text-align:right;padding:8pt 6pt;">التسجيل :</td>
   </tr>
 </table>
 
@@ -143,86 +137,55 @@ $arCatLabel = $arLabels[$category] ?? $categoryLabels[$category];
 {{-- ═══════════════════════════════════════ --}}
 
 {{-- English header --}}
-<div style="text-align:center;margin-bottom:8pt;border-bottom:2px solid #000;padding-bottom:8pt;">
-  <div style="font-size:15pt;font-weight:bold;">{{ $agency->name }}{{ $agency->rl_number ? ' - RL' . $agency->rl_number : '' }}</div>
-  @if($agency->license_number)<div style="font-size:9pt;">License: {{ $agency->license_number }}</div>@endif
-  <div style="font-size:12pt;font-weight:bold;margin-top:4pt;text-transform:uppercase;letter-spacing:1pt;">Embassy List</div>
-  <div style="font-size:10pt;margin-top:2pt;">
-    List No: <strong>{{ $list->list_no }}</strong>
-    &nbsp;&nbsp;&nbsp;
-    Date: <strong>{{ $list->list_date->format('d / m / Y') }}</strong>
-    @if($list->title) &nbsp;&nbsp;&nbsp; {{ $list->title }} @endif
-  </div>
+@php
+  // Reference shows "<name> - RL1001". Avoid "RLRL…" when rl_number already starts with RL.
+  $rl = $agency->rl_number;
+  $rlSuffix = $rl ? (\Illuminate\Support\Str::startsWith(strtoupper($rl), 'RL') ? ' - ' . $rl : ' - RL' . $rl) : '';
+@endphp
+<div style="text-align:center;margin-bottom:10pt;">
+  <div style="font-size:18pt;font-weight:bold;">{{ $agency->name }}{{ $rlSuffix }}</div>
+  <div style="font-size:13pt;font-weight:bold;margin-top:2pt;">Embassy List - {{ $list->list_date->format('d M, Y') }}</div>
 </div>
 
-@php $grandTotal = 0; @endphp
-
-@foreach($categoryOrder as $category)
-@if(isset($itemsByCategory[$category]) && $itemsByCategory[$category]->count() > 0)
-@php $items = $itemsByCategory[$category]; $grandTotal += $items->count(); @endphp
-
-<div style="font-size:10pt;font-weight:bold;padding:3pt 6pt;margin:8pt 0 3pt;border-left:4pt solid #000;background:#f0f0f0;">
-  {{ $categoryLabels[$category] }}
-</div>
-
-<table style="border-collapse:collapse;font-size:8.5pt;">
+{{-- Single combined table: column header + bilingual category bars + rows + group totals --}}
+<table class="bdr" style="border-collapse:collapse;font-size:8.5pt;">
+  <colgroup>
+    <col style="width:28px"><col style="width:20%"><col><col style="width:15%"><col style="width:14%"><col style="width:16%">
+  </colgroup>
   <thead>
     <tr style="background:#ddd;">
-      <th style="border:1px solid #888;padding:3pt 4pt;text-align:center;width:28px;">SL</th>
-      <th style="border:1px solid #888;padding:3pt 4pt;text-align:left;width:18%;">Agent Name</th>
-      <th style="border:1px solid #888;padding:3pt 4pt;text-align:left;">Candidate Name</th>
-      <th style="border:1px solid #888;padding:3pt 4pt;text-align:left;width:15%;">Passport No.</th>
-      <th style="border:1px solid #888;padding:3pt 4pt;text-align:left;width:14%;">Visa No.</th>
-      <th style="border:1px solid #888;padding:3pt 4pt;text-align:left;width:16%;">Profession</th>
+      <th style="border:1px solid #000;padding:3pt 4pt;text-align:center;">SL.</th>
+      <th style="border:1px solid #000;padding:3pt 4pt;text-align:left;">Agent Name</th>
+      <th style="border:1px solid #000;padding:3pt 4pt;text-align:left;">Name</th>
+      <th style="border:1px solid #000;padding:3pt 4pt;text-align:left;">Passport No.</th>
+      <th style="border:1px solid #000;padding:3pt 4pt;text-align:left;">Visa No</th>
+      <th style="border:1px solid #000;padding:3pt 4pt;text-align:left;">Profession</th>
     </tr>
   </thead>
   <tbody>
+    @foreach($categoryOrder as $category)
+    @php $items = $itemsByCategory[$category] ?? collect(); @endphp
+    {{-- bilingual category bar — always shown, like the reference (incl. empty Cancellation) --}}
+    <tr>
+      <td colspan="6" style="border:1px solid #000;padding:3pt 4pt;text-align:center;font-weight:bold;background:#f0f0f0;">{{ $categoryLabelsBi[$category] }}</td>
+    </tr>
     @foreach($items as $item)
     <tr @if($loop->even) style="background:#f9f9f9;" @endif>
-      <td style="border:1px solid #bbb;padding:2pt 4pt;text-align:center;">{{ $loop->iteration }}</td>
-      <td style="border:1px solid #bbb;padding:2pt 4pt;">{{ $item->snapshot_agent_name ?? '—' }}</td>
-      <td style="border:1px solid #bbb;padding:2pt 4pt;">
-        {{ $item->snapshot_candidate_name }}
-        @if($item->snapshot_candidate_name_ar)
-        <br><span style="font-size:8pt;color:#555;direction:rtl;font-family:DejaVu Sans,sans-serif;">{{ $item->snapshot_candidate_name_ar }}</span>
-        @endif
-      </td>
-      <td style="border:1px solid #bbb;padding:2pt 4pt;font-weight:bold;">{{ $item->snapshot_passport_no ?? '—' }}</td>
-      <td style="border:1px solid #bbb;padding:2pt 4pt;">{{ $item->snapshot_visa_no ?? '—' }}</td>
-      <td style="border:1px solid #bbb;padding:2pt 4pt;">{{ $item->snapshot_profession_en ?? '—' }}</td>
+      <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;">{{ $loop->iteration }}</td>
+      <td style="border:1px solid #000;padding:2pt 4pt;">{{ $item->snapshot_agent_name ?? '—' }}</td>
+      <td style="border:1px solid #000;padding:2pt 4pt;">{{ $item->snapshot_candidate_name }}</td>
+      <td style="border:1px solid #000;padding:2pt 4pt;font-weight:bold;">{{ $item->snapshot_passport_no ?? '—' }}</td>
+      <td style="border:1px solid #000;padding:2pt 4pt;">{{ $item->snapshot_visa_no ?? '—' }}</td>
+      <td style="border:1px solid #000;padding:2pt 4pt;@if($item->snapshot_profession_ar)direction:rtl;text-align:right;font-family:DejaVu Sans,sans-serif;@endif">{{ $item->snapshot_profession_ar ?? $item->snapshot_profession_en ?? '—' }}</td>
     </tr>
     @endforeach
+    @if($items->count() > 0)
     <tr style="font-weight:bold;background:#ececec;">
-      <td colspan="5" style="border:1px solid #bbb;padding:2pt 4pt;text-align:right;">{{ $categoryLabels[$category] }} Total:</td>
-      <td style="border:1px solid #bbb;padding:2pt 4pt;">{{ $items->count() }}</td>
+      <td colspan="6" style="border:1px solid #000;padding:2pt 6pt;text-align:right;direction:rtl;font-family:DejaVu Sans,sans-serif;">المجموعة : {{ $items->count() }}</td>
     </tr>
+    @endif
+    @endforeach
   </tbody>
-</table>
-
-@endif
-@endforeach
-
-{{-- English grand total --}}
-<div style="margin-top:8pt;padding:5pt 8pt;border:2px solid #000;font-size:10.5pt;">
-  Grand Total: <strong>{{ $grandTotal }}</strong> Candidate(s)
-  @if($list->total_new > 0) &nbsp;|&nbsp; New: {{ $list->total_new }} @endif
-  @if($list->total_restamping > 0) &nbsp;|&nbsp; Re-stamp: {{ $list->total_restamping }} @endif
-  @if($list->total_cancellation > 0) &nbsp;|&nbsp; Cancel: {{ $list->total_cancellation }} @endif
-</div>
-
-{{-- English signatures --}}
-<table style="margin-top:20pt;">
-  <tr>
-    <td style="width:33%;text-align:center;padding:0 6pt;vertical-align:bottom;">
-      <div style="border-top:1px solid #000;padding-top:3pt;font-size:8.5pt;">Agency Representative<br>Name &amp; Stamp</div>
-    </td>
-    <td style="width:33%;text-align:center;padding:0 6pt;vertical-align:bottom;">
-      <div style="border-top:1px solid #000;padding-top:3pt;font-size:8.5pt;">Prepared By<br><small>{{ $list->createdBy?->name ?? '—' }}</small></div>
-    </td>
-    <td style="width:33%;text-align:center;padding:0 6pt;vertical-align:bottom;">
-      <div style="border-top:1px solid #000;padding-top:3pt;font-size:8.5pt;">Embassy Stamp<br>&nbsp;</div>
-    </td>
-  </tr>
 </table>
 
 @if(empty($_pdf))</div>@endif

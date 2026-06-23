@@ -19,7 +19,7 @@ class HrProfileController extends Controller
 
         $agencyId = auth()->user()->agency_id;
 
-        $query = HrProfile::with(['agent'])
+        $query = HrProfile::with(['agent', 'passport'])
             ->forAgency($agencyId)
             ->latest();
 
@@ -41,6 +41,10 @@ class HrProfileController extends Controller
             $query->where('agent_id', $agentId);
         }
 
+        if ($nationality = $request->input('nationality')) {
+            $query->where('nationality', $nationality);
+        }
+
         if ($request->input('filter') === 'passport_expiring') {
             $query->whereHas('passport', fn($q) => $q
                 ->whereNotNull('expiry_date')
@@ -52,11 +56,19 @@ class HrProfileController extends Controller
 
         $agents = Agent::forAgency($agencyId)->active()->orderBy('name')->get();
 
+        $nationalities = HrProfile::forAgency($agencyId)
+            ->whereNotNull('nationality')->where('nationality', '!=', '')
+            ->distinct()->orderBy('nationality')->pluck('nationality');
+
         $subscription = auth()->user()->agency?->activeSubscription;
         $planLimit    = $subscription?->plan?->max_hr ?? 0;
         $totalHr      = HrProfile::forAgency($agencyId)->count();
+        $statusCounts = HrProfile::forAgency($agencyId)
+            ->selectRaw('status, COUNT(*) as c')->groupBy('status')->pluck('c', 'status');
 
-        return view('agency.hr.index', compact('hrProfiles', 'agents', 'planLimit', 'totalHr'));
+        return view('agency.hr.index', compact(
+            'hrProfiles', 'agents', 'nationalities', 'planLimit', 'totalHr', 'statusCounts'
+        ));
     }
 
     public function create()
@@ -173,8 +185,20 @@ class HrProfileController extends Controller
 
         AuditLog::record('create', $hrProfile, [], $hrProfile->toArray());
 
-        return redirect()->route('hr.show', $hrProfile)
-            ->with('success', 'HR profile created successfully.');
+        return $this->afterSaveRedirect($request, $hrProfile, 'HR profile created successfully.');
+    }
+
+    /**
+     * Redirect after a successful save, honouring the wizard's "after_save" choice:
+     * save & view (default), save & add another, or save & generate documents.
+     */
+    private function afterSaveRedirect(Request $request, HrProfile $hr, string $message)
+    {
+        return match ($request->input('after_save')) {
+            'add_another' => redirect()->route('hr.create')->with('success', $message.' Add another below.'),
+            'documents'   => redirect()->route('hr.documents', $hr)->with('success', $message),
+            default       => redirect()->route('hr.show', $hr)->with('success', $message),
+        };
     }
 
     public function show(HrProfile $hr)
@@ -308,8 +332,7 @@ class HrProfileController extends Controller
 
         AuditLog::record('update', $hr, $oldValues, $hr->fresh()->toArray());
 
-        return redirect()->route('hr.show', $hr)
-            ->with('success', 'HR profile updated successfully.');
+        return $this->afterSaveRedirect($request, $hr, 'HR profile updated successfully.');
     }
 
     public function destroy(HrProfile $hr)

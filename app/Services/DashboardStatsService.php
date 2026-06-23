@@ -58,22 +58,22 @@ class DashboardStatsService
         $alerts = [];
         $now    = now();
 
-        // Subscription alerts
+        // Subscription alerts (billing — admin only, see $billingScope flag)
         if (! $subscription) {
-            $alerts[] = ['type' => 'danger', 'icon' => 'bi-credit-card-x', 'message' => 'No active subscription. You cannot create new records or generate PDFs.', 'action' => route('subscription.expired'), 'action_label' => 'Request Renewal'];
+            $alerts[] = ['scope' => 'billing', 'title' => 'No active subscription', 'type' => 'danger', 'icon' => 'bi-credit-card-x', 'message' => 'No active subscription. You cannot create new records or generate PDFs.', 'action' => route('subscription.expired'), 'action_label' => 'Request Renewal'];
         } elseif ($subscription->daysRemaining() <= 3) {
-            $alerts[] = ['type' => 'danger', 'icon' => 'bi-clock', 'message' => "Subscription expires in <strong>{$subscription->daysRemaining()} day(s)</strong> on {$subscription->end_date->format('d M Y')}. Renew now to avoid disruption.", 'action' => route('subscription.expired'), 'action_label' => 'Renew'];
+            $alerts[] = ['scope' => 'billing', 'title' => 'Subscription expiring', 'type' => 'danger', 'icon' => 'bi-clock', 'message' => "Subscription expires in <strong>{$subscription->daysRemaining()} day(s)</strong> on {$subscription->end_date->format('d M Y')}. Renew now to avoid disruption.", 'action' => route('subscription.expired'), 'action_label' => 'Renew'];
         } elseif ($subscription->daysRemaining() <= 7) {
-            $alerts[] = ['type' => 'warning', 'icon' => 'bi-clock', 'message' => "Subscription expires in <strong>{$subscription->daysRemaining()} days</strong> on {$subscription->end_date->format('d M Y')}.", 'action' => route('subscription.expired'), 'action_label' => 'Renew'];
+            $alerts[] = ['scope' => 'billing', 'title' => 'Subscription expiring', 'type' => 'warning', 'icon' => 'bi-clock', 'message' => "Subscription expires in <strong>{$subscription->daysRemaining()} days</strong> on {$subscription->end_date->format('d M Y')}.", 'action' => route('subscription.expired'), 'action_label' => 'Renew'];
         }
 
         // License expiry
         if ($agency?->license_expiry_date) {
             $days = (int) $now->diffInDays($agency->license_expiry_date, false);
             if ($days >= 0 && $days <= 30) {
-                $alerts[] = ['type' => 'warning', 'icon' => 'bi-file-earmark-x', 'message' => "Agency license expires in <strong>{$days} day(s)</strong> on {$agency->license_expiry_date->format('d M Y')}. Please renew.", 'action' => null, 'action_label' => null];
+                $alerts[] = ['scope' => 'billing', 'title' => 'License expiring', 'type' => 'warning', 'icon' => 'bi-file-earmark-x', 'message' => "Agency license expires in <strong>{$days} day(s)</strong> on {$agency->license_expiry_date->format('d M Y')}. Please renew.", 'action' => null, 'action_label' => null];
             } elseif ($days < 0) {
-                $alerts[] = ['type' => 'danger', 'icon' => 'bi-file-earmark-x', 'message' => "Agency license has <strong>expired</strong> on {$agency->license_expiry_date->format('d M Y')}. Please renew immediately.", 'action' => null, 'action_label' => null];
+                $alerts[] = ['scope' => 'billing', 'title' => 'License expired', 'type' => 'danger', 'icon' => 'bi-file-earmark-x', 'message' => "Agency license has <strong>expired</strong> on {$agency->license_expiry_date->format('d M Y')}. Please renew immediately.", 'action' => null, 'action_label' => null];
             }
         }
 
@@ -88,9 +88,9 @@ class DashboardStatsService
                     ->count();
                 $pct = ($pdfUsed / $pdfLimit) * 100;
                 if ($pdfUsed >= $pdfLimit) {
-                    $alerts[] = ['type' => 'danger', 'icon' => 'bi-printer', 'message' => "Monthly PDF download limit reached (<strong>{$pdfUsed}/{$pdfLimit}</strong>). Upgrade your plan or wait until next month.", 'action' => null, 'action_label' => null];
+                    $alerts[] = ['scope' => 'billing', 'title' => 'PDF limit reached', 'type' => 'danger', 'icon' => 'bi-printer', 'message' => "Monthly PDF download limit reached (<strong>{$pdfUsed}/{$pdfLimit}</strong>). Upgrade your plan or wait until next month.", 'action' => null, 'action_label' => null];
                 } elseif ($pct >= 80) {
-                    $alerts[] = ['type' => 'warning', 'icon' => 'bi-printer', 'message' => "PDF download usage at <strong>{$pdfUsed}/{$pdfLimit}</strong> (" . round($pct) . "%). Approaching monthly limit.", 'action' => null, 'action_label' => null];
+                    $alerts[] = ['scope' => 'billing', 'title' => 'PDF usage high', 'type' => 'warning', 'icon' => 'bi-printer', 'message' => "PDF download usage at <strong>{$pdfUsed}/{$pdfLimit}</strong> (" . round($pct) . "%). Approaching monthly limit.", 'action' => null, 'action_label' => null];
                 }
             }
         }
@@ -101,7 +101,7 @@ class DashboardStatsService
             ->whereBetween('expiry_date', [$now, $now->copy()->addMonths(6)])
             ->count();
         if ($expiring > 0) {
-            $alerts[] = ['type' => 'warning', 'icon' => 'bi-passport', 'message' => "<strong>{$expiring}</strong> candidate passport(s) will expire within the next 6 months.", 'action' => route('hr.index', ['filter' => 'passport_expiring']), 'action_label' => 'View'];
+            $alerts[] = ['scope' => 'operations', 'title' => 'Passports expiring', 'type' => 'warning', 'icon' => 'bi-passport', 'message' => "<strong>{$expiring}</strong> candidate passport(s) will expire within the next 6 months.", 'action' => route('hr.index', ['filter' => 'passport_expiring']), 'action_label' => 'View'];
         }
 
         // Incomplete HR records (active, no passport)
@@ -110,13 +110,13 @@ class DashboardStatsService
             ->where('status', 'active')
             ->count();
         if ($incomplete > 0) {
-            $alerts[] = ['type' => 'info', 'icon' => 'bi-person-exclamation', 'message' => "<strong>{$incomplete}</strong> active HR profile(s) missing passport information.", 'action' => route('hr.index'), 'action_label' => 'View'];
+            $alerts[] = ['scope' => 'operations', 'title' => 'Incomplete profiles', 'type' => 'info', 'icon' => 'bi-person-exclamation', 'message' => "<strong>{$incomplete}</strong> active HR profile(s) missing passport information.", 'action' => route('hr.index'), 'action_label' => 'View'];
         }
 
         // Draft embassy lists
         $drafts = EmbassyList::where('agency_id', $agencyId)->where('status', 'draft')->count();
         if ($drafts > 0) {
-            $alerts[] = ['type' => 'info', 'icon' => 'bi-list-ol', 'message' => "<strong>{$drafts}</strong> embassy list(s) still in draft — finalize to submit to embassy.", 'action' => route('embassy-lists.index', ['status' => 'draft']), 'action_label' => 'View'];
+            $alerts[] = ['scope' => 'operations', 'title' => 'Embassy list drafts', 'type' => 'info', 'icon' => 'bi-list-ol', 'message' => "<strong>{$drafts}</strong> embassy list(s) still in draft — finalize to submit to embassy.", 'action' => route('embassy-lists.index', ['status' => 'draft']), 'action_label' => 'View'];
         }
 
         return $alerts;

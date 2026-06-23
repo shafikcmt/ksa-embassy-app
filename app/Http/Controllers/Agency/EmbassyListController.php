@@ -74,8 +74,9 @@ class EmbassyListController extends Controller
         $agencyId      = auth()->user()->agency_id;
         $agents        = Agent::forAgency($agencyId)->active()->orderBy('name')->get();
         $availableHr   = $this->loadAvailableHr($agencyId);
+        $listedHrIds   = $this->hrIdsInActiveLists($agencyId);
 
-        return view('agency.embassy-lists.create', compact('agents', 'availableHr'));
+        return view('agency.embassy-lists.create', compact('agents', 'availableHr', 'listedHrIds'));
     }
 
     public function store(StoreEmbassyListRequest $request)
@@ -160,6 +161,7 @@ class EmbassyListController extends Controller
         $agencyId    = auth()->user()->agency_id;
         $agents      = Agent::forAgency($agencyId)->active()->orderBy('name')->get();
         $availableHr = $this->loadAvailableHr($agencyId, $embassyList->id);
+        $listedHrIds = $this->hrIdsInActiveLists($agencyId, $embassyList->id);
 
         // Build map of currently selected items: hr_profile_id => category
         $selectedItems = $embassyList->items()
@@ -167,7 +169,7 @@ class EmbassyListController extends Controller
             ->get()
             ->mapWithKeys(fn($item) => [$item->hr_profile_id => $item->category]);
 
-        return view('agency.embassy-lists.edit', compact('embassyList', 'agents', 'availableHr', 'selectedItems'));
+        return view('agency.embassy-lists.edit', compact('embassyList', 'agents', 'availableHr', 'selectedItems', 'listedHrIds'));
     }
 
     public function update(UpdateEmbassyListRequest $request, EmbassyList $embassyList)
@@ -419,6 +421,19 @@ class EmbassyListController extends Controller
             'snapshot_sponsor_id'        => $hr->visa?->sponsor_id,
             'snapshot_nationality'       => $hr->nationality,
         ];
+    }
+
+    /**
+     * HR profile IDs already present in another draft/finalized/printed list
+     * (used to flag "Already in a list" badges in the builder).
+     */
+    private function hrIdsInActiveLists(int $agencyId, ?int $excludeListId = null)
+    {
+        return EmbassyListItem::whereHas('embassyList', function ($q) use ($agencyId, $excludeListId) {
+            $q->where('agency_id', $agencyId)
+              ->whereIn('status', ['draft', 'finalized', 'printed'])
+              ->when($excludeListId, fn($q) => $q->where('id', '!=', $excludeListId));
+        })->pluck('hr_profile_id')->unique()->values();
     }
 
     private function loadAvailableHr(int $agencyId, ?int $excludeListId = null)

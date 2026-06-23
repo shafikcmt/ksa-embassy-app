@@ -12,20 +12,20 @@ $barColor  = $pct >= 100 ? '#ef4444' : ($pct >= 80 ? '#f59e0b' : match($color) {
 });
 @endphp
 
-<div class="mb-2">
+<div class="mb-3">
     <div class="d-flex justify-content-between align-items-center mb-1" style="font-size:.78rem;">
-        <span class="text-muted">{{ $label }}</span>
+        <span style="color:#475569;font-weight:500;">{{ $label }}</span>
         @if($unlimited)
             <span class="text-success fw-semibold"><i class="bi bi-infinity"></i> Unlimited</span>
         @else
-            <span class="fw-semibold {{ $pct >= 100 ? 'text-danger' : ($pct >= 80 ? 'text-warning' : '') }}">
-                {{ number_format($used) }} / {{ number_format($limit) }}
+            <span class="fw-semibold {{ $pct >= 100 ? 'text-danger' : ($pct >= 80 ? 'text-warning' : 'text-slate' ) }}" style="color:#334155;">
+                {{ number_format($used) }} <span style="color:#94a3b8;font-weight:500;">/ {{ number_format($limit) }}</span>
             </span>
         @endif
     </div>
     @if(!$unlimited)
-    <div style="height:5px;background:#e5e7eb;border-radius:3px;overflow:hidden;">
-        <div style="width:{{ $pct }}%;height:100%;background:{{ $barColor }};border-radius:3px;transition:width .3s;"></div>
+    <div style="height:7px;background:#eef2f7;border-radius:999px;overflow:hidden;">
+        <div style="width:{{ max($pct, 2) }}%;height:100%;background:linear-gradient(90deg,{{ $barColor }},{{ $barColor }}cc);border-radius:999px;transition:width .4s ease;"></div>
     </div>
     @endif
 </div>

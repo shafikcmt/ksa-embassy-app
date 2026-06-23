@@ -70,6 +70,7 @@ class PrintDataMapper
             'visa_no'              => $visa?->visa_number ?? '',
             'visa_type'            => $visa?->visa_type ?? '',
             'visa_date'            => $visa?->issue_date?->format('d/m/Y') ?? '',
+            'visa_date_hijri'      => self::hijriString($visa?->issue_date),
             'visa_expiry_date'     => $visa?->expiry_date?->format('d/m/Y') ?? '',
             'visa_issue_place_en'  => $visa?->issue_place ?? '',
             'visa_issue_place_ar'  => $visa?->issue_place_ar ?? '',
@@ -136,6 +137,13 @@ class PrintDataMapper
         $categoryOrder  = ['restamping', 'new', 'cancellation'];
         $categoryLabels = ['restamping' => 'Re-Stamping', 'new' => 'New', 'cancellation' => 'Cancellation'];
 
+        // Bilingual category bars exactly as on the embassy reference (Arabic / English).
+        $categoryLabelsBi = [
+            'restamping'   => 'التجديد / Re-stamping',
+            'new'          => 'جديد / New',
+            'cancellation' => 'الغاء / Cancellation',
+        ];
+
         $itemsByCategory = $list->items()
             ->orderBy('serial_no')
             ->orderBy('sort_order')
@@ -143,11 +151,65 @@ class PrintDataMapper
             ->groupBy('category');
 
         return [
-            'list'            => $list,
-            'agency'          => $list->agency,
-            'categoryOrder'   => $categoryOrder,
-            'categoryLabels'  => $categoryLabels,
-            'itemsByCategory' => $itemsByCategory,
+            'list'             => $list,
+            'agency'           => $list->agency,
+            'categoryOrder'    => $categoryOrder,
+            'categoryLabels'   => $categoryLabels,
+            'categoryLabelsBi' => $categoryLabelsBi,
+            'itemsByCategory'  => $itemsByCategory,
+            // Hijri year shown in the "التاريخ / Year" column (e.g. 1447), derived
+            // from the list date. intl is not available, so use a tabular conversion.
+            'hijriYear'        => $list->list_date ? self::gregorianToHijriYear(
+                (int) $list->list_date->year,
+                (int) $list->list_date->month,
+                (int) $list->list_date->day,
+            ) : null,
         ];
+    }
+
+    /**
+     * Convert a Gregorian date to its Islamic (tabular) [year, month, day] — no
+     * intl/calendar extension required. Accurate enough for embassy print use.
+     *
+     * @return array{0:int,1:int,2:int}
+     */
+    private static function gregorianToHijri(int $gy, int $gm, int $gd): array
+    {
+        $a = intdiv(14 - $gm, 12);
+        $y = $gy + 4800 - $a;
+        $m = $gm + 12 * $a - 3;
+        $jdn = $gd + intdiv(153 * $m + 2, 5) + 365 * $y
+             + intdiv($y, 4) - intdiv($y, 100) + intdiv($y, 400) - 32045;
+
+        $l = $jdn - 1948440 + 10632;
+        $n = intdiv($l - 1, 10631);
+        $l = $l - 10631 * $n + 354;
+        $j = intdiv(10985 - $l, 5316) * intdiv(50 * $l, 17719)
+           + intdiv($l, 5670) * intdiv(43 * $l, 15238);
+        $l = $l - intdiv(30 - $j, 15) * intdiv(17719 * $j, 50)
+           - intdiv($j, 16) * intdiv(15238 * $j, 43) + 29;
+
+        $hm = intdiv(24 * $l, 709);
+        $hd = $l - intdiv(709 * $hm, 24);
+        $hy = 30 * $n + $j - 30;
+
+        return [$hy, $hm, $hd];
+    }
+
+    /** Hijri year only (e.g. 1447) for the embassy-list "التاريخ / Year" column. */
+    private static function gregorianToHijriYear(int $gy, int $gm, int $gd): int
+    {
+        return self::gregorianToHijri($gy, $gm, $gd)[0];
+    }
+
+    /** Format a Gregorian Carbon date as a Hijri string "YYYY/MM/DD" (e.g. 1447/11/25). */
+    private static function hijriString(?\Carbon\CarbonInterface $date): string
+    {
+        if (! $date) {
+            return '';
+        }
+        [$y, $m, $d] = self::gregorianToHijri((int) $date->year, (int) $date->month, (int) $date->day);
+
+        return sprintf('%d/%02d/%02d', $y, $m, $d);
     }
 }

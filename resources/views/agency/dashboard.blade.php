@@ -1,353 +1,468 @@
-@extends('layouts.agency')
+@extends('layouts.agency-app')
 @section('title', 'Dashboard')
 @section('page-title', 'Dashboard')
 
-@push('styles')
-<style>
-    .metric { border-radius: 12px; border: 1px solid #e2e8f0; background: #fff; padding: 1rem 1.1rem;
-        display: block; transition: transform .15s, box-shadow .15s; height: 100%; position: relative; overflow: hidden; }
-    .metric:hover { transform: translateY(-2px); box-shadow: 0 10px 24px -14px rgba(15,23,42,.35); }
-    .metric .m-ic { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; color: #fff; font-size: 1.1rem; }
-    .metric .m-label { font-size: .68rem; text-transform: uppercase; letter-spacing: .05em; color: #64748b; font-weight: 600; }
-    .metric .m-value { font-size: 1.7rem; font-weight: 800; line-height: 1.1; color: #0f172a; position: relative; z-index: 1; }
-    .metric .m-sub { font-size: .72rem; position: relative; z-index: 1; }
-    .metric .m-wm { position: absolute; right: .35rem; bottom: -.35rem; font-size: 3rem; line-height: 1; opacity: .06; color: #0f172a; pointer-events: none; }
-    .metric .m-go { color: #cbd5e1; font-size: .85rem; transition: transform .15s, color .15s; }
-    .metric:hover .m-go { color: var(--brand-blue, #2563eb); transform: translateX(2px); }
-    .m-blue{background:linear-gradient(135deg,#3b82f6,#2563eb)} .m-green{background:linear-gradient(135deg,#34d399,#059669)}
-    .m-amber{background:linear-gradient(135deg,#fbbf24,#d97706)} .m-violet{background:linear-gradient(135deg,#a78bfa,#7c3aed)}
-    .m-rose{background:linear-gradient(135deg,#fb7185,#e11d48)} .m-teal{background:linear-gradient(135deg,#2dd4bf,#0d9488)}
-    .qa { display: flex; align-items: center; gap: .7rem; padding: .85rem; border-radius: 10px; text-decoration: none;
-        border: 1px solid #e2e8f0; background: #fff; transition: .15s; height: 100%; }
-    .qa:hover { border-color: #cbd5e1; background: #f8fafc; transform: translateY(-1px); }
-    .qa .qa-ic { width: 38px; height: 38px; border-radius: 9px; display: grid; place-items: center; color: #fff; flex-shrink: 0; font-size: 1.05rem; }
-    .qa .qa-title { font-weight: 600; font-size: .82rem; color: #0f172a; }
-    .qa .qa-sub { font-size: .7rem; color: #64748b; }
-    .wq-item { display: flex; align-items: center; gap: .75rem; padding: .7rem .25rem; border-bottom: 1px solid #f1f5f9; }
-    .wq-item:last-child { border-bottom: 0; }
-    .wq-ic { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; flex-shrink: 0; font-size: .95rem; }
-    .header-card { border-radius: 14px; background: linear-gradient(120deg,#0f172a,#1e3a5f); color: #fff; padding: 1.1rem 1.35rem; }
-    .header-card .meta-chip { font-size: .72rem; background: rgba(255,255,255,.12); padding: .2rem .55rem; border-radius: 6px; color: #e2e8f0; }
-</style>
-@endpush
-
 @section('content')
 
-{{-- ── Header ─────────────────────────────────────────────── --}}
-<div class="header-card mb-3">
-    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
-        <div>
-            <h5 class="mb-1 fw-bold"><i class="bi bi-buildings me-1"></i> {{ $agency?->name }}</h5>
-            <div class="d-flex flex-wrap gap-2 align-items-center">
-                <span class="meta-chip"><i class="bi bi-calendar3 me-1"></i>{{ now()->format('l, d F Y') }}</span>
-                @if($agency?->rl_number)<span class="meta-chip">RL: {{ $agency->rl_number }}</span>@endif
-                @if($agency?->license_number)<span class="meta-chip">License: {{ $agency->license_number }}</span>@endif
-                @if($subscription)
-                    <span class="badge badge-status-{{ $subscription->status }}">{{ ucfirst($subscription->status) }} · {{ $subscription->plan->name ?? 'Plan' }}</span>
-                @else
-                    <span class="badge badge-status-expired">No subscription</span>
-                @endif
+@php
+    $authUser  = auth()->user();
+    $isAdmin   = method_exists($authUser, 'isAgencyAdmin') ? $authUser->isAgencyAdmin() : true;
+    $firstName = \Illuminate\Support\Str::of($authUser->name)->trim()->explode(' ')->first() ?: 'there';
+    $hour      = (int) now()->format('H');
+    $greeting  = $hour < 12 ? 'Good morning' : ($hour < 17 ? 'Good afternoon' : 'Good evening');
+
+    $canHr   = $authUser->can('create', \App\Models\HrProfile::class);
+    $canList = $authUser->can('create', \App\Models\EmbassyList::class);
+
+    // ── Onboarding workflow state (drives hero progress + steps) ──
+    $wf = [
+        ['num' => 1, 'icon' => 'bi-person-plus',     'title' => 'Add HR Profile',      'sub' => $stats['total_hr'].' profiles',           'done' => $stats['total_hr'] > 0,                                          'href' => $canHr ? route('hr.create') : route('hr.index')],
+        ['num' => 2, 'icon' => 'bi-clipboard-check', 'title' => 'Complete Information', 'sub' => $stats['hr_no_passport'] > 0 ? $stats['hr_no_passport'].' need passport' : 'Profiles ready', 'done' => $stats['total_hr'] > 0 && $stats['hr_no_passport'] === 0, 'href' => route('hr.index')],
+        ['num' => 3, 'icon' => 'bi-list-ol',         'title' => 'Create Embassy List', 'sub' => $stats['total_embassy_lists'].' lists',   'done' => $stats['total_embassy_lists'] > 0,                               'href' => $canList ? route('embassy-lists.create') : route('embassy-lists.index')],
+        ['num' => 4, 'icon' => 'bi-file-earmark-pdf','title' => 'Generate Documents',  'sub' => $stats['pdf_downloads_month'].' this month', 'done' => $stats['pdf_downloads_month'] > 0,                            'href' => route('hr.index')],
+        ['num' => 5, 'icon' => 'bi-printer',         'title' => 'Print / Download',    'sub' => 'Final output',                            'done' => $stats['pdf_downloads_month'] > 0,                               'href' => route('hr.index')],
+    ];
+    $wfTotal     = count($wf);
+    $wfDone      = collect($wf)->where('done', true)->count();
+    $wfActiveIdx = collect($wf)->search(fn($w) => ! $w['done']);   // false when all done
+    $wfPct       = (int) round($wfDone / $wfTotal * 100);
+
+    // ── Application (embassy list) status breakdown ──
+    $esc        = $embassyStatusCounts ?? collect();
+    $statusMeta = [
+        'draft'     => ['label' => 'Draft',     'tone' => 'amber',  'bar' => 'bg-amber-400',   'chip' => 'bg-amber-50 text-amber-700 ring-amber-200',     'icon' => 'bi-pencil-square'],
+        'finalized' => ['label' => 'Finalized', 'tone' => 'green',  'bar' => 'bg-emerald-400', 'chip' => 'bg-emerald-50 text-emerald-700 ring-emerald-200', 'icon' => 'bi-check2-circle'],
+        'printed'   => ['label' => 'Printed',   'tone' => 'brand',  'bar' => 'bg-brand-400',   'chip' => 'bg-brand-50 text-brand-700 ring-brand-200',     'icon' => 'bi-printer'],
+        'cancelled' => ['label' => 'Cancelled', 'tone' => 'slate',  'bar' => 'bg-slate-300',   'chip' => 'bg-slate-100 text-slate-600 ring-slate-200',    'icon' => 'bi-x-circle'],
+    ];
+    $escTotal = collect($statusMeta)->keys()->sum(fn($k) => (int) ($esc[$k] ?? 0));
+
+    // ── Upcoming reminders (real dates only) ──
+    $reminders = [];
+    if ($subscription && $subscription->end_date) {
+        $d = (int) now()->startOfDay()->diffInDays($subscription->end_date, false);
+        $reminders[] = ['icon' => 'bi-gem', 'dot' => $d <= 3 ? 'bg-rose-500' : ($d <= 7 ? 'bg-amber-500' : 'bg-emerald-500'),
+            'title' => 'Subscription '.($d < 0 ? 'expired' : 'renewal'), 'date' => $subscription->end_date, 'days' => $d, 'href' => route('subscription.expired')];
+    }
+    if ($agency?->license_expiry_date) {
+        $d = (int) now()->startOfDay()->diffInDays($agency->license_expiry_date, false);
+        if ($d <= 60) {
+            $reminders[] = ['icon' => 'bi-patch-check', 'dot' => $d < 0 ? 'bg-rose-500' : 'bg-amber-500',
+                'title' => 'Agency license '.($d < 0 ? 'expired' : 'expiry'), 'date' => $agency->license_expiry_date, 'days' => $d, 'href' => null];
+        }
+    }
+    foreach (($upcomingExpiries ?? collect()) as $p) {
+        $d = (int) now()->startOfDay()->diffInDays($p->expiry_date, false);
+        $reminders[] = ['icon' => 'bi-passport', 'dot' => $d <= 30 ? 'bg-rose-500' : 'bg-amber-500',
+            'title' => 'Passport · '.($p->hrProfile?->full_name_en ?? 'Candidate'), 'date' => $p->expiry_date, 'days' => $d,
+            'href' => route('hr.index', ['filter' => 'passport_expiring'])];
+    }
+    $reminders = collect($reminders)->sortBy('days')->take(6)->values();
+
+    // ── Plan-aware progress for summary cards ──
+    $maxHr  = $subscription->plan->max_hr ?? 0;
+    $maxPdf = $subscription->plan->max_pdf_monthly ?? 0;
+    $hrPct  = ($maxHr > 0 && $maxHr < 9999) ? round($stats['total_hr'] / $maxHr * 100) : null;
+    $pdfPct = ($maxPdf > 0 && $maxPdf < 9999) ? round($stats['pdf_downloads_month'] / $maxPdf * 100) : null;
+@endphp
+
+{{-- ════════ HERO ════════ --}}
+<div class="relative mb-5 overflow-hidden rounded-3xl bg-gradient-to-br from-violet-600 via-brand-600 to-cyan-500 p-6 text-white shadow-lift sm:p-7">
+    <div class="pointer-events-none absolute -right-12 -top-20 h-72 w-72 rounded-full bg-white/15 blur-3xl"></div>
+    <div class="pointer-events-none absolute -bottom-24 left-1/4 h-64 w-64 rounded-full bg-fuchsia-300/20 blur-3xl"></div>
+    <div class="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+        <div class="min-w-0">
+            <p class="text-sm font-medium text-white/80">{{ $greeting }},</p>
+            <h2 class="mt-0.5 truncate text-2xl font-bold tracking-tight sm:text-3xl">{{ $firstName }} 👋</h2>
+            <div class="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                <span class="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 backdrop-blur"><i class="bi bi-buildings"></i>{{ $agency?->name }}</span>
+                <span class="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 backdrop-blur"><i class="bi bi-person-badge"></i>{{ $isAdmin ? 'Agency Admin' : 'Agency Staff' }}</span>
+                <span class="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 backdrop-blur"><i class="bi bi-calendar3"></i>{{ now()->format('l, d M Y') }}</span>
+            </div>
+
+            {{-- Setup progress ribbon --}}
+            <div class="mt-5 max-w-md">
+                <div class="mb-1.5 flex items-center justify-between text-xs text-white/80">
+                    <span class="font-medium">{{ $wfDone === $wfTotal ? 'Workflow complete 🎉' : 'Setup progress' }}</span>
+                    <span class="font-semibold text-white">{{ $wfDone }}/{{ $wfTotal }} steps</span>
+                </div>
+                <div class="h-2 overflow-hidden rounded-full bg-white/20">
+                    <div class="h-full rounded-full bg-white transition-all duration-700" style="width: {{ max($wfPct, 4) }}%"></div>
+                </div>
             </div>
         </div>
-        <div class="d-flex flex-wrap gap-2">
+
+        <div class="flex flex-wrap gap-2">
             @can('create', \App\Models\HrProfile::class)
-            <a href="{{ route('hr.create') }}" class="btn btn-sm btn-light fw-semibold"><i class="bi bi-plus-lg me-1"></i> Add HR</a>
+                <a href="{{ route('hr.create') }}" class="inline-flex h-10 items-center gap-2 rounded-xl bg-white px-4 text-sm font-semibold text-violet-700 shadow-lg shadow-violet-950/20 transition hover:-translate-y-0.5 hover:shadow-xl"><i class="bi bi-plus-lg"></i> Add HR</a>
             @endcan
             @can('create', \App\Models\EmbassyList::class)
-            <a href="{{ route('embassy-lists.create') }}" class="btn btn-sm btn-outline-light"><i class="bi bi-list-ol me-1"></i> Embassy List</a>
+                <a href="{{ route('embassy-lists.create') }}" class="inline-flex h-10 items-center gap-2 rounded-xl border border-white/25 bg-white/10 px-4 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20"><i class="bi bi-list-ol"></i> Embassy List</a>
             @endcan
-            <a href="{{ route('hr.index') }}" class="btn btn-sm btn-outline-light"><i class="bi bi-file-earmark-pdf me-1"></i> Generate Documents</a>
+            <a href="{{ route('hr.index') }}" class="inline-flex h-10 items-center gap-2 rounded-xl border border-white/25 bg-white/10 px-4 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20"><i class="bi bi-file-earmark-pdf"></i> Documents</a>
         </div>
     </div>
 </div>
 
-{{-- ── Alerts ─────────────────────────────────────────────── --}}
-<x-alert-panel :alerts="$alerts" />
-
-{{-- Super-admin notices --}}
-@if($agency?->notices?->count())
-<div class="mb-3">
-    @foreach($agency->notices as $notice)
-    <div class="alert alert-{{ in_array($notice->type, ['danger','warning','info','success']) ? $notice->type : 'info' }} alert-dismissible fade show py-2" style="font-size:.82rem;border-radius:10px;">
-        <strong>{{ $notice->title }}:</strong> {{ $notice->body }}
-        <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert"></button>
-    </div>
-    @endforeach
-</div>
+{{-- ════════ IMPORTANT ALERTS ════════ --}}
+@php
+    $noticeCount = $agency?->notices?->count() ?? 0;
+    $alertTotal  = count($alerts) + $noticeCount;
+    $hasUrgent   = collect($alerts)->contains(fn($a) => ($a['type'] ?? null) === 'danger');
+@endphp
+@if($alertTotal)
+    <x-ui.card class="mb-5 overflow-hidden">
+        <div class="flex items-center justify-between gap-2 border-b border-slate-100 px-5 py-3">
+            <h2 class="flex items-center gap-2 text-sm font-bold text-slate-800">
+                <span @class([
+                    'grid h-6 w-6 place-items-center rounded-lg',
+                    'bg-rose-50 text-rose-500'   => $hasUrgent,
+                    'bg-brand-50 text-brand-500' => ! $hasUrgent,
+                ])><i class="bi bi-bell-fill text-xs"></i></span>
+                Important Alerts
+                <span class="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-slate-100 px-1.5 text-xs font-bold text-slate-600">{{ $alertTotal }}</span>
+            </h2>
+            <span class="hidden text-xs font-medium text-slate-400 sm:inline">Action needed</span>
+        </div>
+        <div @class([
+            'space-y-2.5 p-4',
+            'max-h-[28rem] overflow-y-auto' => $alertTotal > 4,
+        ])>
+            @foreach($alerts as $alert)
+                <x-ui.alert :type="$alert['type']" :icon="$alert['icon']" :title="$alert['title'] ?? null"
+                    :message="$alert['message']" :action="$alert['action'] ?? null" :actionLabel="$alert['action_label'] ?? null" />
+            @endforeach
+            @foreach(($agency?->notices ?? []) as $notice)
+                @php $nt = in_array($notice->type, ['danger','warning','info','success']) ? $notice->type : 'info'; @endphp
+                <x-ui.alert :type="$nt" icon="bi-megaphone-fill" :title="$notice->title" badge="Notice" dismissible>{{ $notice->body }}</x-ui.alert>
+            @endforeach
+        </div>
+    </x-ui.card>
 @endif
 
-{{-- ── Summary metric cards ──────────────────────────────── --}}
-<div class="row g-3 mb-3">
-    @php
-        $metrics = [
-            ['route' => route('hr.index'), 'ic' => 'bi-person-vcard', 'cls' => 'm-blue', 'label' => 'HR / Candidates', 'value' => $stats['total_hr'], 'sub' => $stats['active_hr'].' active', 'subcls' => 'text-success'],
-            ['route' => route('agents.index'), 'ic' => 'bi-people', 'cls' => 'm-green', 'label' => 'Agents', 'value' => $stats['total_agents'], 'sub' => $stats['active_agents'].' active', 'subcls' => 'text-success'],
-            ['route' => route('embassy-lists.index'), 'ic' => 'bi-list-ol', 'cls' => 'm-amber', 'label' => 'Embassy Lists', 'value' => $stats['embassy_lists_month'], 'sub' => 'this month', 'subcls' => 'text-muted'],
-            ['route' => route('hr.index'), 'ic' => 'bi-file-earmark-pdf', 'cls' => 'm-violet', 'label' => 'PDF Downloads', 'value' => $stats['pdf_downloads_month'], 'sub' => ($subscription && ($subscription->plan->max_pdf_monthly ?? 0) < 9999 ? 'of '.$subscription->plan->max_pdf_monthly.' / mo' : 'this month'), 'subcls' => 'text-muted'],
-            ['route' => route('hr.index', ['filter' => 'passport_expiring']), 'ic' => 'bi-passport', 'cls' => 'm-rose', 'label' => 'Passport Expiring', 'value' => $stats['passports_expiring'], 'sub' => 'within 6 months', 'subcls' => $stats['passports_expiring'] > 0 ? 'text-danger' : 'text-muted'],
-            ['route' => route('embassy-lists.index', ['status' => 'draft']), 'ic' => 'bi-hourglass-split', 'cls' => 'm-teal', 'label' => 'Pending Drafts', 'value' => $stats['hr_draft_embassy'], 'sub' => 'embassy lists', 'subcls' => $stats['hr_draft_embassy'] > 0 ? 'text-warning' : 'text-muted'],
-        ];
-    @endphp
-    @foreach($metrics as $m)
-    <div class="col-6 col-md-4 col-xl-2">
-        <a href="{{ $m['route'] }}" class="metric text-decoration-none">
-            <span class="m-wm"><i class="bi {{ $m['ic'] }}"></i></span>
-            <div class="d-flex justify-content-between align-items-start mb-2">
-                <span class="m-ic {{ $m['cls'] }}"><i class="bi {{ $m['ic'] }}"></i></span>
-                <i class="bi bi-arrow-right m-go"></i>
-            </div>
-            <div class="m-label">{{ $m['label'] }}</div>
-            <div class="m-value">{{ $m['value'] }}</div>
-            <div class="m-sub {{ $m['subcls'] }}">{{ $m['sub'] }}</div>
-        </a>
-    </div>
-    @endforeach
+{{-- ════════ SUMMARY CARDS ════════ --}}
+<div class="mb-2.5 ml-0.5 flex items-center gap-2">
+    <span class="h-3.5 w-1 rounded-full bg-gradient-to-b from-violet-500 to-cyan-500"></span>
+    <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Overview</span>
+</div>
+<div class="mb-5 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+    <x-ui.stat accent :href="route('hr.index')" icon="bi-person-vcard" tone="brand" label="Total HR Records" :value="$stats['total_hr']"
+        :sub="$hrPct !== null ? $hrPct.'% of plan' : $stats['active_hr'].' active'" :progress="$hrPct" />
+    <x-ui.stat accent :href="route('hr.index')" icon="bi-person-check" tone="green" label="Active Candidates" :value="$stats['active_hr']"
+        :sub="$stats['total_hr'] > 0 ? round($stats['active_hr'] / max(1,$stats['total_hr']) * 100).'% of total' : 'No records'" subTone="green" />
+    <x-ui.stat accent :href="route('embassy-lists.index')" icon="bi-list-ol" tone="violet" label="Embassy Lists" :value="$stats['embassy_lists_month']" sub="this month" />
+    <x-ui.stat accent :href="route('hr.index')" icon="bi-file-earmark-pdf" tone="cyan" label="Documents" :value="$stats['pdf_downloads_month']"
+        :sub="$pdfPct !== null ? $pdfPct.'% of plan' : 'this month'" :progress="$pdfPct" />
+    <x-ui.stat accent :href="route('embassy-lists.index', ['status' => 'draft'])" icon="bi-hourglass-split" tone="amber" label="Pending Drafts" :value="$stats['hr_draft_embassy']"
+        :sub="$stats['hr_draft_embassy'] > 0 ? 'awaiting finalize' : 'all clear'" :subTone="$stats['hr_draft_embassy'] > 0 ? 'amber' : 'green'" />
+    <x-ui.stat accent :href="route('hr.index', ['filter' => 'passport_expiring'])" icon="bi-passport" :tone="$stats['passports_expiring'] > 0 ? 'red' : 'slate'" label="Passport Expiring" :value="$stats['passports_expiring']"
+        sub="within 6 months" :subTone="$stats['passports_expiring'] > 0 ? 'red' : 'muted'" />
 </div>
 
-{{-- ── Subscription + Quick Actions ──────────────────────── --}}
-<div class="row g-3 mb-3">
-    {{-- Subscription --}}
-    <div class="col-lg-5">
-        @if($subscription)
-        @php $daysLeft = $subscription->daysRemaining(); @endphp
-        <div class="card h-100 {{ $daysLeft <= 3 ? 'border-danger' : ($daysLeft <= 7 ? 'border-warning' : '') }}">
-            <div class="card-header py-2 d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-credit-card me-1"></i> Subscription &amp; Usage</span>
-                <span class="badge badge-status-{{ $subscription->status }}">{{ ucfirst($subscription->status) }}</span>
-            </div>
-            <div class="card-body py-3">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <div class="fw-bold fs-6">{{ $subscription->plan->name ?? '—' }}</div>
-                        <small class="text-muted">Expires {{ optional($subscription->end_date)->format('d M Y') }}</small>
-                    </div>
-                    <div class="text-end">
-                        <div class="fw-bold {{ $daysLeft <= 7 ? 'text-danger' : 'text-success' }}" style="font-size:1.1rem;">{{ $daysLeft }}</div>
-                        <small class="text-muted">days left</small>
-                    </div>
-                </div>
-                <x-usage-meter label="HR Profiles" :used="$stats['total_hr']" :limit="$subscription->plan->max_hr ?? 9999" color="primary" />
-                <x-usage-meter label="Agents" :used="$stats['total_agents']" :limit="$subscription->plan->max_agents ?? 9999" color="success" />
-                <x-usage-meter label="Embassy Lists (month)" :used="$stats['embassy_lists_month']" :limit="$subscription->plan->max_embassy_lists_monthly ?? 9999" color="warning" />
-                <x-usage-meter label="PDF Downloads (month)" :used="$stats['pdf_downloads_month']" :limit="$subscription->plan->max_pdf_monthly ?? 9999" color="info" />
-            </div>
+{{-- ════════ ONBOARDING WORKFLOW (only while incomplete) ════════ --}}
+@if($wfActiveIdx !== false)
+    <x-ui.card class="mb-5 overflow-hidden">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-5 py-3">
+            <h2 class="flex items-center gap-2 text-sm font-bold text-slate-800"><i class="bi bi-compass text-violet-500"></i> Get Started — Workflow Steps</h2>
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700 ring-1 ring-inset ring-violet-200">
+                <i class="bi bi-flag"></i> Next: {{ $wf[$wfActiveIdx]['title'] }}
+            </span>
         </div>
+        <div class="grid grid-cols-2 gap-3 p-4 sm:grid-cols-3 lg:grid-cols-5">
+            @foreach($wf as $i => $w)
+                <x-ui.workflow-step :num="$w['num']" :icon="$w['icon']" :title="$w['title']" :sub="$w['sub']" :href="$w['href']"
+                    :state="$w['done'] ? 'done' : ($i === $wfActiveIdx ? 'active' : 'todo')" />
+            @endforeach
+        </div>
+    </x-ui.card>
+@endif
+
+{{-- ════════ APPLICATION STATUS OVERVIEW ════════ --}}
+<x-ui.card class="mb-5">
+    <div class="flex items-center justify-between border-b border-slate-100 px-5 py-3">
+        <h2 class="flex items-center gap-2 text-sm font-bold text-slate-800"><i class="bi bi-bar-chart-line text-violet-500"></i> Application Status Overview</h2>
+        <a href="{{ route('embassy-lists.index') }}" class="text-xs font-semibold text-brand-600 hover:text-brand-700">View all</a>
+    </div>
+    <div class="p-5">
+        @if($escTotal > 0)
+            {{-- stacked bar --}}
+            <div class="mb-4 flex h-2.5 overflow-hidden rounded-full bg-slate-100">
+                @foreach($statusMeta as $key => $m)
+                    @php $c = (int) ($esc[$key] ?? 0); @endphp
+                    @if($c > 0)
+                        <div class="{{ $m['bar'] }}" style="width: {{ $c / $escTotal * 100 }}%" title="{{ $m['label'] }}: {{ $c }}"></div>
+                    @endif
+                @endforeach
+            </div>
+            <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                @foreach($statusMeta as $key => $m)
+                    @php $c = (int) ($esc[$key] ?? 0); @endphp
+                    <a href="{{ route('embassy-lists.index', ['status' => $key]) }}"
+                       class="rounded-xl border border-slate-200 p-3 transition hover:border-slate-300 hover:shadow-soft">
+                        <div class="flex items-center gap-2">
+                            <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.68rem] font-semibold ring-1 ring-inset {{ $m['chip'] }}">
+                                <i class="bi {{ $m['icon'] }}"></i>{{ $m['label'] }}
+                            </span>
+                        </div>
+                        <div class="mt-2 text-2xl font-extrabold leading-none text-slate-900">{{ $c }}</div>
+                        <div class="mt-0.5 text-xs text-slate-400">{{ $escTotal > 0 ? round($c / $escTotal * 100) : 0 }}% of lists</div>
+                    </a>
+                @endforeach
+            </div>
         @else
-        <div class="card h-100 border-warning">
-            <div class="card-body d-flex flex-column align-items-center justify-content-center text-center py-4">
-                <i class="bi bi-credit-card-x fs-1 text-warning opacity-50 mb-2"></i>
-                <div class="fw-semibold">No Active Subscription</div>
-                <p class="text-muted small mt-1 mb-3">You cannot create new records or generate PDFs until you subscribe.</p>
-                <a href="{{ route('subscription.expired') }}" class="btn btn-warning btn-sm"><i class="bi bi-send me-1"></i> Request Renewal</a>
+            <div class="py-8 text-center">
+                <i class="bi bi-bar-chart-line mb-2 block text-3xl text-slate-300"></i>
+                <p class="text-sm text-slate-500">No embassy applications yet.</p>
+                @can('create', \App\Models\EmbassyList::class)
+                    <a href="{{ route('embassy-lists.create') }}" class="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700"><i class="bi bi-plus-lg"></i> Create first list</a>
+                @endcan
             </div>
-        </div>
         @endif
     </div>
+</x-ui.card>
 
-    {{-- Quick Actions --}}
-    <div class="col-lg-7">
-        <div class="card h-100">
-            <div class="card-header py-2"><i class="bi bi-lightning-charge me-1"></i> Quick Actions</div>
-            <div class="card-body py-3">
-                <div class="row g-2">
-                    @can('create', \App\Models\Agent::class)
-                    <div class="col-sm-6">
-                        <a href="{{ route('agents.create') }}" class="qa">
-                            <span class="qa-ic m-green"><i class="bi bi-person-plus"></i></span>
-                            <div><div class="qa-title">Add Agent</div><div class="qa-sub">{{ $stats['total_agents'] }} total</div></div>
-                        </a>
-                    </div>
-                    @endcan
-                    @can('create', \App\Models\HrProfile::class)
-                    <div class="col-sm-6">
-                        <a href="{{ route('hr.create') }}" class="qa">
-                            <span class="qa-ic m-blue"><i class="bi bi-person-vcard"></i></span>
-                            <div><div class="qa-title">Add HR Profile</div><div class="qa-sub">{{ $stats['total_hr'] }} total</div></div>
-                        </a>
-                    </div>
-                    @endcan
-                    @can('create', \App\Models\EmbassyList::class)
-                    <div class="col-sm-6">
-                        <a href="{{ route('embassy-lists.create') }}" class="qa">
-                            <span class="qa-ic m-amber"><i class="bi bi-list-ol"></i></span>
-                            <div><div class="qa-title">Create Embassy List</div><div class="qa-sub">{{ $stats['embassy_lists_month'] }} this month</div></div>
-                        </a>
-                    </div>
-                    @endcan
-                    <div class="col-sm-6">
-                        <a href="{{ route('hr.index') }}" class="qa">
-                            <span class="qa-ic m-violet"><i class="bi bi-file-earmark-pdf"></i></span>
-                            <div><div class="qa-title">Generate Documents</div><div class="qa-sub">{{ $stats['pdf_downloads_month'] }} PDFs this month</div></div>
-                        </a>
-                    </div>
-                    <div class="col-sm-6">
-                        <a href="{{ route('hr.index') }}" class="qa">
-                            <span class="qa-ic m-teal"><i class="bi bi-search"></i></span>
-                            <div><div class="qa-title">View Candidates</div><div class="qa-sub">Browse &amp; filter HR files</div></div>
-                        </a>
-                    </div>
-                    <div class="col-sm-6">
-                        <a href="{{ route('embassy-lists.index') }}" class="qa">
-                            <span class="qa-ic m-rose"><i class="bi bi-collection"></i></span>
-                            <div><div class="qa-title">Embassy Lists</div><div class="qa-sub">{{ $stats['total_embassy_lists'] }} total</div></div>
-                        </a>
-                    </div>
-                </div>
+{{-- ════════ MAIN GRID: records (left) + activity panel (right) ════════ --}}
+<div class="grid grid-cols-1 gap-5 lg:grid-cols-12">
+
+    {{-- ──── LEFT: records + quick actions ──── --}}
+    <div class="space-y-5 lg:col-span-8">
+
+        {{-- Quick Actions --}}
+        <x-ui.card>
+            <div class="border-b border-slate-100 px-5 py-3">
+                <h2 class="flex items-center gap-2 text-sm font-bold text-slate-800"><i class="bi bi-lightning-charge-fill text-amber-500"></i> Quick Actions</h2>
             </div>
-        </div>
-    </div>
-</div>
-
-{{-- ── Work Queue ────────────────────────────────────────── --}}
-@php
-    $queue = [];
-    if (($stats['hr_draft_embassy'] ?? 0) > 0)   $queue[] = ['ic'=>'bi-hourglass-split','bg'=>'#fef3c7','fg'=>'#92400e','title'=>'Draft embassy lists to finalize','count'=>$stats['hr_draft_embassy'],'url'=>route('embassy-lists.index',['status'=>'draft'])];
-    if (($stats['hr_no_passport'] ?? 0) > 0)     $queue[] = ['ic'=>'bi-person-exclamation','bg'=>'#dbeafe','fg'=>'#1e40af','title'=>'Active HR profiles missing passport','count'=>$stats['hr_no_passport'],'url'=>route('hr.index')];
-    if (($stats['passports_expiring'] ?? 0) > 0) $queue[] = ['ic'=>'bi-passport','bg'=>'#fee2e2','fg'=>'#991b1b','title'=>'Passports expiring within 6 months','count'=>$stats['passports_expiring'],'url'=>route('hr.index',['filter'=>'passport_expiring'])];
-@endphp
-<div class="row g-3 mb-3">
-    <div class="col-lg-5">
-        <div class="card h-100">
-            <div class="card-header py-2"><i class="bi bi-check2-square me-1"></i> Work Queue</div>
-            <div class="card-body py-2">
-                @forelse($queue as $q)
-                <a href="{{ $q['url'] }}" class="wq-item text-decoration-none text-reset">
-                    <span class="wq-ic" style="background:{{ $q['bg'] }};color:{{ $q['fg'] }};"><i class="bi {{ $q['ic'] }}"></i></span>
-                    <div class="flex-grow-1"><div style="font-size:.82rem;font-weight:600;">{{ $q['title'] }}</div></div>
-                    <span class="badge rounded-pill" style="background:{{ $q['bg'] }};color:{{ $q['fg'] }};">{{ $q['count'] }}</span>
-                    <i class="bi bi-chevron-right text-muted"></i>
-                </a>
-                @empty
-                <div class="text-center text-muted py-4">
-                    <i class="bi bi-check-circle fs-3 text-success opacity-50 d-block mb-2"></i>
-                    <div style="font-size:.85rem;">All caught up — no pending tasks.</div>
-                </div>
-                @endforelse
+            <div class="grid grid-cols-1 gap-2 p-4 sm:grid-cols-2">
+                @php
+                    $qa = [];
+                    if ($canHr)   $qa[] = ['route' => route('hr.create'),            'icon' => 'bi-person-vcard', 'title' => 'Add HR Profile',        'sub' => $stats['total_hr'].' total',                    'tone' => 'brand'];
+                    if ($canList) $qa[] = ['route' => route('embassy-lists.create'), 'icon' => 'bi-list-ol',      'title' => 'Create Embassy List',   'sub' => $stats['embassy_lists_month'].' this month',    'tone' => 'violet'];
+                    $qa[] = ['route' => route('hr.index'),            'icon' => 'bi-file-earmark-pdf', 'title' => 'Generate Documents', 'sub' => $stats['pdf_downloads_month'].' PDFs this month', 'tone' => 'cyan'];
+                    $qa[] = ['route' => route('embassy-lists.index'), 'icon' => 'bi-collection',       'title' => 'Embassy Lists',      'sub' => $stats['total_embassy_lists'].' total',          'tone' => 'green'];
+                    if ($authUser->can('create', \App\Models\Agent::class)) $qa[] = ['route' => route('agents.create'), 'icon' => 'bi-person-plus', 'title' => 'Add Staff / Agent', 'sub' => $stats['active_agents'].' active', 'tone' => 'rose'];
+                    if ($isAdmin) $qa[] = ['route' => route('settings.index'), 'icon' => 'bi-gear', 'title' => 'Agency Settings', 'sub' => 'Profile & preferences', 'tone' => 'amber'];
+                @endphp
+                @foreach($qa as $a)
+                    <x-ui.quick-action :href="$a['route']" :icon="$a['icon']" :title="$a['title']" :sub="$a['sub']" :tone="$a['tone']" />
+                @endforeach
             </div>
-        </div>
-    </div>
+        </x-ui.card>
 
-    {{-- Recent Embassy Lists --}}
-    <div class="col-lg-7">
-        <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center py-2">
-                <span><i class="bi bi-list-ol me-1"></i> Recent Embassy Lists</span>
-                <a href="{{ route('embassy-lists.index') }}" class="btn btn-sm btn-outline-primary py-0">View All</a>
+        {{-- Recent HR Records --}}
+        <x-ui.card class="overflow-hidden">
+            <div class="flex items-center justify-between border-b border-slate-100 px-5 py-3">
+                <h2 class="flex items-center gap-2 text-sm font-bold text-slate-800"><i class="bi bi-person-vcard text-violet-500"></i> Recent HR Records</h2>
+                <a href="{{ route('hr.index') }}" class="text-xs font-semibold text-brand-600 hover:text-brand-700">View all</a>
+            </div>
+            @if($recentHr->count())
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead><tr class="border-b border-slate-100 bg-slate-50/70 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                            <th class="px-5 py-2.5">Name</th><th class="px-5 py-2.5">Passport</th><th class="px-5 py-2.5">Status</th><th class="hidden px-5 py-2.5 sm:table-cell">Created</th><th class="px-5 py-2.5 text-right">Action</th>
+                        </tr></thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @foreach($recentHr as $hr)
+                                <tr class="hover:bg-slate-50">
+                                    <td class="px-5 py-2.5">
+                                        <a href="{{ route('hr.show', $hr) }}" class="font-semibold text-slate-800 hover:text-brand-600">{{ $hr->full_name_en }}</a>
+                                        <div class="text-xs text-slate-400">{{ $hr->nationality }}</div>
+                                    </td>
+                                    <td class="px-5 py-2.5">
+                                        @if($hr->passport?->passport_number)
+                                            <span class="font-mono text-xs text-slate-600">{{ $hr->passport->passport_number }}</span>
+                                            @if($hr->passport->expiry_date?->isPast())
+                                                <i class="bi bi-exclamation-triangle-fill ml-1 text-rose-500" title="Passport expired"></i>
+                                            @elseif($hr->passport->expiry_date && $hr->passport->expiry_date->isBefore(now()->addMonths(6)))
+                                                <i class="bi bi-exclamation-triangle ml-1 text-amber-500" title="Expiring soon"></i>
+                                            @endif
+                                        @else <span class="text-slate-300">—</span> @endif
+                                    </td>
+                                    <td class="px-5 py-2.5"><x-ui.status-badge :status="$hr->status" /></td>
+                                    <td class="hidden px-5 py-2.5 text-slate-400 sm:table-cell">{{ optional($hr->created_at)->format('d M Y') }}</td>
+                                    <td class="px-5 py-2.5">
+                                        <div class="flex justify-end gap-1">
+                                            <a href="{{ route('hr.show', $hr) }}" title="View" class="grid h-7 w-7 place-items-center rounded-lg text-slate-500 hover:bg-slate-100"><i class="bi bi-eye"></i></a>
+                                            <a href="{{ route('hr.documents', $hr) }}" title="Documents" class="grid h-7 w-7 place-items-center rounded-lg text-emerald-600 hover:bg-emerald-50"><i class="bi bi-file-earmark-pdf"></i></a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @else
+                <x-ui.empty icon="bi-person-vcard" title="No HR profiles yet" :actionUrl="route('hr.create')" actionLabel="Add First Profile" />
+            @endif
+        </x-ui.card>
+
+        {{-- Recent Embassy Lists --}}
+        <x-ui.card class="overflow-hidden">
+            <div class="flex items-center justify-between border-b border-slate-100 px-5 py-3">
+                <h2 class="flex items-center gap-2 text-sm font-bold text-slate-800"><i class="bi bi-list-ol text-violet-500"></i> Recent Embassy Lists</h2>
+                <a href="{{ route('embassy-lists.index') }}" class="text-xs font-semibold text-brand-600 hover:text-brand-700">View all</a>
             </div>
             @if($recentEmbassyLists->count())
-            <div class="table-responsive">
-                <table class="table table-hover table-sm mb-0">
-                    <thead><tr><th>List No</th><th>Date</th><th class="text-center">Total</th><th>Status</th><th></th></tr></thead>
-                    <tbody>
-                        @foreach($recentEmbassyLists as $list)
-                        <tr>
-                            <td class="font-monospace fw-semibold" style="font-size:.8rem;">{{ $list->list_no }}</td>
-                            <td><small class="text-muted">{{ optional($list->list_date)->format('d M Y') }}</small></td>
-                            <td class="text-center fw-bold">{{ $list->total_items }}</td>
-                            <td><span class="badge badge-status-{{ $list->status }}">{{ ucfirst($list->status) }}</span></td>
-                            <td>
-                                <div class="d-flex gap-1">
-                                    <a href="{{ route('embassy-lists.show', $list) }}" class="btn btn-sm btn-outline-secondary py-0" title="View"><i class="bi bi-eye"></i></a>
-                                    @if($list->isFinalized() || $list->status === 'printed')
-                                    <a href="{{ route('embassy-lists.download-pdf', $list) }}" class="btn btn-sm btn-outline-primary py-0" title="PDF"><i class="bi bi-file-earmark-pdf"></i></a>
-                                    @endif
-                                </div>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead><tr class="border-b border-slate-100 bg-slate-50/70 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                            <th class="px-5 py-2.5">List No</th><th class="px-5 py-2.5">Date</th><th class="px-5 py-2.5 text-center">Total</th><th class="px-5 py-2.5">Status</th><th class="px-5 py-2.5 text-right">Action</th>
+                        </tr></thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @foreach($recentEmbassyLists as $list)
+                                <tr class="hover:bg-slate-50">
+                                    <td class="px-5 py-2.5"><a href="{{ route('embassy-lists.show', $list) }}" class="font-mono font-semibold text-slate-700 hover:text-brand-600">{{ $list->list_no }}</a></td>
+                                    <td class="px-5 py-2.5 text-slate-400">{{ optional($list->list_date)->format('d M Y') }}</td>
+                                    <td class="px-5 py-2.5 text-center font-bold text-slate-700">{{ $list->total_items }}</td>
+                                    <td class="px-5 py-2.5"><x-ui.status-badge :status="$list->status" /></td>
+                                    <td class="px-5 py-2.5">
+                                        <div class="flex justify-end gap-1">
+                                            <a href="{{ route('embassy-lists.show', $list) }}" title="View" class="grid h-7 w-7 place-items-center rounded-lg text-slate-500 hover:bg-slate-100"><i class="bi bi-eye"></i></a>
+                                            @if($list->isFinalized() || $list->status === 'printed')
+                                                <a href="{{ route('embassy-lists.download-pdf', $list) }}" title="PDF" class="grid h-7 w-7 place-items-center rounded-lg text-brand-600 hover:bg-brand-50"><i class="bi bi-file-earmark-pdf"></i></a>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             @else
-            <x-empty-state icon="bi-list-ol" title="No embassy lists yet" size="sm"
-                actionUrl="{{ route('embassy-lists.create') }}" actionLabel="Create First List" />
+                <x-ui.empty icon="bi-list-ol" title="No embassy lists yet" :actionUrl="route('embassy-lists.create')" actionLabel="Create First List" />
             @endif
+        </x-ui.card>
+    </div>
+
+    {{-- ──── RIGHT: calendar / reminders / activity panel ──── --}}
+    <div class="space-y-5 lg:col-span-4">
+
+        {{-- Today card --}}
+        <div class="overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 to-navy-800 p-5 text-white shadow-soft">
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="text-xs font-medium uppercase tracking-wider text-white/60">{{ now()->format('l') }}</div>
+                    <div class="mt-1 text-4xl font-extrabold leading-none">{{ now()->format('d') }}</div>
+                    <div class="mt-1 text-sm text-white/70">{{ now()->format('F Y') }}</div>
+                </div>
+                <span class="grid h-12 w-12 place-items-center rounded-2xl bg-white/10 text-2xl ring-1 ring-white/15"><i class="bi bi-calendar-event"></i></span>
+            </div>
         </div>
-    </div>
-</div>
 
-{{-- ── Recent HR ─────────────────────────────────────────── --}}
-<div class="card mb-3">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span><i class="bi bi-person-vcard me-1"></i> Recent HR Files</span>
-        <a href="{{ route('hr.index') }}" class="btn btn-sm btn-outline-primary py-0">View All</a>
-    </div>
-    @if($recentHr->count())
-    <div class="table-responsive">
-        <table class="table table-hover table-sm mb-0">
-            <thead><tr><th>Name</th><th>Passport</th><th>Visa</th><th>Agent</th><th>Status</th><th></th></tr></thead>
-            <tbody>
-                @foreach($recentHr as $hr)
-                <tr>
-                    <td><div class="fw-semibold">{{ $hr->full_name_en }}</div><small class="text-muted">{{ $hr->nationality }}</small></td>
-                    <td>
-                        @if($hr->passport?->passport_number)
-                            <code style="font-size:.75rem;">{{ $hr->passport->passport_number }}</code>
-                            @if($hr->passport->expiry_date?->isPast())
-                                <i class="bi bi-exclamation-triangle-fill text-danger ms-1" title="Passport expired"></i>
-                            @elseif($hr->passport->expiry_date && $hr->passport->expiry_date->isBefore(now()->addMonths(6)))
-                                <i class="bi bi-exclamation-triangle text-warning ms-1" title="Expiring soon"></i>
-                            @endif
-                        @else
-                            <span class="text-muted">—</span>
-                        @endif
-                    </td>
-                    <td><small>{{ $hr->visa?->visa_number ?? '—' }}</small></td>
-                    <td><small class="text-muted">{{ $hr->agent?->name ?? '—' }}</small></td>
-                    <td><span class="badge badge-status-{{ $hr->status }}">{{ ucfirst($hr->status) }}</span></td>
-                    <td>
-                        <div class="d-flex gap-1">
-                            <a href="{{ route('hr.show', $hr) }}" class="btn btn-sm btn-outline-secondary py-0" title="View"><i class="bi bi-eye"></i></a>
-                            <a href="{{ route('hr.documents', $hr) }}" class="btn btn-sm btn-outline-success py-0" title="Documents"><i class="bi bi-file-earmark-pdf"></i></a>
+        {{-- Subscription & Usage --}}
+        @if($subscription)
+            @php
+                $daysLeft  = $subscription->daysRemaining();
+                $accent    = $daysLeft <= 3 ? 'bg-rose-500' : ($daysLeft <= 7 ? 'bg-amber-500' : 'bg-emerald-500');
+                $accentTxt = $daysLeft <= 3 ? 'text-rose-600' : ($daysLeft <= 7 ? 'text-amber-600' : 'text-emerald-600');
+            @endphp
+            <x-ui.card class="overflow-hidden">
+                <div class="h-1 {{ $accent }}"></div>
+                <div class="flex items-center justify-between border-b border-slate-100 px-5 py-3">
+                    <h2 class="flex items-center gap-2 text-sm font-bold text-slate-800"><i class="bi bi-credit-card text-brand-600"></i> Subscription</h2>
+                    <x-ui.status-badge :status="$subscription->status" />
+                </div>
+                <div class="p-5">
+                    <div class="mb-4 flex items-center justify-between border-b border-slate-100 pb-4">
+                        <div>
+                            <div class="text-base font-bold text-slate-900">{{ $subscription->plan->name ?? '—' }}</div>
+                            <div class="mt-0.5 text-xs text-slate-400"><i class="bi bi-calendar-event mr-1"></i>Expires {{ optional($subscription->end_date)->format('d M Y') }}</div>
                         </div>
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
-    @else
-    <x-empty-state icon="bi-person-vcard" title="No HR profiles yet"
-        actionUrl="{{ route('hr.create') }}" actionLabel="Add First Profile" size="sm" />
-    @endif
-</div>
+                        <div class="text-right">
+                            <div class="text-2xl font-extrabold leading-none {{ $accentTxt }}">{{ $daysLeft }}</div>
+                            <div class="text-xs text-slate-400">days left</div>
+                        </div>
+                    </div>
+                    <x-ui.usage-meter label="HR Profiles" :used="$stats['total_hr']" :limit="$subscription->plan->max_hr ?? 9999" color="brand" />
+                    <x-ui.usage-meter label="Agents" :used="$stats['total_agents']" :limit="$subscription->plan->max_agents ?? 9999" color="green" />
+                    <x-ui.usage-meter label="Lists (month)" :used="$stats['embassy_lists_month']" :limit="$subscription->plan->max_embassy_lists_monthly ?? 9999" color="amber" />
+                    <x-ui.usage-meter label="PDFs (month)" :used="$stats['pdf_downloads_month']" :limit="$subscription->plan->max_pdf_monthly ?? 9999" color="cyan" />
+                </div>
+            </x-ui.card>
+        @else
+            <x-ui.card class="flex flex-col items-center justify-center p-6 text-center">
+                <i class="bi bi-credit-card-2-front mb-2 text-3xl text-amber-400"></i>
+                <div class="font-semibold text-slate-900">No Active Subscription</div>
+                <p class="mt-1 text-xs text-slate-400">Subscribe to create records and generate PDFs.</p>
+                <x-ui.button :href="route('subscription.expired')" variant="success" size="sm" class="mt-3"><i class="bi bi-send"></i> Request Renewal</x-ui.button>
+            </x-ui.card>
+        @endif
 
-{{-- ── Recent Document Activity ──────────────────────────── --}}
-@if($recentDocActivity->count())
-<div class="card mb-3">
-    <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <span><i class="bi bi-clock-history me-1"></i> Recent Document Activity</span>
-        <small class="text-muted">Last {{ $recentDocActivity->count() }} events</small>
-    </div>
-    <div class="table-responsive">
-        <table class="table table-hover table-sm mb-0">
-            <thead><tr><th>Candidate</th><th>Document</th><th>Action</th><th>By</th><th>When</th></tr></thead>
-            <tbody>
-                @foreach($recentDocActivity as $doc)
-                <tr>
-                    <td>
-                        @if($doc->hrProfile)
-                            <a href="{{ route('hr.show', $doc->hrProfile) }}" class="text-decoration-none fw-semibold" style="font-size:.8rem;">{{ $doc->hrProfile->full_name_en }}</a>
-                        @else
-                            <span class="text-muted">—</span>
-                        @endif
-                    </td>
-                    <td style="font-size:.78rem;">{{ ucwords(str_replace('_', ' ', $doc->document_type)) }}</td>
-                    <td>
-                        @if($doc->action === 'download')
-                            <span class="badge" style="background:#dbeafe;color:#1e40af;font-size:.68rem;">Download</span>
-                        @else
-                            <span class="badge" style="background:#f3f4f6;color:#6b7280;font-size:.68rem;">Preview</span>
-                        @endif
-                    </td>
-                    <td style="font-size:.78rem;">{{ $doc->generatedBy?->name ?? '—' }}</td>
-                    <td class="text-muted" style="font-size:.78rem;">{{ $doc->created_at->format('d M, H:i') }}</td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
+        {{-- Upcoming reminders --}}
+        <x-ui.card class="overflow-hidden">
+            <div class="border-b border-slate-100 px-5 py-3">
+                <h2 class="flex items-center gap-2 text-sm font-bold text-slate-800"><i class="bi bi-bell text-amber-500"></i> Upcoming &amp; Reminders</h2>
+            </div>
+            <div class="p-3">
+                @if($reminders->count())
+                    <ul class="space-y-1">
+                        @foreach($reminders as $r)
+                            <li>
+                                <a @if($r['href']) href="{{ $r['href'] }}" @endif class="flex items-center gap-3 rounded-lg px-2.5 py-2 transition hover:bg-slate-50 @if(!$r['href']) cursor-default @endif">
+                                    <span class="relative flex h-2.5 w-2.5 shrink-0">
+                                        <span class="absolute inline-flex h-full w-full rounded-full {{ $r['dot'] }} opacity-40"></span>
+                                        <span class="relative inline-flex h-2.5 w-2.5 rounded-full {{ $r['dot'] }}"></span>
+                                    </span>
+                                    <span class="min-w-0 flex-1">
+                                        <span class="block truncate text-sm font-medium text-slate-700"><i class="bi {{ $r['icon'] }} mr-1 text-slate-400"></i>{{ $r['title'] }}</span>
+                                        <span class="block text-xs text-slate-400">{{ $r['date']->format('d M Y') }}</span>
+                                    </span>
+                                    <span @class([
+                                        'shrink-0 rounded-full px-2 py-0.5 text-[0.68rem] font-semibold',
+                                        'bg-rose-50 text-rose-600'    => $r['days'] < 0 || $r['days'] <= 7,
+                                        'bg-amber-50 text-amber-600'  => $r['days'] > 7 && $r['days'] <= 30,
+                                        'bg-slate-100 text-slate-500' => $r['days'] > 30,
+                                    ])>
+                                        {{ $r['days'] < 0 ? abs($r['days']).'d ago' : 'in '.$r['days'].'d' }}
+                                    </span>
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+                @else
+                    <div class="px-4 py-8 text-center">
+                        <i class="bi bi-calendar-check mb-2 block text-2xl text-emerald-400"></i>
+                        <p class="text-sm text-slate-500">No upcoming reminders.</p>
+                    </div>
+                @endif
+            </div>
+        </x-ui.card>
+
+        {{-- Recent activity timeline --}}
+        <x-ui.card class="overflow-hidden">
+            <div class="border-b border-slate-100 px-5 py-3">
+                <h2 class="flex items-center gap-2 text-sm font-bold text-slate-800"><i class="bi bi-clock-history text-violet-500"></i> Recent Activity</h2>
+            </div>
+            <div class="p-4">
+                @if($recentDocActivity->count())
+                    <ol class="relative ml-2 space-y-4 border-l border-slate-200 pl-5">
+                        @foreach($recentDocActivity->take(6) as $doc)
+                            @php $isDl = $doc->action === 'download'; @endphp
+                            <li class="relative">
+                                <span class="absolute -left-[1.45rem] top-0.5 grid h-5 w-5 place-items-center rounded-full text-[0.6rem] text-white ring-4 ring-white {{ $isDl ? 'bg-brand-500' : 'bg-slate-400' }}">
+                                    <i class="bi {{ $isDl ? 'bi-download' : 'bi-eye' }}"></i>
+                                </span>
+                                <div class="text-sm font-medium text-slate-700">
+                                    {{ ucwords(str_replace('_', ' ', $doc->document_type)) }}
+                                    <span class="font-normal text-slate-400">{{ $isDl ? 'downloaded' : 'previewed' }}</span>
+                                </div>
+                                <div class="mt-0.5 text-xs text-slate-400">
+                                    @if($doc->hrProfile)
+                                        <a href="{{ route('hr.show', $doc->hrProfile) }}" class="font-medium text-slate-500 hover:text-brand-600">{{ $doc->hrProfile->full_name_en }}</a> ·
+                                    @endif
+                                    {{ $doc->generatedBy?->name ?? 'System' }} · {{ $doc->created_at->diffForHumans() }}
+                                </div>
+                            </li>
+                        @endforeach
+                    </ol>
+                @else
+                    <div class="px-4 py-8 text-center">
+                        <i class="bi bi-activity mb-2 block text-2xl text-slate-300"></i>
+                        <p class="text-sm text-slate-500">No document activity yet.</p>
+                    </div>
+                @endif
+            </div>
+        </x-ui.card>
     </div>
 </div>
-@endif
 
 @endsection

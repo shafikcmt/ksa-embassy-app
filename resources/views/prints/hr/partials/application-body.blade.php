@@ -51,7 +51,7 @@
     <td style="width:30%;vertical-align:top;padding:0;">
       {{-- Passport-size photo box (~35mm × 41mm), thin black border, top-left --}}
       <table style="width:100pt;border-collapse:collapse;"><tr>
-        <td style="width:100pt;height:117pt;border:1px solid #000;text-align:center;vertical-align:middle;font-size:8pt;color:#555;padding:2pt;">
+        <td style="width:100pt;height:111pt;border:1px solid #000;text-align:center;vertical-align:middle;font-size:8pt;color:#555;padding:2pt;">
           Photo
         </td>
       </tr></table>
@@ -75,7 +75,7 @@
     </td>
     <td style="width:30%;text-align:right;vertical-align:top;padding:8pt 0 2pt 4pt;">
       @if(!empty($application_no))
-      <div style="font-size:22pt;font-weight:bold;letter-spacing:0.5pt;">{{ $application_no }}</div>
+      <div style="font-size:16pt;font-weight:bold;letter-spacing:0.5pt;">{{ $application_no }}</div>
       @endif
       <div style="font-size:10pt;font-weight:bold;margin-top:13pt;white-space:nowrap;">EMBASSY OF SAUDI ARABIA</div>
       <div style="font-size:9.5pt;font-weight:bold;margin-top:3pt;white-space:nowrap;">CONSULAR SECTION</div>
