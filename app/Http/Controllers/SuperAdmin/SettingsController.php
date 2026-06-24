@@ -13,7 +13,7 @@ class SettingsController extends Controller
     {
         $plans = Plan::active()->orderBy('price')->get();
 
-        $systemName     = Setting::get('system_name', null, 'KSA Embassy File System');
+        $systemName     = Setting::get('system_name', null, 'VisaDeskPro');
         $defaultPlanId  = Setting::get('default_plan_id', null, '');
         $maintenanceMode = Setting::get('maintenance_mode', null, '0');
         $supportEmail   = Setting::get('support_email', null, '');
@@ -31,7 +31,7 @@ class SettingsController extends Controller
             'default_plan_id'=> 'nullable|exists:plans,id',
         ]);
 
-        Setting::set('system_name', $request->input('system_name', 'KSA Embassy File System'));
+        Setting::set('system_name', $request->input('system_name', 'VisaDeskPro'));
         Setting::set('support_email', $request->input('support_email', ''));
         Setting::set('default_plan_id', $request->input('default_plan_id', ''));
         Setting::set('maintenance_mode', $request->boolean('maintenance_mode') ? '1' : '0');

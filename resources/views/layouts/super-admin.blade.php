@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Super Admin') — KSA Embassy System</title>
+    <title>@yield('title', 'Super Admin') — VisaDeskPro</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
@@ -94,7 +94,7 @@
 {{-- Sidebar --}}
 <div id="sidebar">
     <div class="brand">
-        <i class="bi bi-building"></i> KSA <span>Embassy</span><br>
+        <i class="bi bi-passport"></i> VisaDesk<span>Pro</span><br>
         <small style="font-size:.68rem;font-weight:400;color:#5a6279;">Super Admin Panel</small>
     </div>
 

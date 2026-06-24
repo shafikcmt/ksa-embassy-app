@@ -1,4 +1,10 @@
 <x-guest-layout>
+    <div class="mb-6 text-center">
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900">VisaDesk<span class="text-sky-500">Pro</span></h1>
+        <p class="mt-1 text-sm font-medium text-slate-600">Agency, HR &amp; Visa Document Management System</p>
+        <p class="mt-2 text-xs leading-relaxed text-slate-500">Manage HR records, agency workflow, application documents, payment requests, and print-ready files from one secure dashboard.</p>
+    </div>
+
     <form method="POST" action="{{ route('register') }}">
         @csrf
 
@@ -49,4 +55,6 @@
             </x-primary-button>
         </div>
     </form>
+
+    <p class="mt-6 text-center text-xs text-slate-400">&copy; 2026 VisaDeskPro. All rights reserved.</p>
 </x-guest-layout>

@@ -72,8 +72,10 @@
     <div class="pointer-events-none absolute -bottom-24 left-1/4 h-64 w-64 rounded-full bg-fuchsia-300/20 blur-3xl"></div>
     <div class="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
         <div class="min-w-0">
+            <span class="mb-2 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-wide text-white backdrop-blur"><i class="bi bi-stars"></i> Welcome to VisaDeskPro</span>
             <p class="text-sm font-medium text-white/80">{{ $greeting }},</p>
             <h2 class="mt-0.5 truncate text-2xl font-bold tracking-tight sm:text-3xl">{{ $firstName }} 👋</h2>
+            <p class="mt-1.5 max-w-md text-sm text-white/80">Manage your agency operations, HR records, documents, and workflow from one simple dashboard.</p>
             <div class="mt-3 flex flex-wrap items-center gap-2 text-xs">
                 <span class="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 backdrop-blur"><i class="bi bi-buildings"></i>{{ $agency?->name }}</span>
                 <span class="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 backdrop-blur"><i class="bi bi-person-badge"></i>{{ $isAdmin ? 'Agency Admin' : 'Agency Staff' }}</span>

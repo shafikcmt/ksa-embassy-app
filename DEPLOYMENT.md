@@ -43,7 +43,7 @@ MAIL_PORT=587
 MAIL_USERNAME=noreply@yourdomain.com
 MAIL_PASSWORD=your_mail_password
 MAIL_FROM_ADDRESS=noreply@yourdomain.com
-MAIL_FROM_NAME="KSA Embassy File System"
+MAIL_FROM_NAME="VisaDeskPro"
 ```
 
 ## 3. Install Dependencies

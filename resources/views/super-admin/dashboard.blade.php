@@ -6,8 +6,8 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h5 class="mb-0 fw-bold">System Overview</h5>
-        <small class="text-muted">{{ now()->format('l, d F Y') }}</small>
+        <h5 class="mb-0 fw-bold">Welcome to VisaDeskPro</h5>
+        <small class="text-muted">System Overview · {{ now()->format('l, d F Y') }}</small>
     </div>
 </div>
 

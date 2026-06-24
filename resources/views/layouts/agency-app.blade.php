@@ -55,7 +55,7 @@
             </span>
             <div class="min-w-0">
                 <div class="truncate text-sm font-bold text-white">{{ $authUser->agency->name ?? 'Agency' }}</div>
-                <div class="text-[0.65rem] tracking-wide text-slate-400">KSA Embassy File System</div>
+                <div class="text-[0.65rem] tracking-wide text-slate-400">VisaDeskPro</div>
             </div>
         </div>
 

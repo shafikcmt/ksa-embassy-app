@@ -256,7 +256,7 @@
         <span class="brand-icon"><i class="bi bi-buildings"></i></span>
         <div style="min-width:0;">
             <div class="agency-name">{{ $authUser->agency->name ?? 'Agency' }}</div>
-            <div class="sub-label">KSA Embassy File System</div>
+            <div class="sub-label">VisaDeskPro</div>
         </div>
     </div>
 

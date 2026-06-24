@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login — KSA Embassy File Agency</title>
+    <title>Login — VisaDeskPro</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
@@ -25,8 +25,11 @@
             border-radius: 12px; display: inline-flex; align-items: center;
             justify-content: center; margin-bottom: .75rem;
         }
-        .login-header h1 { color: #fff; font-size: 1.1rem; font-weight: 700; margin: 0; }
-        .login-header p  { color: #94a3b8; font-size: .8rem; margin: .25rem 0 0; }
+        .login-header h1 { color: #fff; font-size: 1.35rem; font-weight: 700; margin: 0; letter-spacing: -.01em; }
+        .login-header h1 .pro { color: #38bdf8; }
+        .login-header .tagline { color: #cbd5e1; font-size: .82rem; margin: .35rem 0 0; font-weight: 500; }
+        .login-header p  { color: #94a3b8; font-size: .76rem; margin: .5rem 0 0; line-height: 1.5; }
+        .login-foot { text-align: center; padding: 0 2rem 1.5rem; color: #94a3b8; font-size: .72rem; }
         .login-body { padding: 1.75rem 2rem 2rem; }
         .form-control { border-radius: 8px; }
         .btn-login {
@@ -42,8 +45,9 @@
         <div class="logo-icon">
             <i class="bi bi-building text-white fs-4"></i>
         </div>
-        <h1>KSA Embassy File Agency</h1>
-        <p>Management System — Secure Login</p>
+        <h1>VisaDesk<span class="pro">Pro</span></h1>
+        <p class="tagline">Agency, HR &amp; Visa Document Management System</p>
+        <p>Manage HR records, agency workflow, application documents, payment requests, and print-ready files from one secure dashboard.</p>
     </div>
     <div class="login-body">
         @if(session('status'))
@@ -85,6 +89,7 @@
             </button>
         </form>
     </div>
+    <div class="login-foot">&copy; 2026 VisaDeskPro. All rights reserved.</div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

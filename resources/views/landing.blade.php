@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Create Saudi Embassy Application Form, Forwarding Letter, Employment Agreement and Checklist from one-time input — with automatic barcode and professional A4 PDF download.">
-<title>{{ config('app.name', 'KSA Embassy File App') }} — Complete Saudi Embassy File Solution</title>
+<meta name="description" content="VisaDeskPro — a secure SaaS platform to manage HR records, agency applications, visa/application documents, payment requests and print-ready PDFs from one dashboard.">
+<title>{{ config('app.name', 'VisaDeskPro') }} — Smart Agency &amp; Visa Document Management Platform</title>
 <link rel="preconnect" href="https://fonts.bunny.net">
 <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800" rel="stylesheet" />
 <style>
@@ -41,6 +41,8 @@
   .nav-in{display:flex;align-items:center;justify-content:space-between;height:68px}
   .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;letter-spacing:-.02em}
   .brand .logo{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--indigo),var(--emerald));display:grid;place-items:center;color:#fff;flex:0 0 auto}
+  .brand .pro{color:var(--indigo)}
+  footer .brand .pro{color:#818cf8}
   .nav-links{display:flex;align-items:center;gap:28px}
   .nav-links a{font-size:15px;color:var(--slate);font-weight:500;transition:.15s}
   .nav-links a:hover{color:var(--indigo)}
@@ -213,7 +215,7 @@
       <span class="logo">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/></svg>
       </span>
-      KSA Embassy File
+      VisaDesk<span class="pro">Pro</span>
     </a>
 
     <nav class="nav-links">
@@ -264,18 +266,18 @@
   <div class="wrap hero-grid">
     <div>
       <span class="eyebrow"><span class="dot"></span> Built for recruiting &amp; manpower agencies</span>
-      <h1 class="hero-title">Complete <span class="grad">Saudi Embassy File</span> Solution for Agencies</h1>
-      <p class="lead">Create the Embassy Application Form, Forwarding Letter, Employment Agreement and Checklist from a single one-time input — with automatic barcode and professional A4 PDF download.</p>
+      <h1 class="hero-title"><span class="grad">VisaDeskPro</span> — Smart Agency &amp; Visa Document Management Platform</h1>
+      <p class="lead">Manage HR records, agency applications, embassy/application formats, payment requests, and print-ready documents from one secure SaaS dashboard.</p>
       <div class="hero-cta">
         @auth
-          <a href="{{ $dashUrl }}" class="btn btn-primary">Go to Dashboard</a>
+          <a href="{{ $dashUrl }}" class="btn btn-primary">Login to Dashboard</a>
         @else
           @if (Route::has('register'))
-            <a href="{{ route('register') }}" class="btn btn-primary">Get Started Free
+            <a href="{{ route('register') }}" class="btn btn-primary">Get Started
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
             </a>
           @endif
-          <a href="{{ route('login') }}" class="btn btn-ghost">Login</a>
+          <a href="{{ route('login') }}" class="btn btn-ghost">Login to Dashboard</a>
         @endauth
         <a href="#features" class="btn btn-ghost">View Features</a>
       </div>
@@ -357,20 +359,19 @@
   <div class="wrap">
     <div class="sec-head">
       <span class="sec-tag">Features</span>
-      <h2>Everything you need to prepare embassy files</h2>
-      <p>Stop retyping the same candidate data into four documents. Enter it once and let the system build a consistent, print-ready file.</p>
+      <h2>Everything your agency needs in one platform</h2>
+      <p>From HR records to print-ready visa documents, VisaDeskPro brings your whole agency workflow into one clean, secure SaaS dashboard.</p>
     </div>
     <div class="feat-grid">
       @php
         $features = [
-          ['ic-indigo','M9 11l3 3 8-8M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11','One-time Input','Enter candidate information once and generate every required document automatically.'],
-          ['ic-emerald','M4 7V5a1 1 0 0 1 1-1h2M20 7V5a1 1 0 0 0-1-1h-2M4 17v2a1 1 0 0 0 1 1h2M20 17v2a1 1 0 0 1-1 1h-2|M7 8v8M11 8v8M15 8v8','Automatic Barcode','Generate visa and passport barcodes automatically for the embassy application file.'],
-          ['ic-amber','M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z|M14 2v6h6','Complete File PDF','Download the Application Form, Forwarding Letter, Employment Agreement and Checklist in one PDF.'],
-          ['ic-sky','M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z|M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z','Preview Before Download','Check every document on screen before the final PDF download.'],
-          ['ic-indigo','M12 8v4l3 2|M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z','Auto Age & Passport','Calculate age, expiry dates and required data automatically — no manual maths.'],
-          ['ic-emerald','M21 8v13H3V8M1 3h22v5H1zM10 12h4','Agency Data Backup','Keep candidate and file records safely stored for fast future reuse.'],
-          ['ic-amber','M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z','HR / Agency Workflow','Manage every candidate and document from one clean dashboard.'],
-          ['ic-sky','M6 2h9l5 5v15a0 0 0 0 1 0 0H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z|M14 2v6h6M8 13h8M8 17h8','Print-Ready A4','Generate professional A4 print-ready documents every time.'],
+          ['ic-indigo','M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2|M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8','HR Record Management','Store, search and manage every candidate and HR profile from one organised place.'],
+          ['ic-emerald','M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z|M14 2v6h6M8 13h8M8 17h5','Application Document Generation','Generate application and visa documents automatically from a single candidate input.'],
+          ['ic-amber','M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z','Agency Dashboard','Track agents, candidates, documents and payments from one clear overview.'],
+          ['ic-sky','M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2|M9 7a4 4 0 1 0 0 .01|M23 21v-2a4 4 0 0 0-3-3.87|M16 3.13a4 4 0 0 1 0 7.75','Staff Workflow','Give your team a simple, role-aware workflow for everyday agency operations.'],
+          ['ic-indigo','M6 9V2h12v7|M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2|M6 14h12v8H6z','Print Preview & PDF Download','Preview every document on screen and export print-ready A4 PDFs in one click.'],
+          ['ic-emerald','M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z|m9 12 2 2 4-4','Role Based Access','Super admin, agency admin and staff each get exactly the access they need.'],
+          ['ic-sky','M5 11h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2z|M7 11V7a5 5 0 0 1 10 0v4','Secure SaaS Dashboard','Manage your whole agency securely from any device, with data kept safe.'],
         ];
       @endphp
       @foreach($features as $f)
@@ -472,7 +473,7 @@
         </ul>
       </div>
       <div class="ba-col ba-after">
-        <h3><span class="badge-good">After</span> With KSA Embassy File</h3>
+        <h3><span class="badge-good">After</span> With VisaDeskPro</h3>
         <ul>
           @foreach(['One-time input for all documents','Automatic barcode generation','Consistent A4 print format','Complete file in one click','Faster, smoother agency workflow'] as $a)
           <li><svg class="v" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>{{ $a }}</li>
@@ -510,9 +511,9 @@
       <div>
         <div class="brand">
           <span class="logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/></svg></span>
-          KSA Embassy File
+          VisaDesk<span class="pro">Pro</span>
         </div>
-        <p class="desc">The complete Saudi Embassy file solution for recruiting, HR and manpower agencies — application form, forwarding letter, agreement and checklist from one input.</p>
+        <p class="desc">A secure SaaS platform for recruiting, HR and manpower agencies — manage HR records, agency applications, visa/application documents, payment requests and print-ready PDFs from one dashboard.</p>
       </div>
       <div class="foot-col">
         <h4>Product</h4>
@@ -535,8 +536,8 @@
       </div>
     </div>
     <div class="foot-bottom">
-      <span>&copy; {{ date('Y') }} {{ config('app.name', 'KSA Embassy File App') }}. All rights reserved.</span>
-      <span>Built for Saudi embassy file management.</span>
+      <span>&copy; {{ date('Y') }} {{ config('app.name', 'VisaDeskPro') }}. All rights reserved.</span>
+      <span>Agency, HR &amp; visa document management.</span>
     </div>
   </div>
 </footer>

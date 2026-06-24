@@ -1,4 +1,4 @@
-# KSA Embassy File Management System
+# VisaDeskPro
 
 A multi-tenant SaaS application for Saudi Arabia recruitment agencies to manage HR candidate files, embassy submission lists, subscriptions, and document generation (PDF/print).
 
@@ -75,7 +75,7 @@ Add one cron entry on the server:
 
 
 
-# KSA Embassy File App Instructions
+# VisaDeskPro Instructions
 
 This is a Laravel 12 project for KSA Embassy file, HR/candidate record, Agent, Embassy List, License and print/PDF generation.
 
