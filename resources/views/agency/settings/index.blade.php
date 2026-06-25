@@ -25,6 +25,14 @@
                     <i class="bi bi-bell me-1"></i> Notifications
                 </a>
             </li>
+            @if($canManageFields ?? false)
+            <li class="nav-item">
+                <a class="nav-link {{ request('tab') === 'hr_fields' ? 'active' : '' }}"
+                   href="{{ route('settings.index') }}?tab=hr_fields">
+                    <i class="bi bi-ui-checks me-1"></i> HR Form Fields
+                </a>
+            </li>
+            @endif
         </ul>
 
         {{-- Profile Tab --}}
@@ -172,6 +180,76 @@
 
                         <button type="submit" class="btn btn-primary btn-sm">
                             <i class="bi bi-floppy me-1"></i> Save Notification Settings
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        {{-- HR Form Fields Tab --}}
+        @if(request('tab') === 'hr_fields' && ($canManageFields ?? false))
+        <div id="hr-fields">
+            <div class="card">
+                <div class="card-header py-2 d-flex align-items-center justify-content-between">
+                    <span><i class="bi bi-ui-checks me-1"></i> HR Form Field Controls</span>
+                    <span class="badge bg-light text-secondary border">Active / Inactive</span>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">
+                        Turn fields <strong>On</strong> to show them on the Add / Edit HR form, or <strong>Off</strong> to hide them.
+                        Required fields are always shown and can't be turned off. Changes apply to your agency's HR form only.
+                    </p>
+
+                    <form method="POST" action="{{ route('settings.update') }}">
+                        @csrf @method('PUT')
+                        <input type="hidden" name="tab" value="hr_fields">
+
+                        @foreach($hrFieldGroups as $section => $fields)
+                            <div class="mb-3">
+                                <div class="text-uppercase text-muted fw-semibold mb-2" style="font-size:.68rem;letter-spacing:.04em;">{{ $section }}</div>
+                                <div class="table-responsive">
+                                    <table class="table table-sm align-middle mb-0">
+                                        <thead>
+                                            <tr class="text-muted" style="font-size:.72rem;">
+                                                <th style="width:55%;">Field Name</th>
+                                                <th style="width:25%;">Type</th>
+                                                <th style="width:20%;" class="text-end">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($fields as $field)
+                                                <tr>
+                                                    <td class="fw-semibold text-dark" style="font-size:.85rem;">{{ $field['label'] }}</td>
+                                                    <td>
+                                                        @if($field['required'])
+                                                            <span class="badge bg-secondary-subtle text-secondary border">Required</span>
+                                                        @else
+                                                            <span class="text-muted small">Optional</span>
+                                                        @endif
+                                                    </td>
+                                                    <td class="text-end">
+                                                        @if($field['required'])
+                                                            <span class="badge bg-success-subtle text-success border"><i class="bi bi-lock-fill me-1"></i>Always on</span>
+                                                        @else
+                                                            <div class="form-check form-switch d-inline-block">
+                                                                <input class="form-check-input" type="checkbox"
+                                                                       name="fields[]" value="{{ $field['key'] }}"
+                                                                       id="hrf_{{ $field['key'] }}"
+                                                                       {{ ($hrFieldStatuses[$field['key']] ?? true) ? 'checked' : '' }}>
+                                                            </div>
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        @endforeach
+
+                        <button type="submit" class="btn btn-primary btn-sm mt-2">
+                            <i class="bi bi-floppy me-1"></i> Save Field Settings
                         </button>
                     </form>
                 </div>

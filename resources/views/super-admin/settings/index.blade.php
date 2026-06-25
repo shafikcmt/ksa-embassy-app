@@ -63,6 +63,72 @@
             </div>
         </div>
 
+        {{-- Global default HR form field controls --}}
+        <div class="card mt-4">
+            <div class="card-header py-2 d-flex align-items-center justify-content-between">
+                <span><i class="bi bi-ui-checks me-1"></i> HR Form Field Defaults</span>
+                <span class="badge bg-light text-secondary border">Active / Inactive</span>
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-3">
+                    These are the <strong>global defaults</strong> for the Add / Edit HR form. Each agency can override
+                    them from their own Settings. Required fields are always shown and can't be turned off.
+                </p>
+
+                <form method="POST" action="{{ route('super-admin.settings.update') }}">
+                    @csrf @method('PUT')
+                    <input type="hidden" name="section" value="hr_fields">
+
+                    @foreach($hrFieldGroups as $section => $fields)
+                        <div class="mb-3">
+                            <div class="text-uppercase text-muted fw-semibold mb-2" style="font-size:.68rem;letter-spacing:.04em;">{{ $section }}</div>
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle mb-0">
+                                    <thead>
+                                        <tr class="text-muted" style="font-size:.72rem;">
+                                            <th style="width:55%;">Field Name</th>
+                                            <th style="width:25%;">Type</th>
+                                            <th style="width:20%;" class="text-end">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($fields as $field)
+                                            <tr>
+                                                <td class="fw-semibold text-dark" style="font-size:.85rem;">{{ $field['label'] }}</td>
+                                                <td>
+                                                    @if($field['required'])
+                                                        <span class="badge bg-secondary-subtle text-secondary border">Required</span>
+                                                    @else
+                                                        <span class="text-muted small">Optional</span>
+                                                    @endif
+                                                </td>
+                                                <td class="text-end">
+                                                    @if($field['required'])
+                                                        <span class="badge bg-success-subtle text-success border"><i class="bi bi-lock-fill me-1"></i>Always on</span>
+                                                    @else
+                                                        <div class="form-check form-switch d-inline-block">
+                                                            <input class="form-check-input" type="checkbox"
+                                                                   name="fields[]" value="{{ $field['key'] }}"
+                                                                   id="gf_{{ $field['key'] }}"
+                                                                   {{ ($hrFieldStatuses[$field['key']] ?? true) ? 'checked' : '' }}>
+                                                        </div>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    @endforeach
+
+                    <button type="submit" class="btn btn-primary btn-sm mt-2">
+                        <i class="bi bi-floppy me-1"></i> Save Field Defaults
+                    </button>
+                </form>
+            </div>
+        </div>
+
     </div>
 </div>
 @endsection

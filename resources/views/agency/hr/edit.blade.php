@@ -10,8 +10,10 @@
     </x-slot:actions>
 </x-ui.page-header>
 
-<form method="POST" action="{{ route('hr.update', $hr) }}" id="hrForm" novalidate>
-    @csrf @method('PUT')
-    @include('agency.hr._form', ['hr' => $hr, 'mode' => 'edit'])
-</form>
+<div class="mx-auto max-w-4xl">
+    <form method="POST" action="{{ route('hr.update', $hr) }}" id="hrForm" novalidate>
+        @csrf @method('PUT')
+        @include('agency.hr._form', ['hr' => $hr, 'mode' => 'edit'])
+    </form>
+</div>
 @endsection

@@ -4,21 +4,29 @@ namespace App\Http\Controllers\Agency;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use App\Support\HrFieldControls;
 use Illuminate\Http\Request;
 
 class SettingsController extends Controller
 {
     public function index()
     {
-        $agency = auth()->user()->agency;
+        $user   = auth()->user();
+        $agency = $user->agency;
 
         $printHeader = Setting::get('print_header', $agency->id, '');
         $printFooter = Setting::get('print_footer', $agency->id, '');
         $notifySubscription = Setting::get('notify_subscription_expiry', $agency->id, '1');
         $notifyPassport = Setting::get('notify_passport_expiry', $agency->id, '1');
 
+        // HR form field controls (Active/Inactive) — managed by Agency Admin / Super Admin.
+        $canManageFields = $user->isAgencyAdmin() || $user->isSuperAdmin();
+        $hrFieldGroups   = HrFieldControls::grouped();
+        $hrFieldStatuses = HrFieldControls::statusesForScope($agency->id, true);
+
         return view('agency.settings.index', compact(
-            'agency', 'printHeader', 'printFooter', 'notifySubscription', 'notifyPassport'
+            'agency', 'printHeader', 'printFooter', 'notifySubscription', 'notifyPassport',
+            'canManageFields', 'hrFieldGroups', 'hrFieldStatuses'
         ));
     }
 
@@ -50,6 +58,15 @@ class SettingsController extends Controller
             Setting::set('print_footer', $request->input('print_footer', ''), $agencyId);
 
             return back()->with('success', 'Print settings saved.')->withFragment('print');
+        }
+
+        if ($tab === 'hr_fields') {
+            $user = auth()->user();
+            abort_unless($user->isAgencyAdmin() || $user->isSuperAdmin(), 403);
+
+            HrFieldControls::save($request->input('fields', []), $user->agency_id);
+
+            return back()->with('success', 'HR form field settings saved.')->withFragment('hr-fields');
         }
 
         if ($tab === 'notifications') {

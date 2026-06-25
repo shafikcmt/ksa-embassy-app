@@ -5,6 +5,7 @@ namespace App\Http\Controllers\SuperAdmin;
 use App\Http\Controllers\Controller;
 use App\Models\Plan;
 use App\Models\Setting;
+use App\Support\HrFieldControls;
 use Illuminate\Http\Request;
 
 class SettingsController extends Controller
@@ -18,13 +19,25 @@ class SettingsController extends Controller
         $maintenanceMode = Setting::get('maintenance_mode', null, '0');
         $supportEmail   = Setting::get('support_email', null, '');
 
+        // Global default HR form field controls (agencies inherit these unless overridden).
+        $hrFieldGroups   = HrFieldControls::grouped();
+        $hrFieldStatuses = HrFieldControls::statusesForScope(null);
+
         return view('super-admin.settings.index', compact(
-            'plans', 'systemName', 'defaultPlanId', 'maintenanceMode', 'supportEmail'
+            'plans', 'systemName', 'defaultPlanId', 'maintenanceMode', 'supportEmail',
+            'hrFieldGroups', 'hrFieldStatuses'
         ));
     }
 
     public function update(Request $request)
     {
+        // Global default HR form field controls (separate form on the settings page).
+        if ($request->input('section') === 'hr_fields') {
+            HrFieldControls::save($request->input('fields', []), null);
+
+            return back()->with('success', 'Default HR form field settings saved.');
+        }
+
         $request->validate([
             'system_name'    => 'required|string|max:200',
             'support_email'  => 'nullable|email|max:150',

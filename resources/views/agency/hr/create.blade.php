@@ -9,8 +9,10 @@
     </x-slot:actions>
 </x-ui.page-header>
 
-<form method="POST" action="{{ route('hr.store') }}" id="hrForm" novalidate>
-    @csrf
-    @include('agency.hr._form', ['hr' => null, 'mode' => 'create'])
-</form>
+<div class="mx-auto max-w-4xl">
+    <form method="POST" action="{{ route('hr.store') }}" id="hrForm" novalidate>
+        @csrf
+        @include('agency.hr._form', ['hr' => null, 'mode' => 'create'])
+    </form>
+</div>
 @endsection
