@@ -23,19 +23,19 @@
     $sidebarSub = $authUser->agency?->activeSubscription;
     $initials   = collect(explode(' ', trim($authUser->name)))->take(2)->map(fn($p) => mb_substr($p, 0, 1))->implode('');
 
-    $navGroups = [
-        'Overview' => [
-            ['route' => 'dashboard', 'active' => request()->routeIs('dashboard'), 'icon' => 'bi-speedometer2', 'label' => 'Dashboard'],
-        ],
-        'Operations' => [
-            ['route' => 'agents.index', 'active' => request()->routeIs('agents.*'), 'icon' => 'bi-people', 'label' => 'Agents'],
-            ['route' => 'hr.index', 'active' => request()->routeIs('hr.index') || request()->routeIs('hr.create') || request()->routeIs('hr.edit') || request()->routeIs('hr.show'), 'icon' => 'bi-person-vcard', 'label' => 'HR / Candidates'],
-            ['route' => 'embassy-lists.index', 'active' => request()->routeIs('embassy-lists.*'), 'icon' => 'bi-list-ol', 'label' => 'Embassy Lists'],
-        ],
-        'Documents' => [
-            ['route' => 'hr.index', 'active' => request()->routeIs('hr.documents') || request()->routeIs('hr.print.*') || request()->routeIs('hr.download.*'), 'icon' => 'bi-file-earmark-pdf', 'label' => 'Print / PDF'],
-        ],
+    // Primary navigation — the few items a normal agency user needs every day.
+    $primaryNav = [
+        ['route' => 'dashboard',            'active' => request()->routeIs('dashboard'),                                                                                  'icon' => 'bi-grid-1x2',         'label' => 'Dashboard'],
+        ['route' => 'hr.index',             'active' => request()->routeIs('hr.index') || request()->routeIs('hr.create') || request()->routeIs('hr.edit') || request()->routeIs('hr.show'), 'icon' => 'bi-person-vcard', 'label' => 'HR / Candidates'],
+        ['route' => 'embassy-lists.index',  'active' => request()->routeIs('embassy-lists.*'),                                                                            'icon' => 'bi-list-ol',          'label' => 'Embassy Lists'],
+        ['route' => 'hr.index',             'active' => request()->routeIs('hr.documents') || request()->routeIs('hr.print.*') || request()->routeIs('hr.download.*'),    'icon' => 'bi-printer',          'label' => 'Documents / Print'],
     ];
+
+    // Admin-only tools, tucked inside a collapsible group so they never crowd daily work.
+    $adminNav = [
+        ['route' => 'agents.index', 'active' => request()->routeIs('agents.*'), 'icon' => 'bi-people', 'label' => 'Agents & Staff'],
+    ];
+    $adminActive = collect($adminNav)->contains('active', true);
 @endphp
 
 <div x-data="{ sidebar: false }" class="min-h-full">
@@ -60,40 +60,58 @@
         </div>
 
         {{-- Nav --}}
-        <nav class="flex-1 overflow-y-auto px-3 py-3">
-            @foreach($navGroups as $group => $links)
-                <div class="px-3 pb-1.5 pt-4 text-[0.62rem] font-bold uppercase tracking-[0.13em] text-slate-500">{{ $group }}</div>
-                @foreach($links as $link)
-                    <a href="{{ route($link['route']) }}"
-                       @click="sidebar = false"
-                       @class([
-                           'group mx-0.5 my-0.5 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition',
-                           'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-lg shadow-indigo-600/30' => $link['active'],
-                           'text-slate-300 hover:bg-white/5 hover:text-white' => ! $link['active'],
-                       ])>
-                        <i class="bi {{ $link['icon'] }} w-5 text-center text-base"></i>
-                        <span>{{ $link['label'] }}</span>
-                    </a>
-                @endforeach
+        @php
+            $navItem  = 'group relative mx-0.5 my-0.5 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition';
+            $navOn    = 'bg-white/10 text-white';
+            $navOff   = 'text-slate-300 hover:bg-white/5 hover:text-white';
+        @endphp
+        <nav class="flex-1 overflow-y-auto px-3 py-4">
+            <div class="px-3 pb-1.5 text-[0.62rem] font-bold uppercase tracking-[0.13em] text-slate-500">Menu</div>
+            @foreach($primaryNav as $link)
+                <a href="{{ route($link['route']) }}" @click="sidebar = false"
+                   @class([$navItem, $navOn => $link['active'], $navOff => ! $link['active']])>
+                    @if($link['active'])<span class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-brand-400"></span>@endif
+                    <i class="bi {{ $link['icon'] }} w-5 text-center text-base {{ $link['active'] ? 'text-brand-300' : 'text-slate-400 group-hover:text-slate-200' }}"></i>
+                    <span>{{ $link['label'] }}</span>
+                </a>
             @endforeach
 
-            <div class="px-3 pb-1.5 pt-4 text-[0.62rem] font-bold uppercase tracking-[0.13em] text-slate-500">Account</div>
             @if($isAdmin)
-                <a href="{{ route('settings.index') }}"
-                   @click="sidebar = false"
-                   @class([
-                       'group mx-0.5 my-0.5 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition',
-                       'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-lg shadow-indigo-600/30' => request()->routeIs('settings.*'),
-                       'text-slate-300 hover:bg-white/5 hover:text-white' => ! request()->routeIs('settings.*'),
-                   ])>
-                    <i class="bi bi-gear w-5 text-center text-base"></i>
+                <a href="{{ route('settings.index') }}" @click="sidebar = false"
+                   @class([$navItem, $navOn => request()->routeIs('settings.*'), $navOff => ! request()->routeIs('settings.*')])>
+                    @if(request()->routeIs('settings.*'))<span class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-brand-400"></span>@endif
+                    <i class="bi bi-gear w-5 text-center text-base {{ request()->routeIs('settings.*') ? 'text-brand-300' : 'text-slate-400 group-hover:text-slate-200' }}"></i>
                     <span>Settings</span>
                 </a>
+
+                {{-- Admin Tools — collapsible so advanced options stay out of the way --}}
+                <div x-data="{ open: {{ $adminActive ? 'true' : 'false' }} }" class="mt-3">
+                    <div class="px-3 pb-1.5 text-[0.62rem] font-bold uppercase tracking-[0.13em] text-slate-500">Admin</div>
+                    <button type="button" @click="open = !open"
+                            class="group mx-0.5 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-white/5 hover:text-white">
+                        <i class="bi bi-shield-lock w-5 text-center text-base text-slate-400 group-hover:text-slate-200"></i>
+                        <span class="flex-1 text-left">Admin Tools</span>
+                        <i class="bi bi-chevron-down text-xs text-slate-400 transition-transform" :class="open && 'rotate-180'"></i>
+                    </button>
+                    <div x-show="open" x-cloak
+                         x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
+                         class="mt-0.5 space-y-0.5 pl-3">
+                        @foreach($adminNav as $link)
+                            <a href="{{ route($link['route']) }}" @click="sidebar = false"
+                               @class([$navItem, $navOn => $link['active'], $navOff => ! $link['active']])>
+                                <i class="bi {{ $link['icon'] }} w-5 text-center text-base {{ $link['active'] ? 'text-brand-300' : 'text-slate-400 group-hover:text-slate-200' }}"></i>
+                                <span>{{ $link['label'] }}</span>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
             @endif
+
+            <div class="my-3 border-t border-white/10"></div>
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit" class="group mx-0.5 my-0.5 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-slate-300 transition hover:bg-white/5 hover:text-white">
-                    <i class="bi bi-box-arrow-right w-5 text-center text-base"></i>
+                    <i class="bi bi-box-arrow-right w-5 text-center text-base text-slate-400 group-hover:text-slate-200"></i>
                     <span>Logout</span>
                 </button>
             </form>
@@ -151,13 +169,10 @@
                     <i class="bi bi-list text-xl"></i>
                 </button>
                 <h1 class="truncate text-base font-bold text-slate-900">@yield('page-title', 'Dashboard')</h1>
-                <span class="hidden items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-500 xl:inline-flex">
-                    <i class="bi bi-calendar3 text-slate-400"></i>{{ now()->format('D, d M Y') }}
-                </span>
-                <form method="GET" action="{{ route('hr.index') }}" class="hidden items-center gap-2 rounded-lg bg-slate-100 px-3 py-2 ring-1 ring-transparent transition focus-within:bg-white focus-within:ring-brand-300 md:flex">
+                <form method="GET" action="{{ route('hr.index') }}" class="hidden items-center gap-2 rounded-lg bg-slate-100 px-3 py-1.5 ring-1 ring-transparent transition focus-within:bg-white focus-within:ring-brand-300 md:flex">
                     <i class="bi bi-search text-sm text-slate-400"></i>
                     <input type="text" name="search" value="{{ request('search') }}" placeholder="Search candidates…"
-                           class="w-44 border-0 bg-transparent p-0 text-sm text-slate-700 placeholder:text-slate-400 focus:ring-0 lg:w-56">
+                           class="w-40 border-0 bg-transparent p-0 text-sm text-slate-700 placeholder:text-slate-400 focus:ring-0 lg:w-48">
                 </form>
             </div>
 
