@@ -27,6 +27,12 @@
                             value="{{ old('name') }}" required>
                         @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Owner / Contact Name</label>
+                        <input type="text" name="owner_name" class="form-control @error('owner_name') is-invalid @enderror"
+                            value="{{ old('owner_name') }}" placeholder="Contact person / owner">
+                        @error('owner_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
                     <div class="col-md-3">
                         <label class="form-label fw-semibold">License Number</label>
                         <input type="text" name="license_number" class="form-control @error('license_number') is-invalid @enderror"
@@ -64,9 +70,25 @@
                             <option value="suspended" @selected(old('status') === 'suspended')>Suspended</option>
                         </select>
                     </div>
-                    <div class="col-md-8">
+                    <div class="col-md-5">
                         <label class="form-label fw-semibold">Logo</label>
                         <input type="file" name="logo" class="form-control" accept="image/*">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold d-block">Print Logo <span class="text-danger">*</span></label>
+                        @php $printLogo = (int) old('print_logo', 1); @endphp
+                        <div class="d-flex gap-4 pt-1">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="print_logo" id="cLogoYes"
+                                    value="1" {{ $printLogo === 1 ? 'checked' : '' }}>
+                                <label class="form-check-label" for="cLogoYes">Yes</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="print_logo" id="cLogoNo"
+                                    value="0" {{ $printLogo === 0 ? 'checked' : '' }}>
+                                <label class="form-check-label" for="cLogoNo">No</label>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

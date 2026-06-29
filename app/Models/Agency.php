@@ -35,6 +35,17 @@ class Agency extends Model
         return $this->hasMany(User::class);
     }
 
+    /**
+     * The agency's primary admin user (login account). Falls back to the first
+     * user if no agency_admin role is assigned. Used by the Super Admin agency
+     * profile screens to view/edit the agency's login email & password.
+     */
+    public function adminUser(): ?User
+    {
+        return $this->users()->whereHas('roles', fn ($q) => $q->where('name', 'agency_admin'))->first()
+            ?? $this->users()->first();
+    }
+
     public function subscriptions(): HasMany
     {
         return $this->hasMany(Subscription::class);

@@ -15,7 +15,7 @@
         <form method="GET" class="row g-2 align-items-end">
             <div class="col-md-5">
                 <input type="text" name="search" class="form-control form-control-sm"
-                    placeholder="Search by name, email, or license number..."
+                    placeholder="Search by agency, owner, RL no, email, or phone..."
                     value="{{ request('search') }}">
             </div>
             <div class="col-md-3">
@@ -44,10 +44,11 @@
                 <tr>
                     <th>#</th>
                     <th>Agency</th>
-                    <th>License / RL</th>
-                    <th>Contact</th>
-                    <th>Subscription</th>
-                    <th>Users</th>
+                    <th>Owner</th>
+                    <th>RL No</th>
+                    <th>Official Email</th>
+                    <th>Phone</th>
+                    <th>License Expiry</th>
                     <th>Status</th>
                     <th>Actions</th>
                 </tr>
@@ -58,33 +59,25 @@
                     <td class="text-muted">{{ $loop->iteration + ($agencies->currentPage() - 1) * $agencies->perPage() }}</td>
                     <td>
                         <div class="fw-semibold">{{ $agency->name }}</div>
-                        @if($agency->license_expiry_date)
-                            <small class="{{ $agency->license_expiry_date->isPast() ? 'text-danger' : 'text-muted' }}">
-                                <i class="bi bi-calendar3"></i> License exp: {{ $agency->license_expiry_date->format('d M Y') }}
-                            </small>
-                        @endif
-                    </td>
-                    <td>
-                        <small>{{ $agency->license_number ?? '—' }}</small><br>
-                        <small class="text-muted">{{ $agency->rl_number ?? '' }}</small>
-                    </td>
-                    <td>
-                        <small>{{ $agency->phone ?? '—' }}</small><br>
-                        <small class="text-muted">{{ $agency->email ?? '' }}</small>
-                    </td>
-                    <td>
                         @if($agency->activeSubscription)
-                            <span class="badge badge-status-{{ $agency->activeSubscription->status }}">
-                                {{ $agency->activeSubscription->plan->name ?? '—' }}
-                            </span>
-                            <div style="font-size:.7rem;" class="text-muted">
-                                Exp: {{ $agency->activeSubscription->end_date->format('d M Y') }}
-                            </div>
+                            <small class="text-muted">{{ $agency->activeSubscription->plan->name ?? '—' }}</small>
                         @else
-                            <span class="badge bg-light text-secondary">No Subscription</span>
+                            <small class="text-muted">No subscription</small>
                         @endif
                     </td>
-                    <td class="text-center">{{ $agency->users_count }}</td>
+                    <td><small>{{ $agency->owner_name ?? '—' }}</small></td>
+                    <td><small>{{ $agency->rl_number ?? '—' }}</small></td>
+                    <td><small>{{ $agency->email ?? '—' }}</small></td>
+                    <td><small>{{ $agency->phone ?? '—' }}</small></td>
+                    <td>
+                        @if($agency->license_expiry_date)
+                            <small class="{{ $agency->license_expiry_date->isPast() ? 'text-danger fw-semibold' : 'text-muted' }}">
+                                {{ $agency->license_expiry_date->format('d M Y') }}
+                            </small>
+                        @else
+                            <small class="text-muted">—</small>
+                        @endif
+                    </td>
                     <td>
                         <span class="badge badge-status-{{ $agency->status }}">{{ ucfirst($agency->status) }}</span>
                     </td>
@@ -118,7 +111,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="8" class="text-center text-muted py-4">
+                    <td colspan="9" class="text-center text-muted py-4">
                         <i class="bi bi-inbox fs-4 d-block mb-1"></i> No agencies found.
                     </td>
                 </tr>
