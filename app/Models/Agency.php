@@ -28,6 +28,16 @@ class Agency extends Model
                 $agency->slug = Str::slug($agency->name) . '-' . Str::random(5);
             }
         });
+
+        // System license number is auto-generated from the new record's id
+        // (LIC-AGY-0001, ...) so Super Admin never types it manually and it
+        // is guaranteed unique. Only generated when not already set.
+        static::created(function (Agency $agency) {
+            if (empty($agency->license_number)) {
+                $agency->license_number = 'LIC-AGY-' . str_pad((string) $agency->id, 4, '0', STR_PAD_LEFT);
+                $agency->saveQuietly();
+            }
+        });
     }
 
     public function users(): HasMany

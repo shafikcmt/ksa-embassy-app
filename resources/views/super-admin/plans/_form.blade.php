@@ -5,12 +5,21 @@
             value="{{ old('name', $plan->name ?? '') }}" required>
         @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
     </div>
-    <div class="col-md-3">
-        <label class="form-label fw-semibold">Price (USD)</label>
+    <div class="col-md-2">
+        <label class="form-label fw-semibold">Price</label>
         <input type="number" name="price" class="form-control" step="0.01" min="0"
             value="{{ old('price', $plan->price ?? 0) }}">
     </div>
-    <div class="col-md-3">
+    <div class="col-md-2">
+        <label class="form-label fw-semibold">Currency</label>
+        @php $planCurrency = old('currency', $plan->currency ?? 'BDT'); @endphp
+        <select name="currency" class="form-select">
+            <option value="BDT" @selected($planCurrency === 'BDT')>BDT (৳)</option>
+            <option value="USD" @selected($planCurrency === 'USD')>USD ($)</option>
+            <option value="SAR" @selected($planCurrency === 'SAR')>SAR</option>
+        </select>
+    </div>
+    <div class="col-md-2">
         <label class="form-label fw-semibold">Duration (Days)</label>
         <input type="number" name="duration_days" class="form-control" min="1"
             value="{{ old('duration_days', $plan->duration_days ?? 30) }}">

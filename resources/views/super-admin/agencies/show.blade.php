@@ -23,7 +23,7 @@
                 <table class="table table-sm table-borderless mb-0">
                     <tr><th width="45%">Status</th><td><span class="badge badge-status-{{ $agency->status }}">{{ ucfirst($agency->status) }}</span></td></tr>
                     <tr><th>Owner / Contact</th><td>{{ $agency->owner_name ?? '—' }}</td></tr>
-                    <tr><th>License No.</th><td>{{ $agency->license_number ?? '—' }}</td></tr>
+                    <tr><th>System License No.</th><td>{{ $agency->license_number ?? '—' }}</td></tr>
                     <tr><th>RL Number</th><td>{{ $agency->rl_number ?? '—' }}</td></tr>
                     <tr><th>Phone</th><td>{{ $agency->phone ?? '—' }}</td></tr>
                     <tr><th>Official Email</th><td>{{ $agency->email ?? '—' }}</td></tr>

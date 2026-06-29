@@ -33,17 +33,18 @@
                             value="{{ old('owner_name') }}" placeholder="Contact person / owner">
                         @error('owner_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-semibold">License Number</label>
-                        <input type="text" name="license_number" class="form-control @error('license_number') is-invalid @enderror"
-                            value="{{ old('license_number') }}">
-                        @error('license_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-semibold">RL Number</label>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">RL Number / Recruiting License No</label>
                         <input type="text" name="rl_number" class="form-control @error('rl_number') is-invalid @enderror"
-                            value="{{ old('rl_number') }}">
+                            value="{{ old('rl_number') }}" placeholder="Optional">
+                        <div class="form-text">Optional. You can update it later.</div>
                         @error('rl_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="col-12">
+                        <div class="alert alert-light border d-flex align-items-center mb-0 py-2" role="alert">
+                            <i class="bi bi-info-circle me-2 text-primary"></i>
+                            <small class="mb-0">A <strong>System License Number</strong> (e.g. <code>LIC-AGY-0001</code>) will be generated automatically after agency creation.</small>
+                        </div>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label fw-semibold">Phone</label>
@@ -137,11 +138,11 @@
                     <option value="">— No subscription yet —</option>
                     @foreach($plans as $plan)
                         <option value="{{ $plan->id }}" @selected(old('plan_id') == $plan->id)>
-                            {{ $plan->name }} ({{ $plan->price > 0 ? '$'.$plan->price.'/mo' : 'Free' }})
+                            {{ $plan->name }} ({{ $plan->priceLabel('/mo') }})
                         </option>
                     @endforeach
                 </select>
-                <small class="text-muted">Will start a trial subscription with the selected plan.</small>
+                <small class="text-muted">Optional — starts a trial subscription with the selected plan. Agency can be created without one.</small>
             </div>
         </div>
 

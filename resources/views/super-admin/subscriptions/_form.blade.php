@@ -19,7 +19,7 @@
             @foreach($plans as $plan)
                 <option value="{{ $plan->id }}"
                     @selected(old('plan_id', $subscription->plan_id ?? '') == $plan->id)>
-                    {{ $plan->name }} — ${{ number_format($plan->price, 2) }}
+                    {{ $plan->name }} — {{ $plan->priceLabel('') }}
                 </option>
             @endforeach
         </select>

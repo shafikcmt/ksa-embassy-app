@@ -56,6 +56,7 @@ class PlanController extends Controller
         return $request->validate([
             'name'                       => 'required|string|max:100',
             'price'                      => 'required|numeric|min:0',
+            'currency'                   => 'required|string|in:BDT,USD,SAR',
             'max_hr'                     => 'required|integer|min:1',
             'max_users'                  => 'required|integer|min:1',
             'max_agents'                 => 'required|integer|min:0',

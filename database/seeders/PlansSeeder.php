@@ -17,6 +17,7 @@ class PlansSeeder extends Seeder
                 'name'                      => 'Trial',
                 'slug'                      => 'trial',
                 'price'                     => 0,
+                'currency'                  => 'BDT',
                 'max_hr'                    => 20,
                 'max_users'                 => 2,
                 'max_agents'                => 5,
@@ -30,7 +31,8 @@ class PlansSeeder extends Seeder
             [
                 'name'                      => 'Basic',
                 'slug'                      => 'basic',
-                'price'                     => 29.00,
+                'price'                     => 2000.00,
+                'currency'                  => 'BDT',
                 'max_hr'                    => 100,
                 'max_users'                 => 3,
                 'max_agents'                => 15,
@@ -44,7 +46,8 @@ class PlansSeeder extends Seeder
             [
                 'name'                      => 'Standard',
                 'slug'                      => 'standard',
-                'price'                     => 59.00,
+                'price'                     => 4000.00,
+                'currency'                  => 'BDT',
                 'max_hr'                    => 500,
                 'max_users'                 => 8,
                 'max_agents'                => 50,
@@ -58,7 +61,8 @@ class PlansSeeder extends Seeder
             [
                 'name'                      => 'Premium',
                 'slug'                      => 'premium',
-                'price'                     => 99.00,
+                'price'                     => 7000.00,
+                'currency'                  => 'BDT',
                 'max_hr'                    => 9999,
                 'max_users'                 => 25,
                 'max_agents'                => 999,

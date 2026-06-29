@@ -21,7 +21,7 @@
             </div>
             <div class="card-body">
                 <div class="fs-4 fw-bold text-primary mb-1">
-                    {{ $plan->price > 0 ? '$'.number_format($plan->price, 2) : 'Free' }}
+                    {{ $plan->priceLabel('') }}
                     <small class="fs-6 text-muted fw-normal">/ {{ $plan->duration_days }}d</small>
                 </div>
                 @if($plan->description)

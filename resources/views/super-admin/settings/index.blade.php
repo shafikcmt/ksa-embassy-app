@@ -37,7 +37,7 @@
                             <option value="">— None —</option>
                             @foreach($plans as $plan)
                             <option value="{{ $plan->id }}" {{ (string)$defaultPlanId === (string)$plan->id ? 'selected' : '' }}>
-                                {{ $plan->name }} — SAR {{ number_format($plan->price, 0) }}
+                                {{ $plan->name }} — {{ $plan->priceLabel('') }}
                             </option>
                             @endforeach
                         </select>

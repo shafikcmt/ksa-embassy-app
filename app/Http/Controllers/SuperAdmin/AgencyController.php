@@ -53,7 +53,7 @@ class AgencyController extends Controller
         $validated = $request->validate([
             'name'                => 'required|string|max:255',
             'owner_name'          => 'nullable|string|max:255',
-            'license_number'      => 'nullable|string|max:100',
+            // license_number (system license) is auto-generated — never from input.
             'rl_number'           => 'nullable|string|max:100',
             'address'             => 'nullable|string',
             'phone'               => 'nullable|string|max:30',
@@ -74,11 +74,11 @@ class AgencyController extends Controller
                 $logoPath = $request->file('logo')->store('logos', 'public');
             }
 
+            // license_number is generated automatically by the Agency model.
             $agency = Agency::create([
                 'name'                => $validated['name'],
                 'owner_name'          => $validated['owner_name'] ?? null,
                 'slug'                => Str::slug($validated['name']) . '-' . Str::random(5),
-                'license_number'      => $validated['license_number'] ?? null,
                 'rl_number'           => $validated['rl_number'] ?? null,
                 'address'             => $validated['address'] ?? null,
                 'phone'               => $validated['phone'] ?? null,
@@ -127,7 +127,9 @@ class AgencyController extends Controller
     public function edit(Agency $agency)
     {
         $adminUser = $agency->adminUser();
-        return view('super-admin.agencies.edit', compact('agency', 'adminUser'));
+        $agency->load('activeSubscription.plan');
+        $plans = Plan::active()->get();
+        return view('super-admin.agencies.edit', compact('agency', 'adminUser', 'plans'));
     }
 
     public function update(Request $request, Agency $agency)
@@ -137,7 +139,7 @@ class AgencyController extends Controller
         $validated = $request->validate([
             'name'                => 'required|string|max:255',
             'owner_name'          => 'nullable|string|max:255',
-            'license_number'      => 'nullable|string|max:100',
+            // license_number (system license) is read-only — not accepted from input.
             'rl_number'           => 'nullable|string|max:100',
             'address'             => 'nullable|string',
             'phone'               => 'nullable|string|max:30',
@@ -152,12 +154,13 @@ class AgencyController extends Controller
                 Rule::unique('users', 'email')->ignore($adminUser?->id),
             ],
             'new_password'        => 'nullable|string|min:8|confirmed',
+            'plan_id'             => 'nullable|exists:plans,id',
         ]);
 
         $old = $agency->toArray();
 
         $agencyData = collect($validated)->only([
-            'name', 'owner_name', 'license_number', 'rl_number', 'address',
+            'name', 'owner_name', 'rl_number', 'address',
             'phone', 'email', 'license_expiry_date', 'status',
         ])->all();
         $agencyData['print_logo'] = (bool) $validated['print_logo'];
@@ -179,6 +182,23 @@ class AgencyController extends Controller
             }
             if ($userData) {
                 $adminUser->update($userData);
+            }
+        }
+
+        // Optional: assign a new subscription plan from the edit page. Creates a
+        // fresh subscription (same as create) without touching existing ones.
+        if ($request->filled('plan_id')) {
+            $plan = Plan::find($validated['plan_id']);
+            if ($plan) {
+                Subscription::create([
+                    'agency_id'      => $agency->id,
+                    'plan_id'        => $plan->id,
+                    'start_date'     => now(),
+                    'end_date'       => now()->addDays($plan->duration_days),
+                    'status'         => 'trial',
+                    'payment_status' => 'pending',
+                    'amount'         => $plan->price,
+                ]);
             }
         }
 

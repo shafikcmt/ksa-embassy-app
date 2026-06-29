@@ -34,7 +34,7 @@
                         <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;">Plan Price</div>
                         <div class="fw-bold">
                             @if($lastSubscription->plan?->price)
-                                SAR {{ number_format($lastSubscription->plan->price, 0) }}/period
+                                {{ $lastSubscription->plan->priceLabel('/period') }}
                             @else
                                 —
                             @endif
