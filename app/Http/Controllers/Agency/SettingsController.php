@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Support\HrFieldControls;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class SettingsController extends Controller
 {
@@ -25,7 +27,7 @@ class SettingsController extends Controller
         $hrFieldStatuses = HrFieldControls::statusesForScope($agency->id, true);
 
         return view('agency.settings.index', compact(
-            'agency', 'printHeader', 'printFooter', 'notifySubscription', 'notifyPassport',
+            'user', 'agency', 'printHeader', 'printFooter', 'notifySubscription', 'notifyPassport',
             'canManageFields', 'hrFieldGroups', 'hrFieldStatuses'
         ));
     }
@@ -35,14 +37,51 @@ class SettingsController extends Controller
         $tab = $request->input('tab', 'profile');
 
         if ($tab === 'profile') {
-            $request->validate([
-                'name'    => 'required|string|max:200',
-                'email'   => 'nullable|email|max:150',
-                'phone'   => 'nullable|string|max:30',
-                'address' => 'nullable|string|max:500',
+            $user   = auth()->user();
+            $agency = $user->agency;
+
+            // Login email is changing only if a different value was submitted.
+            $loginEmailChanging = $request->filled('login_email')
+                && $request->input('login_email') !== $user->email;
+
+            $validated = $request->validate([
+                'owner_name'      => 'nullable|string|max:200',
+                'official_email'  => 'nullable|email|max:150',
+                'phone'           => 'nullable|string|max:30',
+                'address'         => 'nullable|string|max:500',
+                'print_logo'      => 'required|boolean',
+                'login_email'     => [
+                    'required', 'email', 'max:150',
+                    Rule::unique('users', 'email')->ignore($user->id),
+                ],
+                // Current password is required only when the login email changes.
+                'current_password' => [
+                    Rule::requiredIf($loginEmailChanging),
+                ],
             ]);
 
-            auth()->user()->agency->update($request->only('name', 'email', 'phone', 'address'));
+            if ($loginEmailChanging
+                && ! Hash::check((string) $request->input('current_password'), $user->password)) {
+                return back()
+                    ->withErrors(['current_password' => 'The current password is incorrect.'])
+                    ->withInput()
+                    ->withFragment('profile');
+            }
+
+            // Agency-owned, editable fields. Company name (name) and RL number are
+            // license/registration data and are intentionally NOT updated here.
+            $agency->update([
+                'owner_name' => $validated['owner_name'] ?? null,
+                'email'      => $validated['official_email'] ?? null,
+                'phone'      => $validated['phone'] ?? null,
+                'address'    => $validated['address'] ?? null,
+                'print_logo' => (bool) $validated['print_logo'],
+            ]);
+
+            // Login / account email lives on the user record.
+            if ($loginEmailChanging) {
+                $user->update(['email' => $validated['login_email']]);
+            }
 
             return back()->with('success', 'Profile settings saved.')->withFragment('profile');
         }

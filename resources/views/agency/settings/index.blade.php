@@ -43,57 +43,130 @@
                     <i class="bi bi-building me-1"></i> Agency Profile
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ route('settings.update') }}">
+                    <form method="POST" action="{{ route('settings.update') }}" id="profileForm">
                         @csrf @method('PUT')
                         <input type="hidden" name="tab" value="profile">
 
+                        {{-- Name (contact person / owner) --}}
                         <div class="mb-3">
-                            <label class="form-label small fw-semibold">Agency Name <span class="text-danger">*</span></label>
-                            <input type="text" name="name" class="form-control form-control-sm @error('name') is-invalid @enderror"
-                                value="{{ old('name', $agency->name) }}">
-                            @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <label class="form-label small fw-semibold">Name <span class="text-danger">*</span></label>
+                            <input type="text" name="owner_name"
+                                class="form-control form-control-sm @error('owner_name') is-invalid @enderror"
+                                value="{{ old('owner_name', $agency->owner_name) }}"
+                                placeholder="Contact person / owner name">
+                            @error('owner_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
 
+                        {{-- Company + RL No — read-only (from license / registration data) --}}
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-8">
+                                <label class="form-label small fw-semibold">Company</label>
+                                <input type="text" class="form-control form-control-sm" style="background:#eef1f5;"
+                                    value="{{ $agency->name }}" disabled readonly>
+                                <div class="form-text">Registered company name (from license data).</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold">RL No</label>
+                                <input type="text" class="form-control form-control-sm" style="background:#eef1f5;"
+                                    value="{{ $agency->rl_number ?: '—' }}" disabled readonly>
+                                <div class="form-text">Recruiting license number.</div>
+                            </div>
+                        </div>
+
+                        {{-- License info (read-only, from subscription/license system) --}}
+                        <div class="mb-3 p-2 px-3 d-flex flex-wrap gap-4" style="background:#eef1f5;border-radius:6px;">
+                            <div>
+                                <div class="text-muted" style="font-size:.68rem;text-transform:uppercase;">License No.</div>
+                                <div style="font-size:.82rem;">{{ $agency->license_number ?: '—' }}</div>
+                            </div>
+                            <div>
+                                <div class="text-muted" style="font-size:.68rem;text-transform:uppercase;">License Expiry</div>
+                                <div style="font-size:.82rem;">{{ $agency->license_expiry_date?->format('d M Y') ?? '—' }}</div>
+                            </div>
+                        </div>
+
+                        {{-- Address --}}
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Address</label>
+                            <textarea name="address" rows="2"
+                                class="form-control form-control-sm @error('address') is-invalid @enderror"
+                                placeholder="Full agency address">{{ old('address', $agency->address) }}</textarea>
+                            @error('address')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+
+                        {{-- Official Email + Phone --}}
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Email</label>
-                                <input type="email" name="email" class="form-control form-control-sm @error('email') is-invalid @enderror"
-                                    value="{{ old('email', $agency->email) }}">
-                                @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                <label class="form-label small fw-semibold">Official Email</label>
+                                <input type="email" name="official_email"
+                                    class="form-control form-control-sm @error('official_email') is-invalid @enderror"
+                                    value="{{ old('official_email', $agency->email) }}"
+                                    placeholder="agency@example.com">
+                                <div class="form-text">Shown on documents &amp; notifications.</div>
+                                @error('official_email')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-semibold">Phone</label>
-                                <input type="text" name="phone" class="form-control form-control-sm"
-                                    value="{{ old('phone', $agency->phone) }}">
+                                <input type="text" name="phone"
+                                    class="form-control form-control-sm @error('phone') is-invalid @enderror"
+                                    value="{{ old('phone', $agency->phone) }}"
+                                    placeholder="+880…">
+                                @error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                         </div>
 
+                        {{-- Print Logo --}}
                         <div class="mb-3">
-                            <label class="form-label small fw-semibold">Address</label>
-                            <textarea name="address" class="form-control form-control-sm" rows="3">{{ old('address', $agency->address) }}</textarea>
+                            <label class="form-label small fw-semibold d-block">Print Logo <span class="text-danger">*</span></label>
+                            @php $printLogo = (int) old('print_logo', (int) $agency->print_logo); @endphp
+                            <div class="d-flex gap-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="print_logo" id="printLogoYes"
+                                        value="1" {{ $printLogo === 1 ? 'checked' : '' }}>
+                                    <label class="form-check-label small" for="printLogoYes">Yes</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="print_logo" id="printLogoNo"
+                                        value="0" {{ $printLogo === 0 ? 'checked' : '' }}>
+                                    <label class="form-check-label small" for="printLogoNo">No</label>
+                                </div>
+                            </div>
+                            <div class="form-text">Show the agency logo on printed / PDF documents.</div>
                         </div>
 
-                        <div class="mb-3 p-3" style="background:#f8fafc;border-radius:6px;">
-                            <div class="text-muted small fw-semibold mb-2">Read-only Information</div>
-                            <div class="row g-2">
-                                <div class="col-md-4">
-                                    <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;">License No.</div>
-                                    <div style="font-size:.82rem;">{{ $agency->license_number ?? '—' }}</div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;">RL Number</div>
-                                    <div style="font-size:.82rem;">{{ $agency->rl_number ?? '—' }}</div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="text-muted" style="font-size:.7rem;text-transform:uppercase;">License Expiry</div>
-                                    <div style="font-size:.82rem;">{{ $agency->license_expiry_date?->format('d M Y') ?? '—' }}</div>
-                                </div>
+                        <hr class="my-3">
+                        <div class="text-uppercase text-muted fw-semibold mb-2" style="font-size:.68rem;letter-spacing:.04em;">
+                            Login &amp; Security
+                        </div>
+
+                        {{-- Login Email + Current Password --}}
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Email <span class="text-danger">*</span></label>
+                                <input type="email" name="login_email"
+                                    class="form-control form-control-sm @error('login_email') is-invalid @enderror"
+                                    value="{{ old('login_email', $user->email) }}">
+                                <div class="form-text">Used to sign in to your account.</div>
+                                @error('login_email')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Current Password</label>
+                                <input type="password" name="current_password" autocomplete="current-password"
+                                    class="form-control form-control-sm @error('current_password') is-invalid @enderror"
+                                    placeholder="Required to change login email">
+                                <div class="form-text">Only needed when changing the login email.</div>
+                                @error('current_password')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                         </div>
 
-                        <button type="submit" class="btn btn-primary btn-sm">
-                            <i class="bi bi-floppy me-1"></i> Save Profile
-                        </button>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                <i class="bi bi-floppy me-1"></i> Update
+                            </button>
+                            <button type="reset" class="btn btn-outline-secondary btn-sm">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>

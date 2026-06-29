@@ -8,8 +8,16 @@
 <div class="ksa-letter" style="font-size:13pt;line-height:1.6;">
 
 {{-- Blank space for pre-printed letterhead (reduced from 65mm so the bottom
-     "Your Faithfully" signature is never pushed into the cut/unprintable area) --}}
-<div style="height:35mm;"></div>
+     "Your Faithfully" signature is never pushed into the cut/unprintable area).
+     When the agency enables "Print Logo" and has a logo, it is shown here. --}}
+@if(!empty($agency_show_logo) && !empty($agency_logo))
+  <div style="height:35mm;text-align:center;">
+    <img src="{{ empty($_pdf) ? asset('storage/'.$agency_logo) : public_path('storage/'.$agency_logo) }}"
+         style="max-height:30mm;max-width:80mm;" alt="">
+  </div>
+@else
+  <div style="height:35mm;"></div>
+@endif
 
 {{-- To address --}}
 <p style="margin:0;font-size:13pt;">To,</p>

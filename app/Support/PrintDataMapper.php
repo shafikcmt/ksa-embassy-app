@@ -129,6 +129,10 @@ class PrintDataMapper
             'agency_phone'         => $agency?->phone ?? '',
             'agency_email'         => $agency?->email ?? '',
             'agency_license_expiry'=> $agency?->license_expiry_date?->format('d/m/Y') ?? '',
+
+            // Logo on print/PDF is gated by the agency's "Print Logo" setting.
+            'agency_logo'          => $agency?->logo,
+            'agency_show_logo'     => $agency ? (bool) $agency->print_logo && $agency->logo : false,
         ];
     }
 

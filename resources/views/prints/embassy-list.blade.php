@@ -143,6 +143,10 @@ td, th { padding: 3pt 5pt; vertical-align: middle; font-size: 9pt; }
   $rlSuffix = $rl ? (\Illuminate\Support\Str::startsWith(strtoupper($rl), 'RL') ? ' - ' . $rl : ' - RL' . $rl) : '';
 @endphp
 <div style="text-align:center;margin-bottom:10pt;">
+  @if($agency->print_logo && $agency->logo)
+    <img src="{{ empty($_pdf) ? asset('storage/'.$agency->logo) : public_path('storage/'.$agency->logo) }}"
+         style="max-height:20mm;max-width:60mm;margin-bottom:4pt;" alt="">
+  @endif
   <div style="font-size:18pt;font-weight:bold;">{{ $agency->name }}{{ $rlSuffix }}</div>
   <div style="font-size:13pt;font-weight:bold;margin-top:2pt;">Embassy List - {{ $list->list_date->format('d M, Y') }}</div>
 </div>

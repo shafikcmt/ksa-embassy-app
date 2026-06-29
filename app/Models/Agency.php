@@ -10,13 +10,14 @@ use Illuminate\Support\Str;
 class Agency extends Model
 {
     protected $fillable = [
-        'name', 'slug', 'license_number', 'rl_number',
-        'address', 'phone', 'email', 'logo',
+        'name', 'owner_name', 'slug', 'license_number', 'rl_number',
+        'address', 'phone', 'email', 'logo', 'print_logo',
         'license_expiry_date', 'status', 'notes',
     ];
 
     protected $casts = [
         'license_expiry_date' => 'date',
+        'print_logo' => 'boolean',
     ];
 
     protected static function boot(): void
