@@ -8,8 +8,10 @@
   — do not redesign; only the dynamic values change per candidate.
 --}}
 @php
+  // Uppercase helper for the important page-1 values (display only — multibyte-safe).
+  $U = fn($x) => ($x === null || $x === '') ? '' : mb_strtoupper((string) $x, 'UTF-8');
   $tp = strtolower($travel_purpose ?: 'work');
-  $fullNameDisplay = $full_name_en . ($father_name ? ' S/O. ' . strtoupper($father_name) : '');
+  $fullNameDisplay = $U($full_name_en) . ($father_name ? ' S/O. ' . $U($father_name) : '');
   // Purpose-of-Travel options — each box shows Arabic (top) + English (bottom),
   // exactly one row of boxes as in the reference (no duplicate EN/AR sections).
   $purposeOpts = [
@@ -34,6 +36,10 @@
   .ksa-app .bdr td, .ksa-app .bdr th { border: 1px solid #000; padding: 2.4pt 4pt; font-size: 7.6pt; font-weight: bold; vertical-align: middle; }
   .ksa-app .lbl { font-weight: bold; text-align: left; white-space: nowrap; }
   .ksa-app .val { font-weight: bold; text-align: center; }
+  /* Full Name / Father / Mother values — moderately bold (600), slightly larger (~1px).
+     Note: mPDF's bundled DejaVu Sans has only Regular/Bold, so the PDF renders this as
+     standard bold (never 800/900); the browser preview honours the 600 weight. */
+  .ksa-app .nmval { font-size: 8.5pt; font-weight: 600; }
   .ksa-app .ar  { direction: rtl; text-align: right; font-weight: bold; font-size: 7.3pt; white-space: nowrap; }
   .ksa-app .inner td { border: 0 !important; padding: 0; font-weight: bold; }
   /* Purpose-of-Travel option boxes — bordered table cells, AR over EN */
@@ -90,16 +96,16 @@
     <col style="width:15%"><col style="width:20%"><col style="width:15%">
   </colgroup>
   <tbody>
-    {{-- Full Name --}}
+    {{-- Full Name (value — incl. "S/O. <father>" — rendered bold) --}}
     <tr>
       <td class="lbl">Full Name:</td>
-      <td colspan="4" class="val">{{ $fullNameDisplay }}</td>
+      <td colspan="4" class="val"><span class="nmval">{{ $fullNameDisplay }}</span></td>
       <td class="ar">اسم الكامل :</td>
     </tr>
-    {{-- Mother's Name --}}
+    {{-- Mother's Name (value rendered bold + uppercase) --}}
     <tr>
       <td class="lbl">Mother's Name:</td>
-      <td colspan="4" class="val">{{ $mother_name ?: '' }}</td>
+      <td colspan="4" class="val"><span class="nmval">{{ $U($mother_name) }}</span></td>
       <td class="ar">اسم الأم :</td>
     </tr>
     {{-- Date of Birth | Place of Birth --}}
@@ -108,34 +114,34 @@
       <td class="val">{{ $date_of_birth }}</td>
       <td class="ar">تاريخ الولادة :</td>
       <td class="lbl">Place of Birth:</td>
-      <td class="val">{{ $place_of_birth ?: '' }}</td>
+      <td class="val">{{ $U($place_of_birth) }}</td>
       <td class="ar">محل الولادة :</td>
     </tr>
     {{-- Previous | Present Nationality --}}
     <tr>
       <td class="lbl">Previous Nationality:</td>
-      <td class="val">{{ $previous_nationality ?: '' }}</td>
+      <td class="val">{{ $U($previous_nationality) }}</td>
       <td class="ar">الجنسية السابقة :</td>
       <td class="lbl">Present Nationality:</td>
-      <td class="val">{{ $nationality }}</td>
+      <td class="val">{{ $U($nationality) }}</td>
       <td class="ar">الجنسية الحالية :</td>
     </tr>
     {{-- Sex | Marital Status --}}
     <tr>
       <td class="lbl">Sex:</td>
-      <td class="val">{{ $gender }}</td>
+      <td class="val">{{ $U($gender) }}</td>
       <td class="ar">الجنس :</td>
       <td class="lbl">Marital Status:</td>
-      <td class="val">{{ $marital_status ?: '' }}</td>
+      <td class="val">{{ $U($marital_status) }}</td>
       <td class="ar">الحالة الاجتماعية :</td>
     </tr>
     {{-- Sect | Religion --}}
     <tr>
       <td class="lbl">Sect:</td>
-      <td class="val">{{ $sect ?: '' }}</td>
+      <td class="val">{{ $U($sect) }}</td>
       <td class="ar">المذهب :</td>
       <td class="lbl">Religion:</td>
-      <td class="val">{{ $religion ?: '' }}</td>
+      <td class="val">{{ $U($religion) }}</td>
       <td class="ar">الديانة :</td>
     </tr>
     {{-- Profession block — arabic labels + arabic profession value --}}
@@ -213,10 +219,10 @@
     </tr>
     {{-- Passport field values (centered) --}}
     <tr>
-      <td class="val">{{ $passport_issue_place ?: '' }}</td>
+      <td class="val">{{ $U($passport_issue_place) }}</td>
       <td class="val">{{ $passport_issue_date ?: '' }}</td>
       <td class="val">{{ $passport_expiry_date ?: '' }}</td>
-      <td colspan="2" class="val">{{ $passport_no ?: '' }}</td>
+      <td colspan="2" class="val">{{ $U($passport_no) }}</td>
     </tr>
     {{-- Duration / Arrival / Departure — arabic labels --}}
     <tr>

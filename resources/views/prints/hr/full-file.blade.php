@@ -10,6 +10,10 @@ td, th { padding: 2pt 3pt; vertical-align: middle; font-size: 8pt; }
 .b { font-weight: bold; }
 .bdr td, .bdr th { border: 1px solid #000; }
 .dtbl td, .dtbl th { font-size: 10pt; padding: 5pt 4pt; vertical-align: top; }
+/* ~2in top spacing applied to pages 2–4 of the Complete File only (page 1 unaffected).
+   Uses a fixed-height table row — mPDF honours td height reliably (a bare div collapses). */
+.page-top-gap { width: 100%; border-collapse: collapse; }
+.page-top-gap td { height: 50mm; border: 0; padding: 0; font-size: 0; line-height: 0; }
 
 /* ── Scoped styles for the shared KSA Application form body ──────────────
    Identical ruleset to prints.hr.application so the form renders the SAME
@@ -76,6 +80,9 @@ td, th { padding: 2pt 3pt; vertical-align: middle; font-size: 8pt; }
 {{-- PAGE 2: FORWARDING LETTER --}}
 {{-- ══════════════════════════════════════════════════════════════════════ --}}
 
+{{-- Extra top spacing (~2in) — pages 2–4 only; keeps page 1 in place --}}
+<table class="page-top-gap"><tr><td>&nbsp;</td></tr></table>
+
 {{-- Shared Forwarding Letter — identical to the single preview --}}
 @include('prints.hr.partials.forwarding-letter-body')
 
@@ -88,6 +95,9 @@ td, th { padding: 2pt 3pt; vertical-align: middle; font-size: 8pt; }
 {{-- PAGE 3: EMPLOYMENT AGREEMENT --}}
 {{-- ══════════════════════════════════════════════════════════════════════ --}}
 
+{{-- Extra top spacing (~2in) — pages 2–4 only; keeps page 1 in place --}}
+<table class="page-top-gap"><tr><td>&nbsp;</td></tr></table>
+
 {{-- Shared Employment Agreement — identical to the single preview --}}
 @include('prints.hr.partials.employment-agreement-body')
 
@@ -99,6 +109,9 @@ td, th { padding: 2pt 3pt; vertical-align: middle; font-size: 8pt; }
 {{-- ══════════════════════════════════════════════════════════════════════ --}}
 {{-- PAGE 4: ATTACHMENT CHECKLIST --}}
 {{-- ══════════════════════════════════════════════════════════════════════ --}}
+
+{{-- Extra top spacing (~2in) — pages 2–4 only; keeps page 1 in place --}}
+<table class="page-top-gap"><tr><td>&nbsp;</td></tr></table>
 
 {{-- Shared Attachment Checklist — identical to the single preview --}}
 @include('prints.hr.partials.checklist-body')

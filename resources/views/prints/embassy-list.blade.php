@@ -76,13 +76,13 @@ td, th { padding: 3pt 5pt; vertical-align: middle; font-size: 9pt; }
     <col style="width:28px"><col style="width:18%"><col><col style="width:16%"><col style="width:11%"><col style="width:16%">
   </colgroup>
   <thead>
-    <tr style="background:#ddd;">
-      <th style="border:1px solid #000;padding:3pt 4pt;text-align:center;">ت</th>
-      <th style="border:1px solid #000;padding:3pt 4pt;text-align:center;">رقم الجوازات</th>
-      <th style="border:1px solid #000;padding:3pt 4pt;text-align:center;">اسم الكفيل</th>
-      <th style="border:1px solid #000;padding:3pt 4pt;text-align:center;">رقم التأشيرة</th>
-      <th style="border:1px solid #000;padding:3pt 4pt;text-align:center;">التاريخ</th>
-      <th style="border:1px solid #000;padding:3pt 4pt;text-align:center;">المهنة</th>
+    <tr style="background:#e9e9e9;">
+      <th style="border:1px solid #000;padding:2pt 4pt;text-align:center;">ت<br><span style="font-size:8pt;direction:ltr;">SL.</span></th>
+      <th style="border:1px solid #000;padding:2pt 4pt;text-align:center;">رقم الجوازات<br><span style="font-size:8pt;direction:ltr;">Passport No.</span></th>
+      <th style="border:1px solid #000;padding:2pt 4pt;text-align:center;">اسم الكفيل<br><span style="font-size:8pt;direction:ltr;">Sponsor Name</span></th>
+      <th style="border:1px solid #000;padding:2pt 4pt;text-align:center;">رقم التأشيرة<br><span style="font-size:8pt;direction:ltr;">Visa No</span></th>
+      <th style="border:1px solid #000;padding:2pt 4pt;text-align:center;">التاريخ<br><span style="font-size:8pt;direction:ltr;">Year</span></th>
+      <th style="border:1px solid #000;padding:2pt 4pt;text-align:center;">المهنة<br><span style="font-size:8pt;direction:ltr;">Profession</span></th>
     </tr>
   </thead>
   <tbody>
@@ -90,10 +90,10 @@ td, th { padding: 3pt 5pt; vertical-align: middle; font-size: 9pt; }
     @php $items = $itemsByCategory[$category] ?? collect(); @endphp
     {{-- bilingual category bar — always shown, like the reference (incl. empty Cancellation) --}}
     <tr>
-      <td colspan="6" style="border:1px solid #000;padding:3pt 4pt;text-align:center;font-weight:bold;background:#f0f0f0;direction:rtl;">{{ $categoryLabelsBi[$category] }}</td>
+      <td colspan="6" style="border:1px solid #000;padding:3pt 4pt;text-align:center;font-weight:bold;direction:rtl;">{{ $categoryLabelsBi[$category] }}</td>
     </tr>
     @foreach($items as $item)
-    <tr @if($loop->even) style="background:#f9f9f9;" @endif>
+    <tr>
       <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;">{{ $loop->iteration }}</td>
       <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;direction:ltr;font-weight:bold;">{{ $item->snapshot_passport_no ?? '—' }}</td>
       <td style="border:1px solid #000;padding:2pt 6pt;text-align:right;">{{ $item->snapshot_sponsor_name ?? '—' }}</td>
@@ -103,7 +103,7 @@ td, th { padding: 3pt 5pt; vertical-align: middle; font-size: 9pt; }
     </tr>
     @endforeach
     @if($items->count() > 0)
-    <tr style="font-weight:bold;background:#ececec;">
+    <tr style="font-weight:bold;">
       <td colspan="6" style="border:1px solid #000;padding:2pt 6pt;text-align:right;direction:rtl;">المجموعة : {{ $items->count() }}</td>
     </tr>
     @endif
@@ -153,13 +153,13 @@ td, th { padding: 3pt 5pt; vertical-align: middle; font-size: 9pt; }
     <col style="width:28px"><col style="width:20%"><col><col style="width:15%"><col style="width:14%"><col style="width:16%">
   </colgroup>
   <thead>
-    <tr style="background:#ddd;">
+    <tr style="background:#e9e9e9;">
       <th style="border:1px solid #000;padding:3pt 4pt;text-align:center;">SL.</th>
-      <th style="border:1px solid #000;padding:3pt 4pt;text-align:left;">Agent Name</th>
-      <th style="border:1px solid #000;padding:3pt 4pt;text-align:left;">Name</th>
-      <th style="border:1px solid #000;padding:3pt 4pt;text-align:left;">Passport No.</th>
-      <th style="border:1px solid #000;padding:3pt 4pt;text-align:left;">Visa No</th>
-      <th style="border:1px solid #000;padding:3pt 4pt;text-align:left;">Profession</th>
+      <th style="border:1px solid #000;padding:3pt 4pt;text-align:center;">Agent Name</th>
+      <th style="border:1px solid #000;padding:3pt 4pt;text-align:center;">Name</th>
+      <th style="border:1px solid #000;padding:3pt 4pt;text-align:center;">Passport No.</th>
+      <th style="border:1px solid #000;padding:3pt 4pt;text-align:center;">Visa No</th>
+      <th style="border:1px solid #000;padding:3pt 4pt;text-align:center;">Profession</th>
     </tr>
   </thead>
   <tbody>
@@ -167,20 +167,20 @@ td, th { padding: 3pt 5pt; vertical-align: middle; font-size: 9pt; }
     @php $items = $itemsByCategory[$category] ?? collect(); @endphp
     {{-- bilingual category bar — always shown, like the reference (incl. empty Cancellation) --}}
     <tr>
-      <td colspan="6" style="border:1px solid #000;padding:3pt 4pt;text-align:center;font-weight:bold;background:#f0f0f0;">{{ $categoryLabelsBi[$category] }}</td>
+      <td colspan="6" style="border:1px solid #000;padding:3pt 4pt;text-align:center;font-weight:bold;">{{ $categoryLabelsBi[$category] }}</td>
     </tr>
     @foreach($items as $item)
-    <tr @if($loop->even) style="background:#f9f9f9;" @endif>
+    <tr>
       <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;">{{ $loop->iteration }}</td>
-      <td style="border:1px solid #000;padding:2pt 4pt;">{{ $item->snapshot_agent_name ?? '—' }}</td>
-      <td style="border:1px solid #000;padding:2pt 4pt;">{{ $item->snapshot_candidate_name }}</td>
-      <td style="border:1px solid #000;padding:2pt 4pt;font-weight:bold;">{{ $item->snapshot_passport_no ?? '—' }}</td>
-      <td style="border:1px solid #000;padding:2pt 4pt;">{{ $item->snapshot_visa_no ?? '—' }}</td>
-      <td style="border:1px solid #000;padding:2pt 4pt;@if($item->snapshot_profession_ar)direction:rtl;text-align:right;font-family:DejaVu Sans,sans-serif;@endif">{{ $item->snapshot_profession_ar ?? $item->snapshot_profession_en ?? '—' }}</td>
+      <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;">{{ $item->snapshot_agent_name ?? '—' }}</td>
+      <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;">{{ $item->snapshot_candidate_name }}</td>
+      <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;font-weight:bold;">{{ $item->snapshot_passport_no ?? '—' }}</td>
+      <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;">{{ $item->snapshot_visa_no ?? '—' }}</td>
+      <td style="border:1px solid #000;padding:2pt 4pt;@if($item->snapshot_profession_ar)direction:rtl;text-align:right;font-family:DejaVu Sans,sans-serif;@else text-align:center;@endif">{{ $item->snapshot_profession_ar ?? $item->snapshot_profession_en ?? '—' }}</td>
     </tr>
     @endforeach
     @if($items->count() > 0)
-    <tr style="font-weight:bold;background:#ececec;">
+    <tr style="font-weight:bold;">
       <td colspan="6" style="border:1px solid #000;padding:2pt 6pt;text-align:right;direction:rtl;font-family:DejaVu Sans,sans-serif;">المجموعة : {{ $items->count() }}</td>
     </tr>
     @endif

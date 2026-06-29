@@ -14,39 +14,8 @@
     $canHr   = $authUser->can('create', \App\Models\HrProfile::class);
     $canList = $authUser->can('create', \App\Models\EmbassyList::class);
 
-    // ── Alerts (compact) ──────────────────────────────────────────
-    // Normal staff don't need billing/license notices — keep those for admins only.
-    $alertItems = collect($alerts)
-        ->filter(fn($a) => $isAdmin || ($a['scope'] ?? 'operations') !== 'billing')
-        ->map(fn($a) => [
-            'type'    => $a['type'] ?? 'info',
-            'icon'    => $a['icon'] ?? 'bi-info-circle',
-            'title'   => $a['title'] ?? 'Notice',
-            'message' => $a['message'] ?? '',
-            'action'  => $a['action'] ?? null,
-            'label'   => $a['action_label'] ?? null,
-        ]);
-
-    foreach (($agency?->notices ?? []) as $notice) {
-        $alertItems->push([
-            'type'    => in_array($notice->type, ['danger','warning','info','success']) ? $notice->type : 'info',
-            'icon'    => 'bi-megaphone',
-            'title'   => $notice->title,
-            'message' => $notice->body,
-            'action'  => null,
-            'label'   => null,
-        ]);
-    }
-    // Most urgent first: danger → warning → info/success.
-    $tonePriority = ['danger' => 0, 'warning' => 1, 'info' => 2, 'success' => 3];
-    $alertItems   = $alertItems->sortBy(fn($a) => $tonePriority[$a['type']] ?? 9)->values();
-
-    $alertTone = [
-        'danger'  => 'bg-rose-50 text-rose-600',
-        'warning' => 'bg-amber-50 text-amber-600',
-        'info'    => 'bg-brand-50 text-brand-600',
-        'success' => 'bg-emerald-50 text-emerald-600',
-    ];
+    // ── Important alerts now live in the topbar bell only (see NotificationComposer) ──
+    // They were removed from the dashboard body to avoid duplicating the same items.
 
     // ── Upcoming reminders (real dates only) ──────────────────────
     $reminders = [];
@@ -87,41 +56,7 @@
     </div>
 </div>
 
-{{-- ════════ IMPORTANT ALERTS (compact, max 3 + view all) ════════ --}}
-@if($alertItems->count())
-    <div x-data="{ all: false }" class="mb-5 rounded-2xl border border-slate-200 bg-white shadow-soft">
-        <div class="flex items-center justify-between gap-2 border-b border-slate-100 px-4 py-3">
-            <h2 class="flex items-center gap-2 text-sm font-bold text-slate-800">
-                <i class="bi bi-bell text-amber-500"></i> Important Alerts
-                <span class="inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-slate-100 px-1.5 text-xs font-bold text-slate-600">{{ $alertItems->count() }}</span>
-            </h2>
-            @if($alertItems->count() > 3)
-                <button @click="all = !all" class="text-xs font-semibold text-brand-600 hover:text-brand-700">
-                    <span x-show="!all">View all</span><span x-show="all" x-cloak>Show less</span>
-                </button>
-            @endif
-        </div>
-        <ul class="divide-y divide-slate-100">
-            @foreach($alertItems as $i => $a)
-                <li @if($i >= 3) x-show="all" x-cloak @endif>
-                    <a @if($a['action']) href="{{ $a['action'] }}" @endif
-                       class="flex items-center gap-3 px-4 py-3 transition hover:bg-slate-50 @if(!$a['action']) cursor-default @endif">
-                        <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg {{ $alertTone[$a['type']] ?? $alertTone['info'] }}">
-                            <i class="bi {{ $a['icon'] }}"></i>
-                        </span>
-                        <div class="min-w-0 flex-1">
-                            <div class="truncate text-sm font-semibold text-slate-800">{{ $a['title'] }}</div>
-                            <div class="truncate text-xs text-slate-500">{!! $a['message'] !!}</div>
-                        </div>
-                        @if($a['label'])
-                            <span class="hidden shrink-0 text-xs font-semibold text-brand-600 sm:inline">{{ $a['label'] }} →</span>
-                        @endif
-                    </a>
-                </li>
-            @endforeach
-        </ul>
-    </div>
-@endif
+{{-- Important alerts are shown in the topbar bell dropdown only (no dashboard card). --}}
 
 {{-- ════════ OVERVIEW (4 cards) ════════ --}}
 <div class="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">

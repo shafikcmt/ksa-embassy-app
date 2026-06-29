@@ -237,7 +237,8 @@
                             @empty
                                 <div class="px-4 py-10 text-center">
                                     <i class="bi bi-check2-circle mb-2 block text-2xl text-emerald-400"></i>
-                                    <p class="text-sm text-slate-500">You're all caught up</p>
+                                    <p class="text-sm font-medium text-slate-600">No important alerts</p>
+                                    <p class="mt-0.5 text-xs text-slate-400">You're all caught up</p>
                                 </div>
                             @endforelse
                         </div>
