@@ -31,7 +31,10 @@
      selector is under .ksa-app, so pages 2–4 are unaffected. Placed after the
      host <head> CSS, so these rules win on equal specificity. --}}
 <style>
-  .ksa-app { line-height: 1.12; color: #000; }
+  /* FreeSans (an Arial/Helvetica clone) has a much heavier Bold than DejaVu
+     Sans, matching the reference form's thick Latin text. Arabic stays on
+     DejaVu (.ar rules below) since its Arabic shaping is known-good. */
+  .ksa-app { line-height: 1.12; color: #000; font-family: freesans, sans-serif; }
   .ksa-app table { width: 100%; border-collapse: collapse; }
   .ksa-app .bdr td, .ksa-app .bdr th { border: 1px solid #000; padding: 2.4pt 4pt; font-size: 7.6pt; font-weight: bold; vertical-align: middle; }
   .ksa-app .lbl { font-weight: bold; text-align: left; white-space: nowrap; }
@@ -245,13 +248,15 @@
       <td class="ar">بشيك رقم :</td>
       <td class="ar">طريقة الدفع :</td>
     </tr>
-    {{-- Mode of payment — english (Mode of payment on the LEFT) --}}
+    {{-- Mode of payment — english (Mode of payment on the LEFT).
+         Matches the reference exactly: "Free Cash Cheque No. | Date | No. | Date"
+         with NO underscore/placeholder lines after Date/No. --}}
     <tr>
       <td class="lbl">Mode of payment:</td>
-      <td style="font-size:7pt;"><strong>{{ $payment_mode ?: 'Free' }}</strong> &nbsp; Cash &nbsp; Cheque</td>
-      <td style="font-size:7.5pt;">Date: ________</td>
-      <td style="font-size:7.5pt;">No.: ________</td>
-      <td style="font-size:7.5pt;">Date: ________</td>
+      <td style="font-size:7pt;"><strong>{{ $payment_mode ?: 'Free' }}</strong> &nbsp; Cash &nbsp; Cheque No.</td>
+      <td class="lbl" style="font-weight:normal;">Date</td>
+      <td class="lbl" style="font-weight:normal;">No.</td>
+      <td class="lbl" style="font-weight:normal;">Date</td>
     </tr>
     {{-- Mahram name | Relationship --}}
     <tr>
