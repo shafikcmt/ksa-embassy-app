@@ -21,12 +21,21 @@ class EnsureAgencyAccess
             return redirect()->route('login');
         }
 
+        // Super admins have no agency of their own — every agency controller
+        // would break on a null agency_id. Send them to their own dashboard.
         if ($user->isSuperAdmin()) {
-            return $next($request);
+            return redirect()->route('super-admin.dashboard');
         }
 
+        // Agency admin/staff must be assigned to an agency to use this area.
         if (! $user->agency_id || ! $user->agency) {
-            abort(403, 'No agency assigned to your account.');
+            auth()->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')->withErrors([
+                'email' => 'Your account is not assigned to any agency. Please contact Super Admin.',
+            ]);
         }
 
         if ($user->agency->status === 'suspended') {

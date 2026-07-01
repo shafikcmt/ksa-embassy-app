@@ -19,26 +19,26 @@
 <table style="width:100%;border-collapse:collapse;margin-bottom:14pt;font-size:10pt;">
   <tbody>
     <tr>
-      <td style="width:50%;border-bottom:1px solid #000;padding:5pt 4pt;"><strong>NAME OF COMPANY :</strong></td>
-      <td style="width:50%;border-bottom:1px solid #000;padding:5pt 4pt;">
+      <td style="width:50%;border-bottom:1px solid #000;padding:5pt 4pt;">NAME OF COMPANY:</td>
+      <td style="width:50%;border-bottom:1px solid #000;padding:5pt 4pt;font-weight:bold;">
         @if(!empty($sponsor_name_ar))<span class="ar" style="font-weight:bold;">{{ $sponsor_name_ar }}</span>@else{{ $sponsor_name ?: $agency_name }}@endif
       </td>
     </tr>
     <tr>
-      <td style="border-bottom:1px solid #000;padding:5pt 4pt;"><strong>HEREBY APPOINTED :</strong></td>
-      <td style="border-bottom:1px solid #000;padding:5pt 4pt;">{{ $full_name_en }}</td>
+      <td style="border-bottom:1px solid #000;padding:5pt 4pt;">HEREBY APPOINTED:</td>
+      <td style="border-bottom:1px solid #000;padding:5pt 4pt;font-weight:bold;">{{ $full_name_en }}</td>
     </tr>
     <tr>
-      <td style="border-bottom:1px solid #000;padding:5pt 4pt;"><strong>PASSPORT NO WITH ISSUE DATE :</strong></td>
-      <td style="border-bottom:1px solid #000;padding:5pt 4pt;">{{ $passport_no ?: '—' }}@if($passport_issue_date) &nbsp; Date: {{ $passport_issue_date }}@endif</td>
+      <td style="border-bottom:1px solid #000;padding:5pt 4pt;">PASSPORT NO WITH ISSUE DATE:</td>
+      <td style="border-bottom:1px solid #000;padding:5pt 4pt;font-weight:bold;">{{ $passport_no ?: '—' }}@if($passport_issue_date) &nbsp; Date: {{ $passport_issue_date }}@endif</td>
     </tr>
     <tr>
-      <td style="border-bottom:1px solid #000;padding:5pt 4pt;"><strong>PASSPORT HOLDER :</strong></td>
-      <td style="border-bottom:1px solid #000;padding:5pt 4pt;">{{ $nationality }}</td>
+      <td style="border-bottom:1px solid #000;padding:5pt 4pt;">PASSPORT HOLDER:</td>
+      <td style="border-bottom:1px solid #000;padding:5pt 4pt;font-weight:bold;">{{ $nationality }}</td>
     </tr>
     <tr>
-      <td style="border-bottom:1px solid #000;padding:5pt 4pt;"><strong>PROFESSION :</strong></td>
-      <td style="border-bottom:1px solid #000;padding:5pt 4pt;">{{ $profession_en ?: ($occupation ?: '—') }}</td>
+      <td style="border-bottom:1px solid #000;padding:5pt 4pt;">PROFESSION:</td>
+      <td style="border-bottom:1px solid #000;padding:5pt 4pt;font-weight:bold;">{{ $profession_en ?: ($occupation ?: '—') }}</td>
     </tr>
   </tbody>
 </table>
@@ -57,53 +57,53 @@
   </colgroup>
   <tbody>
     <tr>
-      <td style="border:1px solid #000;padding:4pt 6pt;text-align:center;font-weight:bold;">1</td>
-      <td style="border:1px solid #000;padding:4pt 6pt;"><strong>MONTHLY SALARY</strong></td>
+      <td style="border:1px solid #000;padding:4pt 6pt;text-align:center;">1</td>
+      <td style="border:1px solid #000;padding:4pt 6pt;">MONTHLY SALARY:</td>
       <td style="border:1px solid #000;padding:4pt 6pt;">{{ $salary ?: '—' }}</td>
     </tr>
     <tr>
-      <td style="border:1px solid #000;padding:4pt 6pt;text-align:center;font-weight:bold;">2</td>
-      <td style="border:1px solid #000;padding:4pt 6pt;"><strong>FOOD AND ACCOMMODATION</strong></td>
+      <td style="border:1px solid #000;padding:4pt 6pt;text-align:center;">2</td>
+      <td style="border:1px solid #000;padding:4pt 6pt;">FOOD AND ACCOMMODATION:</td>
       <td style="border:1px solid #000;padding:4pt 6pt;">200/= SR</td>
     </tr>
     <tr>
-      <td style="border:1px solid #000;padding:4pt 6pt;text-align:center;font-weight:bold;">3</td>
-      <td style="border:1px solid #000;padding:4pt 6pt;"><strong>AIR PASSAGE</strong></td>
+      <td style="border:1px solid #000;padding:4pt 6pt;text-align:center;">3</td>
+      <td style="border:1px solid #000;padding:4pt 6pt;">AIR PASSAGE:</td>
       <td style="border:1px solid #000;padding:4pt 6pt;">BORNE BY THE EMPLOYER</td>
     </tr>
     <tr>
-      <td style="border:1px solid #000;padding:4pt 6pt;text-align:center;font-weight:bold;">4</td>
-      <td style="border:1px solid #000;padding:4pt 6pt;"><strong>DUTY HOUR</strong></td>
+      <td style="border:1px solid #000;padding:4pt 6pt;text-align:center;">4</td>
+      <td style="border:1px solid #000;padding:4pt 6pt;">DUTY HOUR:</td>
       <td style="border:1px solid #000;padding:4pt 6pt;">8 HOURS DAILY</td>
     </tr>
     <tr>
-      <td style="border:1px solid #000;padding:4pt 6pt;text-align:center;font-weight:bold;">5</td>
-      <td style="border:1px solid #000;padding:4pt 6pt;"><strong>HOLIDAY</strong></td>
+      <td style="border:1px solid #000;padding:4pt 6pt;text-align:center;">5</td>
+      <td style="border:1px solid #000;padding:4pt 6pt;">HOLIDAY:</td>
       <td style="border:1px solid #000;padding:4pt 6pt;">AS PER SAUDI LABOUR LAWS</td>
     </tr>
     <tr>
-      <td style="border:1px solid #000;padding:4pt 6pt;text-align:center;font-weight:bold;">6</td>
-      <td style="border:1px solid #000;padding:4pt 6pt;"><strong>LEAVE</strong></td>
+      <td style="border:1px solid #000;padding:4pt 6pt;text-align:center;">6</td>
+      <td style="border:1px solid #000;padding:4pt 6pt;">LEAVE:</td>
       <td style="border:1px solid #000;padding:4pt 6pt;">AS PER SAUDI LABOUR LAWS</td>
     </tr>
     <tr>
-      <td style="border:1px solid #000;padding:4pt 6pt;text-align:center;font-weight:bold;">7</td>
-      <td style="border:1px solid #000;padding:4pt 6pt;"><strong>OVERTIME &amp; OTHER BENEFIT</strong></td>
+      <td style="border:1px solid #000;padding:4pt 6pt;text-align:center;">7</td>
+      <td style="border:1px solid #000;padding:4pt 6pt;">OVERTIME &amp; OTHER BENEFIT:</td>
       <td style="border:1px solid #000;padding:4pt 6pt;">AS PER SAUDI LABOUR LAWS</td>
     </tr>
     <tr>
-      <td style="border:1px solid #000;padding:4pt 6pt;text-align:center;font-weight:bold;">8</td>
-      <td style="border:1px solid #000;padding:4pt 6pt;"><strong>MEDICAL FACILITIES</strong></td>
+      <td style="border:1px solid #000;padding:4pt 6pt;text-align:center;">8</td>
+      <td style="border:1px solid #000;padding:4pt 6pt;">MEDICAL FACILITIES:</td>
       <td style="border:1px solid #000;padding:4pt 6pt;">FREE</td>
     </tr>
     <tr>
-      <td style="border:1px solid #000;padding:4pt 6pt;text-align:center;font-weight:bold;">9</td>
-      <td style="border:1px solid #000;padding:4pt 6pt;"><strong>PERIOD OF CONTRACT</strong></td>
+      <td style="border:1px solid #000;padding:4pt 6pt;text-align:center;">9</td>
+      <td style="border:1px solid #000;padding:4pt 6pt;">PERIOD OF CONTRACT:</td>
       <td style="border:1px solid #000;padding:4pt 6pt;">{{ $contract_period ?: ($duration_stay_en ?: 'TWO/ONE YEARS') }}</td>
     </tr>
     <tr>
-      <td style="border:1px solid #000;padding:4pt 6pt;text-align:center;font-weight:bold;">10</td>
-      <td style="border:1px solid #000;padding:4pt 6pt;font-size:9pt;"><strong>REPATRIATION ARRANGEMENT INCLUDING RETURN OF DEAD BODY &amp; SERVICE BENEFIT TO THE LEGAL HEIR OF THE EMPLOYEE</strong></td>
+      <td style="border:1px solid #000;padding:4pt 6pt;text-align:center;">10</td>
+      <td style="border:1px solid #000;padding:4pt 6pt;font-size:9pt;">REPATRIATION ARRANGEMENT INCLUDING RETURN OF DEAD BODY &amp; SERVICE BENEFIT TO THE LEGAL HEIR OF THE EMPLOYEE:</td>
       <td style="border:1px solid #000;padding:4pt 6pt;">AS PER SAUDI LABOUR LAWS</td>
     </tr>
   </tbody>

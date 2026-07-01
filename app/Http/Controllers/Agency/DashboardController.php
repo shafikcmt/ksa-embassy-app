@@ -13,10 +13,28 @@ class DashboardController extends Controller
 
     public function index()
     {
-        $user     = auth()->user();
+        $user = auth()->user();
+
+        // Super admins belong on their own dashboard, not the agency one.
+        if ($user->isSuperAdmin()) {
+            return redirect()->route('super-admin.dashboard');
+        }
+
+        // Guard against a missing agency assignment so we never pass null
+        // into agencyStats(int $agencyId) and crash with a TypeError.
+        $agencyId = $user->agency_id;
+        if (! $agencyId) {
+            auth()->logout();
+            request()->session()->invalidate();
+            request()->session()->regenerateToken();
+
+            return redirect()->route('login')->withErrors([
+                'email' => 'Your account is not assigned to any agency. Please contact Super Admin.',
+            ]);
+        }
+
         $agency   = $user->agency()->with(['activeSubscription.plan', 'notices' => fn($q) => $q->active()])->first();
         $subscription = $agency?->activeSubscription;
-        $agencyId = $user->agency_id;
 
         $stats   = $this->statsService->agencyStats($agencyId);
         $alerts  = $this->statsService->agencyAlerts($agencyId, $subscription, $agency);

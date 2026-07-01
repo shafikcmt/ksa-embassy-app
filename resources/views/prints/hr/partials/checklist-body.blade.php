@@ -62,8 +62,14 @@
       ];
     @endphp
     @foreach($rows as [$step, $value, $arabicValue])
+    @php
+      // Step is stored "Arabic / English"; the reference renders the English
+      // label bold and the Arabic label in regular weight, so split and bold
+      // only the English half (order preserved by the RTL cell direction).
+      [$stepAr, $stepEn] = array_pad(array_map('trim', explode('/', $step, 2)), 2, '');
+    @endphp
     <tr>
-      <td style="border:1px solid #000;padding:4pt 6pt;text-align:right;direction:rtl;">{{ $step }}</td>
+      <td style="border:1px solid #000;padding:4pt 6pt;text-align:right;direction:rtl;">{{ $stepAr }} / <strong dir="ltr" style="unicode-bidi:isolate;">{{ $stepEn }}</strong></td>
       <td style="border:1px solid #000;padding:4pt 6pt;text-align:center;{{ $arabicValue ? 'direction:rtl;' : 'direction:ltr;' }}">{!! nl2br(e($value)) !!}</td>
       <td style="border:1px solid #000;padding:4pt 6pt;"></td>
       <td style="border:1px solid #000;padding:4pt 6pt;"></td>

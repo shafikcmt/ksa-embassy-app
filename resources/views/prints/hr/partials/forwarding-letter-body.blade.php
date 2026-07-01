@@ -5,7 +5,7 @@
   inline styles + .ksa-letter scoped wrapper — does not depend on host body
   font-size or any .dtbl class.
 --}}
-<div class="ksa-letter" style="font-size:13pt;line-height:1.6;">
+<div class="ksa-letter" style="font-size:13pt;line-height:1.6;font-weight:bold;">
 
 {{-- Blank space for pre-printed letterhead (reduced from 65mm so the bottom
      "Your Faithfully" signature is never pushed into the cut/unprintable area).
