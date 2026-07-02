@@ -81,7 +81,7 @@
   .ksa-app .pt td.box { border: 1px solid #000 !important; text-align: center; padding: 1pt 2pt; line-height: 1.05; }
   .ksa-app .pt td.box .pa { font-size: 6.5pt; font-weight: normal; }
   .ksa-app .pt td.box .pe { font-size: 7pt; font-weight: bold; }
-  .ksa-app .pt td.sel { background: #595959; }
+  .ksa-app .pt td.sel { background: #404040; }
   .ksa-app .pt td.sel .pa, .ksa-app .pt td.sel .pe { color: #fff; }
 </style>
 <div class="ksa-app">
@@ -358,6 +358,8 @@
       <td class="val">TEL: {{ $agency_phone ?: '' }}</td>
       <td>&nbsp;</td><td>&nbsp;</td>
     </tr>
+    {{-- Trailing empty row — reference shows a taller dependents block. --}}
+    <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
   </tbody>
 </table>
 
