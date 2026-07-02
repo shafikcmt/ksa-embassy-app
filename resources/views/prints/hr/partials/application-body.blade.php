@@ -54,14 +54,13 @@
   .ksa-app .bdr td, .ksa-app .bdr th { border: 0.9pt solid #000; padding: 3pt 5pt; font-size: 8pt; font-weight: bold; vertical-align: middle; }
   .ksa-app .lbl { font-weight: bold; text-align: left; white-space: nowrap; }
   .ksa-app .val { font-weight: bold; text-align: center; }
-  /* Full Name / Father / Mother values — the two headline rows must be the
-     HEAVIEST text on the form (like the reference). FreeSans only ships
-     Regular + Bold (font-weight:900 silently falls back to Regular in mPDF),
-     so to get a true black weight we faux-bold with a same-colour horizontal
-     text-shadow "stroke" on top of Bold — this reliably thickens the glyphs
-     in mPDF without needing a proprietary black font file. */
-  .ksa-app .nmval { font-size: 8.5pt; font-weight: bold; line-height: 1; letter-spacing: 0.2pt;
-    text-shadow: 0.3pt 0 0 #000, -0.3pt 0 0 #000, 0 0.3pt 0 #000, 0 -0.3pt 0 #000; }
+  /* Full Name / Father / Mother values — the two headline rows. The
+     reference uses a clean Helvetica/Arial-style Bold (crisp, even strokes,
+     the same weight as the labels), NOT a heavy black weight. FreeSans is
+     the Arial/Helvetica clone, so plain FreeSans Bold matches it. No
+     text-shadow "stroke" here — that smeared the glyph edges and looked
+     ugly; clean Bold reads sharper and closer to the reference. */
+  .ksa-app .nmval { font-size: 8.5pt; font-weight: bold; line-height: 1; }
   /* Arabic: reference form's Arabic labels/content are NOT bold (lighter,
      regular weight) — clearly thinner than the heavy Latin bold. Force
      normal weight with !important because the grid rule (.bdr td{bold})
