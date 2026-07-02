@@ -8,8 +8,13 @@
   — do not redesign; only the dynamic values change per candidate.
 --}}
 @php
-  // Uppercase helper for the important page-1 values (display only — multibyte-safe).
+  // Uppercase helper — ONLY for fields the reference shows in UPPERCASE
+  // (name, mother's name, place of birth, nationalities, passport no.).
   $U = fn($x) => ($x === null || $x === '') ? '' : mb_strtoupper((string) $x, 'UTF-8');
+  // Title-case helper for fields the reference shows in mixed case
+  // (Sex "Male", Marital Status "Unmarried", Religion "Muslim", Sect).
+  // Normalises DB casing so e.g. "female" → "Female" regardless of storage.
+  $T = fn($x) => ($x === null || $x === '') ? '' : mb_convert_case((string) $x, MB_CASE_TITLE, 'UTF-8');
   $tp = strtolower($travel_purpose ?: 'work');
   $fullNameDisplay = $U($full_name_en) . ($father_name ? ' S/O. ' . $U($father_name) : '');
   // Purpose-of-Travel options — each box shows Arabic (top) + English (bottom),
@@ -49,11 +54,14 @@
   .ksa-app .bdr td, .ksa-app .bdr th { border: 0.9pt solid #000; padding: 3pt 5pt; font-size: 8pt; font-weight: bold; vertical-align: middle; }
   .ksa-app .lbl { font-weight: bold; text-align: left; white-space: nowrap; }
   .ksa-app .val { font-weight: bold; text-align: center; }
-  /* Full Name / Father / Mother values — the two headline rows. Larger +
-     fully bold so they stand out most, like the reference. Must be an
-     explicit `bold` (not 600): mPDF's fonts have only Regular/Bold, and a
-     numeric 600 falls back to Regular, which made these look light. */
-  .ksa-app .nmval { font-size: 9.5pt; font-weight: bold; letter-spacing: 0.2pt; }
+  /* Full Name / Father / Mother values — the two headline rows must be the
+     HEAVIEST text on the form (like the reference). FreeSans only ships
+     Regular + Bold (font-weight:900 silently falls back to Regular in mPDF),
+     so to get a true black weight we faux-bold with a same-colour horizontal
+     text-shadow "stroke" on top of Bold — this reliably thickens the glyphs
+     in mPDF without needing a proprietary black font file. */
+  .ksa-app .nmval { font-size: 10pt; font-weight: bold; letter-spacing: 0.2pt;
+    text-shadow: 0.4pt 0 0 #000, -0.4pt 0 0 #000, 0 0.4pt 0 #000, 0 -0.4pt 0 #000; }
   /* Arabic: reference form's Arabic labels/content are NOT bold (lighter,
      regular weight) — clearly thinner than the heavy Latin bold. Force
      normal weight with !important because the grid rule (.bdr td{bold})
@@ -163,19 +171,19 @@
     {{-- Sex | Marital Status --}}
     <tr>
       <td class="lbl">Sex:</td>
-      <td class="val">{{ $U($gender) }}</td>
+      <td class="val">{{ $T($gender) }}</td>
       <td class="ar">الجنس :</td>
       <td class="lbl">Marital Status:</td>
-      <td class="val">{{ $U($marital_status) }}</td>
+      <td class="val">{{ $T($marital_status) }}</td>
       <td class="ar">الحالة الاجتماعية :</td>
     </tr>
     {{-- Sect | Religion --}}
     <tr>
       <td class="lbl">Sect:</td>
-      <td class="val">{{ $U($sect) }}</td>
+      <td class="val">{{ $T($sect) }}</td>
       <td class="ar">المذهب :</td>
       <td class="lbl">Religion:</td>
-      <td class="val">{{ $U($religion) }}</td>
+      <td class="val">{{ $T($religion) }}</td>
       <td class="ar">الديانة :</td>
     </tr>
     {{-- Profession block — arabic labels + arabic profession value.
