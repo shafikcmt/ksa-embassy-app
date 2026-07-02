@@ -46,18 +46,22 @@
   .ksa-app table { width: 100%; border-collapse: collapse; }
   /* Bordered grid: 8pt bold Latin + taller rows (more vertical padding) to
      match the reference form's spacing and heavier, clearer text. */
-  .ksa-app .bdr td, .ksa-app .bdr th { border: 0.9pt solid #000; padding: 3.4pt 5pt; font-size: 8pt; font-weight: bold; vertical-align: middle; }
+  .ksa-app .bdr td, .ksa-app .bdr th { border: 0.9pt solid #000; padding: 3pt 5pt; font-size: 8pt; font-weight: bold; vertical-align: middle; }
   .ksa-app .lbl { font-weight: bold; text-align: left; white-space: nowrap; }
   .ksa-app .val { font-weight: bold; text-align: center; }
-  /* Full Name / Father / Mother values — slightly larger + fully bold.
-     Must be an explicit `bold` (not 600): mPDF's fonts have only Regular/Bold,
-     and a numeric 600 falls back to Regular, which made these look light. */
-  .ksa-app .nmval { font-size: 9pt; font-weight: bold; }
-  /* Arabic: reference form's Arabic LABELS are lighter (regular) than the
-     heavy Latin bold, so .ar defaults to normal weight. Arabic VALUES that
-     should be bold in the reference are wrapped in <strong> in the markup. */
-  .ksa-app .ar  { direction: rtl; text-align: right; font-weight: normal; font-size: 7.8pt; white-space: nowrap; }
-  .ksa-app .ar strong { font-weight: bold; }
+  /* Full Name / Father / Mother values — the two headline rows. Larger +
+     fully bold so they stand out most, like the reference. Must be an
+     explicit `bold` (not 600): mPDF's fonts have only Regular/Bold, and a
+     numeric 600 falls back to Regular, which made these look light. */
+  .ksa-app .nmval { font-size: 9.5pt; font-weight: bold; letter-spacing: 0.2pt; }
+  /* Arabic: reference form's Arabic labels/content are NOT bold (lighter,
+     regular weight) — clearly thinner than the heavy Latin bold. Force
+     normal weight with !important because the grid rule (.bdr td{bold})
+     has higher specificity than .ar and would otherwise win, leaving the
+     Arabic heavy. Arabic VALUES that ARE bold in the reference are wrapped
+     in <strong> and restored to bold below. */
+  .ksa-app .ar  { direction: rtl; text-align: right; font-weight: normal !important; font-size: 7.8pt; white-space: nowrap; }
+  .ksa-app .ar strong { font-weight: bold !important; }
   .ksa-app .inner td { border: 0 !important; padding: 0; font-weight: bold; }
   /* Signature row — reference draws NO box around it (clean, borderless). */
   .ksa-app .sig td { border: 0; padding: 2.4pt 4pt; font-size: 7.6pt; vertical-align: middle; }
@@ -75,10 +79,16 @@
 </style>
 <div class="ksa-app">
 
-{{-- ── HEADER: photo (left) · barcode (center) · embassy (right) ───────────── --}}
+{{-- Reference leaves a little breathing space above the header block. --}}
+<div style="height:2mm;"></div>
+
+{{-- ── HEADER: photo (left) · barcode (center) · embassy (right) ─────────────
+     Photo and MOFA columns are near-equal width so the barcode sits centered
+     on the page, and EMBASSY/CONSULAR are pushed down to line up with the
+     barcode number / New Application, exactly like the reference. --}}
 <table style="width:100%;border-collapse:collapse;margin-bottom:8pt;">
   <tr>
-    <td style="width:26%;vertical-align:top;padding:0;">
+    <td style="width:30%;vertical-align:top;padding:0;">
       {{-- Passport-size photo box (~35mm × 41mm), thin black border, top-left --}}
       <table style="width:100pt;border-collapse:collapse;"><tr>
         <td style="width:100pt;height:111pt;border:1px solid #000;text-align:center;vertical-align:middle;font-size:8pt;color:#555;padding:2pt;">
@@ -86,15 +96,15 @@
         </td>
       </tr></table>
     </td>
-    <td style="width:38%;text-align:center;vertical-align:top;padding:6pt 4pt 4pt 4pt;">
+    <td style="width:36%;text-align:center;vertical-align:top;padding:6pt 4pt 4pt 4pt;">
       {{-- Nested table: row-1 fixed height reliably pushes "New Application" down
            (mPDF ignores margin/padding between sibling divs inside a cell). --}}
       <table style="width:100%;border-collapse:collapse;">
         <tr><td style="height:54pt;text-align:center;vertical-align:top;border:0;padding:0;">
           @if(!empty($topBarcodeSrc))
-            <img src="{{ $topBarcodeSrc }}" style="width:52mm;height:12mm;display:block;margin:0 auto;">
+            <img src="{{ $topBarcodeSrc }}" style="width:46mm;height:12mm;display:block;margin:0 auto;">
           @elseif(!empty($topBarcodeText))
-            <div style="width:52mm;height:12mm;border:1px dashed #aaa;margin:0 auto;text-align:center;line-height:12mm;font-size:7pt;">{{ $topBarcodeText }}</div>
+            <div style="width:46mm;height:12mm;border:1px dashed #aaa;margin:0 auto;text-align:center;line-height:12mm;font-size:7pt;">{{ $topBarcodeText }}</div>
           @endif
           <div style="text-align:center;font-weight:bold;font-size:10pt;margin-top:1pt;letter-spacing:0.5pt;">{{ $topBarcodeText ?? '' }}</div>
         </td></tr>
@@ -103,12 +113,12 @@
         </td></tr>
       </table>
     </td>
-    <td style="width:36%;text-align:right;vertical-align:top;padding:2pt 0 2pt 4pt;">
+    <td style="width:34%;text-align:right;vertical-align:top;padding:2pt 0 2pt 4pt;">
       @if(!empty($application_no))
       <div style="font-size:19pt;font-weight:bold;letter-spacing:0.5pt;">{{ $application_no }}</div>
       @endif
-      <div style="font-size:12pt;font-weight:bold;margin-top:12pt;white-space:nowrap;">EMBASSY OF SAUDI ARABIA</div>
-      <div style="font-size:11pt;font-weight:bold;margin-top:3pt;white-space:nowrap;">CONSULAR SECTION</div>
+      <div style="font-size:11.5pt;font-weight:bold;margin-top:36pt;white-space:nowrap;">EMBASSY OF SAUDI ARABIA</div>
+      <div style="font-size:11pt;font-weight:bold;margin-top:4pt;white-space:nowrap;">CONSULAR SECTION</div>
     </td>
   </tr>
 </table>
@@ -173,7 +183,7 @@
          left area is one open cell (borderless inner table for positioning),
          and only the right arabic-label column (المهنة) keeps its divider. --}}
     <tr>
-      <td colspan="5" style="padding:3.4pt 5pt;">
+      <td colspan="5" style="padding:3pt 5pt;">
         <table class="inner" dir="ltr" style="width:100%;">
           <tr>
             <td style="width:28%;">&nbsp;</td>
@@ -189,7 +199,7 @@
          Reference: full-width open row, no internal vertical dividers, value
          (profession) extends to the right edge. --}}
     <tr>
-      <td colspan="6" style="padding:3.4pt 5pt;">
+      <td colspan="6" style="padding:3pt 5pt;">
         <table class="inner" dir="ltr" style="width:100%;">
           <tr>
             <td class="lbl" style="width:28%;">Place of Issue:</td>
