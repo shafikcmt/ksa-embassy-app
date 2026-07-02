@@ -32,19 +32,38 @@
      host <head> CSS, so these rules win on equal specificity. --}}
 <style>
   /* FreeSans (an Arial/Helvetica clone) has a much heavier Bold than DejaVu
-     Sans, matching the reference form's thick Latin text. Arabic stays on
-     DejaVu (.ar rules below) since its Arabic shaping is known-good. */
-  .ksa-app { line-height: 1.12; color: #000; font-family: freesans, sans-serif; }
+     Sans, matching the reference form's thick Latin text.
+     CRITICAL mPDF quirk: table cells do NOT inherit font-family from an
+     ancestor (<div class="ksa-app">) — they silently fall back to the host
+     body font (DejaVu Sans), which is why earlier output looked too light.
+     So freesans must be declared DIRECTLY on every element type (table/td/
+     th/div/span), not just on the container. Arabic glyphs auto-substitute
+     to mPDF's Arabic font via autoLangToFont regardless of this. */
+  .ksa-app,
+  .ksa-app table, .ksa-app td, .ksa-app th,
+  .ksa-app div, .ksa-app span, .ksa-app p { font-family: freesans, sans-serif; }
+  .ksa-app { line-height: 1.12; color: #000; font-weight: bold; }
   .ksa-app table { width: 100%; border-collapse: collapse; }
   .ksa-app .bdr td, .ksa-app .bdr th { border: 1px solid #000; padding: 2.4pt 4pt; font-size: 7.6pt; font-weight: bold; vertical-align: middle; }
   .ksa-app .lbl { font-weight: bold; text-align: left; white-space: nowrap; }
   .ksa-app .val { font-weight: bold; text-align: center; }
-  /* Full Name / Father / Mother values — moderately bold (600), slightly larger (~1px).
-     Note: mPDF's bundled DejaVu Sans has only Regular/Bold, so the PDF renders this as
-     standard bold (never 800/900); the browser preview honours the 600 weight. */
-  .ksa-app .nmval { font-size: 8.5pt; font-weight: 600; }
-  .ksa-app .ar  { direction: rtl; text-align: right; font-weight: bold; font-size: 7.3pt; white-space: nowrap; }
+  /* Full Name / Father / Mother values — slightly larger + fully bold.
+     Must be an explicit `bold` (not 600): mPDF's fonts have only Regular/Bold,
+     and a numeric 600 falls back to Regular, which made these look light. */
+  .ksa-app .nmval { font-size: 8.5pt; font-weight: bold; }
+  /* Arabic: reference form's Arabic LABELS are lighter (regular) than the
+     heavy Latin bold, so .ar defaults to normal weight. Arabic VALUES that
+     should be bold in the reference are wrapped in <strong> in the markup. */
+  .ksa-app .ar  { direction: rtl; text-align: right; font-weight: normal; font-size: 7.3pt; white-space: nowrap; }
+  .ksa-app .ar strong { font-weight: bold; }
   .ksa-app .inner td { border: 0 !important; padding: 0; font-weight: bold; }
+  /* Signature row — reference draws NO box around it (clean, borderless). */
+  .ksa-app .sig td { border: 0; padding: 2.4pt 4pt; font-size: 7.6pt; vertical-align: middle; }
+  /* "For official use only" — reference has NO vertical grid: just a dashed
+     separator line on top and thin solid horizontal rules between rows. */
+  .ksa-app .offc { border-top: 1px dashed #000; }
+  .ksa-app .offc td { border: 0; border-bottom: 1px solid #000; padding: 2.4pt 4pt; font-size: 7.6pt; vertical-align: middle; }
+  .ksa-app .offc .hdr td { border-bottom: 1px solid #000; padding-top: 3pt; }
   /* Purpose-of-Travel option boxes — bordered table cells, AR over EN */
   .ksa-app .pt td.box { border: 1px solid #000 !important; text-align: center; padding: 1pt 2pt; line-height: 1.05; }
   .ksa-app .pt td.box .pa { font-size: 6.5pt; font-weight: normal; }
@@ -332,34 +351,34 @@
   </tbody>
 </table>
 
-{{-- ── SIGNATURE (single horizontal row) ───────────────────────────────────── --}}
-<table class="bdr" style="margin-top:0;font-size:7.5pt;">
+{{-- ── SIGNATURE (single horizontal row — borderless, like the reference) ──── --}}
+<table class="sig" style="margin-top:1pt;font-size:7.5pt;">
   <colgroup>
     <col style="width:14%"><col style="width:8%"><col style="width:18%">
     <col style="width:8%"><col style="width:44%"><col style="width:8%">
   </colgroup>
   <tbody>
     <tr>
-      <td class="lbl">Date: ________</td>
+      <td class="lbl">Date:</td>
       <td class="ar">التاريخ :</td>
-      <td class="lbl">Signature: ________</td>
+      <td class="lbl">Signature:</td>
       <td class="ar">التوقيع :</td>
-      <td class="lbl" style="font-weight:normal;"><strong>Name:</strong> {{ $full_name_en }}</td>
+      <td class="lbl"><strong>Name:</strong> {{ $U($full_name_en) }}</td>
       <td class="ar">الاسم :</td>
     </tr>
   </tbody>
 </table>
 
-{{-- ── FOR OFFICIAL USE ONLY ───────────────────────────────────────────────── --}}
-<table class="bdr" style="margin-top:2pt;font-size:7.5pt;">
+{{-- ── FOR OFFICIAL USE ONLY (borderless grid: dashed top + horizontal rules) --}}
+<table class="offc" style="margin-top:1pt;font-size:7.5pt;">
   <colgroup>
     <col style="width:12%"><col style="width:16%"><col style="width:12%">
     <col style="width:14%"><col style="width:16%"><col style="width:30%">
   </colgroup>
   <tbody>
-    <tr>
+    <tr class="hdr">
       <td colspan="3" style="font-weight:bold;font-size:8pt;text-decoration:underline;">For official use only</td>
-      <td colspan="3" class="ar" style="font-weight:bold;font-size:8pt;">للاستعمال الرسمي فقط</td>
+      <td colspan="3" class="ar" style="font-weight:bold;font-size:8pt;text-decoration:underline;">للاستعمال الرسمي فقط</td>
     </tr>
     <tr>
       <td class="lbl">Date:</td>
@@ -371,11 +390,11 @@
     </tr>
     <tr>
       <td class="lbl">Visit/Work for:</td>
-      <td colspan="4" class="val">@if(!empty($sponsor_name_ar))<span class="ar">{{ $sponsor_name_ar }}</span>@else{{ $sponsor_name ?: '' }}@endif</td>
+      <td colspan="4" class="val">@if(!empty($sponsor_name_ar))<span class="ar"><strong>{{ $sponsor_name_ar }}</strong></span>@else{{ $sponsor_name ?: '' }}@endif</td>
       <td class="ar">لزيارة :</td>
     </tr>
     <tr>
-      <td class="lbl">Date: ________</td>
+      <td class="lbl">Date:</td>
       <td>&nbsp;</td>
       <td class="ar">التاريخ :</td>
       <td class="lbl">Authorization:</td>
