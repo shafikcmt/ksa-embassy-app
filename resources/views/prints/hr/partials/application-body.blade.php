@@ -60,8 +60,8 @@
      so to get a true black weight we faux-bold with a same-colour horizontal
      text-shadow "stroke" on top of Bold — this reliably thickens the glyphs
      in mPDF without needing a proprietary black font file. */
-  .ksa-app .nmval { font-size: 10pt; font-weight: bold; letter-spacing: 0.2pt;
-    text-shadow: 0.4pt 0 0 #000, -0.4pt 0 0 #000, 0 0.4pt 0 #000, 0 -0.4pt 0 #000; }
+  .ksa-app .nmval { font-size: 8.5pt; font-weight: bold; line-height: 1; letter-spacing: 0.2pt;
+    text-shadow: 0.3pt 0 0 #000, -0.3pt 0 0 #000, 0 0.3pt 0 #000, 0 -0.3pt 0 #000; }
   /* Arabic: reference form's Arabic labels/content are NOT bold (lighter,
      regular weight) — clearly thinner than the heavy Latin bold. Force
      normal weight with !important because the grid rule (.bdr td{bold})
