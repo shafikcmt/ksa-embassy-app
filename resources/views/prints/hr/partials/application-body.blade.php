@@ -51,7 +51,7 @@
   .ksa-app table { width: 100%; border-collapse: collapse; }
   /* Bordered grid: 8pt bold Latin + taller rows (more vertical padding) to
      match the reference form's spacing and heavier, clearer text. */
-  .ksa-app .bdr td, .ksa-app .bdr th { border: 0.9pt solid #000; padding: 3pt 5pt; font-size: 8pt; font-weight: bold; vertical-align: middle; }
+  .ksa-app .bdr td, .ksa-app .bdr th { border: 0.9pt solid #000; padding: 2.6pt 5pt; font-size: 8pt; font-weight: bold; vertical-align: middle; }
   .ksa-app .lbl { font-weight: bold; text-align: left; white-space: nowrap; }
   .ksa-app .val { font-weight: bold; text-align: center; }
   /* Full Name / Father / Mother values — the two headline rows. The
@@ -190,7 +190,7 @@
          left area is one open cell (borderless inner table for positioning),
          and only the right arabic-label column (المهنة) keeps its divider. --}}
     <tr>
-      <td colspan="5" style="padding:3pt 5pt;">
+      <td colspan="5" style="padding:2.6pt 5pt;">
         <table class="inner" dir="ltr" style="width:100%;">
           <tr>
             <td style="width:28%;">&nbsp;</td>
@@ -206,7 +206,7 @@
          Reference: full-width open row, no internal vertical dividers, value
          (profession) extends to the right edge. --}}
     <tr>
-      <td colspan="6" style="padding:3pt 5pt;">
+      <td colspan="6" style="padding:2.6pt 5pt;">
         <table class="inner" dir="ltr" style="width:100%;">
           <tr>
             <td class="lbl" style="width:28%;">Place of Issue:</td>
@@ -358,7 +358,8 @@
       <td class="val">TEL: {{ $agency_phone ?: '' }}</td>
       <td>&nbsp;</td><td>&nbsp;</td>
     </tr>
-    {{-- Trailing empty row — reference shows a taller dependents block. --}}
+    {{-- Trailing empty rows — reference shows a taller dependents block. --}}
+    <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
     <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
   </tbody>
 </table>
