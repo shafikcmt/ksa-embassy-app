@@ -36,6 +36,21 @@
      selector is under .ksa-app, so pages 2–4 are unaffected. Placed after the
      host <head> CSS, so these rules win on equal specificity. --}}
 <style>
+@if(empty($_pdf))
+  /* BROWSER-ONLY: embed the exact TTFs mPDF renders with, so the on-screen
+     preview and Ctrl+P print match the downloaded PDF glyph-for-glyph. The
+     surrounding blade if-guard emits this block only when NOT rendering to PDF
+     — mPDF already ships these fonts internally, so it must not see url()-based
+     font-face rules (it would try to re-load/embed them and can error).
+     Files live in public/fonts (copied from vendor/mpdf/mpdf/ttfonts). */
+  @font-face { font-family: freesans;      font-weight: normal; font-style: normal; src: url('/fonts/FreeSans.ttf') format('truetype'); }
+  @font-face { font-family: freesans;      font-weight: bold;   font-style: normal; src: url('/fonts/FreeSansBold.ttf') format('truetype'); }
+  @font-face { font-family: dejavusans;    font-weight: normal; font-style: normal; src: url('/fonts/DejaVuSans.ttf') format('truetype'); }
+  @font-face { font-family: dejavusans;    font-weight: bold;   font-style: normal; src: url('/fonts/DejaVuSans-Bold.ttf') format('truetype'); }
+  /* .ar / body reference the spaced name "DejaVu Sans" — alias it to the same files. */
+  @font-face { font-family: 'DejaVu Sans'; font-weight: normal; font-style: normal; src: url('/fonts/DejaVuSans.ttf') format('truetype'); }
+  @font-face { font-family: 'DejaVu Sans'; font-weight: bold;   font-style: normal; src: url('/fonts/DejaVuSans-Bold.ttf') format('truetype'); }
+@endif
   /* FreeSans (an Arial/Helvetica clone) has a much heavier Bold than DejaVu
      Sans, matching the reference form's thick Latin text.
      CRITICAL mPDF quirk: table cells do NOT inherit font-family from an
@@ -60,7 +75,22 @@
      the Arial/Helvetica clone, so plain FreeSans Bold matches it. No
      text-shadow "stroke" here — that smeared the glyph edges and looked
      ugly; clean Bold reads sharper and closer to the reference. */
-  .ksa-app .nmval { font-size: 8.5pt; font-weight: bold; line-height: 1; }
+  /* Full Name / Mother's Name VALUES: sized 2px (=1.5pt) larger than the 8pt
+     used by every other value cell — so 9.5pt — to headline them per the
+     reference. Weight stays the `bold` keyword: in this mPDF, numeric weights
+     (700/800/900) make DejaVu/FreeSans fall back to REGULAR (thin), so `bold`
+     is the only correct heavy weight. line-height:1 keeps the taller text from
+     inflating the row more than necessary. */
+  .ksa-app .nmval { font-size: 9.5pt; font-weight: bold; line-height: 1; }
+  /* Personal-Info table (Section 1): use FreeSans — the Arial/Helvetica clone
+     that matches the reference form's narrow, compact Latin glyphs (labels AND
+     values). This is the same family the rest of page 1 uses; keeping it here
+     makes the label column read compact like the reference (an earlier DejaVu
+     Sans experiment was wider/rounder and did not match the reference shape).
+     WARNING: keep the `bold` keyword — numeric weights (700/800/900) make
+     FreeSans fall back to REGULAR (thin) in this mPDF, so `bold` is the only
+     correct heavy weight for .val/.lbl/.nmval. */
+  .ksa-app .pi td, .ksa-app .pi th, .ksa-app .pi span { font-family: freesans, sans-serif; }
   /* Arabic: reference form's Arabic labels/content are NOT bold (lighter,
      regular weight) — clearly thinner than the heavy Latin bold. Force
      normal weight with !important because the grid rule (.bdr td{bold})
@@ -70,6 +100,10 @@
   .ksa-app .ar  { direction: rtl; text-align: right; font-weight: normal !important; font-size: 7.8pt; white-space: nowrap; }
   .ksa-app .ar strong { font-weight: bold !important; }
   .ksa-app .inner td { border: 0 !important; padding: 0; font-weight: bold; }
+  /* Passport No. column — the reference emphasises this field with a bolder,
+     darker vertical divider on its left edge (Date of expiry | Passport No.).
+     Scoped to .ppno cells only, so no other cell/border is affected. */
+  .ksa-app .bdr td.ppno { border-left: 1.6pt solid #000; }
   /* Signature row — reference draws NO box around it (clean, borderless). */
   .ksa-app .sig td { border: 0; padding: 2.4pt 4pt; font-size: 7.6pt; vertical-align: middle; }
   /* "For official use only" — reference has NO vertical grid: just a dashed
@@ -131,12 +165,28 @@
 </table>
 
 {{-- ── MAIN IDENTITY TABLE (6-col grid: label | value | arabic ×2) ─────────── --}}
-<table class="bdr">
+{{-- .pi = Personal-Info scope: Section-1 Latin text uses the heavier DejaVu Sans
+     Bold (see .pi rule below); other .bdr tables stay FreeSans. --}}
+<table class="bdr pi" style="table-layout:fixed;">
+  {{-- Reference (ksa-complete-file-reference-0001.pdf) measures the identity
+       grid as SIX EQUAL columns — grid lines fall at 0/16.7/33.3/50/66.7/83.3/100%.
+       Label, value and Arabic columns are the same width (16.67% each); the label
+       column is NOT wider. Keep all six equal so every row lines up. --}}
   <colgroup>
-    <col style="width:15%"><col style="width:20%"><col style="width:15%">
-    <col style="width:15%"><col style="width:20%"><col style="width:15%">
+    <col style="width:16.66%"><col style="width:16.67%"><col style="width:16.67%">
+    <col style="width:16.66%"><col style="width:16.67%"><col style="width:16.67%">
   </colgroup>
   <tbody>
+    {{-- Zero-height sizing row: mPDF 8.x IGNORES <colgroup> widths and, with a
+         colspan cell in the first visible row, cannot derive an even grid — it
+         falls back to content sizing, which is what made the label column bulge
+         wide. This invisible 6-cell row is the real first row, so mPDF pins all
+         six columns to the equal 16.67% grid the reference uses. Borderless /
+         zero-height so it never shows. --}}
+    <tr style="font-size:0;line-height:0;">
+      <td style="border:0;padding:0;width:16.66%;"></td><td style="border:0;padding:0;width:16.67%;"></td><td style="border:0;padding:0;width:16.67%;"></td>
+      <td style="border:0;padding:0;width:16.66%;"></td><td style="border:0;padding:0;width:16.67%;"></td><td style="border:0;padding:0;width:16.67%;"></td>
+    </tr>
     {{-- Full Name (value — incl. "S/O. <father>" — rendered bold) --}}
     <tr>
       <td class="lbl">Full Name:</td>
@@ -185,12 +235,47 @@
       <td class="val">{{ $T($religion) }}</td>
       <td class="ar">الديانة :</td>
     </tr>
+  </tbody>
+</table>
+
+{{-- ── PROFESSION + ADDRESS + PURPOSE (independent grid — its OWN colgroup) ───
+     A SEPARATE table so its wide label column ("Business address & phone No.")
+     and full-width value/arabic cells do NOT distort the fixed 6-col identity
+     grid above (and vice-versa). Column widths here are deliberately kept
+     independent of the identity table — this mirrors the reference, where the
+     address/profession rows use their own column widths, not the identity
+     table's. Auto layout (no table-layout:fixed) lets the long labels size
+     to content without wrapping. --}}
+<table class="bdr pi" style="margin-top:0;table-layout:fixed;">
+  {{-- 6-col grid tuned so the ADDRESS rows resolve to 25% / 50% / 25%
+       (left label · middle value · right Arabic label — left==right, matching
+       the reference). Address rows map as c1 | colspan3(c2+c3+c4) | colspan2(c5+c6),
+       so c1=25, c2+c3+c4=50, c5+c6=25. Purpose row uses c1 | colspan4 | c6, and
+       the profession rows use colspan5|c6 / colspan6 — all still valid on this grid.
+       table-layout:fixed + the zero-height sizing row below make mPDF honour these
+       widths (auto layout ignored the colgroup and let the label column bulge). --}}
+  <colgroup>
+    <col style="width:25%"><col style="width:17%"><col style="width:16%">
+    <col style="width:17%"><col style="width:12.5%"><col style="width:12.5%">
+  </colgroup>
+  <tbody>
+    {{-- Zero-height sizing row: pins all six columns to the colgroup grid under
+         table-layout:fixed (the first visible row starts with a colspan cell, so
+         without this mPDF cannot derive the grid). Borderless / zero-height. --}}
+    <tr style="font-size:0;line-height:0;">
+      <td style="border:0;padding:0;width:25%;"></td><td style="border:0;padding:0;width:17%;"></td><td style="border:0;padding:0;width:16%;"></td>
+      <td style="border:0;padding:0;width:17%;"></td><td style="border:0;padding:0;width:12.5%;"></td><td style="border:0;padding:0;width:12.5%;"></td>
+    </tr>
     {{-- Profession block — arabic labels + arabic profession value.
          Reference has NO internal vertical grid across this row: the whole
          left area is one open cell (borderless inner table for positioning),
          and only the right arabic-label column (المهنة) keeps its divider. --}}
+    {{-- border-right/left:none on this pair removes ONLY the shared internal
+         divider between the open left area and the المهنة label — the reference
+         renders this Arabic row as one continuous line (no vertical divider
+         before المهنة). Outer table left/top/bottom/right borders are kept. --}}
     <tr>
-      <td colspan="5" style="padding:2.6pt 5pt;">
+      <td colspan="5" style="padding:2.6pt 5pt;border-right:none;">
         <table class="inner" dir="ltr" style="width:100%;">
           <tr>
             <td style="width:28%;">&nbsp;</td>
@@ -200,7 +285,7 @@
           </tr>
         </table>
       </td>
-      <td class="ar">المهنة :</td>
+      <td class="ar" style="border-left:none;">المهنة :</td>
     </tr>
     {{-- Profession block — english labels + english profession value.
          Reference: full-width open row, no internal vertical dividers, value
@@ -259,27 +344,44 @@
   </tbody>
 </table>
 
-{{-- ── PASSPORT / VISA SECTION ─────────────────────────────────────────────── --}}
-<table class="bdr" style="margin-top:0;">
+{{-- ── PASSPORT INFO (own 4-EQUAL-column grid — reference = 25/25/25/25) ───────
+     Split into a dedicated table so the label + value rows sit on an exact
+     4-equal-column grid (table-layout:fixed + zero-height sizing row make mPDF
+     honour the colgroup). The duration/payment/destination rows below keep their
+     own independent 5-column table untouched — those rows genuinely need 5 cells
+     and their Arabic labels would overflow a forced 4-col grid. --}}
+<table class="bdr" style="margin-top:0;margin-bottom:0;table-layout:fixed;">
   <colgroup>
-    <col style="width:22%"><col style="width:16%"><col style="width:22%">
-    <col style="width:22%"><col style="width:18%">
+    <col style="width:25%"><col style="width:25%"><col style="width:25%"><col style="width:25%">
   </colgroup>
   <tbody>
+    <tr style="font-size:0;line-height:0;">
+      <td style="border:0;padding:0;width:25%;"></td><td style="border:0;padding:0;width:25%;"></td><td style="border:0;padding:0;width:25%;"></td><td style="border:0;padding:0;width:25%;"></td>
+    </tr>
     {{-- Passport field headers: english + arabic label in one cell --}}
     <tr>
       <td><table class="inner" style="width:100%"><tr><td class="lbl" style="text-align:left;">Place of issue:</td><td class="ar">محل الإصدار :</td></tr></table></td>
       <td><table class="inner" style="width:100%"><tr><td class="lbl" style="text-align:left;">Date of issue:</td><td class="ar">تاريخ الإصدار :</td></tr></table></td>
       <td><table class="inner" style="width:100%"><tr><td class="lbl" style="text-align:left;">Date of expiry:</td><td class="ar">تاريخ انتهاء الصلاحية :</td></tr></table></td>
-      <td colspan="2"><table class="inner" style="width:100%"><tr><td class="lbl" style="text-align:left;">Passport No.:</td><td class="ar">رقم الجواز :</td></tr></table></td>
+      <td class="ppno"><table class="inner" style="width:100%"><tr><td class="lbl" style="text-align:left;">Passport No.:</td><td class="ar">رقم الجواز :</td></tr></table></td>
     </tr>
     {{-- Passport field values (centered) --}}
     <tr>
       <td class="val">{{ $U($passport_issue_place) }}</td>
       <td class="val">{{ $passport_issue_date ?: '' }}</td>
       <td class="val">{{ $passport_expiry_date ?: '' }}</td>
-      <td colspan="2" class="val">{{ $U($passport_no) }}</td>
+      <td class="val ppno">{{ $U($passport_no) }}</td>
     </tr>
+  </tbody>
+</table>
+
+{{-- ── VISA / DURATION / PAYMENT / DESTINATION (independent 5-column table) ──── --}}
+<table class="bdr" style="margin-top:0;">
+  <colgroup>
+    <col style="width:22%"><col style="width:16%"><col style="width:22%">
+    <col style="width:22%"><col style="width:18%">
+  </colgroup>
+  <tbody>
     {{-- Duration / Arrival / Departure — arabic labels --}}
     <tr>
       <td colspan="2" class="ar">مدة الإقامة بالمملكة :</td>
