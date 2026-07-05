@@ -14,9 +14,9 @@ td, th { padding: 2pt 3pt; vertical-align: middle; font-size: 7.5pt; }
    Guarantees the partial renders identically in single and combined views,
    independent of any host/parent CSS. */
 .ksa-app table { width: 100%; border-collapse: collapse; }
-.ksa-app td, .ksa-app th { padding: 2.6pt 3pt; vertical-align: middle; font-size: 7.5pt; }
+.ksa-app td, .ksa-app th { padding: 3pt 3pt; vertical-align: middle; font-size: 9pt; }
 .ksa-app .bdr td, .ksa-app .bdr th { border: 1px solid #000; }
-.ksa-app .ar { direction: rtl; text-align: right; font-family: 'DejaVu Sans', sans-serif; font-size: 7pt; }
+.ksa-app .ar { direction: rtl; text-align: right; font-family: 'DejaVu Sans', sans-serif; font-size: 9pt; }
 .ksa-app .lbl { font-weight: bold; }
 .ksa-app .val { text-align: center; font-weight: bold; }
 .ksa-app .inner td { border: 0 !important; padding: 0; }
@@ -46,10 +46,14 @@ td, th { padding: 2pt 3pt; vertical-align: middle; font-size: 7.5pt; }
 @media print {
   body { background: #fff; margin: 0; padding: 0; }
   .no-print { display: none !important; }
+  /* Print geometry MUST match mPDF: the @page rule already supplies the 10mm
+     margin (same as PdfGeneratorService), so the wrapper adds NO extra padding.
+     Otherwise browser print would have less printable height than the PDF and
+     page 1 could overflow onto a 2nd sheet. */
   .a4-page {
     width: 100%;
     margin: 0;
-    padding: 8mm 10mm;
+    padding: 0;
     box-shadow: none;
     box-sizing: border-box;
     page-break-after: always;

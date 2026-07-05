@@ -66,7 +66,7 @@
   .ksa-app table { width: 100%; border-collapse: collapse; }
   /* Bordered grid: 8pt bold Latin + taller rows (more vertical padding) to
      match the reference form's spacing and heavier, clearer text. */
-  .ksa-app .bdr td, .ksa-app .bdr th { border: 0.9pt solid #000; padding: 2.6pt 5pt; font-size: 8pt; font-weight: bold; vertical-align: middle; }
+  .ksa-app .bdr td, .ksa-app .bdr th { border: 0.6pt solid #000; padding: 2pt 5pt; font-size: 8.5pt; font-weight: bold; vertical-align: middle; }
   .ksa-app .lbl { font-weight: bold; text-align: left; white-space: nowrap; }
   .ksa-app .val { font-weight: bold; text-align: center; }
   /* Full Name / Father / Mother values — the two headline rows. The
@@ -81,7 +81,25 @@
      (700/800/900) make DejaVu/FreeSans fall back to REGULAR (thin), so `bold`
      is the only correct heavy weight. line-height:1 keeps the taller text from
      inflating the row more than necessary. */
-  .ksa-app .nmval { font-size: 9.5pt; font-weight: bold; line-height: 1; }
+  .ksa-app .nmval { font-size: 10pt; font-weight: bold; line-height: 1; color: #000; }
+  /* Passport-info VALUES (Place/Date of issue, Date of expiry, Passport No.)
+     — the reference prints these darker/bolder than ordinary value cells.
+     Bump from the default 8pt to 9.5pt bold black so they read clearly, while
+     keeping the `bold` keyword (numeric 700/800/900 make FreeSans fall back to
+     REGULAR/thin in this mPDF — see .nmval note above). */
+  .ksa-app .ppval { font-size: 9.5pt; font-weight: bold; color: #000; }
+  /* Passport-info grid (.ppt): four tight 25% cells. The longest Arabic label
+     "تاريخ انتهاء الصلاحية :" (Date of expiry) overflowed its cell's right
+     border, so shrink the EN + AR label fonts a little and trim the horizontal
+     cell padding — every label pair now stays fully inside its border. These
+     selectors are .ppt-scoped (higher specificity + later in source) so they
+     win over .bdr td / .lbl / .ar in mPDF's cascade. Values stay large/bold,
+     and Passport No. is bumped the most (the reference's most prominent field). */
+  .ksa-app table.ppt td { padding-left: 3pt; padding-right: 3pt; }
+  .ksa-app .ppt .lbl { font-size: 7.3pt; }
+  .ksa-app .ppt .ar  { font-size: 6.5pt; line-height: 1; }
+  .ksa-app .ppt .val { font-size: 9.5pt; font-weight: bold; color: #000; }
+  .ksa-app .ppt .val.ppno { font-size: 10.5pt; font-weight: bold; color: #000; }
   /* Personal-Info table (Section 1): use FreeSans — the Arial/Helvetica clone
      that matches the reference form's narrow, compact Latin glyphs (labels AND
      values). This is the same family the rest of page 1 uses; keeping it here
@@ -97,13 +115,21 @@
      has higher specificity than .ar and would otherwise win, leaving the
      Arabic heavy. Arabic VALUES that ARE bold in the reference are wrapped
      in <strong> and restored to bold below. */
-  .ksa-app .ar  { direction: rtl; text-align: right; font-weight: normal !important; font-size: 7.8pt; white-space: nowrap; }
+  .ksa-app .ar  { direction: rtl; text-align: right; font-weight: normal !important; font-size: 8pt; white-space: nowrap; }
   .ksa-app .ar strong { font-weight: bold !important; }
   .ksa-app .inner td { border: 0 !important; padding: 0; font-weight: bold; }
   /* Passport No. column — the reference emphasises this field with a bolder,
      darker vertical divider on its left edge (Date of expiry | Passport No.).
      Scoped to .ppno cells only, so no other cell/border is affected. */
-  .ksa-app .bdr td.ppno { border-left: 1.6pt solid #000; }
+  .ksa-app .bdr td.ppno { border-left: 0.8pt solid #000; }
+  /* Duration / Payment / Mahram / Destination block: the reference renders these
+     rows as open text lines — outer frame + horizontal row rules only, with NO
+     internal vertical dividers. Remove vertical cell borders, then restore the
+     outer left/right frame on the first/last cell of each row. Scoped to .hrows
+     so the passport grid above and dependents grid below stay untouched. */
+  .ksa-app .hrows td { border-left: 0; border-right: 0; }
+  .ksa-app .hrows td:first-child { border-left: 0.6pt solid #000; }
+  .ksa-app .hrows td:last-child  { border-right: 0.6pt solid #000; }
   /* Signature row — reference draws NO box around it (clean, borderless). */
   .ksa-app .sig td { border: 0; padding: 2.4pt 4pt; font-size: 7.6pt; vertical-align: middle; }
   /* "For official use only" — reference has NO vertical grid: just a dashed
@@ -111,23 +137,28 @@
   .ksa-app .offc { border-top: 1px dashed #000; }
   .ksa-app .offc td { border: 0; border-bottom: 1px solid #000; padding: 2.4pt 4pt; font-size: 7.6pt; vertical-align: middle; }
   .ksa-app .offc .hdr td { border-bottom: 1px solid #000; padding-top: 3pt; }
-  /* Purpose-of-Travel option boxes — bordered table cells, AR over EN */
-  .ksa-app .pt td.box { border: 1px solid #000 !important; text-align: center; padding: 1pt 2pt; line-height: 1.05; }
-  .ksa-app .pt td.box .pa { font-size: 6.5pt; font-weight: normal; }
-  .ksa-app .pt td.box .pe { font-size: 7pt; font-weight: bold; }
-  .ksa-app .pt td.sel { background: #404040; }
-  .ksa-app .pt td.sel .pa, .ksa-app .pt td.sel .pe { color: #fff; }
+  /* Purpose-of-Travel option boxes — bordered table cells, AR over EN.
+     Reference packs 7 options into the 50% middle block with "Residence"/
+     "Diplomacy" on one line; at 7pt they wrapped once the block narrowed to 50%,
+     so match the reference's compact sizing (6pt) + tighter padding. NOTE: in
+     this mPDF the font-size must sit on the CELL — a size on the nested .pe/.pa
+     <span> alone is ignored — so it is set on td.box here. */
+  .ksa-app .pt td.box { border: 1px solid #000 !important; text-align: center; padding: 1pt 1pt; line-height: 1.05; font-size: 6pt; }
+  .ksa-app .pt td.box .pa { font-size: 5.5pt; font-weight: normal; }
+  .ksa-app .pt td.box .pe { font-size: 6pt; font-weight: bold; }
+  .ksa-app .pt td.sel { background: #333333; }
+  .ksa-app .pt td.sel .pa, .ksa-app .pt td.sel .pe { color: #fff; font-weight: bold; }
 </style>
 <div class="ksa-app">
 
 {{-- Reference leaves a little breathing space above the header block. --}}
-<div style="height:2mm;"></div>
+<div style="height:1mm;"></div>
 
 {{-- ── HEADER: photo (left) · barcode (center) · embassy (right) ─────────────
      Photo and MOFA columns are near-equal width so the barcode sits centered
      on the page, and EMBASSY/CONSULAR are pushed down to line up with the
      barcode number / New Application, exactly like the reference. --}}
-<table style="width:100%;border-collapse:collapse;margin-bottom:8pt;">
+<table style="width:100%;border-collapse:collapse;margin-bottom:5pt;">
   <tr>
     <td style="width:30%;vertical-align:top;padding:0;">
       {{-- Passport-size photo box (~35mm × 41mm), thin black border, top-left --}}
@@ -327,10 +358,13 @@
     </tr>
     @endif
     {{-- Purpose of Travel — ONE row: label · compact boxes (AR+EN) · arabic label.
-         Selected purpose (default Work) is grey-filled like the reference. --}}
+         Reference proportions are 25 / 50 / 25 (label · boxes · arabic). On this
+         6-col grid that is c1 | colspan3(c2+c3+c4)=50% | colspan2(c5+c6)=25% — the
+         same colspan pattern the address rows use, so it aligns with them and the
+         arabic heading is no longer squeezed. Selected purpose is grey-filled. --}}
     <tr>
       <td class="lbl" style="white-space:nowrap;">Purpose of Travel:</td>
-      <td colspan="4" style="padding:2pt 4pt;vertical-align:middle;">
+      <td colspan="3" style="padding:2pt 4pt;vertical-align:middle;">
         <table class="pt" style="width:100%;border-collapse:collapse;"><tr>
           @foreach($purposeOpts as $opt)
           <td class="box{{ $tp === $opt['val'] ? ' sel' : '' }}" style="width:{{ number_format(100/count($purposeOpts),2) }}%;">
@@ -339,7 +373,7 @@
           @endforeach
         </tr></table>
       </td>
-      <td class="ar" style="white-space:nowrap;">الغاية من السفر :</td>
+      <td colspan="2" class="ar" style="white-space:nowrap;">الغاية من السفر :</td>
     </tr>
   </tbody>
 </table>
@@ -350,7 +384,7 @@
      honour the colgroup). The duration/payment/destination rows below keep their
      own independent 5-column table untouched — those rows genuinely need 5 cells
      and their Arabic labels would overflow a forced 4-col grid. --}}
-<table class="bdr" style="margin-top:0;margin-bottom:0;table-layout:fixed;">
+<table class="bdr ppt" style="margin-top:0;margin-bottom:0;table-layout:fixed;">
   <colgroup>
     <col style="width:25%"><col style="width:25%"><col style="width:25%"><col style="width:25%">
   </colgroup>
@@ -365,18 +399,20 @@
       <td><table class="inner" style="width:100%"><tr><td class="lbl" style="text-align:left;">Date of expiry:</td><td class="ar">تاريخ انتهاء الصلاحية :</td></tr></table></td>
       <td class="ppno"><table class="inner" style="width:100%"><tr><td class="lbl" style="text-align:left;">Passport No.:</td><td class="ar">رقم الجواز :</td></tr></table></td>
     </tr>
-    {{-- Passport field values (centered) --}}
+    {{-- Passport field values (centered, emphasised — see .ppval) --}}
     <tr>
-      <td class="val">{{ $U($passport_issue_place) }}</td>
-      <td class="val">{{ $passport_issue_date ?: '' }}</td>
-      <td class="val">{{ $passport_expiry_date ?: '' }}</td>
-      <td class="val ppno">{{ $U($passport_no) }}</td>
+      <td class="val ppval">{{ $U($passport_issue_place) }}</td>
+      <td class="val ppval">{{ $passport_issue_date ?: '' }}</td>
+      <td class="val ppval">{{ $passport_expiry_date ?: '' }}</td>
+      <td class="val ppval ppno">{{ $U($passport_no) }}</td>
     </tr>
   </tbody>
 </table>
 
-{{-- ── VISA / DURATION / PAYMENT / DESTINATION (independent 5-column table) ──── --}}
-<table class="bdr" style="margin-top:0;">
+{{-- ── VISA / DURATION / PAYMENT / DESTINATION (independent 5-column table) ────
+     .hrows = horizontal-rules-only: reference shows these rows with no internal
+     vertical dividers (open text lines), just the outer frame + row separators. --}}
+<table class="bdr hrows" style="margin-top:0;">
   <colgroup>
     <col style="width:22%"><col style="width:16%"><col style="width:22%">
     <col style="width:22%"><col style="width:18%">
@@ -408,7 +444,7 @@
          with NO underscore/placeholder lines after Date/No. --}}
     <tr>
       <td class="lbl">Mode of payment:</td>
-      <td style="font-size:7pt;"><strong>{{ $payment_mode ?: 'Free' }}</strong> &nbsp; Cash &nbsp; Cheque No.</td>
+      <td style="font-size:7pt;"><strong>{{ $payment_mode ?: 'Free' }}</strong> Cash  Cheque No.</td>
       <td class="lbl" style="font-weight:normal;">Date</td>
       <td class="lbl" style="font-weight:normal;">No.</td>
       <td class="lbl" style="font-weight:normal;">Date</td>
@@ -460,8 +496,7 @@
       <td class="val">TEL: {{ $agency_phone ?: '' }}</td>
       <td>&nbsp;</td><td>&nbsp;</td>
     </tr>
-    {{-- Trailing empty rows — reference shows a taller dependents block. --}}
-    <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+    {{-- Trailing empty row — reference shows a taller dependents block. --}}
     <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
   </tbody>
 </table>
@@ -484,8 +519,8 @@
 <table class="bdr" style="margin-top:0;font-size:7.5pt;">
   <tbody>
     <tr>
-      <td style="width:55%;text-align:center;">I the undersigned hereby that all the information I have provided are correct. I will abide by laws of the kingdom during the period of my residence in it.</td>
-      <td style="width:45%;" class="ar">أنا الموقع أدناه أقر بأن كل المعلومات التي زودتها صحيحة وسأكون ملتزماً بقوانين المملكة العربية السعودية خلال فترة وجودي بها.</td>
+      <td style="width:60%;text-align:center;">I the undersigned hereby that all the information I have provided are correct. I will abide by laws of the kingdom during the period of my residence in it.</td>
+      <td style="width:40%;">أنا الموقع أدناه أقر بأن كل المعلومات التي زودتها صحيحة وسأكون ملتزماً بقوانين المملكة العربية السعودية خلال فترة وجودي بها.</td>
     </tr>
   </tbody>
 </table>
@@ -524,7 +559,7 @@
       <td class="val">{{ $visa_date_hijri ?: '' }}</td>
       <td class="ar">التاريخ :</td>
       <td class="lbl">Visa No:</td>
-      <td class="val">{{ $visa_no ?: '' }}</td>
+      <td class="val ppval">{{ $visa_no ?: '' }}</td>
       <td class="ar">رقم الأمر المعتمد عليه في إعطاء التأشيرة :</td>
     </tr>
     <tr>
@@ -537,7 +572,7 @@
       <td>&nbsp;</td>
       <td class="ar">التاريخ :</td>
       <td class="lbl">Authorization:</td>
-      <td class="val">{{ $wakala_no ?: ($musaned_no ?: '') }}</td>
+      <td class="val ppval">{{ $wakala_no ?: ($musaned_no ?: '') }}</td>
       <td class="ar">أشير برقم :</td>
     </tr>
     <tr>

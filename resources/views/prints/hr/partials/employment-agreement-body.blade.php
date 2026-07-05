@@ -6,9 +6,10 @@
 --}}
 <div class="ksa-letter" style="font-size:13pt;line-height:1.6;">
 
-{{-- Blank space for pre-printed letterhead (reduced from 65mm so the bottom
-     signature row is never pushed into the cut/unprintable area) --}}
-<div style="height:30mm;"></div>
+{{-- Top spacer: content starts 2in / 50.8mm from the physical page top
+     (mPDF reserves a 10mm margin, so 10 + 40.8 = 50.8mm). Same value on
+     pages 2–4 so single-page and Complete-File PDFs match. --}}
+<div style="height:40.8mm;"></div>
 
 {{-- Title --}}
 <div style="text-align:center;margin-bottom:16pt;">

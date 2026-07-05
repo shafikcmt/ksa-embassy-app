@@ -5,18 +5,19 @@
   inline styles + .ksa-letter scoped wrapper — does not depend on host body
   font-size or any .dtbl class.
 --}}
-<div class="ksa-letter" style="font-size:13pt;line-height:1.6;font-weight:bold;">
+<div class="ksa-letter" style="font-size:13pt;line-height:1.6;font-weight:normal;">
 
-{{-- Blank space for pre-printed letterhead (reduced from 65mm so the bottom
-     "Your Faithfully" signature is never pushed into the cut/unprintable area).
-     When the agency enables "Print Logo" and has a logo, it is shown here. --}}
+{{-- Top spacer: content starts 2in / 50.8mm from the physical page top.
+     mPDF reserves a 10mm page margin, so this spacer is 40.8mm (10 + 40.8 =
+     50.8mm). Same value on pages 2–4 so single-page and Complete-File PDFs
+     match. Doubles as pre-printed-letterhead / optional agency-logo space. --}}
 @if(!empty($agency_show_logo) && !empty($agency_logo))
-  <div style="height:35mm;text-align:center;">
+  <div style="height:40.8mm;text-align:center;">
     <img src="{{ empty($_pdf) ? asset('storage/'.$agency_logo) : public_path('storage/'.$agency_logo) }}"
-         style="max-height:30mm;max-width:80mm;" alt="">
+         style="max-height:34mm;max-width:80mm;" alt="">
   </div>
 @else
-  <div style="height:35mm;"></div>
+  <div style="height:40.8mm;"></div>
 @endif
 
 {{-- To address --}}
@@ -36,29 +37,29 @@ With Due Respect we are Submitting One Passport for work Visa with all Necessary
   <tbody>
     <tr>
       <td style="width:50%;border-bottom:1px solid #000;padding:5pt 4pt;"><strong>NAME OF COMPANY</strong></td>
-      <td style="width:50%;border-bottom:1px solid #000;padding:5pt 4pt;">
+      <td style="width:50%;border-bottom:1px solid #000;padding:5pt 4pt;font-weight:bold;">
         @if(!empty($sponsor_name_ar))<span class="ar" style="font-weight:bold;">{{ $sponsor_name_ar }}</span>@else{{ $sponsor_name ?: $agency_name }}@endif
       </td>
     </tr>
     <tr>
       <td style="border-bottom:1px solid #000;padding:5pt 4pt;"><strong>VISA NUMBER &amp; DATE</strong></td>
-      <td style="border-bottom:1px solid #000;padding:5pt 4pt;">{{ $visa_no ?: '—' }}@if($visa_date) &nbsp; Date: {{ $visa_date }}@endif</td>
+      <td style="border-bottom:1px solid #000;padding:5pt 4pt;font-weight:bold;">{{ $visa_no ?: '—' }}@if($visa_date) &nbsp; Date: {{ $visa_date }}@endif</td>
     </tr>
     <tr>
       <td style="border-bottom:1px solid #000;padding:5pt 4pt;"><strong>FULL NAME OF THE EMPLOYEE</strong></td>
-      <td style="border-bottom:1px solid #000;padding:5pt 4pt;">{{ $full_name_en }}</td>
+      <td style="border-bottom:1px solid #000;padding:5pt 4pt;font-weight:bold;">{{ $full_name_en }}</td>
     </tr>
     <tr>
       <td style="border-bottom:1px solid #000;padding:5pt 4pt;"><strong>PASSPORT NO. WITH ISSUE DATE</strong></td>
-      <td style="border-bottom:1px solid #000;padding:5pt 4pt;">{{ $passport_no ?: '—' }}@if($passport_issue_date) &nbsp; Date: {{ $passport_issue_date }}@endif</td>
+      <td style="border-bottom:1px solid #000;padding:5pt 4pt;font-weight:bold;">{{ $passport_no ?: '—' }}@if($passport_issue_date) &nbsp; Date: {{ $passport_issue_date }}@endif</td>
     </tr>
     <tr>
       <td style="border-bottom:1px solid #000;padding:5pt 4pt;"><strong>PROFESSION</strong></td>
-      <td style="border-bottom:1px solid #000;padding:5pt 4pt;">{{ $profession_en ?: ($occupation ?: '—') }}</td>
+      <td style="border-bottom:1px solid #000;padding:5pt 4pt;font-weight:bold;">{{ $profession_en ?: ($occupation ?: '—') }}</td>
     </tr>
     <tr>
       <td style="border-bottom:1px solid #000;padding:5pt 4pt;"><strong>RELIGION</strong></td>
-      <td style="border-bottom:1px solid #000;padding:5pt 4pt;">{{ $religion ?: '—' }}</td>
+      <td style="border-bottom:1px solid #000;padding:5pt 4pt;font-weight:bold;">{{ $religion ?: '—' }}</td>
     </tr>
   </tbody>
 </table>

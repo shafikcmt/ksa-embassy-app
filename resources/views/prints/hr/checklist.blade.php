@@ -21,7 +21,8 @@ td, th { padding: 3pt 5pt; vertical-align: middle; font-size: 9pt; }
 @media print {
   body { background: #fff; margin: 0; padding: 0; }
   .no-print { display: none !important; }
-  .a4-page { width: 100%; margin: 0; padding: 10mm 12mm; box-shadow: none; box-sizing: border-box; page-break-after: always; }
+  /* Match mPDF: @page supplies the 10mm margin; wrapper adds no extra padding. */
+  .a4-page { width: 100%; margin: 0; padding: 0; box-shadow: none; box-sizing: border-box; page-break-after: always; }
   .a4-page:last-child { page-break-after: auto; }
 }
 </style>

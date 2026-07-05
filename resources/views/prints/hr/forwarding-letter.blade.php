@@ -13,7 +13,7 @@ td, th { padding: 4pt 6pt; vertical-align: top; }
      A4 + 10mm margins; feeding it an @page rule makes this mPDF version spray
      dozens/hundreds of blank pages, so it must be hidden from the PDF render. --}}
 @if(empty($_pdf))
-@page { size: A4; margin: 12mm; }
+@page { size: A4; margin: 10mm; }
 @endif
 
 @media screen {

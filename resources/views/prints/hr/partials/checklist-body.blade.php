@@ -12,6 +12,11 @@
 --}}
 <div class="ksa-checklist" style="font-family:'DejaVu Sans',sans-serif;color:#000;">
 
+{{-- Top spacer: content starts 2in / 50.8mm from the physical page top
+     (mPDF reserves a 10mm margin, so 10 + 40.8 = 50.8mm). Same value on
+     pages 2–4 so single-page and Complete-File PDFs match. --}}
+<div style="height:40.8mm;"></div>
+
 {{-- Centred, underlined Arabic title --}}
 <div style="text-align:center;margin:4pt 0 18pt;direction:rtl;">
   <span style="font-size:13pt;font-weight:bold;text-decoration:underline;">إرفاق الجدول التالي في كل معاملة</span>

@@ -10,10 +10,6 @@ td, th { padding: 2pt 3pt; vertical-align: middle; font-size: 8pt; }
 .b { font-weight: bold; }
 .bdr td, .bdr th { border: 1px solid #000; }
 .dtbl td, .dtbl th { font-size: 10pt; padding: 5pt 4pt; vertical-align: top; }
-/* ~2in top spacing applied to pages 2–4 of the Complete File only (page 1 unaffected).
-   Uses a fixed-height table row — mPDF honours td height reliably (a bare div collapses). */
-.page-top-gap { width: 100%; border-collapse: collapse; }
-.page-top-gap td { height: 50mm; border: 0; padding: 0; font-size: 0; line-height: 0; }
 
 /* ── Scoped styles for the shared KSA Application form body ──────────────
    Identical ruleset to prints.hr.application so the form renders the SAME
@@ -43,8 +39,13 @@ td, th { padding: 2pt 3pt; vertical-align: middle; font-size: 8pt; }
 @media print {
   body { background: #fff; margin: 0; padding: 0; }
   .no-print { display: none !important; }
-  .a4-page { width: 100%; margin: 0; padding: 6mm; box-shadow: none; box-sizing: border-box; page-break-after: always; }
-  .a4-page-lg { width: 100%; margin: 0; padding: 14mm 16mm; box-shadow: none; box-sizing: border-box; page-break-after: always; }
+  /* Print geometry MUST match mPDF: @page supplies the single 10mm margin (same
+     as PdfGeneratorService) and the body partials own their top spacers, so the
+     wrappers add NO extra padding. This keeps browser print page-breaks and top
+     spacing identical to the downloaded PDF (page 1 fits one A4; pages 2–4 start
+     at 50.8mm). */
+  .a4-page { width: 100%; margin: 0; padding: 0; box-shadow: none; box-sizing: border-box; page-break-after: always; }
+  .a4-page-lg { width: 100%; margin: 0; padding: 0; box-shadow: none; box-sizing: border-box; page-break-after: always; }
   .a4-page:last-child, .a4-page-lg:last-child { page-break-after: auto; }
 }
 </style>
@@ -80,8 +81,8 @@ td, th { padding: 2pt 3pt; vertical-align: middle; font-size: 8pt; }
 {{-- PAGE 2: FORWARDING LETTER --}}
 {{-- ══════════════════════════════════════════════════════════════════════ --}}
 
-{{-- Extra top spacing (~2in) — pages 2–4 only; keeps page 1 in place --}}
-<table class="page-top-gap"><tr><td>&nbsp;</td></tr></table>
+{{-- Top spacing (2in / 50.8mm from page top) is owned by the body partial's
+     own top spacer so single-page and Complete-File PDFs match exactly. --}}
 
 {{-- Shared Forwarding Letter — identical to the single preview --}}
 @include('prints.hr.partials.forwarding-letter-body')
@@ -95,8 +96,7 @@ td, th { padding: 2pt 3pt; vertical-align: middle; font-size: 8pt; }
 {{-- PAGE 3: EMPLOYMENT AGREEMENT --}}
 {{-- ══════════════════════════════════════════════════════════════════════ --}}
 
-{{-- Extra top spacing (~2in) — pages 2–4 only; keeps page 1 in place --}}
-<table class="page-top-gap"><tr><td>&nbsp;</td></tr></table>
+{{-- Top spacing owned by the body partial (2in / 50.8mm from page top). --}}
 
 {{-- Shared Employment Agreement — identical to the single preview --}}
 @include('prints.hr.partials.employment-agreement-body')
@@ -110,8 +110,7 @@ td, th { padding: 2pt 3pt; vertical-align: middle; font-size: 8pt; }
 {{-- PAGE 4: ATTACHMENT CHECKLIST --}}
 {{-- ══════════════════════════════════════════════════════════════════════ --}}
 
-{{-- Extra top spacing (~2in) — pages 2–4 only; keeps page 1 in place --}}
-<table class="page-top-gap"><tr><td>&nbsp;</td></tr></table>
+{{-- Top spacing owned by the body partial (2in / 50.8mm from page top). --}}
 
 {{-- Shared Attachment Checklist — identical to the single preview --}}
 @include('prints.hr.partials.checklist-body')
