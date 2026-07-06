@@ -47,7 +47,7 @@ With Due Respect we are Submitting One Passport for work Visa with all Necessary
     </tr>
     <tr>
       <td style="border-bottom:1px solid #000;padding:5pt 4pt;"><strong>FULL NAME OF THE EMPLOYEE</strong></td>
-      <td style="border-bottom:1px solid #000;padding:5pt 4pt;font-weight:bold;">{{ $full_name_en }}</td>
+      <td style="border-bottom:1px solid #000;padding:5pt 4pt;font-weight:bold;">{{ $full_name_en_upper }}</td>
     </tr>
     <tr>
       <td style="border-bottom:1px solid #000;padding:5pt 4pt;"><strong>PASSPORT NO. WITH ISSUE DATE</strong></td>

@@ -51,7 +51,7 @@
       $rows = [
         ['رقم إنجاز / Application Number',            $application_no ?: '—',                                          false],
         ['رقم المستند / Visa No.',                    $visa_no ?: '—',                                                false],
-        ['الاسم في الجواز / Passport Holder Name',    $full_name_en,                                                  false],
+        ['الاسم في الجواز / Passport Holder Name',    $full_name_en_upper,                                            false, true],
         ['رقم الجواز / Passport Number',              $passport_no ?: '—',                                            false],
         ['صلاحية الجواز / Passport Validity',         $passport_expiry_date ?: '—',                                   false],
         ['العمر / Age',                               trim(($date_of_birth && $date_of_birth !== '—' ? $date_of_birth."\n" : '').($age_detail ?: ($age !== '—' ? $age.' years' : ''))) ?: '—', false],
@@ -66,8 +66,10 @@
         ['البصمة / Fingerprint',                      $fingerprint ?: '—',                                            false],
       ];
     @endphp
-    @foreach($rows as [$step, $value, $arabicValue])
+    @foreach($rows as $row)
     @php
+      // $bold (4th tuple element, default false) bolds only the candidate name row.
+      [$step, $value, $arabicValue, $bold] = array_pad($row, 4, false);
       // Step is stored "Arabic / English"; the reference renders the English
       // label bold and the Arabic label in regular weight, so split and bold
       // only the English half (order preserved by the RTL cell direction).
@@ -75,7 +77,7 @@
     @endphp
     <tr>
       <td style="border:1px solid #000;padding:4pt 6pt;text-align:right;direction:rtl;">{{ $stepAr }} / <strong dir="ltr" style="unicode-bidi:isolate;">{{ $stepEn }}</strong></td>
-      <td style="border:1px solid #000;padding:4pt 6pt;text-align:center;{{ $arabicValue ? 'direction:rtl;' : 'direction:ltr;' }}">{!! nl2br(e($value)) !!}</td>
+      <td style="border:1px solid #000;padding:4pt 6pt;text-align:center;{{ $arabicValue ? 'direction:rtl;' : 'direction:ltr;' }}{{ $bold ? 'font-weight:bold;' : '' }}">{!! nl2br(e($value)) !!}</td>
       <td style="border:1px solid #000;padding:4pt 6pt;"></td>
       <td style="border:1px solid #000;padding:4pt 6pt;"></td>
     </tr>

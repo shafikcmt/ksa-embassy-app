@@ -34,6 +34,11 @@ class PrintDataMapper
             // ── HR Profile ──────────────────────────────────────────────
             'file_number'          => $hr->file_number ?? '—',
             'full_name_en'         => $hr->full_name_en,
+            // Display-only UPPERCASE candidate name for the print partials (pages 2–4).
+            // Kept separate from 'full_name_en' so filenames / toolbar headers / search
+            // that rely on the original casing are unaffected.
+            'full_name_en_upper'   => ($hr->full_name_en === null || $hr->full_name_en === '')
+                                        ? '' : mb_strtoupper((string) $hr->full_name_en, 'UTF-8'),
             'full_name_ar'         => $hr->full_name_ar ?? '',
             'father_name'          => $hr->father_name ?? '',
             'mother_name'          => $hr->mother_name ?? '',
