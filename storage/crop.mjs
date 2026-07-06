@@ -1,0 +1,20 @@
+import * as mupdf from "mupdf";
+import { readFileSync, writeFileSync } from "fs";
+// args: src.pdf outname f0 f1 scale
+const src = process.argv[2];
+const out = process.argv[3];
+const f0 = parseFloat(process.argv[4]);
+const f1 = parseFloat(process.argv[5]);
+const S = parseFloat(process.argv[6] || "2.2");
+const doc = mupdf.Document.openDocument(readFileSync(src), "application/pdf");
+const page = doc.loadPage(0);
+const b = page.getBounds();
+const H = b[3]-b[1];
+const y0 = b[1]+H*f0, y1 = b[1]+H*f1;
+const dbox=[Math.round(b[0]*S),Math.round(y0*S),Math.round(b[2]*S),Math.round(y1*S)];
+const pix=new mupdf.Pixmap(mupdf.ColorSpace.DeviceRGB,dbox,false);
+pix.clear(255);
+const dev=new mupdf.DrawDevice(mupdf.Matrix.scale(S,S),pix);
+page.run(dev,mupdf.Matrix.identity); dev.close();
+writeFileSync(out,pix.asPNG());
+console.log("wrote",out);

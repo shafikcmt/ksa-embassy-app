@@ -60,7 +60,7 @@
     <tr>
       <td style="border-bottom:1px solid #000;padding:4pt 6pt;text-align:center;">1</td>
       <td style="border-bottom:1px solid #000;padding:4pt 6pt;">MONTHLY SALARY:</td>
-      <td style="border-bottom:1px solid #000;padding:4pt 6pt;">{{ $salary ?: '—' }}</td>
+      <td style="border-bottom:1px solid #000;padding:4pt 6pt;">{{ $salary ?: '800/= SR' }}</td>
     </tr>
     <tr>
       <td style="border-bottom:1px solid #000;padding:4pt 6pt;text-align:center;">2</td>
