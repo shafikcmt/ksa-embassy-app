@@ -5,6 +5,32 @@
   inline styles + .ksa-letter scoped wrapper — does not depend on host body
   font-size or any .dtbl class.
 --}}
+{{-- ── Scoped typography — match reference page 2 (ksa-application-reference-0002.jpg)
+     The reference letter's Latin text is an Arial/Helvetica style, the same
+     family page 1 uses (FreeSans, an Arial clone) — NOT the wider/rounder
+     DejaVu Sans the host body defaults to. Scoped to .ksa-letter so pages 1/3/4
+     are unaffected. --}}
+<style>
+@if(empty($_pdf))
+  /* BROWSER-ONLY @font-face: embed the exact TTFs mPDF renders with, so the
+     on-screen preview and Ctrl+P print match the downloaded PDF glyph-for-glyph.
+     mPDF ships these fonts internally, so emit them only when NOT rendering to
+     PDF. Files live in public/fonts (copied from vendor/mpdf/mpdf/ttfonts). */
+  @font-face { font-family: freesans;      font-weight: normal; font-style: normal; src: url('/fonts/FreeSans.ttf') format('truetype'); }
+  @font-face { font-family: freesans;      font-weight: bold;   font-style: normal; src: url('/fonts/FreeSansBold.ttf') format('truetype'); }
+  @font-face { font-family: 'DejaVu Sans'; font-weight: normal; font-style: normal; src: url('/fonts/DejaVuSans.ttf') format('truetype'); }
+  @font-face { font-family: 'DejaVu Sans'; font-weight: bold;   font-style: normal; src: url('/fonts/DejaVuSans-Bold.ttf') format('truetype'); }
+@endif
+  /* Declare freesans DIRECTLY on every element type — mPDF table cells do NOT
+     inherit font-family from an ancestor (they silently fall back to the host
+     body font), so the container alone is not enough. */
+  .ksa-letter,
+  .ksa-letter table, .ksa-letter td, .ksa-letter th,
+  .ksa-letter div, .ksa-letter span, .ksa-letter p, .ksa-letter strong { font-family: freesans, sans-serif; }
+  /* Arabic keeps DejaVu Sans (full Arabic coverage in browser + mPDF);
+     mPDF's autoLangToFont substitutes the Arabic font for RTL text anyway. */
+  .ksa-letter .ar { font-family: 'DejaVu Sans', sans-serif; }
+</style>
 <div class="ksa-letter" style="font-size:13pt;line-height:1.6;font-weight:normal;">
 
 {{-- Top spacer: content starts 2in / 50.8mm from the physical page top.
