@@ -51,7 +51,7 @@
       $rows = [
         ['رقم إنجاز / Application Number',            $application_no ?: '—',                                          false],
         ['رقم المستند / Visa No.',                    $visa_no ?: '—',                                                false],
-        ['الاسم في الجواز / Passport Holder Name',    $full_name_en_upper,                                            false, true],
+        ['الاسم في الجواز / Passport Holder Name',    $full_name_en_upper,                                            false, false],
         ['رقم الجواز / Passport Number',              $passport_no ?: '—',                                            false],
         ['صلاحية الجواز / Passport Validity',         $passport_expiry_date ?: '—',                                   false],
         ['العمر / Age',                               trim(($date_of_birth && $date_of_birth !== '—' ? $date_of_birth."\n" : '').($age_detail ?: ($age !== '—' ? $age.' years' : ''))) ?: '—', false],
