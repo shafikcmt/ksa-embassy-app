@@ -6,15 +6,6 @@
     $active      = $statusCounts['active'] ?? 0;
     $inactive    = $statusCounts['inactive'] ?? 0;
     $blacklisted = $statusCounts['blacklisted'] ?? 0;
-
-    // Shared helper: passport expiry state for a profile
-    $passState = function ($hr) {
-        $exp = $hr->passport?->expiry_date;
-        if (! $exp) return null;
-        if ($exp->isPast()) return ['red', 'Expired', $exp];
-        if ($exp->lt(now()->addMonths(6))) return ['amber', 'Expiring', $exp];
-        return ['green', $exp->format('d M Y'), $exp];
-    };
 @endphp
 
 @section('content')
@@ -83,54 +74,46 @@
             <table class="w-full text-sm">
                 <thead>
                     <tr class="border-b border-slate-200 bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                        <th class="px-4 py-3">Candidate</th>
-                        <th class="px-4 py-3">Nationality</th>
-                        <th class="px-4 py-3">File #</th>
-                        <th class="px-4 py-3">Agent</th>
-                        <th class="px-4 py-3">Phone</th>
-                        <th class="px-4 py-3">Passport</th>
-                        <th class="px-4 py-3">Status</th>
-                        <th class="px-4 py-3">Created</th>
-                        <th class="px-4 py-3 text-right">Actions</th>
+                        <th class="w-[4%]  px-3 py-3">#</th>
+                        <th class="w-[20%] px-3 py-3">Name</th>
+                        <th class="w-[11%] px-3 py-3">MOFA ID</th>
+                        <th class="w-[11%] px-3 py-3">Passport No</th>
+                        <th class="w-[12%] px-3 py-3">Agent</th>
+                        <th class="w-[11%] px-3 py-3">Visa No</th>
+                        <th class="w-[11%] px-3 py-3">Sponsor ID</th>
+                        <th class="w-[12%] px-3 py-3">Sponsor Name</th>
+                        <th class="px-3 py-3 text-right">Action</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($hrProfiles as $hr)
-                        @php $ps = $passState($hr); @endphp
                         <tr class="transition hover:bg-slate-50">
-                            <td class="px-4 py-3">
+                            <td class="px-3 py-3 text-slate-400">{{ $hrProfiles->firstItem() + $loop->index }}</td>
+                            <td class="px-3 py-3">
                                 <div class="flex items-center gap-3">
                                     <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-50 text-xs font-bold text-brand-700">
                                         {{ strtoupper(mb_substr($hr->full_name_en, 0, 1)) }}
                                     </span>
                                     <div class="min-w-0">
-                                        <a href="{{ route('hr.show', $hr) }}" class="block truncate font-semibold text-slate-800 hover:text-brand-600">{{ $hr->full_name_en }}</a>
+                                        <a href="{{ route('hr.show', $hr) }}" class="block break-words font-semibold text-slate-800 hover:text-brand-600">{{ $hr->full_name_en }}</a>
                                         @if($hr->full_name_ar)
-                                            <div class="truncate text-xs text-slate-400" dir="rtl">{{ $hr->full_name_ar }}</div>
+                                            <div class="break-words text-xs text-slate-400" dir="rtl">{{ $hr->full_name_ar }}</div>
                                         @endif
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-4 py-3 text-slate-600">{{ $hr->nationality ?: '—' }}</td>
-                            <td class="px-4 py-3">
-                                @if($hr->file_number)
-                                    <span class="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs text-slate-600">{{ $hr->file_number }}</span>
+                            <td class="px-3 py-3">
+                                @if($hr->mofa_new ?: $hr->mofa_old)
+                                    <span class="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs text-slate-600">{{ $hr->mofa_new ?: $hr->mofa_old }}</span>
                                 @else <span class="text-slate-300">—</span> @endif
                             </td>
-                            <td class="px-4 py-3 text-slate-600">{{ $hr->agent?->name ?? '—' }}</td>
-                            <td class="px-4 py-3 text-slate-600">{{ $hr->phone ?: '—' }}</td>
-                            <td class="px-4 py-3">
-                                @if($ps)
-                                    <x-ui.badge :tone="$ps[0]">
-                                        @if($ps[0] !== 'green')<i class="bi bi-exclamation-triangle"></i>@endif
-                                        {{ $ps[1] }}
-                                    </x-ui.badge>
-                                @else <span class="text-slate-300">—</span> @endif
-                            </td>
-                            <td class="px-4 py-3"><x-ui.status-badge :status="$hr->status" /></td>
-                            <td class="px-4 py-3 text-slate-400">{{ $hr->created_at->format('d M Y') }}</td>
-                            <td class="px-4 py-3">
-                                <div class="flex items-center justify-end gap-1">
+                            <td class="px-3 py-3 font-mono text-xs text-slate-600">{{ $hr->passport?->passport_number ?: '—' }}</td>
+                            <td class="px-3 py-3 break-words text-slate-600">{{ $hr->agent?->name ?? '—' }}</td>
+                            <td class="px-3 py-3 font-mono text-xs text-slate-600">{{ $hr->visa?->visa_number ?: '—' }}</td>
+                            <td class="px-3 py-3 font-mono text-xs text-slate-600">{{ $hr->visa?->sponsor_id ?: '—' }}</td>
+                            <td class="px-3 py-3 break-words text-slate-600">{{ $hr->visa?->sponsor_name ?: '—' }}</td>
+                            <td class="px-3 py-3">
+                                <div class="flex items-center justify-end gap-1 whitespace-nowrap">
                                     <a href="{{ route('hr.show', $hr) }}" title="View" class="grid h-8 w-8 place-items-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"><i class="bi bi-eye"></i></a>
                                     <a href="{{ route('hr.documents', $hr) }}" title="Documents" class="grid h-8 w-8 place-items-center rounded-lg text-emerald-600 transition hover:bg-emerald-50"><i class="bi bi-file-earmark-pdf"></i></a>
                                     @can('update', $hr)
@@ -162,7 +145,6 @@
     {{-- ── Mobile cards ──────────────────────────────────────── --}}
     <div class="space-y-3 lg:hidden">
         @forelse($hrProfiles as $hr)
-            @php $ps = $passState($hr); @endphp
             <x-ui.card class="p-4">
                 <div class="flex items-start justify-between gap-3">
                     <div class="flex min-w-0 items-center gap-3">
@@ -174,14 +156,14 @@
                             @if($hr->full_name_ar)<div class="truncate text-xs text-slate-400" dir="rtl">{{ $hr->full_name_ar }}</div>@endif
                         </div>
                     </div>
-                    <x-ui.status-badge :status="$hr->status" />
                 </div>
                 <dl class="mt-3 grid grid-cols-2 gap-y-2 text-xs">
-                    <div><dt class="text-slate-400">Nationality</dt><dd class="font-medium text-slate-700">{{ $hr->nationality ?: '—' }}</dd></div>
-                    <div><dt class="text-slate-400">File #</dt><dd class="font-mono text-slate-700">{{ $hr->file_number ?: '—' }}</dd></div>
+                    <div><dt class="text-slate-400">MOFA ID</dt><dd class="font-mono text-slate-700">{{ $hr->mofa_new ?: ($hr->mofa_old ?: '—') }}</dd></div>
+                    <div><dt class="text-slate-400">Passport No</dt><dd class="font-mono text-slate-700">{{ $hr->passport?->passport_number ?: '—' }}</dd></div>
                     <div><dt class="text-slate-400">Agent</dt><dd class="font-medium text-slate-700">{{ $hr->agent?->name ?? '—' }}</dd></div>
-                    <div><dt class="text-slate-400">Phone</dt><dd class="font-medium text-slate-700">{{ $hr->phone ?: '—' }}</dd></div>
-                    <div class="col-span-2"><dt class="text-slate-400">Passport</dt><dd>@if($ps)<x-ui.badge :tone="$ps[0]">{{ $ps[1] }}</x-ui.badge>@else <span class="text-slate-400">—</span> @endif</dd></div>
+                    <div><dt class="text-slate-400">Visa No</dt><dd class="font-mono text-slate-700">{{ $hr->visa?->visa_number ?: '—' }}</dd></div>
+                    <div><dt class="text-slate-400">Sponsor ID</dt><dd class="font-mono text-slate-700">{{ $hr->visa?->sponsor_id ?: '—' }}</dd></div>
+                    <div><dt class="text-slate-400">Sponsor Name</dt><dd class="font-medium text-slate-700">{{ $hr->visa?->sponsor_name ?: '—' }}</dd></div>
                 </dl>
                 <div class="mt-3 flex gap-2 border-t border-slate-100 pt-3">
                     <x-ui.button :href="route('hr.show', $hr)" variant="secondary" size="sm" class="flex-1"><i class="bi bi-eye"></i> View</x-ui.button>

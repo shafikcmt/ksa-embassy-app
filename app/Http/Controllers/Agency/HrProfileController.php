@@ -19,7 +19,7 @@ class HrProfileController extends Controller
 
         $agencyId = auth()->user()->agency_id;
 
-        $query = HrProfile::with(['agent', 'passport'])
+        $query = HrProfile::with(['agent', 'passport', 'visa'])
             ->forAgency($agencyId)
             ->latest();
 
