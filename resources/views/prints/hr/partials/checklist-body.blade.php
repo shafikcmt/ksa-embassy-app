@@ -10,7 +10,16 @@
   • Step column is bilingual (Arabic / English), right-aligned
   • unboxed, right-aligned footer (office name / licence / signature / stamp)
 --}}
-<div class="ksa-checklist" style="font-family:'DejaVu Sans',sans-serif;color:#000;">
+<style>
+.ksa-checklist, .ksa-checklist table, .ksa-checklist td, .ksa-checklist th,
+.ksa-checklist div, .ksa-checklist span, .ksa-checklist p, .ksa-checklist strong { font-family: ksaroboto, freesans, sans-serif; }
+.ksa-checklist .ar { font-family: 'DejaVu Sans', sans-serif; }
+@if(empty($_pdf))
+  @font-face { font-family: ksaroboto; font-weight: normal; font-style: normal; src: url('/fonts/Roboto-Medium.ttf') format('truetype'); }
+  @font-face { font-family: ksaroboto; font-weight: bold;   font-style: normal; src: url('/fonts/Roboto-Bold.ttf') format('truetype'); }
+@endif
+</style>
+<div class="ksa-checklist" style="color:#000;">
 
 {{-- Top spacer: content starts 2in / 50.8mm from the physical page top
      (mPDF reserves a 10mm margin, so 10 + 40.8 = 50.8mm). Same value on

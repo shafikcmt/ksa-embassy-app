@@ -4,6 +4,14 @@
   page 3) so the layout is identical everywhere. Fully self-contained with
   inline styles + .ksa-letter scoped wrapper.
 --}}
+<style>
+.ksa-letter, .ksa-letter table, .ksa-letter td, .ksa-letter th,
+.ksa-letter div, .ksa-letter span, .ksa-letter p, .ksa-letter strong { font-family: ksaroboto, freesans, sans-serif; }
+@if(empty($_pdf))
+  @font-face { font-family: ksaroboto; font-weight: normal; font-style: normal; src: url('/fonts/Roboto-Medium.ttf') format('truetype'); }
+  @font-face { font-family: ksaroboto; font-weight: bold;   font-style: normal; src: url('/fonts/Roboto-Bold.ttf') format('truetype'); }
+@endif
+</style>
 <div class="ksa-letter" style="font-size:13pt;line-height:1.6;color:#000;">
 
 {{-- Top spacer: content starts 2in / 50.8mm from the physical page top

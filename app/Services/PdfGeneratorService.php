@@ -5,11 +5,23 @@ namespace App\Services;
 use Illuminate\Http\Response;
 use Mpdf\Mpdf;
 use Mpdf\MpdfException;
+use Mpdf\Config\ConfigVariables;
+use Mpdf\Config\FontVariables;
 
 class PdfGeneratorService
 {
     private function makeMpdf(array $options = []): Mpdf
     {
+        // Register a custom 'ksaroboto' font family (Medium=Regular, Bold) IN ADDITION
+        // to mPDF's bundled fonts (dejavusans/freesans stay untouched, still used by
+        // page 1 and all Arabic text). Only pages 2-4 (forwarding letter, employment
+        // agreement, checklist) opt into 'ksaroboto' via their own scoped CSS.
+        $defaultConfig = (new ConfigVariables())->getDefaults();
+        $fontDirs      = $defaultConfig['fontDir'];
+
+        $defaultFontConfig = (new FontVariables())->getDefaults();
+        $fontData          = $defaultFontConfig['fontdata'];
+
         $defaults = [
             'mode'              => 'utf-8',
             'format'            => 'A4',
@@ -21,6 +33,13 @@ class PdfGeneratorService
             'autoScriptToLang'  => true,
             'autoLangToFont'    => true,
             'default_font'      => 'dejavusans',
+            'fontDir'           => array_merge($fontDirs, [public_path('fonts')]),
+            'fontdata'          => $fontData + [
+                'ksaroboto' => [
+                    'R' => 'Roboto-Medium.ttf',
+                    'B' => 'Roboto-Bold.ttf',
+                ],
+            ],
         ];
 
         // Ensure temp directory exists

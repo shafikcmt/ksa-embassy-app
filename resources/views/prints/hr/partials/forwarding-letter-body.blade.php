@@ -18,6 +18,8 @@
      PDF. Files live in public/fonts (copied from vendor/mpdf/mpdf/ttfonts). */
   @font-face { font-family: freesans;      font-weight: normal; font-style: normal; src: url('/fonts/FreeSans.ttf') format('truetype'); }
   @font-face { font-family: freesans;      font-weight: bold;   font-style: normal; src: url('/fonts/FreeSansBold.ttf') format('truetype'); }
+  @font-face { font-family: ksaroboto;     font-weight: normal; font-style: normal; src: url('/fonts/Roboto-Medium.ttf') format('truetype'); }
+  @font-face { font-family: ksaroboto;     font-weight: bold;   font-style: normal; src: url('/fonts/Roboto-Bold.ttf') format('truetype'); }
   @font-face { font-family: 'DejaVu Sans'; font-weight: normal; font-style: normal; src: url('/fonts/DejaVuSans.ttf') format('truetype'); }
   @font-face { font-family: 'DejaVu Sans'; font-weight: bold;   font-style: normal; src: url('/fonts/DejaVuSans-Bold.ttf') format('truetype'); }
 @endif
@@ -26,7 +28,7 @@
      body font), so the container alone is not enough. */
   .ksa-letter,
   .ksa-letter table, .ksa-letter td, .ksa-letter th,
-  .ksa-letter div, .ksa-letter span, .ksa-letter p, .ksa-letter strong { font-family: freesans, sans-serif; }
+  .ksa-letter div, .ksa-letter span, .ksa-letter p, .ksa-letter strong { font-family: ksaroboto, freesans, sans-serif; }
   /* Arabic keeps DejaVu Sans (full Arabic coverage in browser + mPDF);
      mPDF's autoLangToFont substitutes the Arabic font for RTL text anyway. */
   .ksa-letter .ar { font-family: 'DejaVu Sans', sans-serif; }
