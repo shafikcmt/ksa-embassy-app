@@ -150,8 +150,8 @@
   .ksa-app .pt td.box { border: 1px solid #000 !important; text-align: center; padding: 3pt 1pt; line-height: 1.35; font-size: 7.5pt; }
   .ksa-app .pt td.box .pa { font-size: 7pt; font-weight: normal; }
   .ksa-app .pt td.box .pe { font-size: 7.5pt; font-weight: bold; }
-  .ksa-app .pt td.sel { background: #333333; }
-  .ksa-app .pt td.sel .pa, .ksa-app .pt td.sel .pe { color: #fff; font-weight: bold; }
+  .ksa-app .pt td.sel { background: #333333 !important; }
+  .ksa-app .pt td.sel .pa, .ksa-app .pt td.sel .pe { color: #fff !important; font-weight: bold; }
 </style>
 <div class="ksa-app">
 
@@ -373,8 +373,9 @@
       <td colspan="3" style="padding:2pt 4pt;vertical-align:middle;">
         <table class="pt" style="width:100%;border-collapse:collapse;"><tr>
           @foreach($purposeOpts as $opt)
-          <td class="box{{ $tp === $opt['val'] ? ' sel' : '' }}" style="width:{{ number_format(100/count($purposeOpts),2) }}%;">
-            <span class="pa">{{ $opt['ar'] }}</span><br><span class="pe">{{ $opt['en'] }}</span>
+          @php $isSel = $tp === $opt['val']; @endphp
+          <td class="box{{ $isSel ? ' sel' : '' }}" style="width:{{ number_format(100/count($purposeOpts),2) }}%;{{ $isSel ? 'background:#333333;' : '' }}">
+            <span class="pa" style="{{ $isSel ? 'color:#fff;' : '' }}">{{ $opt['ar'] }}</span><br><span class="pe" style="{{ $isSel ? 'color:#fff;font-weight:bold;' : '' }}">{{ $opt['en'] }}</span>
           </td>
           @endforeach
         </tr></table>
@@ -436,24 +437,6 @@
       <td class="val">{{ $duration_stay_en ?: '' }}@if(!empty($duration_stay_ar)) <span class="ar">({{ $duration_stay_ar }})</span>@endif</td>
       <td class="lbl" style="font-weight:normal;"><strong>Date of arrival:</strong> {{ $arrival_date ?: ($arrival_date_ar ?: '') }}</td>
       <td colspan="2" class="lbl" style="font-weight:normal;"><strong>Date of departure:</strong> {{ $departure_date ?: ($departure_date_ar ?: '') }}</td>
-    </tr>
-    {{-- Mode of payment — arabic labels --}}
-    <tr>
-      <td class="ar">تاريخ :</td>
-      <td class="ar">إيصال رقم ( ) :</td>
-      <td class="ar">تاريخ :</td>
-      <td class="ar">بشيك رقم :</td>
-      <td class="ar">طريقة الدفع :</td>
-    </tr>
-    {{-- Mode of payment — english (Mode of payment on the LEFT).
-         Matches the reference exactly: "Free Cash Cheque No. | Date | No. | Date"
-         with NO underscore/placeholder lines after Date/No. --}}
-    <tr>
-      <td class="lbl">Mode of payment:</td>
-      <td style="font-size:7pt;"><strong>{{ $payment_mode ?: 'Free' }}</strong> Cash  Cheque No.</td>
-      <td class="lbl" style="font-weight:normal;">Date</td>
-      <td class="lbl" style="font-weight:normal;">No.</td>
-      <td class="lbl" style="font-weight:normal;">Date</td>
     </tr>
     {{-- Mahram name | Relationship --}}
     <tr>

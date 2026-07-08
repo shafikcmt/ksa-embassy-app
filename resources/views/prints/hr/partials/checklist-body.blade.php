@@ -58,16 +58,16 @@
       // cell renders English on the left and Arabic on the right, as in the
       // reference. $arabicValue marks rows whose value is Arabic (Profession).
       $rows = [
-        ['رقم إنجاز / Application Number',            $application_no ?: '—',                                          false],
-        ['رقم المستند / Visa No.',                    $visa_no ?: '—',                                                false],
-        ['الاسم في الجواز / Passport Holder Name',    $full_name_en_upper,                                            false, false],
+        ['رقم إنجاز / Application Number',            $application_no ?: '—',                                          false, true],
+        ['رقم المستند / Visa No.',                    $visa_no ?: '—',                                                false, true],
+        ['الاسم في الجواز / Passport Holder Name',    $full_name_en_upper,                                            false, true],
         ['رقم الجواز / Passport Number',              $passport_no ?: '—',                                            false],
         ['صلاحية الجواز / Passport Validity',         $passport_expiry_date ?: '—',                                   false],
         ['العمر / Age',                               trim(($date_of_birth && $date_of_birth !== '—' ? $date_of_birth."\n" : '').($age_detail ?: ($age !== '—' ? $age.' years' : ''))) ?: '—', false],
         ['الجنس / Sex',                               $gender ?: '—',                                                 false],
         ['مساند / Musaned',                           $musaned_no ?: 'N/A',                                           false],
         ['الوكالة / Alwakala',                        $wakala_no ?: '—',                                              false],
-        ['فحص طبي / Medical Report',                  $medical_fit ?: '—',                                            false],
+        ['فحص طبي / Medical Report',                  'FIT',                                                          false],
         ['ورقة الشرطة / Police Clearance',            $pc_display ?: '—',                                             false],
         ['الرخصة / License',                          $license_type ?: 'N/A',                                         false],
         ['المهنة / Profession',                       $profession_ar ?: ($profession_en ?: ($occupation ?: '—')),    (bool) ($profession_ar ?? '')],
