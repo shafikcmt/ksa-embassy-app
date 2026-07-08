@@ -12,7 +12,7 @@
   @font-face { font-family: ksaroboto; font-weight: bold;   font-style: normal; src: url('/fonts/Roboto-Bold.ttf') format('truetype'); }
 @endif
 </style>
-<div class="ksa-letter" style="font-size:13pt;line-height:1.6;color:#000;">
+<div class="ksa-letter" style="font-size:13pt;line-height:1.6;color:#000;padding:0 2.5mm;">
 
 {{-- Top spacer: content starts 2in / 50.8mm from the physical page top
      (mPDF reserves a 10mm margin, so 10 + 40.8 = 50.8mm). Same value on

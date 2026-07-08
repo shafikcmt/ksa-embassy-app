@@ -153,7 +153,7 @@
   .ksa-app .pt td.sel { background: #333333 !important; }
   .ksa-app .pt td.sel .pa, .ksa-app .pt td.sel .pe { color: #fff !important; font-weight: bold; }
 </style>
-<div class="ksa-app">
+<div class="ksa-app" style="width:92%;margin:0 auto;">
 
 {{-- Reference leaves a little breathing space above the header block. --}}
 <div style="height:1mm;"></div>
@@ -332,7 +332,7 @@
             <td class="lbl" style="width:28%;">Place of Issue:</td>
             <td class="lbl" style="width:22%;">Qualification:@if($qualification_en) {{ $qualification_en }}@endif</td>
             <td class="lbl" style="width:20%;">Profession:</td>
-            <td class="val" style="width:30%;text-align:left;">{{ $profession_en ?: ($occupation ?: '') }}</td>
+            <td class="val" style="width:30%;text-align:left;font-size:9.5pt;font-weight:bold;">{{ $profession_en ?: ($occupation ?: '') }}</td>
           </tr>
         </table>
       </td>
@@ -560,8 +560,8 @@
       <td class="lbl">Date:</td>
       <td>&nbsp;</td>
       <td class="ar">التاريخ :</td>
-      <td class="lbl">Authorization:</td>
-      <td class="val ppval">{{ $wakala_no ?: ($musaned_no ?: '') }}</td>
+      <td class="lbl">ID No:</td>
+      <td class="val ppval">{{ $sponsor_id ?: '' }}</td>
       <td class="ar">أشير برقم :</td>
     </tr>
     <tr>
