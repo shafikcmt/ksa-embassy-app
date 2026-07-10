@@ -244,17 +244,18 @@
       <td class="ar">محل الولادة :</td>
     </tr>
     {{-- Previous | Present Nationality --}}
-    {{-- These two labels are longer than the other identity labels and, at the
-         shared .lbl 8.5pt, overflowed their fixed 16.67% column (Chrome pushed
-         them past the border; mPDF wrapped "Previous" to 2 lines). Shrink ONLY
-         these two labels to 7pt so both sit on one line inside the border in the
-         browser, print dialog and PDF alike, matching the reference. The grid is
-         fixed-width, so column widths and every other row are unchanged. --}}
+    {{-- These two labels are ~1–2mm wider than the fixed 16.67% column at the
+         shared .lbl 8.5pt. Instead of shrinking the font (which looked out of
+         step with the other rows), drop only the RIGHT padding (5pt → 0) on
+         these two label cells: that reclaims just enough width for both to sit
+         on one line at the full 8.5pt, inside the border, with the left edge
+         still aligned to the other labels — matching the reference. Font-size,
+         column widths and every other row are unchanged. --}}
     <tr>
-      <td class="lbl" style="font-size:7pt;">Previous Nationality:</td>
+      <td class="lbl" style="padding-right:0;">Previous Nationality:</td>
       <td class="val">{{ $U($previous_nationality) }}</td>
       <td class="ar">الجنسية السابقة :</td>
-      <td class="lbl" style="font-size:7pt;">Present Nationality:</td>
+      <td class="lbl" style="padding-right:0;">Present Nationality:</td>
       <td class="val">{{ $U($nationality) }}</td>
       <td class="ar">الجنسية الحالية :</td>
     </tr>
