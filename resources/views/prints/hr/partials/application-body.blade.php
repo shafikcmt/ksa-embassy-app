@@ -573,7 +573,7 @@
       <td class="lbl">Date:</td>
       <td>&nbsp;</td>
       <td class="ar">التاريخ :</td>
-      <td class="lbl">ID No:</td>
+      <td class="lbl">Id Number:</td>
       <td class="val ppval">{{ $sponsor_id ?: '' }}</td>
       <td class="ar">أشير برقم :</td>
     </tr>
