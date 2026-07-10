@@ -244,19 +244,17 @@
       <td class="ar">محل الولادة :</td>
     </tr>
     {{-- Previous | Present Nationality --}}
-    {{-- These two labels are ~1–2mm wider than the fixed 16.67% column at the
-         shared .lbl 8.5pt. Instead of shrinking the font (which looked out of
-         step with the other rows), drop only the RIGHT padding (5pt → 0) on
-         these two label cells: that reclaims just enough width for both to sit
-         on one line at the full 8.5pt, inside the border, with the left edge
-         still aligned to the other labels — matching the reference. Font-size,
-         column widths and every other row are unchanged. --}}
+    {{-- These labels are longer than the other identity labels. Set the label
+         AND value cells of both nationality fields to an explicit 7.5pt so the
+         text fits inside the fixed 16.67% column in the browser, print dialog
+         and PDF alike. Only these four cells are affected; the Arabic cells and
+         every other row keep their default size. --}}
     <tr>
-      <td class="lbl" style="padding-right:0;">Previous Nationality:</td>
-      <td class="val">{{ $U($previous_nationality) }}</td>
+      <td class="lbl" style="font-size:7.5pt;">Previous Nationality:</td>
+      <td class="val" style="font-size:7.5pt;">{{ $U($previous_nationality) }}</td>
       <td class="ar">الجنسية السابقة :</td>
-      <td class="lbl" style="padding-right:0;">Present Nationality:</td>
-      <td class="val">{{ $U($nationality) }}</td>
+      <td class="lbl" style="font-size:7.5pt;">Present Nationality:</td>
+      <td class="val" style="font-size:7.5pt;">{{ $U($nationality) }}</td>
       <td class="ar">الجنسية الحالية :</td>
     </tr>
     {{-- Sex | Marital Status --}}
@@ -345,21 +343,23 @@
       </td>
     </tr>
     {{-- Home address --}}
+    {{-- Label+value set to 7.5pt to match the Business address row below (its
+         sibling "address & phone No.:" pair). Keeping both at the same size
+         means both fit on one line and the shared column 1 stays consistent. --}}
     <tr>
-      <td class="lbl">Home address &amp; phone No.:</td>
-      <td colspan="3" class="val">{{ $home_address ?: ($phone ?: '') }}</td>
+      <td class="lbl" style="font-size:7.5pt;">Home address &amp; phone No.:</td>
+      <td colspan="3" class="val" style="font-size:7.5pt;">{{ $home_address ?: ($phone ?: '') }}</td>
       <td colspan="2" class="ar">عنوان المنزل ورقم التلفون :</td>
     </tr>
     {{-- Business address --}}
     <tr>
-      {{-- This label is longer than "Home address …". In the browser Chrome
-           honours white-space:nowrap (from .lbl) and pushes it past the fixed
-           25% column border. mPDF already wraps it to 2 lines inside the border,
-           so let the browser wrap it the SAME way — but ONLY in the browser.
-           The PDF path keeps .lbl nowrap untouched, so mPDF's column-1 sizing
-           (and the Home row above, which stays on one line) is unchanged. --}}
-      <td class="lbl"@if(empty($_pdf)) style="white-space:normal;"@endif>Business address &amp; phone No.:</td>
-      <td colspan="3" class="val">
+      {{-- Set the label AND value cells of this row to an explicit 7.5pt so the
+           long "Business address & phone No.:" label fits on one line inside the
+           fixed 25% column in the browser, print dialog and PDF alike. The Home
+           row above keeps its default 8.5pt (its label is short enough to fit),
+           and the Arabic cell is unchanged. --}}
+      <td class="lbl" style="font-size:7.5pt;">Business address &amp; phone No.:</td>
+      <td colspan="3" class="val" style="font-size:7.5pt;">
         {{-- Reference shows the business name/RL line slightly bolder/darker than
              the surrounding values (per CLAUDE.md); the email line stays regular. --}}
         @if($business_address_en){{-- stored value already includes RL; don't append it again --}}
