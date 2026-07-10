@@ -345,7 +345,13 @@
     </tr>
     {{-- Business address --}}
     <tr>
-      <td class="lbl">Business address &amp; phone No.:</td>
+      {{-- This label is longer than "Home address …". In the browser Chrome
+           honours white-space:nowrap (from .lbl) and pushes it past the fixed
+           25% column border. mPDF already wraps it to 2 lines inside the border,
+           so let the browser wrap it the SAME way — but ONLY in the browser.
+           The PDF path keeps .lbl nowrap untouched, so mPDF's column-1 sizing
+           (and the Home row above, which stays on one line) is unchanged. --}}
+      <td class="lbl"@if(empty($_pdf)) style="white-space:normal;"@endif>Business address &amp; phone No.:</td>
       <td colspan="3" class="val">
         {{-- Reference shows the business name/RL line slightly bolder/darker than
              the surrounding values (per CLAUDE.md); the email line stays regular. --}}
