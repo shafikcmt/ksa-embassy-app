@@ -150,7 +150,11 @@
   .ksa-app .pt td.box { border: 1px solid #000 !important; text-align: center; padding: 3pt 1pt; line-height: 1.35; font-size: 7.5pt; }
   .ksa-app .pt td.box .pa { font-size: 7pt; font-weight: normal; }
   .ksa-app .pt td.box .pe { font-size: 7.5pt; font-weight: bold; }
-  .ksa-app .pt td.sel { background: #333333 !important; }
+  /* print-color-adjust:exact forces the browser to PRINT this dark fill even
+     when the print dialog's "Background graphics" option is off (browsers omit
+     background colours from print by default). mPDF ignores these properties,
+     so the downloaded PDF — which already renders the fill — is unaffected. */
+  .ksa-app .pt td.sel { background: #333333 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact; }
   .ksa-app .pt td.sel .pa, .ksa-app .pt td.sel .pe { color: #fff !important; font-weight: bold; }
 </style>
 <div class="ksa-app" style="width:92%;margin:0 auto;">
