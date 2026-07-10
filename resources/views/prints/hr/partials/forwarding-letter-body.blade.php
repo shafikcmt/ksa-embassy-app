@@ -33,7 +33,9 @@
      mPDF's autoLangToFont substitutes the Arabic font for RTL text anyway. */
   .ksa-letter .ar { font-family: 'DejaVu Sans', sans-serif; }
 </style>
-<div class="ksa-letter" style="font-size:13pt;line-height:1.6;font-weight:normal;">
+{{-- width:92% + margin:0 auto matches PAGE 1's .ksa-app column so all four
+     Complete-File pages share the SAME left/right margin (≈17.6mm) in the PDF. --}}
+<div class="ksa-letter" style="width:92%;margin:0 auto;font-size:13pt;line-height:1.6;font-weight:normal;">
 
 {{-- Top spacer: content starts 2in / 50.8mm from the physical page top.
      mPDF reserves a 10mm page margin, so this spacer is 40.8mm (10 + 40.8 =

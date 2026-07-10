@@ -24,7 +24,9 @@ td, th { padding: 3pt 5pt; vertical-align: top; }
     margin: 10mm auto;
     background: #fff;
     box-shadow: 0 0 12px rgba(0,0,0,.15);
-    padding: 12mm;
+    /* 10mm = mPDF's margin, so the .ksa-letter 92% column gives the SAME
+       ≈17.6mm left/right margin on screen, in the print dialog and in the PDF. */
+    padding: 10mm;
     box-sizing: border-box;
     overflow: visible;
   }

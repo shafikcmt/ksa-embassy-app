@@ -26,7 +26,9 @@ td, th { padding: 2pt 3pt; vertical-align: middle; font-size: 8pt; }
 @media screen {
   body { background: #e5e7eb; }
   .a4-page { width: 210mm; min-height: 297mm; margin: 10mm auto; background: #fff; box-shadow: 0 0 12px rgba(0,0,0,.15); padding: 6mm; box-sizing: border-box; overflow: visible; }
-  .a4-page-lg { width: 210mm; min-height: 297mm; margin: 10mm auto; background: #fff; box-shadow: 0 0 12px rgba(0,0,0,.15); padding: 14mm 16mm; box-sizing: border-box; overflow: visible; }
+  /* 10mm horizontal = mPDF's margin, so pages 2–4 show the SAME left/right
+     margin as page 1 in the combined preview (matching the downloaded PDF). */
+  .a4-page-lg { width: 210mm; min-height: 297mm; margin: 10mm auto; background: #fff; box-shadow: 0 0 12px rgba(0,0,0,.15); padding: 14mm 10mm; box-sizing: border-box; overflow: visible; }
   /* KSA application page uses the SAME padding as the single preview (8mm 10mm) */
   .ksa-application-page { padding: 8mm 10mm; }
 }

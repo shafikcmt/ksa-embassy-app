@@ -19,7 +19,11 @@
   @font-face { font-family: ksaroboto; font-weight: bold;   font-style: normal; src: url('/fonts/Roboto-Bold.ttf') format('truetype'); }
 @endif
 </style>
-<div class="ksa-checklist" style="color:#000;">
+{{-- width:92% + margin:0 auto matches PAGE 1's .ksa-app column so all four
+     Complete-File pages share the SAME left/right margin (≈17.6mm) in the PDF.
+     The inner table is width:100% below so it fills this column (was 94%, which
+     nested-inset it narrower than the other pages). --}}
+<div class="ksa-checklist" style="width:92%;margin:0 auto;color:#000;">
 
 {{-- Top spacer: content starts 2in / 50.8mm from the physical page top
      (mPDF reserves a 10mm margin, so 10 + 40.8 = 50.8mm). Same value on
@@ -32,7 +36,7 @@
 </div>
 
 {{-- RTL table: visual columns L→R are Notes | Port | Agency | Step --}}
-<table style="width:94%;margin:0 auto;border-collapse:collapse;direction:rtl;font-size:9.5pt;">
+<table style="width:100%;margin:0 auto;border-collapse:collapse;direction:rtl;font-size:9.5pt;">
   <colgroup>
     <col style="width:36%"><col style="width:30%"><col style="width:16%"><col style="width:18%">
   </colgroup>

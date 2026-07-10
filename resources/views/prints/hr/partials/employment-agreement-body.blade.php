@@ -12,7 +12,11 @@
   @font-face { font-family: ksaroboto; font-weight: bold;   font-style: normal; src: url('/fonts/Roboto-Bold.ttf') format('truetype'); }
 @endif
 </style>
-<div class="ksa-letter" style="font-size:13pt;line-height:1.6;color:#000;padding:0 2.5mm;">
+{{-- width:92% + margin:0 auto matches PAGE 1's .ksa-app column so all four
+     Complete-File pages share the SAME left/right margin (≈17.6mm) in the PDF.
+     (Removed the old `padding:0 2.5mm`, which made this page inset differently
+     from pages 2 and 4.) --}}
+<div class="ksa-letter" style="width:92%;margin:0 auto;font-size:13pt;line-height:1.6;color:#000;">
 
 {{-- Top spacer: content starts 2in / 50.8mm from the physical page top
      (mPDF reserves a 10mm margin, so 10 + 40.8 = 50.8mm). Same value on

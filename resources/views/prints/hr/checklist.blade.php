@@ -10,7 +10,9 @@ td, th { padding: 3pt 5pt; vertical-align: middle; font-size: 9pt; }
 .ltr { direction: ltr; text-align: left; }
 @media screen {
   body { background: #e5e7eb; }
-  .a4-page { width: 210mm; min-height: 297mm; margin: 10mm auto; background: #fff; box-shadow: 0 0 12px rgba(0,0,0,.15); padding: 10mm 12mm; box-sizing: border-box; overflow: visible; }
+  /* 10mm horizontal = mPDF's margin, so the .ksa-checklist 92% column gives the
+     SAME left/right margin on screen, in the print dialog and in the PDF. */
+  .a4-page { width: 210mm; min-height: 297mm; margin: 10mm auto; background: #fff; box-shadow: 0 0 12px rgba(0,0,0,.15); padding: 10mm; box-sizing: border-box; overflow: visible; }
 }
 {{-- @page is emitted ONLY for the browser. mPDF's constructor already sets
      A4 + 10mm margins; feeding it an @page rule makes this mPDF version spray
