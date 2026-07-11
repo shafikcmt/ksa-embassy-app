@@ -103,7 +103,7 @@ We therefore, Request your Excellency to kindly issue work Visa out of - 01 - Vi
 </p>
 
 {{-- Signature — kept together so it is never split across pages --}}
-<div class="ksa-signature" style="margin-top:10pt;page-break-inside:avoid;break-inside:avoid;">
+<div class="ksa-signature" style="margin-top:50pt;page-break-inside:avoid;break-inside:avoid;">
   <div style="border-top:1px solid #000;width:160pt;padding-top:4pt;font-size:13pt;">
     <strong>Your Faithfully</strong>
   </div>
