@@ -557,14 +557,33 @@
         travel:    { 'work':'الشغل','visit':'زيارة','umrah':'العمرة','residence':'إقامة','hajj':'الحج','diplomacy':'الدبلوماسية','transit':'عبور' },
         fingerprint:{ 'yes':'نعم','no':'لا' },
         duration:  { '02 years':'سنتان','2 years':'سنتان','two years':'سنتان','1 year':'سنة واحدة','one year':'سنة واحدة','01 year':'سنة واحدة','3 years':'ثلاث سنوات','03 years':'ثلاث سنوات','6 months':'ستة أشهر','06 months':'ستة أشهر' },
-        profession:{ 'domestic worker':'عامل منزلي','housemaid':'عاملة منزلية','house maid':'عاملة منزلية','house driver':'سائق خاص','private driver':'سائق خاص','family driver':'سائق عائلة','driver':'سائق','heavy driver':'سائق ثقيل','heavy vehicle driver':'سائق ثقيل','light driver':'سائق خفيف','cleaner':'عامل نظافة','labour':'عامل','labourer':'عامل','labor':'عامل','worker':'عامل','load and unload worker':'عامل تحميل وتنزيل','security guard':'حارس أمن','guard':'حارس','watchman':'حارس','electrician':'كهربائي','plumber':'سباك','welder':'لحام','mason':'بنّاء','carpenter':'نجار','painter':'دهان','cook':'طباخ','chef':'طباخ','tailor':'خياط','farmer':'مزارع','gardener':'بستاني','shepherd':'راعي غنم','salesman':'بائع','accountant':'محاسب','nurse':'ممرض','technician':'فني','mechanic':'ميكانيكي','helper':'مساعد','waiter':'نادل','barber':'حلاق' },
+        profession:{ 'domestic worker':'عامل منزلي','housemaid':'عاملة منزلية','house maid':'عاملة منزلية','house driver':'سائق خاص','private driver':'سائق خاص','family driver':'سائق عائلة','driver':'سائق','heavy driver':'سائق ثقيل','heavy vehicle driver':'سائق ثقيل','light driver':'سائق خفيف','cleaner':'عامل نظافة','labour':'عامل','labourer':'عامل','labor':'عامل','worker':'عامل','load and unload worker':'عامل تحميل وتنزيل','security guard':'حارس أمن','guard':'حارس','watchman':'حارس','electrician':'كهربائي','plumber':'سباك','welder':'لحام','mason':'بنّاء','carpenter':'نجار','painter':'دهان','cook':'طباخ','chef':'طباخ','tailor':'خياط','farmer':'مزارع','gardener':'بستاني','shepherd':'راعي غنم','salesman':'بائع','accountant':'محاسب','nurse':'ممرض','technician':'فني','mechanic':'ميكانيكي','helper':'مساعد','waiter':'نادل','barber':'حلاق','student':'طالب' },
         qualification:{ 'secondary':'ثانوي','higher secondary':'ثانوية عليا','primary':'ابتدائي','graduate':'خريج','bachelor':'بكالوريوس','diploma':'دبلوم','master':'ماجستير','none':'لا يوجد','illiterate':'أمي','read and write':'يقرأ ويكتب','can read and write':'يقرأ ويكتب' },
         city:      { 'riyadh':'الرياض','jeddah':'جدة','jiddah':'جدة','dammam':'الدمام','makkah':'مكة المكرمة','mecca':'مكة المكرمة','madinah':'المدينة المنورة','medina':'المدينة المنورة','taif':'الطائف','tabuk':'تبوك','abha':'أبها','khobar':'الخبر','al khobar':'الخبر','jubail':'الجبيل','yanbu':'ينبع','hail':'حائل','najran':'نجران','buraidah':'بريدة','qassim':'القصيم','qatif':'القطيف','hofuf':'الهفوف','khamis mushait':'خميس مشيط','dhaka':'دكا' },
         generic:   {},
         address:   {}
     };
+    // Reverse dictionary: Arabic value -> canonical English label.
+    // Built once from DICT so both directions always stay in sync.
+    var DICT_REV = {};
+    Object.keys(DICT).forEach(function (cat) {
+        DICT_REV[cat] = {};
+        Object.keys(DICT[cat]).forEach(function (enKey) {
+            var arVal = DICT[cat][enKey];
+            if (!(arVal in DICT_REV[cat])) {
+                DICT_REV[cat][arVal] = enKey.replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+            }
+        });
+    });
+
+    function translateReverse(dict, value) {
+        var v = (value || '').trim();
+        if (!v || dict === 'date') return '';
+        return (DICT_REV[dict] && DICT_REV[dict][v]) || '';
+    }
+
     // Dicts whose unmatched values fall back to phonetic transliteration.
-    var FREE = { generic: true, address: true };
+    var FREE = { generic: true, address: true, profession: true };
 
     // Latin→Arabic phonetic transliteration (best-effort, fully editable result).
     var TR_MULTI = [['sh','ش'],['ch','تش'],['th','ث'],['kh','خ'],['gh','غ'],['ph','ف'],['ck','ك'],['oo','و'],['ou','و'],['ee','ي'],['aa','ا'],['ll','ل']];
@@ -608,8 +627,22 @@
     // Track manual edits so we never overwrite a value the user typed/saved.
     document.querySelectorAll('.ar-target').forEach(function (el) {
         if (el.value.trim() !== '') el.dataset.touched = '1';
-        el.addEventListener('input', function () { el.dataset.touched = '1'; });
+        el.addEventListener('input', function () {
+            el.dataset.touched = '1';
+            fillReverse(el);
+        });
+        el.addEventListener('change', function () { fillReverse(el, { force: false }); });
     });
+
+    function fillReverse(arField, opts) {
+        var src = document.querySelector('[data-ar-source="' + arField.id + '"]');
+        if (!src) return;
+        var force = opts && opts.force;
+        if (!force && src.dataset.touched === '1' && src.value.trim() !== '') return;
+        var dict = src.dataset.arDict || 'generic';
+        var en = translateReverse(dict, arField.value);
+        if (en) { src.value = en; delete src.dataset.touched; }
+    }
 
     function fill(src, opts) {
         var target = document.getElementById(src.dataset.arSource);
@@ -621,9 +654,11 @@
     }
 
     document.querySelectorAll('[data-ar-source]').forEach(function (src) {
-        // Live: dictionary + date map (no per-keystroke transliteration churn).
-        src.addEventListener('input', function () { fill(src, { translit: false }); });
-        // On blur / change: also allow phonetic transliteration for free-text fields.
+        if (src.value.trim() !== '') src.dataset.touched = '1';
+        src.addEventListener('input', function () {
+            src.dataset.touched = '1';
+            fill(src, { translit: false });
+        });
         src.addEventListener('change', function () { fill(src, { translit: true }); });
     });
 
