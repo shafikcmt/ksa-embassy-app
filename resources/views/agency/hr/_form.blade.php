@@ -548,7 +548,7 @@
 </script>
 <script>
 (function () {
-    // ── Local English→Arabic dictionary (safe, offline, no external API) ──
+    // ── Local English↔Arabic dictionary (safe, offline, no external API) ──
     var DICT = {
         nationality: { 'bangladesh':'بنغلاديش','india':'الهند','pakistan':'باكستان','philippines':'الفلبين','nepal':'نيبال','sri lanka':'سريلانكا' },
         religion:  { 'muslim':'مسلم','non-muslim':'غير مسلم','non muslim':'غير مسلم' },
@@ -557,14 +557,15 @@
         travel:    { 'work':'الشغل','visit':'زيارة','umrah':'العمرة','residence':'إقامة','hajj':'الحج','diplomacy':'الدبلوماسية','transit':'عبور' },
         fingerprint:{ 'yes':'نعم','no':'لا' },
         duration:  { '02 years':'سنتان','2 years':'سنتان','two years':'سنتان','1 year':'سنة واحدة','one year':'سنة واحدة','01 year':'سنة واحدة','3 years':'ثلاث سنوات','03 years':'ثلاث سنوات','6 months':'ستة أشهر','06 months':'ستة أشهر' },
-        profession:{ 'domestic worker':'عامل منزلي','housemaid':'عاملة منزلية','house maid':'عاملة منزلية','house driver':'سائق خاص','private driver':'سائق خاص','family driver':'سائق عائلة','driver':'سائق','heavy driver':'سائق ثقيل','heavy vehicle driver':'سائق ثقيل','light driver':'سائق خفيف','cleaner':'عامل نظافة','labour':'عامل','labourer':'عامل','labor':'عامل','worker':'عامل','load and unload worker':'عامل تحميل وتنزيل','security guard':'حارس أمن','guard':'حارس','watchman':'حارس','electrician':'كهربائي','plumber':'سباك','welder':'لحام','mason':'بنّاء','carpenter':'نجار','painter':'دهان','cook':'طباخ','chef':'طباخ','tailor':'خياط','farmer':'مزارع','gardener':'بستاني','shepherd':'راعي غنم','salesman':'بائع','accountant':'محاسب','nurse':'ممرض','technician':'فني','mechanic':'ميكانيكي','helper':'مساعد','waiter':'نادل','barber':'حلاق','student':'طالب' },
-        qualification:{ 'secondary':'ثانوي','higher secondary':'ثانوية عليا','primary':'ابتدائي','graduate':'خريج','bachelor':'بكالوريوس','diploma':'دبلوم','master':'ماجستير','none':'لا يوجد','illiterate':'أمي','read and write':'يقرأ ويكتب','can read and write':'يقرأ ويكتب' },
+        profession:{ 'domestic worker':'عامل منزلي','housemaid':'عاملة منزلية','house maid':'عاملة منزلية','house driver':'سائق خاص','private driver':'سائق خاص','family driver':'سائق عائلة','driver':'سائق','heavy driver':'سائق ثقيل','heavy vehicle driver':'سائق ثقيل','light driver':'سائق خفيف','cleaner':'عامل نظافة','labour':'عامل','labourer':'عامل','labor':'عامل','worker':'عامل','load and unload worker':'عامل تحميل وتنزيل','security guard':'حارس أمن','guard':'حارس','watchman':'حارس','electrician':'كهربائي','plumber':'سباك','welder':'لحام','mason':'بنّاء','carpenter':'نجار','painter':'دهان','cook':'طباخ','chef':'طباخ','tailor':'خياط','farmer':'مزارع','gardener':'بستاني','shepherd':'راعي غنم','salesman':'بائع','accountant':'محاسب','nurse':'ممرض','technician':'فني','mechanic':'ميكانيكي','helper':'مساعد','waiter':'نادل','barber':'حلاق','student':'طالب','teacher':'معلم' },
+        qualification:{ 'secondary':'ثانوي','higher secondary':'ثانوية عليا','primary':'ابتدائي','graduate':'خريج','bachelor':'بكالوريوس','diploma':'دبلوم','master':'ماجستير','none':'لا يوجد','illiterate':'أمي','read and write':'يقرأ ويكتب','can read and write':'يقرأ ويكتب','teacher':'معلم' },
         city:      { 'riyadh':'الرياض','jeddah':'جدة','jiddah':'جدة','dammam':'الدمام','makkah':'مكة المكرمة','mecca':'مكة المكرمة','madinah':'المدينة المنورة','medina':'المدينة المنورة','taif':'الطائف','tabuk':'تبوك','abha':'أبها','khobar':'الخبر','al khobar':'الخبر','jubail':'الجبيل','yanbu':'ينبع','hail':'حائل','najran':'نجران','buraidah':'بريدة','qassim':'القصيم','qatif':'القطيف','hofuf':'الهفوف','khamis mushait':'خميس مشيط','dhaka':'دكا' },
         generic:   {},
         address:   {}
     };
-    // Reverse dictionary: Arabic value -> canonical English label.
-    // Built once from DICT so both directions always stay in sync.
+
+    // Reverse dictionary: Arabic value -> canonical English label. Built once
+    // from DICT so both directions always stay in sync automatically.
     var DICT_REV = {};
     Object.keys(DICT).forEach(function (cat) {
         DICT_REV[cat] = {};
@@ -576,14 +577,9 @@
         });
     });
 
-    function translateReverse(dict, value) {
-        var v = (value || '').trim();
-        if (!v || dict === 'date') return '';
-        return (DICT_REV[dict] && DICT_REV[dict][v]) || '';
-    }
-
-    // Dicts whose unmatched values fall back to phonetic transliteration.
-    var FREE = { generic: true, address: true, profession: true };
+    // Dicts whose unmatched values fall back to phonetic transliteration
+    // (both directions). Free-text fields + any job/education word not in DICT.
+    var FREE = { generic: true, address: true, profession: true, qualification: true };
 
     // Latin→Arabic phonetic transliteration (best-effort, fully editable result).
     var TR_MULTI = [['sh','ش'],['ch','تش'],['th','ث'],['kh','خ'],['gh','غ'],['ph','ف'],['ck','ك'],['oo','و'],['ou','و'],['ee','ي'],['aa','ا'],['ll','ل']];
@@ -606,6 +602,35 @@
         return s.split(/\s+/).map(translitWord).filter(Boolean).join(' ');
     }
 
+    // Arabic→Latin best-effort reverse transliteration (mirror of translit()).
+    var REV_TR_MULTI = TR_MULTI.map(function (p) { return [p[1], p[0]]; })
+        .sort(function (a, b) { return b[0].length - a[0].length; });
+    var REV_TR_ONE = {};
+    Object.keys(TR_ONE).forEach(function (latin) {
+        var ar = TR_ONE[latin];
+        if (!(ar in REV_TR_ONE)) REV_TR_ONE[ar] = latin;
+    });
+    function revTranslit(value) {
+        var s = (value || '').trim();
+        if (!s) return '';
+        if (!/[؀-ۿ]/.test(s)) return s;          // already Latin → leave it
+        var out = '', i = 0;
+        while (i < s.length) {
+            var matched = false;
+            for (var k = 0; k < REV_TR_MULTI.length; k++) {
+                var tok = REV_TR_MULTI[k][0];
+                if (s.substr(i, tok.length) === tok) { out += REV_TR_MULTI[k][1]; i += tok.length; matched = true; break; }
+            }
+            if (matched) continue;
+            var ch = s[i];
+            out += (ch === ' ' || ch === '-' || ch === '/') ? ch : (REV_TR_ONE[ch] || '');
+            i++;
+        }
+        return out.split(/\s+/).filter(Boolean)
+            .map(function (w) { return w.charAt(0).toUpperCase() + w.slice(1); })
+            .join(' ');
+    }
+
     // Gregorian yyyy-mm-dd → Arabic-Indic dd/mm/yyyy (matches embassy form style).
     var AR_DIGITS = '٠١٢٣٤٥٦٧٨٩';
     function arDigits(s) { return s.replace(/[0-9]/g, function (d) { return AR_DIGITS[+d]; }); }
@@ -624,25 +649,26 @@
         return '';
     }
 
-    // Track manual edits so we never overwrite a value the user typed/saved.
-    document.querySelectorAll('.ar-target').forEach(function (el) {
-        if (el.value.trim() !== '') el.dataset.touched = '1';
-        el.addEventListener('input', function () {
-            el.dataset.touched = '1';
-            fillReverse(el);
-        });
-        el.addEventListener('change', function () { fillReverse(el, { force: false }); });
+    function translateReverse(dict, value, allowTranslit) {
+        var v = (value || '').trim();
+        if (!v || dict === 'date') return '';
+        var hit = DICT_REV[dict] && DICT_REV[dict][v];
+        if (hit) return hit;
+        if (allowTranslit && FREE[dict]) return revTranslit(v);
+        return '';
+    }
+
+    // Mark English (source) fields as "touched" once they have a value, so a
+    // later Arabic paste never silently overwrites what the user already has.
+    document.querySelectorAll('[data-ar-source]').forEach(function (src) {
+        if (src.value.trim() !== '') src.dataset.touched = '1';
     });
 
-    function fillReverse(arField, opts) {
-        var src = document.querySelector('[data-ar-source="' + arField.id + '"]');
-        if (!src) return;
-        var force = opts && opts.force;
-        if (!force && src.dataset.touched === '1' && src.value.trim() !== '') return;
-        var dict = src.dataset.arDict || 'generic';
-        var en = translateReverse(dict, arField.value);
-        if (en) { src.value = en; delete src.dataset.touched; }
-    }
+    // Track manual edits on Arabic fields so we never overwrite a value the
+    // user typed/saved with an automatic forward-translate.
+    document.querySelectorAll('.ar-target').forEach(function (el) {
+        if (el.value.trim() !== '') el.dataset.touched = '1';
+    });
 
     function fill(src, opts) {
         var target = document.getElementById(src.dataset.arSource);
@@ -653,16 +679,40 @@
         if (ar) { target.value = ar; delete target.dataset.touched; }
     }
 
+    function fillReverse(arField, opts) {
+        var src = document.querySelector('[data-ar-source="' + arField.id + '"]');
+        if (!src) return;
+        var force = opts && opts.force;
+        if (!force && src.dataset.touched === '1' && src.value.trim() !== '') return;
+        var dict = src.dataset.arDict || 'generic';
+        var en = translateReverse(dict, arField.value, force || (opts && opts.translit));
+        if (en) { src.value = en; delete src.dataset.touched; }
+    }
+
+    // English → Arabic (forward)
     document.querySelectorAll('[data-ar-source]').forEach(function (src) {
-        if (src.value.trim() !== '') src.dataset.touched = '1';
-        src.addEventListener('input', function () {
+        // Typing: dictionary + date map live (no per-keystroke transliteration churn).
+        // Paste: translate immediately, including phonetic fallback.
+        src.addEventListener('input', function (e) {
             src.dataset.touched = '1';
-            fill(src, { translit: false });
+            var isPaste = e.inputType === 'insertFromPaste' || e.inputType === 'insertReplacementText';
+            fill(src, { translit: isPaste });
         });
+        // Blur/change: also allow phonetic transliteration for free-text fields.
         src.addEventListener('change', function () { fill(src, { translit: true }); });
     });
 
-    // Manual regenerate button (ع) — always (re)generates from the English value.
+    // Arabic → English (reverse) — same rules, mirrored.
+    document.querySelectorAll('.ar-target').forEach(function (el) {
+        el.addEventListener('input', function (e) {
+            el.dataset.touched = '1';
+            var isPaste = e.inputType === 'insertFromPaste' || e.inputType === 'insertReplacementText';
+            fillReverse(el, { translit: isPaste });
+        });
+        el.addEventListener('change', function () { fillReverse(el, { translit: true }); });
+    });
+
+    // Manual regenerate button (ع) — always (re)generates Arabic from the English value.
     document.querySelectorAll('.ar-gen').forEach(function (btn) {
         btn.addEventListener('click', function () {
             var src = document.querySelector('[data-ar-source="' + btn.dataset.target + '"]');
