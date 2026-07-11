@@ -548,6 +548,73 @@
 </script>
 <script>
 (function () {
+    // Allow pasting a date (from Word/PDF/Excel/another form) directly into
+    // native <input type="date"> fields. Browsers normally ignore paste on
+    // these inputs, so we intercept it, parse common formats, and set the
+    // underlying yyyy-mm-dd value ourselves.
+    var MONTHS = {
+        jan:1, january:1, feb:2, february:2, mar:3, march:3, apr:4, april:4,
+        may:5, jun:6, june:6, jul:7, july:7, aug:8, august:8,
+        sep:9, sept:9, september:9, oct:10, october:10,
+        nov:11, november:11, dec:12, december:12
+    };
+    var AR_DIGITS = '٠١٢٣٤٥٦٧٨٩';
+    function normalizeDigits(s) {
+        return s.replace(/[٠-٩]/g, function (d) { return String(AR_DIGITS.indexOf(d)); });
+    }
+    function pad(n) { return (n < 10 ? '0' : '') + n; }
+
+    function parseDateToISO(raw) {
+        var s = normalizeDigits((raw || '').trim());
+        if (!s) return null;
+
+        // Already ISO: yyyy-mm-dd or yyyy/mm/dd
+        var m = /^(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})$/.exec(s);
+        if (m) return isoIfValid(+m[1], +m[2], +m[3]);
+
+        // "7 November 2026" or "November 7, 2026" or "07 Nov 2026"
+        m = /^(\d{1,2})\s+([A-Za-z]{3,9})\.?,?\s+(\d{4})$/.exec(s);
+        if (m && MONTHS[m[2].toLowerCase()]) return isoIfValid(+m[3], MONTHS[m[2].toLowerCase()], +m[1]);
+        m = /^([A-Za-z]{3,9})\.?\s+(\d{1,2}),?\s+(\d{4})$/.exec(s);
+        if (m && MONTHS[m[1].toLowerCase()]) return isoIfValid(+m[3], MONTHS[m[1].toLowerCase()], +m[2]);
+
+        // Slash/dash separated with a 4-digit year first or last, e.g.
+        // dd/mm/yyyy, mm/dd/yyyy, yyyy/mm/dd (year first already handled above)
+        m = /^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/.exec(s);
+        if (m) {
+            var a = +m[1], b = +m[2], y = +m[3];
+            // Unambiguous: whichever of a/b is >12 must be the day.
+            if (a > 12 && b <= 12) return isoIfValid(y, b, a);       // a=day, b=month
+            if (b > 12 && a <= 12) return isoIfValid(y, a, b);       // a=month, b=day
+            // Ambiguous (both <=12): match this form's displayed mm/dd/yyyy order.
+            return isoIfValid(y, a, b);
+        }
+        return null;
+    }
+    function isoIfValid(y, mo, d) {
+        if (!y || !mo || !d || mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+        var dt = new Date(y, mo - 1, d);
+        if (dt.getFullYear() !== y || dt.getMonth() !== mo - 1 || dt.getDate() !== d) return null;
+        return y + '-' + pad(mo) + '-' + pad(d);
+    }
+
+    document.querySelectorAll('input[type="date"]').forEach(function (el) {
+        el.addEventListener('paste', function (e) {
+            var text = (e.clipboardData || window.clipboardData).getData('text');
+            var iso = parseDateToISO(text);
+            if (iso) {
+                e.preventDefault();
+                el.value = iso;
+                el.dispatchEvent(new Event('change', { bubbles: true }));
+                el.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            // If it doesn't parse, let the browser's default (no-op) behavior happen.
+        });
+    });
+})();
+</script>
+<script>
+(function () {
     // ── Local English↔Arabic dictionary (safe, offline, no external API) ──
     var DICT = {
         nationality: { 'bangladesh':'بنغلاديش','india':'الهند','pakistan':'باكستان','philippines':'الفلبين','nepal':'نيبال','sri lanka':'سريلانكا' },
