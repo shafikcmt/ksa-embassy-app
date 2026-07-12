@@ -82,10 +82,33 @@ class HrProfileController extends Controller
         return view('agency.hr.create', compact('agents'));
     }
 
+    /**
+     * The Passport date fields post as dd-mm-yyyy text (see _form.blade.php).
+     * Convert them to Y-m-d before persisting to the real `date` columns.
+     * Validation (date_format:d-m-Y) has already run, so values are well-formed.
+     * (Visa Date is excluded — it is stored verbatim as a freeform string.)
+     */
+    private function normalizeDateInputs(Request $request): array
+    {
+        $out = [];
+        foreach (['passport_issue_date', 'passport_expiry_date'] as $field) {
+            $value = $request->input($field);
+            if ($value) {
+                $parsed = \DateTime::createFromFormat('d-m-Y', $value);
+                if ($parsed !== false) {
+                    $out[$field] = $parsed->format('Y-m-d');
+                }
+            }
+        }
+        return $out;
+    }
+
     public function store(StoreHrProfileRequest $request)
     {
         $this->authorize('create', HrProfile::class);
         $this->enforcePlanLimit();
+
+        $request->merge($this->normalizeDateInputs($request));
 
         $user     = auth()->user();
         $agencyId = $user->agency_id;
@@ -226,6 +249,8 @@ class HrProfileController extends Controller
     public function update(UpdateHrProfileRequest $request, HrProfile $hr)
     {
         $this->authorize('update', $hr);
+
+        $request->merge($this->normalizeDateInputs($request));
 
         $oldValues = $hr->toArray();
 

@@ -44,16 +44,16 @@ class HrProfileRules
             'passport_issue_place' => ['nullable', 'string', 'max:150'],
             'passport_number'      => ['required', 'string', 'max:50'],
             'passport_type'        => ['nullable', 'in:regular,diplomatic,service'],
-            'passport_issue_date'  => ['required', 'date'],
+            'passport_issue_date'  => ['required', 'date_format:d-m-Y'],
             'passport_validity_years' => ['nullable', 'in:5,10'],
-            'passport_expiry_date' => ['required', 'date'],
+            'passport_expiry_date' => ['required', 'date_format:d-m-Y'],
 
             // ── Visa ────────────────────────────────────────────────────
             'visa_number'      => ['required', 'string', 'max:50'],
             'visa_type'        => ['nullable', 'string', 'max:100'],
-            // Guarded year range so the Hijri year printed on the KSA visa sticker
-            // (e.g. 1448) cannot be saved as a Gregorian date. See messages() below.
-            'visa_issue_date'  => ['required', 'date', 'after:2015-01-01', 'before:' . now()->addYears(2)->format('Y-m-d')],
+            // Visa Date is a freeform text field — stored/printed exactly as
+            // entered (Hijri, Gregorian, any format). No date parsing/validation.
+            'visa_issue_date'  => ['required', 'string', 'max:30'],
             'visa_expiry_date' => ['nullable', 'date', 'after:2015-01-01', 'before:' . now()->addYears(5)->format('Y-m-d')],
             'sponsor_name'     => ['required', 'string', 'max:150'],
             'sponsor_name_ar'  => ['nullable', 'string', 'max:150'],
@@ -115,8 +115,8 @@ class HrProfileRules
             'passport_expiry_date.required' => 'Passport Validity Date is required.',
             'visa_number.required'     => 'Visa No is required.',
             'visa_issue_date.required' => 'Visa Date is required.',
-            'visa_issue_date.after'    => 'Visa Date looks wrong. Enter the Gregorian date (e.g. 2025-06-23), not the Hijri year (e.g. 1448) printed on the visa sticker.',
-            'visa_issue_date.before'   => 'Visa Date looks wrong. Enter the Gregorian date, not the Hijri year printed on the visa sticker.',
+            'passport_issue_date.date_format'  => 'Enter Passport Issue Date as dd-mm-yyyy (e.g. 24-07-2023).',
+            'passport_expiry_date.date_format' => 'Enter Passport Validity Date as dd-mm-yyyy (e.g. 24-07-2033).',
             'visa_expiry_date.after'   => 'Visa Expiry looks wrong. Enter the Gregorian date, not the Hijri year printed on the visa sticker.',
             'visa_expiry_date.before'  => 'Visa Expiry looks wrong. Enter the Gregorian date, not the Hijri year printed on the visa sticker.',
         ];

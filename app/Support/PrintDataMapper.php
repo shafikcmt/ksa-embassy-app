@@ -74,8 +74,10 @@ class PrintDataMapper
             // ── Visa ────────────────────────────────────────────────────
             'visa_no'              => $visa?->visa_number ?? '',
             'visa_type'            => $visa?->visa_type ?? '',
-            'visa_date'            => $visa?->issue_date?->format('d/m/Y') ?? '',
-            'visa_date_hijri'      => self::hijriString($visa?->issue_date),
+            // Visa Date is a freeform string (stored/printed exactly as entered).
+            // Both spots show the raw value; hijriString() is kept for future use.
+            'visa_date'            => $visa?->issue_date ?? '',
+            'visa_date_hijri'      => $visa?->issue_date ?? '',
             'visa_expiry_date'     => $visa?->expiry_date?->format('d/m/Y') ?? '',
             'visa_issue_place_en'  => $visa?->issue_place ?? '',
             'visa_issue_place_ar'  => $visa?->issue_place_ar ?? '',

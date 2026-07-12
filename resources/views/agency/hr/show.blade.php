@@ -79,7 +79,7 @@
             @if($hr->visa && ($hr->visa->visa_number || $hr->visa->sponsor_name))
                 <dl class="divide-y divide-slate-100 text-sm">
                     <x-ui.dl-row label="Visa No">{{ $hr->visa->visa_number ?? '—' }}</x-ui.dl-row>
-                    <x-ui.dl-row label="Visa Date">{{ $hr->visa->issue_date?->format('d M Y') ?? '—' }}</x-ui.dl-row>
+                    <x-ui.dl-row label="Visa Date">{{ $hr->visa->issue_date ?: '—' }}</x-ui.dl-row>
                     <x-ui.dl-row label="Sponsor Name">{{ $hr->visa->sponsor_name ?? '—' }}</x-ui.dl-row>
                     <x-ui.dl-row label="Sponsor ID">{{ $hr->visa->sponsor_id ?? '—' }}</x-ui.dl-row>
                     <x-ui.dl-row label="Place of Issue">{{ $hr->visa->issue_place ?? '—' }}{{ $hr->visa->issue_place_ar ? ' / '.$hr->visa->issue_place_ar : '' }}</x-ui.dl-row>

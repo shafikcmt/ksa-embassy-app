@@ -16,7 +16,8 @@ class Visa extends Model
     ];
 
     protected $casts = [
-        'issue_date'  => 'date',
+        // issue_date is intentionally NOT cast — it is a freeform string
+        // (Visa Date is stored/printed exactly as entered, any format).
         'expiry_date' => 'date',
     ];
 

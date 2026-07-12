@@ -120,7 +120,7 @@
                     <dt class="col-5 text-muted">Issue Place</dt>
                     <dd class="col-7">{{ $hr->visa->issue_place ?? '—' }}</dd>
                     <dt class="col-5 text-muted">Issue Date</dt>
-                    <dd class="col-7">{{ $hr->visa->issue_date?->format('d M Y') ?? '—' }}</dd>
+                    <dd class="col-7">{{ $hr->visa->issue_date ?: '—' }}</dd>
                     <dt class="col-5 text-muted">Expiry Date</dt>
                     <dd class="col-7">{{ $hr->visa->expiry_date?->format('d M Y') ?? '—' }}</dd>
                     <dt class="col-5 text-muted">Sponsor Name</dt>

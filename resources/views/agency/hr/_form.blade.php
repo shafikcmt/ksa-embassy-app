@@ -248,7 +248,7 @@
                     <input type="text" name="passport_number" required value="{{ $rel($passport, 'passport_number') }}" class="{{ $inp }} @error('passport_number') !border-rose-400 @enderror">
                 </x-ui.field>
                 <x-ui.field label="Passport Issue Date" name="passport_issue_date" :required="true">
-                    <input type="date" id="passport_issue_date" name="passport_issue_date" required value="{{ $dt($passport, 'issue_date') }}" class="{{ $inp }} @error('passport_issue_date') !border-rose-400 @enderror">
+                    <input type="text" id="passport_issue_date" name="passport_issue_date" required inputmode="numeric" placeholder="dd-mm-yyyy" autocomplete="off" value="{{ old('passport_issue_date', optional($passport?->issue_date)?->format('d-m-Y')) }}" class="{{ $inp }} js-date-text @error('passport_issue_date') !border-rose-400 @enderror">
                 </x-ui.field>
 
                 @if($on('passport_validity_years'))
@@ -268,7 +268,7 @@
                 @endif
 
                 <x-ui.field label="Passport Validity Date" name="passport_expiry_date" :required="true" hint="Auto-filled from issue date + validity; you can edit it." class="sm:col-span-2 sm:max-w-[50%]">
-                    <input type="date" id="passport_expiry_date" name="passport_expiry_date" required value="{{ $dt($passport, 'expiry_date') }}" class="{{ $inp }} @error('passport_expiry_date') !border-rose-400 @enderror">
+                    <input type="text" id="passport_expiry_date" name="passport_expiry_date" required inputmode="numeric" placeholder="dd-mm-yyyy" autocomplete="off" value="{{ old('passport_expiry_date', optional($passport?->expiry_date)?->format('d-m-Y')) }}" class="{{ $inp }} js-date-text @error('passport_expiry_date') !border-rose-400 @enderror">
                 </x-ui.field>
             </div>
         </fieldset>
@@ -282,8 +282,8 @@
                 <x-ui.field label="Visa No" name="visa_number" :required="true">
                     <input type="text" name="visa_number" required value="{{ $rel($visa, 'visa_number') }}" class="{{ $inp }} @error('visa_number') !border-rose-400 @enderror">
                 </x-ui.field>
-                <x-ui.field label="Visa Date" name="visa_issue_date" :required="true" hint="Enter Gregorian date (not the Hijri year on the sticker).">
-                    <input type="date" name="visa_issue_date" required min="2015-01-01" max="{{ now()->addYears(2)->format('Y-m-d') }}" value="{{ $dt($visa, 'issue_date') }}" class="{{ $inp }} @error('visa_issue_date') !border-rose-400 @enderror">
+                <x-ui.field label="Visa Date" name="visa_issue_date" :required="true" hint="Enter exactly as printed on the visa.">
+                    <input type="text" id="visa_issue_date" name="visa_issue_date" required autocomplete="off" value="{{ old('visa_issue_date', $visa?->issue_date) }}" class="{{ $inp }} @error('visa_issue_date') !border-rose-400 @enderror">
                 </x-ui.field>
                 <x-ui.field label="Sponsor Name" name="sponsor_name" :required="true" hint="Arabic auto-fills · editable">
                     <div class="grid grid-cols-2 gap-2">
@@ -529,16 +529,26 @@
         var r = document.querySelector('input[name="passport_validity_years"]:checked');
         return r ? parseInt(r.value, 10) : null;
     }
+    // Issue/expiry are now dd-mm-yyyy text fields, so parse/format that way
+    // (also avoids the old UTC toISOString() off-by-one).
+    function pad2(n) { return (n < 10 ? '0' : '') + n; }
+    function parseDMY(v) {
+        var m = /^(\d{2})-(\d{2})-(\d{4})$/.exec((v || '').trim());
+        if (!m) return null;
+        var d = new Date(+m[3], +m[2] - 1, +m[1]);
+        return isNaN(d.getTime()) ? null : d;
+    }
+    function fmtDMY(d) { return pad2(d.getDate()) + '-' + pad2(d.getMonth() + 1) + '-' + d.getFullYear(); }
     function recalc(force) {
         if (!issue || !expiry || !issue.value) return;
         if (!force && manual && expiry.value) return;
         var y = years();
         if (!y) return;
-        var d = new Date(issue.value);
-        if (isNaN(d.getTime())) return;
+        var d = parseDMY(issue.value);
+        if (!d) return;
         d.setFullYear(d.getFullYear() + y);
         d.setDate(d.getDate() - 1);
-        expiry.value = d.toISOString().slice(0, 10);
+        expiry.value = fmtDMY(d);
     }
     if (issue) issue.addEventListener('change', function () { recalc(true); });
     document.querySelectorAll('input[name="passport_validity_years"]').forEach(function (el) {
@@ -840,6 +850,65 @@
                 node = node.parentElement;
             }
             if (err) err.style.display = 'none';
+        });
+    });
+})();
+</script>
+<script>
+(function () {
+    // Plain dd-mm-yyyy text date fields (.js-date-text): auto-mask while typing
+    // and parse common formats on paste, WITHOUT the native date picker's locale
+    // lock or silent paste-blocking. Never leaves the field empty after a paste.
+    var AR_DIGITS = '٠١٢٣٤٥٦٧٨٩';
+    function normalizeDigits(s) { return s.replace(/[٠-٩]/g, function (d) { return String(AR_DIGITS.indexOf(d)); }); }
+    function pad2(n) { return (n < 10 ? '0' : '') + n; }
+
+    // Insert dashes as the user types: 8 digits -> dd-mm-yyyy.
+    function maskDMY(s) {
+        var g = normalizeDigits(s).replace(/\D/g, '').slice(0, 8);
+        var out = g.slice(0, 2);
+        if (g.length > 2) out += '-' + g.slice(2, 4);
+        if (g.length > 4) out += '-' + g.slice(4, 8);
+        return out;
+    }
+    function toDMY(y, mo, d) {
+        if (!y || !mo || !d || mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+        var dt = new Date(y, mo - 1, d);
+        if (dt.getFullYear() !== y || dt.getMonth() !== mo - 1 || dt.getDate() !== d) return null;
+        return pad2(d) + '-' + pad2(mo) + '-' + y;
+    }
+    // Parse dd-mm-yyyy, dd/mm/yyyy, yyyy-mm-dd, yyyy/mm/dd -> dd-mm-yyyy (or null).
+    // Used by the Passport date fields only. An unparseable paste is kept verbatim
+    // (see below) rather than silently dropped, so the user can fix it.
+    function parseAnyToDMY(raw) {
+        var s = normalizeDigits((raw || '').trim());
+        var m = /^(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})$/.exec(s);      // yyyy-mm-dd
+        if (m) return toDMY(+m[1], +m[2], +m[3]);
+        m = /^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/.exec(s);          // dd-mm-yyyy (day first)
+        if (m) {
+            var a = +m[1], b = +m[2], y = +m[3];
+            if (a > 12 && b <= 12) return toDMY(y, b, a);   // a is day
+            if (b > 12 && a <= 12) return toDMY(y, a, b);   // b is day (mm/dd paste)
+            return toDMY(y, b, a);                          // ambiguous -> day first
+        }
+        return null;
+    }
+
+    document.querySelectorAll('.js-date-text').forEach(function (el) {
+        // Typing: mask into dd-mm-yyyy. Skip when the edit came from a paste
+        // (handled below) so unparseable pasted text is preserved verbatim.
+        el.addEventListener('input', function (e) {
+            if (e && e.inputType === 'insertFromPaste') return;
+            el.value = maskDMY(el.value);
+        });
+        el.addEventListener('paste', function (e) {
+            var text = (e.clipboardData || window.clipboardData).getData('text');
+            e.preventDefault();
+            var parsed = parseAnyToDMY(text);
+            el.value = parsed ? parsed : text.trim();   // never leave it empty
+            // 'change' drives the passport expiry auto-calc; skip 'input' so the
+            // mask above doesn't strip a preserved raw (unparseable) paste.
+            el.dispatchEvent(new Event('change', { bubbles: true }));
         });
     });
 })();
