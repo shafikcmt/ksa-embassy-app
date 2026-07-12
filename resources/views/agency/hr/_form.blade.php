@@ -593,6 +593,11 @@
     }
     function isoIfValid(y, mo, d) {
         if (!y || !mo || !d || mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+        // Reject non-Gregorian years (e.g. a Hijri 1447 copied off the visa
+        // sticker) so a pasted Hijri date isn't silently turned into a bad
+        // Gregorian date. 1900–2100 covers every real date on the form (DOB,
+        // passport, visa) while excluding Hijri years (~1300–1500).
+        if (y < 1900 || y > 2100) return null;
         var dt = new Date(y, mo - 1, d);
         if (dt.getFullYear() !== y || dt.getMonth() !== mo - 1 || dt.getDate() !== d) return null;
         return y + '-' + pad(mo) + '-' + pad(d);
@@ -817,6 +822,26 @@
         natPresent.addEventListener('input', function () { if (natSync.checked) natPrev.value = natPresent.value; });
         applyNatSync();
     }
+})();
+</script>
+<script>
+(function () {
+    // Clear a stale server-flashed validation error as soon as the user edits
+    // the field again, so a corrected value doesn't keep showing an old error
+    // from a previous failed submit. Presentational only — touches no rule.
+    document.querySelectorAll('input, select, textarea').forEach(function (el) {
+        el.addEventListener('input', function () {
+            el.classList.remove('!border-rose-400');
+            // The error <p> is a sibling in the x-ui.field wrapper; the input may
+            // sit in an inner div (grid/flex), so climb a few ancestors to find it.
+            var node = el.parentElement, err = null;
+            for (var i = 0; i < 3 && node && !err; i++) {
+                err = node.querySelector(':scope > p.text-rose-600');
+                node = node.parentElement;
+            }
+            if (err) err.style.display = 'none';
+        });
+    });
 })();
 </script>
 @endpush
