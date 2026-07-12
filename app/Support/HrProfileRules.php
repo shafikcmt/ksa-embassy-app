@@ -51,8 +51,10 @@ class HrProfileRules
             // ── Visa ────────────────────────────────────────────────────
             'visa_number'      => ['required', 'string', 'max:50'],
             'visa_type'        => ['nullable', 'string', 'max:100'],
-            'visa_issue_date'  => ['required', 'date'],
-            'visa_expiry_date' => ['nullable', 'date'],
+            // Guarded year range so the Hijri year printed on the KSA visa sticker
+            // (e.g. 1448) cannot be saved as a Gregorian date. See messages() below.
+            'visa_issue_date'  => ['required', 'date', 'after:2015-01-01', 'before:' . now()->addYears(2)->format('Y-m-d')],
+            'visa_expiry_date' => ['nullable', 'date', 'after:2015-01-01', 'before:' . now()->addYears(5)->format('Y-m-d')],
             'sponsor_name'     => ['required', 'string', 'max:150'],
             'sponsor_name_ar'  => ['nullable', 'string', 'max:150'],
             'sponsor_id'       => ['required', 'string', 'max:50'],
@@ -113,6 +115,10 @@ class HrProfileRules
             'passport_expiry_date.required' => 'Passport Validity Date is required.',
             'visa_number.required'     => 'Visa No is required.',
             'visa_issue_date.required' => 'Visa Date is required.',
+            'visa_issue_date.after'    => 'Visa Date looks wrong. Enter the Gregorian date (e.g. 2025-06-23), not the Hijri year (e.g. 1448) printed on the visa sticker.',
+            'visa_issue_date.before'   => 'Visa Date looks wrong. Enter the Gregorian date, not the Hijri year printed on the visa sticker.',
+            'visa_expiry_date.after'   => 'Visa Expiry looks wrong. Enter the Gregorian date, not the Hijri year printed on the visa sticker.',
+            'visa_expiry_date.before'  => 'Visa Expiry looks wrong. Enter the Gregorian date, not the Hijri year printed on the visa sticker.',
         ];
     }
 }

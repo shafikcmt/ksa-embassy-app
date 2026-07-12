@@ -73,7 +73,7 @@ With Due Respect we are Submitting One Passport for work Visa with all Necessary
     </tr>
     <tr>
       <td style="border-bottom:1px solid #000;padding:5pt 4pt;"><strong>VISA NUMBER &amp; DATE</strong></td>
-      <td style="border-bottom:1px solid #000;padding:5pt 4pt;font-weight:bold;">{{ $visa_no ?: '—' }}@if($visa_date) &nbsp; Date: {{ $visa_date }}@endif</td>
+      <td style="border-bottom:1px solid #000;padding:5pt 4pt;font-weight:bold;">{{ $visa_no ?: '—' }}@if($visa_date) &nbsp; Date: {{ $visa_date_hijri }}@endif</td>
     </tr>
     <tr>
       <td style="border-bottom:1px solid #000;padding:5pt 4pt;"><strong>FULL NAME OF THE EMPLOYEE</strong></td>

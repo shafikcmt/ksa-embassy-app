@@ -282,8 +282,8 @@
                 <x-ui.field label="Visa No" name="visa_number" :required="true">
                     <input type="text" name="visa_number" required value="{{ $rel($visa, 'visa_number') }}" class="{{ $inp }} @error('visa_number') !border-rose-400 @enderror">
                 </x-ui.field>
-                <x-ui.field label="Visa Date" name="visa_issue_date" :required="true">
-                    <input type="date" name="visa_issue_date" required value="{{ $dt($visa, 'issue_date') }}" class="{{ $inp }} @error('visa_issue_date') !border-rose-400 @enderror">
+                <x-ui.field label="Visa Date" name="visa_issue_date" :required="true" hint="Enter Gregorian date (not the Hijri year on the sticker).">
+                    <input type="date" name="visa_issue_date" required min="2015-01-01" max="{{ now()->addYears(2)->format('Y-m-d') }}" value="{{ $dt($visa, 'issue_date') }}" class="{{ $inp }} @error('visa_issue_date') !border-rose-400 @enderror">
                 </x-ui.field>
                 <x-ui.field label="Sponsor Name" name="sponsor_name" :required="true" hint="Arabic auto-fills · editable">
                     <div class="grid grid-cols-2 gap-2">
