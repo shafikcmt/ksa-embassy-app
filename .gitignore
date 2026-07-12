@@ -38,3 +38,4 @@ Thumbs.db
 *.tar.gz
 npm-debug.log
 yarn-error.log
+.claude
