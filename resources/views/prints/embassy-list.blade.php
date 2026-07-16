@@ -96,7 +96,7 @@ td, th { padding: 3pt 5pt; vertical-align: middle; font-size: 9pt; }
     <tr>
       <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;">{{ $loop->iteration }}</td>
       <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;direction:ltr;font-weight:bold;">{{ $item->snapshot_passport_no ?? '—' }}</td>
-      <td style="border:1px solid #000;padding:2pt 6pt;text-align:right;">{{ $item->snapshot_sponsor_name ?? '—' }}</td>
+      <td style="border:1px solid #000;padding:2pt 6pt;text-align:right;">{{ $item->snapshot_sponsor_name_ar ?? $item->snapshot_sponsor_name ?? '—' }}</td>
       <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;direction:ltr;">{{ $item->snapshot_visa_no ?? '—' }}</td>
       <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;direction:ltr;">{{ $hijriYear ?? '—' }}</td>
       <td style="border:1px solid #000;padding:2pt 6pt;text-align:right;">{{ $item->snapshot_profession_ar ?? $item->snapshot_profession_en ?? '—' }}</td>

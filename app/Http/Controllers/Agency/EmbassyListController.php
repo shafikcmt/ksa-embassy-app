@@ -419,6 +419,7 @@ class EmbassyListController extends Controller
             'snapshot_profession_en'     => $hr->visa?->profession_en ?? $hr->occupation,
             'snapshot_profession_ar'     => $hr->visa?->profession_ar,
             'snapshot_sponsor_name'      => $hr->visa?->sponsor_name,
+            'snapshot_sponsor_name_ar'   => $hr->visa?->sponsor_name_ar,
             'snapshot_sponsor_id'        => $hr->visa?->sponsor_id,
             'snapshot_nationality'       => $hr->nationality,
         ];

@@ -666,6 +666,27 @@
     // Latin→Arabic phonetic transliteration (best-effort, fully editable result).
     var TR_MULTI = [['sh','ش'],['ch','تش'],['th','ث'],['kh','خ'],['gh','غ'],['ph','ف'],['ck','ك'],['oo','و'],['ou','و'],['ee','ي'],['aa','ا'],['ll','ل']];
     var TR_ONE = {a:'ا',b:'ب',c:'ك',d:'د',e:'ي',f:'ف',g:'ج',h:'ه',i:'ي',j:'ج',k:'ك',l:'ل',m:'م',n:'ن',o:'و',p:'ب',q:'ق',r:'ر',s:'س',t:'ت',u:'و',v:'ف',w:'و',x:'كس',y:'ي',z:'ز'};
+    // Known Saudi/Arabic names — checked word-by-word BEFORE phonetic translit so
+    // well-known names get their correct spelling. Keep in sync with the PHP
+    // App\Support\ArabicTransliterator::NAME_MAP (server-side backfill).
+    var NAME_MAP = {
+        // Given names (+ common spelling variants)
+        'abdullah':'عبدالله','abdallah':'عبدالله','abdulla':'عبدالله',
+        'omar':'عمر','umar':'عمر',
+        'khalid':'خالد','khaled':'خالد',
+        'mansour':'منصور','mansoor':'منصور','mansur':'منصور',
+        'saad':'سعد','saeed':'سعيد','said':'سعيد',
+        'fahad':'فهد','fahd':'فهد',
+        'turki':'تركي',
+        'mohammed':'محمد','mohammad':'محمد','muhammad':'محمد','mohamed':'محمد','muhammed':'محمد','mohd':'محمد',
+        'ahmed':'أحمد','ahmad':'أحمد',
+        'ali':'علي',
+        'abdulaziz':'عبدالعزيز','abdelaziz':'عبدالعزيز','abdul-aziz':'عبدالعزيز',
+        'abdulrahman':'عبدالرحمن','abdurrahman':'عبدالرحمن','abdelrahman':'عبدالرحمن','abdul-rahman':'عبدالرحمن',
+        // Family / tribal surnames (Al- forms)
+        'al-otaibi':'العتيبي','al-ghamdi':'الغامدي','al-shehri':'الشهري','al-shahri':'الشهري',
+        'al-zahrani':'الزهراني','al-qahtani':'القحطاني','al-mutairi':'المطيري','al-dosari':'الدوسري','al-dossari':'الدوسري'
+    };
     function translitWord(w) {
         var out = '', i = 0, lw = w.toLowerCase();
         while (i < lw.length) {
@@ -681,7 +702,10 @@
         var s = (value || '').trim();
         if (!s) return '';
         if (/[؀-ۿ]/.test(s)) return s;           // already Arabic → leave it
-        return s.split(/\s+/).map(translitWord).filter(Boolean).join(' ');
+        return s.split(/\s+/).map(function (w) {
+            // Known-name spelling wins; otherwise phonetic transliteration.
+            return NAME_MAP[w.toLowerCase()] || translitWord(w);
+        }).filter(Boolean).join(' ');
     }
 
     // Arabic→Latin best-effort reverse transliteration (mirror of translit()).
