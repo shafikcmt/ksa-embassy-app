@@ -182,12 +182,12 @@ td, th { padding: 3pt 5pt; vertical-align: middle; font-size: 9pt; }
       $profAr = $item->snapshot_profession_ar ?: ($profEn ? (config('professions')[mb_strtolower(trim($profEn))] ?? null) : null);
     @endphp
     <tr>
-      <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;">{{ $loop->iteration }}</td>
-      <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;">{{ $item->snapshot_agent_name ?? '—' }}</td>
-      <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;">{{ $item->snapshot_candidate_name }}</td>
-      <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;font-weight:bold;">{{ $item->snapshot_passport_no ?? '—' }}</td>
-      <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;">{{ $item->snapshot_visa_no ?? '—' }}</td>
-      <td style="border:1px solid #000;padding:2pt 6pt;text-align:right;direction:rtl;font-family:DejaVu Sans,sans-serif;">{{ $profAr ?: ($profEn ?: '—') }}</td>
+      <td style="border-top:0;border-bottom:0;border-left:1px solid #000;border-right:1px solid #000;padding:2pt 4pt;text-align:center;">{{ $loop->iteration }}</td>
+      <td style="border-top:0;border-bottom:0;border-left:1px solid #000;border-right:1px solid #000;padding:2pt 4pt;text-align:center;">{{ $item->snapshot_agent_name ?? '—' }}</td>
+      <td style="border-top:0;border-bottom:0;border-left:1px solid #000;border-right:1px solid #000;padding:2pt 4pt;text-align:center;">{{ $item->snapshot_candidate_name }}</td>
+      <td style="border-top:0;border-bottom:0;border-left:1px solid #000;border-right:1px solid #000;padding:2pt 4pt;text-align:center;font-weight:bold;">{{ $item->snapshot_passport_no ?? '—' }}</td>
+      <td style="border-top:0;border-bottom:0;border-left:1px solid #000;border-right:1px solid #000;padding:2pt 4pt;text-align:center;">{{ $item->snapshot_visa_no ?? '—' }}</td>
+      <td style="border-top:0;border-bottom:0;border-left:1px solid #000;border-right:1px solid #000;padding:2pt 6pt;text-align:right;direction:rtl;font-family:DejaVu Sans,sans-serif;">{{ $profAr ?: ($profEn ?: '—') }}</td>
     </tr>
     @endforeach
     @if($items->count() > 0)
