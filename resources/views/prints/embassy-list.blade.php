@@ -51,31 +51,28 @@ td, th { padding: 3pt 5pt; vertical-align: middle; font-size: 9pt; }
   <div style="font-size:15pt;font-weight:bold;font-family:DejaVu Sans,sans-serif;">بيان بالجوازات المقدمة</div>
 </div>
 
-{{-- Office / license / date / signature header grid (RTL — matches reference) --}}
-<table style="direction:rtl;font-size:10pt;margin-bottom:10pt;border-collapse:collapse;font-family:DejaVu Sans,sans-serif;">
-  <colgroup>
-    <col style="width:16%"><col style="width:42%"><col style="width:14%"><col style="width:28%">
-  </colgroup>
-  <tr>
-    <td style="text-align:right;padding:3pt 6pt;font-weight:bold;font-size:10.5pt;">اسم المكتب :</td>
-    <td style="text-align:right;padding:3pt 6pt;font-weight:bold;font-size:11pt;direction:ltr;white-space:nowrap;">{{ $agency->name }}</td>
-    <td style="text-align:right;padding:3pt 6pt;font-weight:bold;font-size:10.5pt;">رقم الرخصة :</td>
-    <td style="text-align:right;padding:3pt 6pt;font-weight:normal;font-size:10pt;direction:ltr;">{{ $agency->rl_number ?: '—' }}</td>
-  </tr>
-  <tr>
-    <td style="text-align:right;padding:3pt 6pt;font-weight:bold;font-size:10.5pt;">توقيع :</td>
-    <td style="padding:3pt 6pt;">&nbsp;</td>
-    <td style="text-align:right;padding:3pt 6pt;font-weight:bold;font-size:10.5pt;">التاريخ :</td>
-    <td style="text-align:right;padding:3pt 6pt;font-weight:normal;font-size:10pt;direction:ltr;">{{ $list->list_date->format('d M, Y') }}</td>
-  </tr>
-</table>
-
-{{-- Single combined table: column header + bilingual category bars + rows + group totals --}}
+{{-- Single combined table: office/license header (borderless) + column header + bilingual category bars + rows + group totals.
+     The office header lives INSIDE this table so its cells share the same columns and align exactly (mPDF sizes columns by content, so two separate tables cannot be aligned). --}}
 <table class="bdr" style="direction:rtl;font-size:8.5pt;font-family:DejaVu Sans,sans-serif;">
   <colgroup>
     <col style="width:28px"><col style="width:18%"><col><col style="width:16%"><col style="width:11%"><col style="width:16%">
   </colgroup>
   <thead>
+    {{-- Office / license / date / signature header — borderless rows sharing the grid columns (RTL) --}}
+    <tr>
+      <td colspan="2" style="border:0;text-align:right;padding:3pt 6pt;font-weight:bold;font-size:10.5pt;direction:rtl;">اسم المكتب :</td>
+      <td style="border:0;text-align:right;padding:3pt 6pt;font-weight:bold;font-size:11pt;direction:ltr;white-space:nowrap;">{{ $agency->name }}</td>
+      <td colspan="2" style="border:0;text-align:right;padding:3pt 6pt;font-weight:bold;font-size:10.5pt;direction:rtl;">رقم الرخصة :</td>
+      <td style="border:0;text-align:right;padding:3pt 6pt;font-weight:normal;font-size:10pt;direction:ltr;">{{ $agency->rl_number ?: '—' }}</td>
+    </tr>
+    <tr>
+      <td colspan="2" style="border:0;text-align:right;padding:3pt 6pt;font-weight:bold;font-size:10.5pt;direction:rtl;">توقيع :</td>
+      <td style="border:0;padding:3pt 6pt;">&nbsp;</td>
+      <td colspan="2" style="border:0;text-align:right;padding:3pt 6pt;font-weight:bold;font-size:10.5pt;direction:rtl;">التاريخ :</td>
+      <td style="border:0;text-align:right;padding:3pt 6pt;font-weight:normal;font-size:10pt;direction:ltr;">{{ $list->list_date->format('d M, Y') }}</td>
+    </tr>
+    {{-- spacer to keep a gap before the column-header row --}}
+    <tr><td colspan="6" style="border:0;padding:0;height:6pt;font-size:1pt;line-height:6pt;">&nbsp;</td></tr>
     <tr style="background:#e9e9e9;">
       <th style="border:1px solid #000;padding:2pt 4pt;text-align:center;">ت<br><span style="font-size:8pt;direction:ltr;">SL.</span></th>
       <th style="border:1px solid #000;padding:2pt 4pt;text-align:center;">رقم الجوازات<br><span style="font-size:8pt;direction:ltr;">Passport No.</span></th>
