@@ -55,20 +55,20 @@ td, th { padding: 3pt 5pt; vertical-align: middle; font-size: 9pt; }
      The office header lives INSIDE this table so its cells share the same columns and align exactly (mPDF sizes columns by content, so two separate tables cannot be aligned). --}}
 <table class="bdr" style="direction:rtl;font-size:8.5pt;font-family:DejaVu Sans,sans-serif;">
   <colgroup>
-    <col style="width:28px"><col style="width:18%"><col><col style="width:16%"><col style="width:11%"><col style="width:16%">
+    <col style="width:28px"><col style="width:16%"><col><col style="width:15%"><col style="width:9%"><col style="width:20%">
   </colgroup>
   <thead>
     {{-- Office / license / date / signature header — borderless rows sharing the grid columns (RTL) --}}
     <tr>
       <td colspan="2" style="border:0;text-align:right;padding:3pt 6pt;font-weight:bold;font-size:10.5pt;direction:rtl;">اسم المكتب :</td>
       <td style="border:0;text-align:left;padding:3pt 6pt;font-weight:bold;font-size:11pt;direction:ltr;white-space:nowrap;">{{ $agency->name }}</td>
-      <td colspan="2" style="border:0;text-align:left;padding:3pt 6pt;font-weight:bold;font-size:10.5pt;direction:rtl;">رقم الرخصة :</td>
+      <td colspan="2" style="border:0;text-align:left;padding:10pt 29pt;font-weight:bold;font-size:9.5pt;direction:rtl;">رقم الرخصة :</td>
       <td style="border:0;text-align:right;padding:3pt 6pt;font-weight:600;font-size:10pt;direction:ltr;">{{ $agency->rl_number ?: '—' }}</td>
     </tr>
     <tr>
       <td colspan="2" style="border:0;text-align:right;padding:3pt 6pt;font-weight:bold;font-size:10.5pt;direction:rtl;">توقيع :</td>
       <td style="border:0;padding:3pt 6pt;">&nbsp;</td>
-      <td colspan="2" style="border:0;text-align:left;padding:3pt 6pt;font-weight:bold;font-size:10.5pt;direction:rtl;">التاريخ :</td>
+      <td colspan="2" style="border:0;text-align:left;padding:3pt 47pt;font-weight:bold;font-size:9.5pt;direction:rtl;">التاريخ :</td>
       <td style="border:0;text-align:right;padding:3pt 6pt;font-weight:600;font-size:10pt;direction:ltr;">{{ $list->list_date->format('d M, Y') }}</td>
     </tr>
     {{-- spacer to keep a gap before the column-header row --}}
@@ -96,7 +96,7 @@ td, th { padding: 3pt 5pt; vertical-align: middle; font-size: 9pt; }
       <td style="border:1px solid #000;padding:2pt 6pt;text-align:right;">{{ $item->snapshot_sponsor_name_ar ?? $item->snapshot_sponsor_name ?? '—' }}</td>
       <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;direction:ltr;">{{ $item->snapshot_visa_no ?? '—' }}</td>
       <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;direction:ltr;">{{ $hijriYear ?? '—' }}</td>
-      <td style="border:1px solid #000;padding:2pt 6pt;text-align:right;">{{ $item->snapshot_profession_ar ?? $item->snapshot_profession_en ?? '—' }}</td>
+      <td style="border:1px solid #000;padding:2pt 6pt;text-align:center;white-space:nowrap;">{{ $item->snapshot_profession_ar ?? $item->snapshot_profession_en ?? '—' }}</td>
     </tr>
     @endforeach
     @if($items->count() > 0)
