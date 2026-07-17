@@ -54,11 +54,11 @@ td, th { padding: 3pt 5pt; vertical-align: middle; font-size: 9pt; }
 {{-- Office / license / date / signature header grid (RTL — matches reference) --}}
 <table style="direction:rtl;font-size:10pt;margin-bottom:10pt;border-collapse:collapse;font-family:DejaVu Sans,sans-serif;">
   <colgroup>
-    <col style="width:18%"><col style="width:32%"><col style="width:18%"><col style="width:32%">
+    <col style="width:16%"><col style="width:42%"><col style="width:14%"><col style="width:28%">
   </colgroup>
   <tr>
     <td style="text-align:right;padding:3pt 6pt;font-weight:bold;font-size:10.5pt;">اسم المكتب :</td>
-    <td style="text-align:right;padding:3pt 6pt;font-weight:normal;font-size:10pt;direction:ltr;">{{ $agency->name }}</td>
+    <td style="text-align:right;padding:3pt 6pt;font-weight:bold;font-size:11pt;direction:ltr;white-space:nowrap;">{{ $agency->name }}</td>
     <td style="text-align:right;padding:3pt 6pt;font-weight:bold;font-size:10.5pt;">رقم الرخصة :</td>
     <td style="text-align:right;padding:3pt 6pt;font-weight:normal;font-size:10pt;direction:ltr;">{{ $agency->rl_number ?: '—' }}</td>
   </tr>
