@@ -74,12 +74,12 @@ td, th { padding: 3pt 5pt; vertical-align: middle; font-size: 9pt; }
     {{-- spacer to keep a gap before the column-header row --}}
     <tr><td colspan="6" style="border:0;padding:0;height:15pt;font-size:1pt;line-height:15pt;">&nbsp;</td></tr>
     <tr style="background:#e9e9e9;">
-      <th style="border:1px solid #000;padding:2pt 4pt;text-align:center;">ت<br><span style="font-size:8pt;direction:ltr;">SL.</span></th>
-      <th style="border:1px solid #000;padding:2pt 4pt;text-align:center;">رقم الجوازات<br><span style="font-size:8pt;direction:ltr;">Passport No.</span></th>
-      <th style="border:1px solid #000;padding:2pt 4pt;text-align:center;">اسم الكفيل<br><span style="font-size:8pt;direction:ltr;">Sponsor Name</span></th>
-      <th style="border:1px solid #000;padding:2pt 4pt;text-align:center;">رقم التأشيرة<br><span style="font-size:8pt;direction:ltr;">Visa No</span></th>
-      <th style="border:1px solid #000;padding:2pt 4pt;text-align:center;">التاريخ<br><span style="font-size:8pt;direction:ltr;">Year</span></th>
-      <th style="border:1px solid #000;padding:2pt 4pt;text-align:center;">المهنة<br><span style="font-size:8pt;direction:ltr;">Profession</span></th>
+      <th style="border:1px solid #000;padding:2pt 4pt;text-align:center;">ت<br><span style="font-size:8pt;direction:ltr;unicode-bidi:embed;">SL.</span></th>
+      <th style="border:1px solid #000;padding:2pt 4pt;text-align:center;">رقم الجوازات<br><span style="font-size:8pt;direction:ltr;unicode-bidi:embed;">Passport No.</span></th>
+      <th style="border:1px solid #000;padding:2pt 4pt;text-align:center;">اسم الكفيل<br><span style="font-size:8pt;direction:ltr;unicode-bidi:embed;">Sponsor Name</span></th>
+      <th style="border:1px solid #000;padding:2pt 4pt;text-align:center;">رقم التأشيرة<br><span style="font-size:8pt;direction:ltr;unicode-bidi:embed;">Visa No</span></th>
+      <th style="border:1px solid #000;padding:2pt 4pt;text-align:center;">التاريخ<br><span style="font-size:8pt;direction:ltr;unicode-bidi:embed;">Year</span></th>
+      <th style="border:1px solid #000;padding:2pt 4pt;text-align:center;">المهنة<br><span style="font-size:8pt;direction:ltr;unicode-bidi:embed;">Profession</span></th>
     </tr>
   </thead>
   <tbody>
@@ -96,16 +96,12 @@ td, th { padding: 3pt 5pt; vertical-align: middle; font-size: 9pt; }
       $profAr = $item->snapshot_profession_ar ?: ($profEn ? (config('professions')[mb_strtolower(trim($profEn))] ?? null) : null);
     @endphp
     <tr>
-      <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;">{{ $loop->iteration }}</td>
-      <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;direction:ltr;font-weight:bold;">{{ $item->snapshot_passport_no ?? '—' }}</td>
-      <td style="border:1px solid #000;padding:2pt 6pt;text-align:right;">{{ $item->snapshot_sponsor_name_ar ?? $item->snapshot_sponsor_name ?? '—' }}</td>
-      <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;direction:ltr;">{{ $item->snapshot_visa_no ?? '—' }}</td>
-      <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;direction:ltr;">{{ $hijriYear ?? '—' }}</td>
-      <td style="border:1px solid #000;padding:2pt 6pt;text-align:center;white-space:nowrap;">
-        @if($profAr && $profEn)<span style="direction:rtl;">{{ $profAr }}</span><br><span style="direction:ltr;font-size:8pt;">{{ $profEn }}</span>
-        @elseif($profAr)<span style="direction:rtl;">{{ $profAr }}</span>
-        @else<span style="direction:ltr;">{{ $profEn ?: '—' }}</span>@endif
-      </td>
+      <td style="border-top:0;border-bottom:0;border-left:1px solid #000;border-right:1px solid #000;padding:2pt 4pt;text-align:center;">{{ $loop->iteration }}</td>
+      <td style="border-top:0;border-bottom:0;border-left:1px solid #000;border-right:1px solid #000;padding:2pt 4pt;text-align:center;direction:ltr;font-weight:bold;">{{ $item->snapshot_passport_no ?? '—' }}</td>
+      <td style="border-top:0;border-bottom:0;border-left:1px solid #000;border-right:1px solid #000;padding:2pt 6pt;text-align:right;">{{ $item->snapshot_sponsor_name_ar ?? $item->snapshot_sponsor_name ?? '—' }}</td>
+      <td style="border-top:0;border-bottom:0;border-left:1px solid #000;border-right:1px solid #000;padding:2pt 4pt;text-align:center;direction:ltr;">{{ $item->snapshot_visa_no ?? '—' }}</td>
+      <td style="border-top:0;border-bottom:0;border-left:1px solid #000;border-right:1px solid #000;padding:2pt 4pt;text-align:center;direction:ltr;">{{ $hijriYear ?? '—' }}</td>
+      <td style="border-top:0;border-bottom:0;border-left:1px solid #000;border-right:1px solid #000;padding:2pt 6pt;text-align:center;white-space:nowrap;">{{ $profAr ?: ($profEn ?: '—') }}</td>
     </tr>
     @endforeach
     @if($items->count() > 0)
@@ -180,13 +176,18 @@ td, th { padding: 3pt 5pt; vertical-align: middle; font-size: 9pt; }
       <td colspan="6" style="border:1px solid #000;padding:3pt 4pt;text-align:center;font-weight:bold;">{{ $categoryLabelsBi[$category] }}</td>
     </tr>
     @foreach($items as $item)
+    @php
+      // Arabic-only profession (same fallback logic as page 1): stored Arabic wins, else En→Ar map.
+      $profEn = $item->snapshot_profession_en;
+      $profAr = $item->snapshot_profession_ar ?: ($profEn ? (config('professions')[mb_strtolower(trim($profEn))] ?? null) : null);
+    @endphp
     <tr>
       <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;">{{ $loop->iteration }}</td>
       <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;">{{ $item->snapshot_agent_name ?? '—' }}</td>
       <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;">{{ $item->snapshot_candidate_name }}</td>
       <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;font-weight:bold;">{{ $item->snapshot_passport_no ?? '—' }}</td>
       <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;">{{ $item->snapshot_visa_no ?? '—' }}</td>
-      <td style="border:1px solid #000;padding:2pt 4pt;@if($item->snapshot_profession_ar)direction:rtl;text-align:right;font-family:DejaVu Sans,sans-serif;@else text-align:center;@endif">{{ $item->snapshot_profession_ar ?? $item->snapshot_profession_en ?? '—' }}</td>
+      <td style="border:1px solid #000;padding:2pt 6pt;text-align:right;direction:rtl;font-family:DejaVu Sans,sans-serif;">{{ $profAr ?: ($profEn ?: '—') }}</td>
     </tr>
     @endforeach
     @if($items->count() > 0)
