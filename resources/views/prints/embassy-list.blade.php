@@ -90,13 +90,22 @@ td, th { padding: 3pt 5pt; vertical-align: middle; font-size: 9pt; }
       <td colspan="6" style="border:1px solid #000;padding:3pt 4pt;text-align:center;font-weight:bold;direction:rtl;">{{ $categoryLabelsBi[$category] }}</td>
     </tr>
     @foreach($items as $item)
+    @php
+      // Bilingual profession: stored Arabic wins; else fall back to the En→Ar map (config/professions.php).
+      $profEn = $item->snapshot_profession_en;
+      $profAr = $item->snapshot_profession_ar ?: ($profEn ? (config('professions')[mb_strtolower(trim($profEn))] ?? null) : null);
+    @endphp
     <tr>
       <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;">{{ $loop->iteration }}</td>
       <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;direction:ltr;font-weight:bold;">{{ $item->snapshot_passport_no ?? '—' }}</td>
       <td style="border:1px solid #000;padding:2pt 6pt;text-align:right;">{{ $item->snapshot_sponsor_name_ar ?? $item->snapshot_sponsor_name ?? '—' }}</td>
       <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;direction:ltr;">{{ $item->snapshot_visa_no ?? '—' }}</td>
       <td style="border:1px solid #000;padding:2pt 4pt;text-align:center;direction:ltr;">{{ $hijriYear ?? '—' }}</td>
-      <td style="border:1px solid #000;padding:2pt 6pt;text-align:center;white-space:nowrap;">{{ $item->snapshot_profession_ar ?? $item->snapshot_profession_en ?? '—' }}</td>
+      <td style="border:1px solid #000;padding:2pt 6pt;text-align:center;white-space:nowrap;">
+        @if($profAr && $profEn)<span style="direction:rtl;">{{ $profAr }}</span><br><span style="direction:ltr;font-size:8pt;">{{ $profEn }}</span>
+        @elseif($profAr)<span style="direction:rtl;">{{ $profAr }}</span>
+        @else<span style="direction:ltr;">{{ $profEn ?: '—' }}</span>@endif
+      </td>
     </tr>
     @endforeach
     @if($items->count() > 0)
