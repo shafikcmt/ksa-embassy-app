@@ -7,9 +7,14 @@
 <style>
 .ksa-letter, .ksa-letter table, .ksa-letter td, .ksa-letter th,
 .ksa-letter div, .ksa-letter span, .ksa-letter p, .ksa-letter strong { font-family: ksaroboto, freesans, sans-serif; }
+/* Arabic (e.g. NAME OF COMPANY value) uses XB Riyaz — the same Naskh mPDF
+   renders in the PDF — so browser preview matches the download. */
+.ksa-letter .ar { font-family: xbriyaz, 'DejaVu Sans', sans-serif; }
 @if(empty($_pdf))
   @font-face { font-family: ksaroboto; font-weight: normal; font-style: normal; src: url('/fonts/Roboto-Medium.ttf') format('truetype'); }
   @font-face { font-family: ksaroboto; font-weight: bold;   font-style: normal; src: url('/fonts/Roboto-Bold.ttf') format('truetype'); }
+  @font-face { font-family: xbriyaz;   font-weight: normal; font-style: normal; src: url('/fonts/XBRiyaz.ttf') format('truetype'); }
+  @font-face { font-family: xbriyaz;   font-weight: bold;   font-style: normal; src: url('/fonts/XBRiyaz-Bold.ttf') format('truetype'); }
 @endif
 </style>
 {{-- width:92% + margin:0 auto matches PAGE 1's .ksa-app column so all four

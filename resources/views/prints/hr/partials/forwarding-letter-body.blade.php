@@ -22,6 +22,9 @@
   @font-face { font-family: ksaroboto;     font-weight: bold;   font-style: normal; src: url('/fonts/Roboto-Bold.ttf') format('truetype'); }
   @font-face { font-family: 'DejaVu Sans'; font-weight: normal; font-style: normal; src: url('/fonts/DejaVuSans.ttf') format('truetype'); }
   @font-face { font-family: 'DejaVu Sans'; font-weight: bold;   font-style: normal; src: url('/fonts/DejaVuSans-Bold.ttf') format('truetype'); }
+  /* Arabic Naskh: match the PDF (mPDF renders Arabic in XB Riyaz). */
+  @font-face { font-family: xbriyaz; font-weight: normal; font-style: normal; src: url('/fonts/XBRiyaz.ttf') format('truetype'); }
+  @font-face { font-family: xbriyaz; font-weight: bold;   font-style: normal; src: url('/fonts/XBRiyaz-Bold.ttf') format('truetype'); }
 @endif
   /* Declare freesans DIRECTLY on every element type — mPDF table cells do NOT
      inherit font-family from an ancestor (they silently fall back to the host
@@ -31,7 +34,7 @@
   .ksa-letter div, .ksa-letter span, .ksa-letter p, .ksa-letter strong { font-family: ksaroboto, freesans, sans-serif; }
   /* Arabic keeps DejaVu Sans (full Arabic coverage in browser + mPDF);
      mPDF's autoLangToFont substitutes the Arabic font for RTL text anyway. */
-  .ksa-letter .ar { font-family: 'DejaVu Sans', sans-serif; }
+  .ksa-letter .ar { font-family: xbriyaz, 'DejaVu Sans', sans-serif; }
 </style>
 {{-- width:92% + margin:0 auto matches PAGE 1's .ksa-app column so all four
      Complete-File pages share the SAME left/right margin (≈17.6mm) in the PDF. --}}

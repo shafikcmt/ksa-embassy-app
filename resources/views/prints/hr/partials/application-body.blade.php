@@ -50,6 +50,12 @@
   /* .ar / body reference the spaced name "DejaVu Sans" — alias it to the same files. */
   @font-face { font-family: 'DejaVu Sans'; font-weight: normal; font-style: normal; src: url('/fonts/DejaVuSans.ttf') format('truetype'); }
   @font-face { font-family: 'DejaVu Sans'; font-weight: bold;   font-style: normal; src: url('/fonts/DejaVuSans-Bold.ttf') format('truetype'); }
+  /* Arabic Naskh: browser preview must use the SAME font mPDF renders Arabic with
+     (XB Riyaz — mPDF's built-in Arabic font, matches the reference form's Naskh).
+     Without this the on-screen preview fell back to plain DejaVu Sans Arabic and
+     looked unlike the downloaded PDF. Files copied from vendor/mpdf/mpdf/ttfonts. */
+  @font-face { font-family: xbriyaz; font-weight: normal; font-style: normal; src: url('/fonts/XBRiyaz.ttf') format('truetype'); }
+  @font-face { font-family: xbriyaz; font-weight: bold;   font-style: normal; src: url('/fonts/XBRiyaz-Bold.ttf') format('truetype'); }
 @endif
   /* FreeSans (an Arial/Helvetica clone) has a much heavier Bold than DejaVu
      Sans, matching the reference form's thick Latin text.
@@ -119,7 +125,7 @@
      has higher specificity than .ar and would otherwise win, leaving the
      Arabic heavy. Arabic VALUES that ARE bold in the reference are wrapped
      in <strong> and restored to bold below. */
-  .ksa-app .ar  { direction: rtl; text-align: right; font-weight: normal !important; font-size: 8pt; white-space: nowrap; }
+  .ksa-app .ar  { direction: rtl; text-align: right; font-family: xbriyaz, 'DejaVu Sans', sans-serif; font-weight: normal !important; font-size: 8pt; white-space: nowrap; }
   .ksa-app .ar strong { font-weight: bold !important; }
   .ksa-app .inner td { border: 0 !important; padding: 0; font-weight: bold; }
   /* Passport No. column — the reference emphasises this field with a bolder,

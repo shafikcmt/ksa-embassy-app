@@ -11,12 +11,17 @@
   • unboxed, right-aligned footer (office name / licence / signature / stamp)
 --}}
 <style>
+{{-- Latin uses Roboto; Arabic glyphs (title, Step column, footer — not all are
+     .ar) fall through to XB Riyaz, the same Naskh mPDF renders in the PDF, so the
+     browser preview matches the download and the reference. --}}
 .ksa-checklist, .ksa-checklist table, .ksa-checklist td, .ksa-checklist th,
-.ksa-checklist div, .ksa-checklist span, .ksa-checklist p, .ksa-checklist strong { font-family: ksaroboto, freesans, sans-serif; }
-.ksa-checklist .ar { font-family: 'DejaVu Sans', sans-serif; }
+.ksa-checklist div, .ksa-checklist span, .ksa-checklist p, .ksa-checklist strong { font-family: ksaroboto, xbriyaz, freesans, sans-serif; }
+.ksa-checklist .ar { font-family: xbriyaz, 'DejaVu Sans', sans-serif; }
 @if(empty($_pdf))
   @font-face { font-family: ksaroboto; font-weight: normal; font-style: normal; src: url('/fonts/Roboto-Medium.ttf') format('truetype'); }
   @font-face { font-family: ksaroboto; font-weight: bold;   font-style: normal; src: url('/fonts/Roboto-Bold.ttf') format('truetype'); }
+  @font-face { font-family: xbriyaz;   font-weight: normal; font-style: normal; src: url('/fonts/XBRiyaz.ttf') format('truetype'); }
+  @font-face { font-family: xbriyaz;   font-weight: bold;   font-style: normal; src: url('/fonts/XBRiyaz-Bold.ttf') format('truetype'); }
 @endif
 </style>
 {{-- width:92% + margin:0 auto matches PAGE 1's .ksa-app column so all four
