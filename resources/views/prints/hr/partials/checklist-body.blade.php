@@ -28,7 +28,7 @@
 {{-- Top spacer: content starts 2in / 50.8mm from the physical page top
      (mPDF reserves a 10mm margin, so 10 + 40.8 = 50.8mm). Same value on
      pages 2–4 so single-page and Complete-File PDFs match. --}}
-<div style="height:40.8mm;"></div>
+<div style="height:52mm;"></div>
 
 {{-- Centred, underlined Arabic title --}}
 <div style="text-align:center;margin:4pt 0 18pt;direction:rtl;">
@@ -66,7 +66,7 @@
         ['رقم المستند / Visa No.',                    $visa_no ?: '—',                                                false, true],
         ['الاسم في الجواز / Passport Holder Name',    $full_name_en_upper,                                            false, true],
         ['رقم الجواز / Passport Number',              $passport_no ?: '—',                                            false],
-        ['صلاحية الجواز / Passport Validity',         $passport_expiry_date ?: '—',                                   false],
+        ['صلاحية الجواز / Passport Validity',         $passport_expiry_date_long ?: ($passport_expiry_date ?: '—'),   false],
         ['العمر / Age',                               trim(($date_of_birth && $date_of_birth !== '—' ? $date_of_birth."\n" : '').($age_detail ?: ($age !== '—' ? $age.' years' : ''))) ?: '—', false],
         ['الجنس / Sex',                               $gender ?: '—',                                                 false],
         ['مساند / Musaned',                           $musaned_no ?: 'N/A',                                           false],

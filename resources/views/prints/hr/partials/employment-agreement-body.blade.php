@@ -21,11 +21,11 @@
 {{-- Top spacer: content starts 2in / 50.8mm from the physical page top
      (mPDF reserves a 10mm margin, so 10 + 40.8 = 50.8mm). Same value on
      pages 2–4 so single-page and Complete-File PDFs match. --}}
-<div style="height:40.8mm;"></div>
+<div style="height:62mm;"></div>
 
-{{-- Title --}}
+{{-- Title — normal word/letter spacing to match reference (no extra tracking). --}}
 <div style="text-align:center;margin-bottom:16pt;">
-  <span style="font-size:14pt;font-weight:bold;text-decoration:underline;letter-spacing:1pt;">EMPLOYMENT AGREEMENT</span>
+  <span style="font-size:14pt;font-weight:bold;text-decoration:underline;">EMPLOYMENT AGREEMENT</span>
 </div>
 
 {{-- Party info — bottom border only --}}
@@ -58,7 +58,7 @@
 
 {{-- Terms heading --}}
 <div style="text-align:center;margin-bottom:10pt;">
-  <span style="font-size:12pt;font-weight:bold;text-decoration:underline;">UNDER THE FOLLOWING TERMS AND CONDITIONS :</span>
+  <span style="font-size:12pt;font-weight:bold;text-decoration:underline;">UNDER THE FOLLOWING TERMS AND CONDITIONS:</span>
 </div>
 
 {{-- Terms table --}}

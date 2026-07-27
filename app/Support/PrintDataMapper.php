@@ -52,7 +52,7 @@ class PrintDataMapper
             'age_detail'           => $ageDetail,
             'sect'                 => $hr->sect ?? '',
             'home_address'         => $hr->home_address ?? '',
-            'date_of_birth'        => $hr->date_of_birth?->format('d/m/Y') ?? '—',
+            'date_of_birth'        => $hr->date_of_birth?->format('d-m-Y') ?? '—',
             'age'                  => $hr->date_of_birth ? $hr->date_of_birth->age : '—',
             'gender'               => ucfirst($hr->gender),
             'religion'             => $hr->religion ?? '',
@@ -66,8 +66,11 @@ class PrintDataMapper
             'passport_no'          => $passport?->passport_number ?? '',
             'passport_type'        => $passport?->passport_type ? ucfirst($passport->passport_type) : '',
             'passport_issue_place' => $passport?->issue_place ?? '',
-            'passport_issue_date'  => $passport?->issue_date?->format('d/m/Y') ?? '',
-            'passport_expiry_date' => $passport?->expiry_date?->format('d/m/Y') ?? '',
+            'passport_issue_date'  => $passport?->issue_date?->format('d-m-Y') ?? '',
+            'passport_expiry_date' => $passport?->expiry_date?->format('d-m-Y') ?? '',
+            // Long form (e.g. 22-Jun-2035) — checklist "Passport Validity" row only;
+            // the numeric key above stays as-is for the application form's expiry cell.
+            'passport_expiry_date_long' => $passport?->expiry_date?->format('d-M-Y') ?? '',
             'passport_validity_years' => $passport?->validity_years ?: ($passportYears ?? ''),
             'passport_validity_type'  => $passport?->validity_years ? $passport->validity_years . ' Years' : ($passportYears ? $passportYears . ' Years' : ''),
 
@@ -108,7 +111,7 @@ class PrintDataMapper
 
             // ── Other Info ──────────────────────────────────────────────
             'contract_period'      => $other?->contract_period ?? '',
-            'salary'               => $other?->salary ? 'SAR ' . number_format($other->salary, 0) : '',
+            'salary'               => $other?->salary ? number_format($other->salary, 0) . '/= SR' : '',
             'work_city'            => $other?->work_city ?? '',
             'destination_city'     => $other?->destination_city ?? '',
             'employer_name'        => $other?->employer_name ?? '',
