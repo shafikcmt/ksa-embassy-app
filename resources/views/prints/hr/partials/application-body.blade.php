@@ -22,7 +22,7 @@
   $purposeOpts = [
     ['en' => 'Work',       'ar' => 'الشغل',       'val' => 'work'],
     ['en' => 'Transit',    'ar' => 'عبور',        'val' => 'transit'],
-    ['en' => 'Visit',      'ar' => 'زيارة',       'val' => 'visit'],
+    ['en' => 'Visit',      'ar' => 'يزور',        'val' => 'visit'],
     ['en' => 'Umrah',      'ar' => 'العمرة',      'val' => 'umrah'],
     ['en' => 'Residence',  'ar' => 'إقامة',       'val' => 'residence'],
     ['en' => 'Hajj',       'ar' => 'الحج',        'val' => 'hajj'],
@@ -74,11 +74,13 @@
      match the reference form's spacing and heavier, clearer text. */
   .ksa-app .bdr td, .ksa-app .bdr th { border: 0.6pt solid #000; padding: 2pt 5pt; font-size: 8.5pt; font-weight: bold; vertical-align: middle; }
   .ksa-app .lbl { font-weight: bold; text-align: left; white-space: nowrap; }
-  /* VALUE cells default to REGULAR weight — the reference shows label-bold /
-     value-regular contrast. The few intentionally-bold VALUE fields keep their
-     own dedicated classes (.nmval Full/Mother's Name, .ppval/.ppno passport +
-     Visa No/Authorization) which are later in source and win the cascade. */
-  .ksa-app .val { font-weight: normal; text-align: center; }
+  /* VALUE cells are BOLD: the reference form prints its values (dates, place of
+     birth, nationalities, Sex/Marital/Religion, duration, etc.) in bold black —
+     see docs/images/ksa-application-reference-0001.jpg. Regular weight rendered
+     thin/faint on physical hard-copy prints (fine on screen only). Bold matches
+     the reference AND survives 300/600dpi printing. FreeSansBold (a genuine bold
+     TTF) is embedded, so this is real bold, not a faked/synthesised weight. */
+  .ksa-app .val { font-weight: bold; text-align: center; }
   /* Full Name / Father / Mother values — the two headline rows. The
      reference uses a clean Helvetica/Arial-style Bold (crisp, even strokes,
      the same weight as the labels), NOT a heavy black weight. FreeSans is
