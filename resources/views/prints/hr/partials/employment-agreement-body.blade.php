@@ -128,12 +128,19 @@
   </tbody>
 </table>
 
+{{-- Pre-signature spacer pushes the signature row to the page bottom (≈268mm),
+     matching the reference. Sized to absorb the smaller 24mm top spacer so the
+     signature stays bottom-anchored while the title sits near the top.
+     KEPT OUTSIDE the break-inside:avoid wrapper below: bundling this tall spacer
+     INSIDE the avoid block made the browser-print engine jump the whole 90mm+
+     block (spacer included) onto its own page — a stray 5th page with only the
+     signature line, pushing the checklist to page 5. With the spacer outside,
+     print keeps the spacer butted against the page bottom and only the short
+     signature row stays "together". mPDF is single-page here, so its output is
+     unchanged. --}}
+<div style="height:80mm;"></div>
 {{-- Signatures — kept together so the row is never split across pages --}}
 <div class="ksa-signature" style="page-break-inside:avoid;break-inside:avoid;">
-  {{-- Pre-signature spacer pushes the signature row to the page bottom (≈268mm),
-       matching the reference. Sized to absorb the smaller 24mm top spacer so the
-       signature stays bottom-anchored while the title sits near the top. --}}
-  <div style="height:83mm;"></div>
   {{-- Reference (page 3): First Party rule/label anchored to the LEFT column edge,
        Second Party anchored to the RIGHT. inline-block makes the top rule exactly
        the label width (not the full cell), matching the reference. Regular weight
