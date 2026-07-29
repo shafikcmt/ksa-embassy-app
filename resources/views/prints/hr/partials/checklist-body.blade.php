@@ -30,10 +30,10 @@
      nested-inset it narrower than the other pages). --}}
 <div class="ksa-checklist" style="width:92%;margin:0 auto;color:#000;">
 
-{{-- Top spacer: content starts 2in / 50.8mm from the physical page top
-     (mPDF reserves a 10mm margin, so 10 + 40.8 = 50.8mm). Same value on
-     pages 2–4 so single-page and Complete-File PDFs match. --}}
-<div style="height:52mm;"></div>
+{{-- Top spacer: page 4's reference (ksa-application-reference-0004.jpg) places
+     the title ~35mm from the physical page top. mPDF reserves a 10mm margin, so
+     22mm here puts the title at ~35mm to match. --}}
+<div style="height:22mm;"></div>
 
 {{-- Centred, underlined Arabic title --}}
 <div style="text-align:center;margin:4pt 0 18pt;direction:rtl;">
@@ -47,16 +47,16 @@
   </colgroup>
   <thead>
     <tr>
-      <th style="border:1px solid #000;padding:5pt 6pt;text-align:center;font-weight:bold;background:#fff;">
+      <th style="border:1px solid #000;padding:8pt 6pt;text-align:center;font-weight:bold;background:#fff;">
         الاجراء<br>Step
       </th>
-      <th style="border:1px solid #000;padding:5pt 6pt;text-align:center;font-weight:bold;background:#fff;">
+      <th style="border:1px solid #000;padding:8pt 6pt;text-align:center;font-weight:bold;background:#fff;">
         المكتب<br>Agency
       </th>
-      <th style="border:1px solid #000;padding:5pt 6pt;text-align:center;font-weight:bold;background:#fff;">
+      <th style="border:1px solid #000;padding:8pt 6pt;text-align:center;font-weight:bold;background:#fff;">
         المنفذ<br>Port
       </th>
-      <th style="border:1px solid #000;padding:5pt 6pt;text-align:center;font-weight:bold;background:#fff;">
+      <th style="border:1px solid #000;padding:8pt 6pt;text-align:center;font-weight:bold;background:#fff;">
         الملاحظات<br>Notes
       </th>
     </tr>
@@ -94,10 +94,10 @@
       [$stepAr, $stepEn] = array_pad(array_map('trim', explode('/', $step, 2)), 2, '');
     @endphp
     <tr>
-      <td style="border:1px solid #000;padding:4pt 6pt;text-align:right;direction:rtl;">{{ $stepAr }} / <strong dir="ltr" style="unicode-bidi:isolate;">{{ $stepEn }}</strong></td>
-      <td style="border:1px solid #000;padding:4pt 6pt;text-align:center;{{ $arabicValue ? 'direction:rtl;' : 'direction:ltr;' }}{{ $bold ? 'font-weight:bold;' : '' }}">{!! nl2br(e($value)) !!}</td>
-      <td style="border:1px solid #000;padding:4pt 6pt;"></td>
-      <td style="border:1px solid #000;padding:4pt 6pt;"></td>
+      <td style="border:1px solid #000;padding:7pt 6pt;text-align:right;direction:rtl;">{{ $stepAr }} / <strong dir="ltr" style="unicode-bidi:isolate;">{{ $stepEn }}</strong></td>
+      <td style="border:1px solid #000;padding:7pt 6pt;text-align:center;{{ $arabicValue ? 'direction:rtl;' : 'direction:ltr;' }}{{ $bold ? 'font-weight:bold;' : '' }}">{!! nl2br(e($value)) !!}</td>
+      <td style="border:1px solid #000;padding:7pt 6pt;"></td>
+      <td style="border:1px solid #000;padding:7pt 6pt;"></td>
     </tr>
     @endforeach
   </tbody>
