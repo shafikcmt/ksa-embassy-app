@@ -155,9 +155,9 @@
      so match the reference's compact sizing (6pt) + tighter padding. NOTE: in
      this mPDF the font-size must sit on the CELL — a size on the nested .pe/.pa
      <span> alone is ignored — so it is set on td.box here. */
-  .ksa-app .pt td.box { border: 1px solid #000 !important; text-align: center; padding: 3pt 1pt; line-height: 1.35; font-size: 7.5pt; }
-  .ksa-app .pt td.box .pa { font-size: 7pt; font-weight: normal; }
-  .ksa-app .pt td.box .pe { font-size: 7.5pt; font-weight: bold; }
+  .ksa-app .pt td.box { border: 1px solid #000 !important; text-align: center; padding: 3pt 0; line-height: 1.35; font-size: 6pt; }
+  .ksa-app .pt td.box .pa { font-size: 6pt; font-weight: normal; }
+  .ksa-app .pt td.box .pe { font-size: 6pt; font-weight: bold; }
   /* print-color-adjust:exact forces the browser to PRINT this dark fill even
      when the print dialog's "Background graphics" option is off (browsers omit
      background colours from print by default). mPDF ignores these properties,
