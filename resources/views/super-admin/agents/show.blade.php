@@ -1,78 +1,76 @@
-@extends('layouts.super-admin')
+@extends('layouts.super-admin-app')
 @section('title', $agent->name)
+@section('page-title', 'Agent Detail')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h5 class="mb-0 fw-bold"><i class="bi bi-person-badge me-1"></i> {{ $agent->name }}</h5>
-    <div class="d-flex gap-1">
-        <button type="button" class="btn btn-sm btn-outline-danger"
-            data-bs-toggle="modal" data-bs-target="#deleteModal">
-            <i class="bi bi-trash me-1"></i> Delete
-        </button>
-        <a href="{{ route('super-admin.agents.index') }}" class="btn btn-sm btn-outline-secondary">
-            <i class="bi bi-arrow-left me-1"></i> Back
-        </a>
-    </div>
-</div>
+<div x-data="{ del: { open: false } }">
 
-<div class="row g-3">
-    <div class="col-md-5">
-        <div class="card">
-            <div class="card-header py-2 d-flex justify-content-between">
-                <span>Agent Details</span>
-                @if($agent->status === 'active')
-                    <span class="badge badge-status-active">Active</span>
-                @else
-                    <span class="badge badge-status-suspended">Inactive</span>
-                @endif
-            </div>
-            <div class="card-body p-0">
-                <table class="table table-sm table-borderless mb-0">
-                    <tr><th width="38%" class="ps-3 text-muted fw-normal">Agency</th>
-                        <td><a href="{{ route('super-admin.agencies.show', $agent->agency_id) }}">{{ $agent->agency->name }}</a></td></tr>
-                    <tr><th class="ps-3 text-muted fw-normal">Phone</th><td>{{ $agent->phone }}</td></tr>
-                    <tr><th class="ps-3 text-muted fw-normal">Email</th><td>{{ $agent->email ?? '—' }}</td></tr>
-                    <tr><th class="ps-3 text-muted fw-normal">Address</th><td>{{ $agent->address }}</td></tr>
+    <x-ui.page-header :title="$agent->name" subtitle="Agent Detail" icon="bi-person-badge">
+        <x-slot:actions>
+            <x-ui.button type="button" variant="secondary" class="cursor-pointer" x-on:click="del.open = true"><i class="bi bi-trash text-rose-500"></i> Delete</x-ui.button>
+            <x-ui.button :href="route('super-admin.agents.index')" variant="secondary" class="cursor-pointer"><i class="bi bi-arrow-left"></i> Back</x-ui.button>
+        </x-slot:actions>
+    </x-ui.page-header>
+
+    <div class="grid grid-cols-1 gap-5 lg:grid-cols-12">
+
+        {{-- Agent Details --}}
+        <div class="lg:col-span-5">
+            <x-ui.card>
+                <div class="flex items-center justify-between border-b border-slate-100 px-5 py-3">
+                    <span class="text-sm font-bold text-slate-800">Agent Details</span>
+                    <x-ui.status-badge :status="$agent->status" />
+                </div>
+                <div class="divide-y divide-slate-100 px-5 py-2 text-sm">
+                    <x-ui.dl-row label="Agency">
+                        <a href="{{ route('super-admin.agencies.show', $agent->agency_id) }}" class="text-brand-600 transition-colors hover:text-brand-700">{{ $agent->agency->name }}</a>
+                    </x-ui.dl-row>
+                    <x-ui.dl-row label="Phone">{{ $agent->phone }}</x-ui.dl-row>
+                    <x-ui.dl-row label="Email">{{ $agent->email ?? '—' }}</x-ui.dl-row>
+                    <x-ui.dl-row label="Address">{{ $agent->address }}</x-ui.dl-row>
                     @if($agent->notes)
-                    <tr><th class="ps-3 text-muted fw-normal">Notes</th><td>{{ $agent->notes }}</td></tr>
+                        <x-ui.dl-row label="Notes">{{ $agent->notes }}</x-ui.dl-row>
                     @endif
-                    <tr class="border-top">
-                        <th class="ps-3 text-muted fw-normal">Created</th>
-                        <td>{{ $agent->created_at->format('d M Y') }}
-                            @if($agent->createdBy) <br><small class="text-muted">by {{ $agent->createdBy->name }}</small>@endif
-                        </td>
-                    </tr>
+                    <x-ui.dl-row label="Created">
+                        {{ $agent->created_at->format('d M Y') }}
+                        @if($agent->createdBy)<span class="text-slate-400">by {{ $agent->createdBy->name }}</span>@endif
+                    </x-ui.dl-row>
                     @if($agent->updatedBy && $agent->updated_at != $agent->created_at)
-                    <tr>
-                        <th class="ps-3 text-muted fw-normal">Updated</th>
-                        <td>{{ $agent->updated_at->format('d M Y') }} by {{ $agent->updatedBy->name }}</td>
-                    </tr>
+                        <x-ui.dl-row label="Updated">{{ $agent->updated_at->format('d M Y') }} by {{ $agent->updatedBy->name }}</x-ui.dl-row>
                     @endif
-                </table>
-            </div>
+                </div>
+            </x-ui.card>
         </div>
-    </div>
-    <div class="col-md-7">
-        <div class="card">
-            <div class="card-header py-2"><i class="bi bi-person-vcard me-1"></i> Assigned HR / Candidates</div>
-            <div class="card-body text-center py-5 text-muted">
-                <i class="bi bi-person-vcard fs-1 opacity-25 d-block mb-2"></i>
-                HR module — Phase 3
-            </div>
-        </div>
-    </div>
-</div>
 
-<div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header border-0"><h5 class="modal-title text-danger"><i class="bi bi-exclamation-triangle me-1"></i> Delete Agent</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-            <div class="modal-body"><p>Delete <strong>{{ $agent->name }}</strong> from <strong>{{ $agent->agency->name }}</strong>?</p><p class="text-muted small mb-0">This cannot be undone.</p></div>
-            <div class="modal-footer border-0">
-                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+        {{-- Assigned HR / Candidates --}}
+        <div class="lg:col-span-7">
+            <x-ui.card>
+                <div class="flex items-center gap-2 border-b border-slate-100 px-5 py-3 text-sm font-bold text-slate-800">
+                    <i class="bi bi-person-vcard text-violet-500"></i> Assigned HR / Candidates
+                </div>
+                <x-ui.empty icon="bi-person-vcard" title="HR module — Phase 3" />
+            </x-ui.card>
+        </div>
+    </div>
+
+    {{-- Delete dialog --}}
+    <div x-show="del.open" x-cloak class="fixed inset-0 z-[60] flex items-center justify-center p-4" style="display:none">
+        <div @click="del.open = false" x-show="del.open" x-transition.opacity class="absolute inset-0 bg-slate-900/50"></div>
+        <div x-show="del.open"
+             x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+             class="relative w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
+            <div class="flex items-start gap-3">
+                <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-rose-50 text-rose-600"><i class="bi bi-exclamation-triangle text-lg"></i></span>
+                <div>
+                    <h3 class="text-base font-semibold text-slate-900">Delete Agent</h3>
+                    <p class="mt-1 text-sm text-slate-500">Delete <strong>{{ $agent->name }}</strong> from <strong>{{ $agent->agency->name }}</strong>? This cannot be undone.</p>
+                </div>
+            </div>
+            <div class="mt-5 flex justify-end gap-2">
+                <x-ui.button type="button" variant="secondary" size="sm" class="cursor-pointer" x-on:click="del.open = false">Cancel</x-ui.button>
                 <form method="POST" action="{{ route('super-admin.agents.destroy', $agent) }}">
                     @csrf @method('DELETE')
-                    <button class="btn btn-danger btn-sm"><i class="bi bi-trash me-1"></i> Delete</button>
+                    <x-ui.button type="submit" variant="danger" size="sm" class="cursor-pointer"><i class="bi bi-trash"></i> Delete</x-ui.button>
                 </form>
             </div>
         </div>

@@ -1,147 +1,94 @@
-@extends('layouts.agency')
+@extends('layouts.agency-app')
 @section('title', 'Add New Agent')
 @section('page-title', 'Add New Agent')
 
-@section('content')
+@php
+    $inputCls = 'h-10 w-full rounded-lg border-slate-300 text-sm transition-colors focus:border-brand-400 focus:ring-brand-400';
+@endphp
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-        <h5 class="mb-0 fw-bold"><i class="bi bi-person-plus me-1 text-primary"></i> Add New Agent</h5>
-        <small class="text-muted">Fill in the agent's details below</small>
-    </div>
-    <a href="{{ route('agents.index') }}" class="btn btn-sm btn-outline-secondary">
-        <i class="bi bi-arrow-left me-1"></i> Back to Agents
-    </a>
-</div>
+@section('content')
+<x-ui.page-header title="Add New Agent" subtitle="Fill in the agent's details below" icon="bi-person-plus">
+    <x-slot:actions>
+        <x-ui.button :href="route('agents.index')" variant="secondary" class="cursor-pointer"><i class="bi bi-arrow-left"></i> Back to Agents</x-ui.button>
+    </x-slot:actions>
+</x-ui.page-header>
 
 <form method="POST" action="{{ route('agents.store') }}" id="agentForm" novalidate>
-@csrf
-<div class="row g-3">
+    @csrf
+    <div class="grid grid-cols-1 gap-5 lg:grid-cols-3">
 
-    {{-- Main form --}}
-    <div class="col-lg-8">
-        <div class="card">
-            <div class="card-header py-2">
-                <i class="bi bi-person me-1"></i> Agent Information
-            </div>
-            <div class="card-body">
-                <div class="row g-3">
+        {{-- Main form --}}
+        <div class="lg:col-span-2">
+            <x-ui.card>
+                <div class="flex items-center gap-2 border-b border-slate-100 px-5 py-3 text-sm font-bold text-slate-800">
+                    <i class="bi bi-person text-brand-600"></i> Agent Information
+                </div>
+                <div class="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2">
                     {{-- Name --}}
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">
-                            Full Name <span class="text-danger">*</span>
-                        </label>
-                        <input type="text" name="name"
-                            class="form-control @error('name') is-invalid @enderror"
-                            value="{{ old('name') }}"
-                            placeholder="e.g. Mohammed Al-Rashid"
-                            required autofocus>
-                        @error('name')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
+                    <x-ui.field label="Full Name" name="name" required>
+                        <input type="text" name="name" value="{{ old('name') }}" placeholder="e.g. Mohammed Al-Rashid"
+                            class="{{ $inputCls }} @error('name') border-rose-400 @enderror" required autofocus>
+                    </x-ui.field>
 
                     {{-- Phone --}}
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">
-                            Phone <span class="text-danger">*</span>
-                        </label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-telephone"></i></span>
-                            <input type="text" name="phone"
-                                class="form-control @error('phone') is-invalid @enderror"
-                                value="{{ old('phone') }}"
-                                placeholder="+966501234567"
-                                required>
-                            @error('phone')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                    <x-ui.field label="Phone" name="phone" required>
+                        <div class="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 transition-colors focus-within:border-brand-400 focus-within:ring-1 focus-within:ring-brand-400 @error('phone') border-rose-400 @enderror">
+                            <i class="bi bi-telephone text-sm text-slate-400"></i>
+                            <input type="text" name="phone" value="{{ old('phone') }}" placeholder="+966501234567"
+                                class="h-10 w-full border-0 bg-transparent p-0 text-sm focus:ring-0" required>
                         </div>
-                    </div>
+                    </x-ui.field>
 
                     {{-- Email --}}
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Email</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                            <input type="email" name="email"
-                                class="form-control @error('email') is-invalid @enderror"
-                                value="{{ old('email') }}"
-                                placeholder="agent@example.com">
-                            @error('email')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                    <x-ui.field label="Email" name="email" hint="Must be unique within your agency.">
+                        <div class="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 transition-colors focus-within:border-brand-400 focus-within:ring-1 focus-within:ring-brand-400 @error('email') border-rose-400 @enderror">
+                            <i class="bi bi-envelope text-sm text-slate-400"></i>
+                            <input type="email" name="email" value="{{ old('email') }}" placeholder="agent@example.com"
+                                class="h-10 w-full border-0 bg-transparent p-0 text-sm focus:ring-0">
                         </div>
-                        <small class="text-muted">Must be unique within your agency.</small>
-                    </div>
+                    </x-ui.field>
 
                     {{-- Status --}}
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Status <span class="text-danger">*</span></label>
-                        <select name="status" class="form-select @error('status') is-invalid @enderror">
+                    <x-ui.field label="Status" name="status" required>
+                        <select name="status" class="{{ $inputCls }} @error('status') border-rose-400 @enderror">
                             <option value="active"   @selected(old('status','active') === 'active')>Active</option>
                             <option value="inactive" @selected(old('status') === 'inactive')>Inactive</option>
                         </select>
-                        @error('status')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
+                    </x-ui.field>
 
                     {{-- Address --}}
-                    <div class="col-12">
-                        <label class="form-label fw-semibold">
-                            Address <span class="text-danger">*</span>
-                        </label>
-                        <textarea name="address" rows="2"
-                            class="form-control @error('address') is-invalid @enderror"
-                            placeholder="Full address including city and district"
-                            required>{{ old('address') }}</textarea>
-                        @error('address')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
+                    <x-ui.field label="Address" name="address" required class="sm:col-span-2">
+                        <textarea name="address" rows="2" placeholder="Full address including city and district"
+                            class="w-full rounded-lg border-slate-300 text-sm transition-colors focus:border-brand-400 focus:ring-brand-400 @error('address') border-rose-400 @enderror" required>{{ old('address') }}</textarea>
+                    </x-ui.field>
 
                     {{-- Notes --}}
-                    <div class="col-12">
-                        <label class="form-label fw-semibold">Notes <small class="text-muted fw-normal">(optional)</small></label>
-                        <textarea name="notes" rows="2"
-                            class="form-control @error('notes') is-invalid @enderror"
-                            placeholder="Any additional notes about this agent...">{{ old('notes') }}</textarea>
-                        @error('notes')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
+                    <x-ui.field label="Notes" name="notes" hint="Optional — any additional notes about this agent." class="sm:col-span-2">
+                        <textarea name="notes" rows="2" placeholder="Any additional notes about this agent…"
+                            class="w-full rounded-lg border-slate-300 text-sm transition-colors focus:border-brand-400 focus:ring-brand-400 @error('notes') border-rose-400 @enderror">{{ old('notes') }}</textarea>
+                    </x-ui.field>
                 </div>
-            </div>
+            </x-ui.card>
+        </div>
+
+        {{-- Actions sidebar --}}
+        <div class="space-y-5">
+            <x-ui.card>
+                <div class="border-b border-slate-100 px-5 py-3 text-sm font-bold text-slate-800">Actions</div>
+                <div class="flex flex-col gap-2 p-5">
+                    <x-ui.button type="submit" class="w-full cursor-pointer"><i class="bi bi-check-lg"></i> Save Agent</x-ui.button>
+                    <x-ui.button type="reset" variant="secondary" class="w-full cursor-pointer"><i class="bi bi-arrow-counterclockwise"></i> Reset Form</x-ui.button>
+                    <x-ui.button :href="route('agents.index')" variant="secondary" class="w-full cursor-pointer"><i class="bi bi-x-lg"></i> Cancel</x-ui.button>
+                </div>
+            </x-ui.card>
+
+            <x-ui.card class="border-l-4 border-l-brand-500">
+                <div class="flex items-start gap-2 p-4 text-xs text-slate-500">
+                    <i class="bi bi-info-circle mt-0.5 text-brand-500"></i>
+                    <span><strong class="text-slate-700">Required fields</strong> are marked with <span class="text-rose-500">*</span>. Email is optional but must be unique per agency if provided.</span>
+                </div>
+            </x-ui.card>
         </div>
     </div>
-
-    {{-- Actions sidebar --}}
-    <div class="col-lg-4">
-        <div class="card mb-3">
-            <div class="card-header py-2">Actions</div>
-            <div class="card-body d-flex flex-column gap-2">
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-check-lg me-1"></i> Save Agent
-                </button>
-                <button type="reset" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Form
-                </button>
-                <a href="{{ route('agents.index') }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-x me-1"></i> Cancel
-                </a>
-            </div>
-        </div>
-
-        <div class="card border-start border-4 border-info">
-            <div class="card-body py-2 small text-muted">
-                <i class="bi bi-info-circle me-1 text-info"></i>
-                <strong>Required fields</strong> are marked with <span class="text-danger">*</span>.
-                Email is optional but must be unique per agency if provided.
-            </div>
-        </div>
-    </div>
-
-</div>
 </form>
 @endsection

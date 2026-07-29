@@ -60,11 +60,11 @@
 
 {{-- ════════ OVERVIEW (4 cards) ════════ --}}
 <div class="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
-    <x-ui.stat :href="route('hr.index')" icon="bi-person-vcard" tone="brand" label="Total HR Records" :value="$stats['total_hr']" :sub="$stats['active_hr'].' active'" />
-    <x-ui.stat :href="route('hr.index', ['status' => 'active'])" icon="bi-person-check" tone="green" label="Active Candidates" :value="$stats['active_hr']"
+    <x-ui.stat class="js-fade-card" :href="route('hr.index')" icon="bi-person-vcard" tone="brand" label="Total HR Records" :value="$stats['total_hr']" :sub="$stats['active_hr'].' active'" />
+    <x-ui.stat class="js-fade-card" :href="route('hr.index', ['status' => 'active'])" icon="bi-person-check" tone="green" label="Active Candidates" :value="$stats['active_hr']"
         :sub="$stats['total_hr'] > 0 ? round($stats['active_hr'] / max(1,$stats['total_hr']) * 100).'% of total' : 'No records'" subTone="green" />
-    <x-ui.stat :href="route('embassy-lists.index')" icon="bi-list-ol" tone="violet" label="Embassy Lists" :value="$stats['total_embassy_lists']" :sub="$stats['embassy_lists_month'].' this month'" />
-    <x-ui.stat :href="route('embassy-lists.index', ['status' => 'draft'])" icon="bi-hourglass-split" tone="amber" label="Pending Drafts" :value="$stats['hr_draft_embassy']"
+    <x-ui.stat class="js-fade-card" :href="route('embassy-lists.index')" icon="bi-list-ol" tone="violet" label="Embassy Lists" :value="$stats['total_embassy_lists']" :sub="$stats['embassy_lists_month'].' this month'" />
+    <x-ui.stat class="js-fade-card" :href="route('embassy-lists.index', ['status' => 'draft'])" icon="bi-hourglass-split" tone="amber" label="Pending Drafts" :value="$stats['hr_draft_embassy']"
         :sub="$stats['hr_draft_embassy'] > 0 ? 'awaiting finalize' : 'all clear'" :subTone="$stats['hr_draft_embassy'] > 0 ? 'amber' : 'green'" />
 </div>
 
@@ -75,7 +75,7 @@
     <div class="space-y-5 lg:col-span-8">
 
         {{-- Quick Actions (3 cards) --}}
-        <x-ui.card>
+        <x-ui.card class="js-fade-card">
             <div class="border-b border-slate-100 px-5 py-3">
                 <h2 class="flex items-center gap-2 text-sm font-bold text-slate-800"><i class="bi bi-lightning-charge-fill text-amber-500"></i> Quick Actions</h2>
             </div>
@@ -91,7 +91,7 @@
         </x-ui.card>
 
         {{-- Recent HR Records --}}
-        <x-ui.card class="overflow-hidden">
+        <x-ui.card class="js-fade-card overflow-hidden">
             <div class="flex items-center justify-between border-b border-slate-100 px-5 py-3">
                 <h2 class="flex items-center gap-2 text-sm font-bold text-slate-800"><i class="bi bi-person-vcard text-violet-500"></i> Recent HR Records</h2>
                 <a href="{{ route('hr.index') }}" class="text-xs font-semibold text-brand-600 hover:text-brand-700">View all</a>
@@ -153,7 +153,7 @@
                     $accent    = $daysLeft <= 3 ? 'bg-rose-500' : ($daysLeft <= 7 ? 'bg-amber-500' : 'bg-emerald-500');
                     $accentTxt = $daysLeft <= 3 ? 'text-rose-600' : ($daysLeft <= 7 ? 'text-amber-600' : 'text-emerald-600');
                 @endphp
-                <x-ui.card class="overflow-hidden">
+                <x-ui.card class="js-fade-card overflow-hidden">
                     <div class="h-1 {{ $accent }}"></div>
                     <div class="flex items-center justify-between border-b border-slate-100 px-5 py-3">
                         <h2 class="flex items-center gap-2 text-sm font-bold text-slate-800"><i class="bi bi-credit-card text-brand-600"></i> Subscription</h2>
@@ -175,7 +175,7 @@
                     </div>
                 </x-ui.card>
             @else
-                <x-ui.card class="flex flex-col items-center justify-center p-6 text-center">
+                <x-ui.card class="js-fade-card flex flex-col items-center justify-center p-6 text-center">
                     <i class="bi bi-credit-card-2-front mb-2 text-3xl text-amber-400"></i>
                     <div class="font-semibold text-slate-900">No Active Subscription</div>
                     <p class="mt-1 text-xs text-slate-400">Subscribe to create records and generate PDFs.</p>
@@ -185,7 +185,7 @@
         @endif
 
         {{-- Upcoming reminders --}}
-        <x-ui.card class="overflow-hidden">
+        <x-ui.card class="js-fade-card overflow-hidden">
             <div class="border-b border-slate-100 px-5 py-3">
                 <h2 class="flex items-center gap-2 text-sm font-bold text-slate-800"><i class="bi bi-bell text-amber-500"></i> Upcoming &amp; Reminders</h2>
             </div>
@@ -225,5 +225,17 @@
         </x-ui.card>
     </div>
 </div>
+
+@push('scripts')
+<script>
+    // Motion One: fade + slide dashboard cards into view as they scroll in.
+    // Guarded so a missing bundle never throws (cards stay visible either way).
+    document.addEventListener('DOMContentLoaded', () => {
+        if (window.fadeInCards) {
+            window.fadeInCards('.js-fade-card');
+        }
+    });
+</script>
+@endpush
 
 @endsection

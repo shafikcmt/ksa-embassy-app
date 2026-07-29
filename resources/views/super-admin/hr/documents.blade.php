@@ -1,84 +1,42 @@
-@extends('layouts.super-admin')
+@extends('layouts.super-admin-app')
 @section('title', 'Documents — ' . $hr->full_name_en)
+@section('page-title', 'HR Documents')
 
 @section('content')
-<div class="d-flex align-items-center gap-2 mb-4">
-    <a href="{{ route('super-admin.hr.show', $hr) }}" class="btn btn-sm btn-outline-secondary">
-        <i class="bi bi-arrow-left"></i>
-    </a>
-    <div>
-        <h5 class="mb-0 fw-bold">{{ $hr->full_name_en }} — Documents</h5>
-        <small class="text-muted">
-            {{ $hr->agency?->name ?? '—' }} · Read-only preview
-        </small>
-    </div>
-</div>
 
-<div class="row g-3">
-    <div class="col-md-6">
-        <div class="card h-100">
-            <div class="card-header py-2"><i class="bi bi-file-earmark-person me-1"></i> Application Form</div>
-            <div class="card-body py-3">
-                <a href="{{ route('hr.print.application', $hr) }}" class="btn btn-sm btn-outline-secondary me-2" target="_blank">
-                    <i class="bi bi-eye me-1"></i> Preview
-                </a>
-                <a href="{{ route('hr.download.application', $hr) }}" class="btn btn-sm btn-outline-primary">
-                    <i class="bi bi-download me-1"></i> Download PDF
-                </a>
+<x-ui.page-header title="{{ $hr->full_name_en }} — Documents" subtitle="{{ $hr->agency?->name ?? '—' }} · Read-only preview" icon="bi-file-earmark-pdf">
+    <x-slot:actions>
+        <x-ui.button :href="route('super-admin.hr.show', $hr)" variant="secondary" class="cursor-pointer"><i class="bi bi-arrow-left"></i> Back</x-ui.button>
+    </x-slot:actions>
+</x-ui.page-header>
+
+@php
+    $docs = [
+        ['icon' => 'bi-file-earmark-person', 'title' => 'Application Form',        'preview' => 'hr.print.application',            'download' => 'hr.download.application'],
+        ['icon' => 'bi-envelope',            'title' => 'Forwarding Letter',       'preview' => 'hr.print.forwarding-letter',      'download' => 'hr.download.forwarding-letter'],
+        ['icon' => 'bi-file-earmark-text',   'title' => 'Employment Agreement',    'preview' => 'hr.print.employment-agreement',   'download' => 'hr.download.employment-agreement'],
+        ['icon' => 'bi-card-checklist',      'title' => 'Checklist',               'preview' => 'hr.print.checklist',              'download' => 'hr.download.checklist'],
+    ];
+@endphp
+
+<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+    @foreach($docs as $doc)
+        <x-ui.card>
+            <div class="flex items-center gap-2 border-b border-slate-100 px-5 py-3 text-sm font-bold text-slate-800"><i class="bi {{ $doc['icon'] }} text-brand-600"></i> {{ $doc['title'] }}</div>
+            <div class="flex gap-2 p-4">
+                <x-ui.button :href="route($doc['preview'], $hr)" variant="secondary" size="sm" class="cursor-pointer" target="_blank"><i class="bi bi-eye"></i> Preview</x-ui.button>
+                <x-ui.button :href="route($doc['download'], $hr)" size="sm" class="cursor-pointer"><i class="bi bi-download"></i> Download PDF</x-ui.button>
             </div>
+        </x-ui.card>
+    @endforeach
+
+    {{-- Complete File --}}
+    <x-ui.card class="border-brand-200 md:col-span-2">
+        <div class="flex flex-col items-start justify-between gap-3 p-4 sm:flex-row sm:items-center">
+            <h2 class="flex items-center gap-2 text-sm font-bold text-slate-800"><i class="bi bi-file-earmark-zip text-brand-600"></i> Complete File (All Documents)</h2>
+            <x-ui.button :href="route('hr.download.full-file', $hr)" size="sm" class="cursor-pointer"><i class="bi bi-download"></i> Download Full File PDF</x-ui.button>
         </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card h-100">
-            <div class="card-header py-2"><i class="bi bi-envelope me-1"></i> Forwarding Letter</div>
-            <div class="card-body py-3">
-                <a href="{{ route('hr.print.forwarding-letter', $hr) }}" class="btn btn-sm btn-outline-secondary me-2" target="_blank">
-                    <i class="bi bi-eye me-1"></i> Preview
-                </a>
-                <a href="{{ route('hr.download.forwarding-letter', $hr) }}" class="btn btn-sm btn-outline-primary">
-                    <i class="bi bi-download me-1"></i> Download PDF
-                </a>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card h-100">
-            <div class="card-header py-2"><i class="bi bi-file-earmark-text me-1"></i> Employment Agreement</div>
-            <div class="card-body py-3">
-                <a href="{{ route('hr.print.employment-agreement', $hr) }}" class="btn btn-sm btn-outline-secondary me-2" target="_blank">
-                    <i class="bi bi-eye me-1"></i> Preview
-                </a>
-                <a href="{{ route('hr.download.employment-agreement', $hr) }}" class="btn btn-sm btn-outline-primary">
-                    <i class="bi bi-download me-1"></i> Download PDF
-                </a>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="card h-100">
-            <div class="card-header py-2"><i class="bi bi-card-checklist me-1"></i> Checklist</div>
-            <div class="card-body py-3">
-                <a href="{{ route('hr.print.checklist', $hr) }}" class="btn btn-sm btn-outline-secondary me-2" target="_blank">
-                    <i class="bi bi-eye me-1"></i> Preview
-                </a>
-                <a href="{{ route('hr.download.checklist', $hr) }}" class="btn btn-sm btn-outline-primary">
-                    <i class="bi bi-download me-1"></i> Download PDF
-                </a>
-            </div>
-        </div>
-    </div>
-    <div class="col-12">
-        <div class="card border-primary">
-            <div class="card-body d-flex justify-content-between align-items-center py-3">
-                <div>
-                    <h6 class="mb-0 fw-bold"><i class="bi bi-file-earmark-zip me-2 text-primary"></i>Complete File (All Documents)</h6>
-                </div>
-                <a href="{{ route('hr.download.full-file', $hr) }}" class="btn btn-primary btn-sm">
-                    <i class="bi bi-download me-1"></i> Download Full File PDF
-                </a>
-            </div>
-        </div>
-    </div>
+    </x-ui.card>
 </div>
 
 {{-- Document Generation Log --}}
@@ -90,41 +48,41 @@
         ->get();
 @endphp
 @if($docLog->isNotEmpty())
-<div class="card mt-3">
-    <div class="card-header py-2 d-flex justify-content-between align-items-center">
-        <span><i class="bi bi-clock-history me-1"></i> Document Activity Log</span>
-        <small class="text-muted">Last 15 events</small>
-    </div>
-    <div class="table-responsive">
-        <table class="table table-sm table-hover mb-0" style="font-size:.82rem;">
-            <thead class="table-light">
-                <tr>
-                    <th>Document</th>
-                    <th>Action</th>
-                    <th>Agency</th>
-                    <th>By</th>
-                    <th>When</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($docLog as $log)
-                <tr>
-                    <td>{{ ucwords(str_replace('_', ' ', $log->document_type)) }}</td>
-                    <td>
-                        @if($log->action === 'download')
-                            <span class="badge bg-primary">Download</span>
-                        @else
-                            <span class="badge bg-secondary">Preview</span>
-                        @endif
-                    </td>
-                    <td>{{ $log->agency?->name ?? '—' }}</td>
-                    <td>{{ $log->generatedBy?->name ?? '—' }}</td>
-                    <td>{{ $log->created_at->format('d M Y H:i') }}</td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
-</div>
+    <x-ui.card class="mt-5 overflow-hidden">
+        <div class="flex items-center justify-between border-b border-slate-100 px-5 py-3">
+            <span class="flex items-center gap-2 text-sm font-bold text-slate-800"><i class="bi bi-clock-history text-violet-500"></i> Document Activity Log</span>
+            <span class="text-xs text-slate-400">Last 15 events</span>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-slate-200 bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        <th class="px-5 py-2.5">Document</th>
+                        <th class="px-5 py-2.5">Action</th>
+                        <th class="px-5 py-2.5">Agency</th>
+                        <th class="px-5 py-2.5">By</th>
+                        <th class="px-5 py-2.5">When</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @foreach($docLog as $log)
+                        <tr class="transition-colors hover:bg-slate-50">
+                            <td class="px-5 py-2.5 text-slate-700">{{ ucwords(str_replace('_', ' ', $log->document_type)) }}</td>
+                            <td class="px-5 py-2.5">
+                                @if($log->action === 'download')
+                                    <x-ui.badge tone="brand">Download</x-ui.badge>
+                                @else
+                                    <x-ui.badge tone="slate">Preview</x-ui.badge>
+                                @endif
+                            </td>
+                            <td class="px-5 py-2.5 text-slate-600">{{ $log->agency?->name ?? '—' }}</td>
+                            <td class="px-5 py-2.5 text-slate-600">{{ $log->generatedBy?->name ?? '—' }}</td>
+                            <td class="px-5 py-2.5 text-slate-400">{{ $log->created_at->format('d M Y H:i') }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </x-ui.card>
 @endif
 @endsection

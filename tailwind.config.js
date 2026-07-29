@@ -12,7 +12,7 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Figtree', 'Inter', ...defaultTheme.fontFamily.sans],
+                sans: ['Plus Jakarta Sans', 'Figtree', 'Inter', ...defaultTheme.fontFamily.sans],
             },
             colors: {
                 // Primary SaaS accent (indigo/blue). `brand-600` == #2563eb.

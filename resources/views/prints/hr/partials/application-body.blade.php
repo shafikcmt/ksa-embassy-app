@@ -43,8 +43,8 @@
      — mPDF already ships these fonts internally, so it must not see url()-based
      font-face rules (it would try to re-load/embed them and can error).
      Files live in public/fonts (copied from vendor/mpdf/mpdf/ttfonts). */
-  @font-face { font-family: freesans;      font-weight: normal; font-style: normal; src: url('/fonts/FreeSans.ttf') format('truetype'); }
-  @font-face { font-family: freesans;      font-weight: bold;   font-style: normal; src: url('/fonts/FreeSansBold.ttf') format('truetype'); }
+  @font-face { font-family: ksaroboto;      font-weight: normal; font-style: normal; src: url('/fonts/FreeSans.ttf') format('truetype'); }
+  @font-face { font-family: ksaroboto;      font-weight: bold;   font-style: normal; src: url('/fonts/FreeSansBold.ttf') format('truetype'); }
   @font-face { font-family: dejavusans;    font-weight: normal; font-style: normal; src: url('/fonts/DejaVuSans.ttf') format('truetype'); }
   @font-face { font-family: dejavusans;    font-weight: bold;   font-style: normal; src: url('/fonts/DejaVuSans-Bold.ttf') format('truetype'); }
   /* .ar / body reference the spaced name "DejaVu Sans" — alias it to the same files. */
@@ -73,6 +73,14 @@
   /* Bordered grid: 8pt bold Latin + taller rows (more vertical padding) to
      match the reference form's spacing and heavier, clearer text. */
   .ksa-app .bdr td, .ksa-app .bdr th { border: 0.6pt solid #000; padding: 2pt 5pt; font-size: 8.5pt; font-weight: bold; vertical-align: middle; }
+  /* Seam de-duplication: where two SEPARATE stacked tables meet, the upper
+     table's last-row bottom border and the lower table's top border both draw a
+     0.6pt line, so the seam looked ~1.2pt (doubled) — noticeably thicker than the
+     single 0.6pt hairline used within a table. Dropping the upper row's bottom
+     border leaves the lower table's top border as the sole 0.6pt line. Applied
+     to the three flagged seams: Sect/Religion→Profession, Purpose→Passport,
+     Destination→Dependents. (Placed after .bdr td so it wins the equal-specificity tie.) */
+  .ksa-app .seam-merge td { border-bottom: 0 !important; }
   .ksa-app .lbl { font-weight: bold; text-align: left; white-space: nowrap; }
   /* VALUE cells are BOLD: the reference form prints its values (dates, place of
      birth, nationalities, Sex/Marital/Religion, duration, etc.) in bold black —
@@ -110,8 +118,12 @@
   .ksa-app table.ppt td { padding-left: 3pt; padding-right: 3pt; }
   .ksa-app .ppt .lbl { font-size: 7.3pt; }
   .ksa-app .ppt .ar  { font-size: 6.5pt; line-height: 1; }
-  .ksa-app .ppt .val { font-size: 9.5pt; font-weight: bold; color: #000; }
-  .ksa-app .ppt .val.ppno { font-size: 10.5pt; font-weight: bold; color: #000; }
+  /* font-family:freesans reinforced here (like .pi td below): without it these
+     .ppt value cells fell back to the host DejaVu Sans, so the passport row
+     (Place/Date of issue, Date of expiry, Passport No.) rendered in a different
+     font than the rest of the form's FreeSans values. */
+  .ksa-app .ppt .val { font-size: 9.5pt; font-weight: bold; color: #000; font-family: freesans, sans-serif; }
+  .ksa-app .ppt .val.ppno { font-size: 10.5pt; font-weight: bold; color: #000; font-family: freesans, sans-serif; }
   /* Personal-Info table (Section 1): use FreeSans — the Arial/Helvetica clone
      that matches the reference form's narrow, compact Latin glyphs (labels AND
      values). This is the same family the rest of page 1 uses; keeping it here
@@ -149,6 +161,16 @@
   .ksa-app .offc { border-top: 1px dashed #000; }
   .ksa-app .offc td { border: 0; border-bottom: 1px solid #000; padding: 2.4pt 4pt; font-size: 7.6pt; vertical-align: middle; }
   .ksa-app .offc .hdr td { border-bottom: 1px solid #000; padding-top: 3pt; }
+  /* Reinforce FreeSans (Arial clone) on the official-use + signature LATIN cells
+     (labels/values), exactly like .pi does for the identity table. Without it
+     these cells fell back to the host DejaVu Sans — whose Bold is noticeably
+     lighter — so the Visa No / Id Number / Name labels looked thinner (not bold)
+     than the rest of the form. .ar cells are excluded so Arabic stays XB Riyaz. */
+  /* font-weight:bold added here (not just on .val): .offc td (0,0,2,1) out-ranks
+     .val (0,0,2,0) in mPDF's cascade and carries no weight, so the official-use
+     VALUES (Visa No, Id Number, Date…) rendered regular. This higher-specificity
+     selector (0,0,3,0) forces real FreeSans Bold on them and the labels. */
+  .ksa-app .offc .lbl, .ksa-app .offc .val, .ksa-app .sig .lbl { font-family: freesans, sans-serif; font-weight: bold; }
   /* Purpose-of-Travel option boxes — bordered table cells, AR over EN.
      Reference packs 7 options into the 50% middle block with "Residence"/
      "Diplomacy" on one line; at 7pt they wrapped once the block narrowed to 50%,
@@ -279,7 +301,9 @@
       <td class="ar">الحالة الاجتماعية :</td>
     </tr>
     {{-- Sect | Religion --}}
-    <tr>
+    {{-- seam-merge: drop this row's bottom border so the seam with the profession
+         table below is a single 0.6pt line (not a doubled ~1.2pt one). --}}
+    <tr class="seam-merge">
       <td class="lbl">Sect:</td>
       <td class="val">{{ $T($sect) }}</td>
       <td class="ar">المذهب :</td>
@@ -393,7 +417,9 @@
          6-col grid that is c1 | colspan3(c2+c3+c4)=50% | colspan2(c5+c6)=25% — the
          same colspan pattern the address rows use, so it aligns with them and the
          arabic heading is no longer squeezed. Selected purpose is grey-filled. --}}
-    <tr>
+    {{-- seam-merge: drop bottom border so the seam with the passport table below
+         is a single 0.6pt line (not doubled). --}}
+    <tr class="seam-merge">
       <td class="lbl" style="white-space:nowrap;">Purpose of Travel:</td>
       <td colspan="3" style="padding:2pt 4pt;vertical-align:middle;">
         <table class="pt" style="width:100%;border-collapse:collapse;"><tr>
@@ -433,10 +459,10 @@
     </tr>
     {{-- Passport field values (centered, emphasised — see .ppval) --}}
     <tr>
-      <td class="val ppval">{{ $U($passport_issue_place) }}</td>
-      <td class="val ppval">{{ $passport_issue_date ?: '' }}</td>
-      <td class="val ppval">{{ $passport_expiry_date ?: '' }}</td>
-      <td class="val ppval ppno">{{ $U($passport_no) }}</td>
+      <td class="val ppval" style="border-bottom:0;">{{ $U($passport_issue_place) }}</td>
+      <td class="val ppval" style="border-bottom:0;">{{ $passport_issue_date ?: '' }}</td>
+      <td class="val ppval" style="border-bottom:0;">{{ $passport_expiry_date ?: '' }}</td>
+      <td class="val ppval ppno" style="border-bottom:0;">{{ $U($passport_no) }}</td>
     </tr>
   </tbody>
 </table>
@@ -451,7 +477,7 @@
   </colgroup>
   <tbody>
     {{-- Duration / Arrival / Departure — arabic labels --}}
-    <tr>
+    <tr style="border-top:0;">
       <td colspan="2" class="ar">مدة الإقامة بالمملكة :</td>
       <td class="ar">تاريخ الوصول :</td>
       <td colspan="2" class="ar">تاريخ المغادرة :</td>
@@ -473,7 +499,9 @@
       <td colspan="4" class="val">{{ $relationship ?: 'EMPLOYER AND EMPLOYEE' }}</td>
     </tr>
     {{-- Destination | Carrier --}}
-    <tr>
+    {{-- seam-merge: drop bottom border so the seam with the dependents table
+         below is a single 0.6pt line (not doubled). --}}
+    <tr class="seam-merge">
       <td class="lbl">Destination:</td>
       <td class="val">{{ $destination_city ?: ($work_city ?: '') }}</td>
       <td class="ar">جهة الوصول :</td>
@@ -519,8 +547,8 @@
 <table class="bdr" style="margin-top:0;font-size:7.5pt;">
   <tbody>
     <tr>
-      <td style="width:50%;">Name and address of company or individual in the kingdom :</td>
-      <td style="width:50%;" class="ar">اسم وعنوان الشركة أو اسم الشخص وعنوانه بالمملكة :</td>
+      <td style="width:50%;border-top:0;">Name and address of company or individual in the kingdom :</td>
+      <td style="width:50%; border-top:0;" class="ar">اسم وعنوان الشركة أو اسم الشخص وعنوانه بالمملكة :</td>
     </tr>
     <tr>
       <td class="val">{{ $kingdom_address_en ?: '' }}</td>
@@ -530,11 +558,14 @@
 </table>
 
 {{-- ── DECLARATION (english left | arabic right) ───────────────────────────── --}}
+{{-- Reference shows this declaration as open text with NO surrounding box, so the
+     two cells override .bdr's border to 0 (border removed on this row only; the
+     bordered tables above/below are untouched). --}}
 <table class="bdr" style="margin-top:0;font-size:7.5pt;">
   <tbody>
     <tr>
-      <td style="width:60%;text-align:center;">I the undersigned hereby that all the information I have provided are correct. I will abide by laws of the kingdom during the period of my residence in it.</td>
-      <td style="width:40%;">أنا الموقع أدناه أقر بأن كل المعلومات التي زودتها صحيحة وسأكون ملتزماً بقوانين المملكة العربية السعودية خلال فترة وجودي بها.</td>
+      <td style="width:60%;text-align:right;border-bottom:0.6pt solid black; border-right:0;border-top:0;">I the undersigned hereby that all the information I have provided are correct. I will abide by laws of the kingdom during the period of my residence in it.</td>
+      <td style="width:40%;border-bottom:0.6pt solid black;border-left:0;border-top:0; font-weight:500; text-align:right;">أنا الموقع أدناه أقر بأن كل المعلومات التي زودتها صحيحة وسأكون ملتزماً بقوانين المملكة العربية السعودية خلال فترة وجودي بها.</td>
     </tr>
   </tbody>
 </table>
@@ -551,7 +582,7 @@
       <td class="ar">التاريخ :</td>
       <td class="lbl">Signature:</td>
       <td class="ar">التوقيع :</td>
-      <td class="lbl"><strong>Name:</strong> <span style="font-size:8.5pt;font-weight:bold;">{{ $U($full_name_en) }}</span></td>
+      <td class="lbl"><strong>Name:</strong> <span style="font-size:9.5pt;font-weight:bold;font-family:ksaroboto,sans-serif;">{{ $U($full_name_en) }}</span></td>
       <td class="ar">الاسم :</td>
     </tr>
   </tbody>
@@ -570,10 +601,15 @@
     </tr>
     <tr>
       <td class="lbl">Date:</td>
-      <td class="val">{{ $visa_date_hijri ?: '' }}</td>
+      <td class="val" style="font-size: 9.5pt; font-family: ksaroboto, sans-serif;">{{ $visa_date_hijri ?: '' }}</td>
       <td class="ar">التاريخ :</td>
       <td class="lbl">Visa No:</td>
-      <td class="val ppval">{{ $visa_no ?: '' }}</td>
+      {{-- value uses .val (7.6pt) — NOT .ppval (9.5pt) — so it is proportionate
+           to the other official-use values (e.g. the Date beside it), matching
+           the reference (was oversized). Inline font-weight:bold guarantees real
+           bold: mPDF's cascade let .offc td (higher specificity, no weight) leave
+           the value regular, so a CSS-only bold did not render. --}}
+      <td class="val"><span style="font-weight:bold;font-size: 9.5pt;font-family: ksaroboto, sans-serif;">{{ $visa_no ?: '' }}</span></td>
       <td class="ar">رقم الأمر المعتمد عليه في إعطاء التأشيرة :</td>
     </tr>
     <tr>
@@ -586,7 +622,10 @@
       <td>&nbsp;</td>
       <td class="ar">التاريخ :</td>
       <td class="lbl">Id Number:</td>
-      <td class="val ppval">{{ $sponsor_id ?: '' }}</td>
+      {{-- value uses .val (7.6pt) — matches the Visa No value so the two parallel
+           official-use fields are the same proportionate size (not oversized).
+           Inline font-weight:bold guarantees real bold (see Visa No note above). --}}
+      <td class="val"><span style="font-weight:bold;font-family: ksaroboto, sans-serif;font-size: 9.5pt;">{{ $sponsor_id ?: '' }}</span></td>
       <td class="ar">أشير برقم :</td>
     </tr>
     <tr>

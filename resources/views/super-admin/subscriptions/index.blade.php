@@ -1,111 +1,97 @@
-@extends('layouts.super-admin')
+@extends('layouts.super-admin-app')
 @section('title', 'Subscriptions')
+@section('page-title', 'Subscriptions')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h5 class="mb-0 fw-bold"><i class="bi bi-credit-card me-1"></i> Subscriptions</h5>
-    <a href="{{ route('super-admin.subscriptions.create') }}" class="btn btn-primary btn-sm">
-        <i class="bi bi-plus-lg me-1"></i> Assign Subscription
-    </a>
-</div>
+
+<x-ui.page-header title="Subscriptions" subtitle="Assign and manage agency subscriptions" icon="bi-credit-card">
+    <x-slot:actions>
+        <x-ui.button :href="route('super-admin.subscriptions.create')" class="cursor-pointer"><i class="bi bi-plus-lg"></i> Assign Subscription</x-ui.button>
+    </x-slot:actions>
+</x-ui.page-header>
 
 {{-- Filters --}}
-<div class="card mb-3">
-    <div class="card-body py-2">
-        <form method="GET" class="row g-2 align-items-end">
-            <div class="col-md-4">
-                <select name="agency_id" class="form-select form-select-sm">
-                    <option value="">All Agencies</option>
-                    @foreach($agencies as $ag)
-                        <option value="{{ $ag->id }}" @selected(request('agency_id') == $ag->id)>{{ $ag->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-md-3">
-                <select name="status" class="form-select form-select-sm">
-                    <option value="">All Status</option>
-                    @foreach(['trial','active','expired','suspended'] as $s)
-                        <option value="{{ $s }}" @selected(request('status') === $s)>{{ ucfirst($s) }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-auto">
-                <button class="btn btn-sm btn-outline-primary"><i class="bi bi-search"></i> Filter</button>
-                @if(request()->hasAny(['status','agency_id']))
-                    <a href="{{ route('super-admin.subscriptions.index') }}" class="btn btn-sm btn-outline-secondary">Clear</a>
-                @endif
-            </div>
-        </form>
-    </div>
-</div>
+<x-ui.card class="mb-5">
+    <form method="GET" class="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-12">
+        <select name="agency_id" class="h-10 rounded-lg border-slate-300 text-sm transition-colors focus:border-brand-400 focus:ring-brand-400 lg:col-span-5">
+            <option value="">All Agencies</option>
+            @foreach($agencies as $ag)
+                <option value="{{ $ag->id }}" @selected(request('agency_id') == $ag->id)>{{ $ag->name }}</option>
+            @endforeach
+        </select>
+        <select name="status" class="h-10 rounded-lg border-slate-300 text-sm transition-colors focus:border-brand-400 focus:ring-brand-400 lg:col-span-4">
+            <option value="">All Status</option>
+            @foreach(['trial','active','expired','suspended'] as $s)
+                <option value="{{ $s }}" @selected(request('status') === $s)>{{ ucfirst($s) }}</option>
+            @endforeach
+        </select>
+        <div class="flex gap-2 lg:col-span-3">
+            <x-ui.button type="submit" class="flex-1 cursor-pointer"><i class="bi bi-funnel"></i> Filter</x-ui.button>
+            @if(request()->hasAny(['status','agency_id']))
+                <x-ui.button :href="route('super-admin.subscriptions.index')" variant="secondary" size="icon" title="Clear filters" class="cursor-pointer"><i class="bi bi-arrow-counterclockwise"></i></x-ui.button>
+            @endif
+        </div>
+    </form>
+</x-ui.card>
 
-<div class="card">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
+<x-ui.card class="overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
             <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Agency</th>
-                    <th>Plan</th>
-                    <th>Period</th>
-                    <th>Status</th>
-                    <th>Payment</th>
-                    <th>Amount</th>
-                    <th>Actions</th>
+                <tr class="border-b border-slate-200 bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <th class="px-4 py-3">#</th>
+                    <th class="px-4 py-3">Agency</th>
+                    <th class="px-4 py-3">Plan</th>
+                    <th class="px-4 py-3">Period</th>
+                    <th class="px-4 py-3">Status</th>
+                    <th class="px-4 py-3">Payment</th>
+                    <th class="px-4 py-3">Amount</th>
+                    <th class="px-4 py-3 text-right">Actions</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="divide-y divide-slate-100">
                 @forelse($subscriptions as $sub)
-                <tr>
-                    <td class="text-muted">{{ $loop->iteration + ($subscriptions->currentPage() - 1) * $subscriptions->perPage() }}</td>
-                    <td class="fw-semibold">{{ $sub->agency->name }}</td>
-                    <td>{{ $sub->plan->name }}</td>
-                    <td>
-                        <small>{{ $sub->start_date->format('d M Y') }}<br>→ {{ $sub->end_date->format('d M Y') }}</small>
-                        @if($sub->isActive())
-                            <div style="font-size:.7rem;" class="text-success">{{ $sub->daysRemaining() }} days left</div>
-                        @endif
-                    </td>
-                    <td><span class="badge badge-status-{{ $sub->status }}">{{ ucfirst($sub->status) }}</span></td>
-                    <td>
-                        @php $pc = $sub->payment_status; @endphp
-                        <span class="badge {{ $pc === 'paid' ? 'bg-success' : ($pc === 'pending' ? 'bg-warning text-dark' : 'bg-secondary') }}">
-                            {{ ucfirst($pc) }}
-                        </span>
-                    </td>
-                    <td>${{ number_format($sub->amount, 2) }}</td>
-                    <td>
-                        <div class="d-flex gap-1">
-                            @if($sub->payment_status === 'pending')
-                            <form method="POST" action="{{ route('super-admin.subscriptions.approve', $sub) }}">
-                                @csrf @method('PATCH')
-                                <button class="btn btn-sm btn-success py-0" title="Approve Payment">
-                                    <i class="bi bi-check-circle"></i>
-                                </button>
-                            </form>
+                    <tr class="transition-colors hover:bg-slate-50">
+                        <td class="px-4 py-3 text-slate-400">{{ $loop->iteration + ($subscriptions->currentPage() - 1) * $subscriptions->perPage() }}</td>
+                        <td class="px-4 py-3 font-semibold text-slate-800">{{ $sub->agency->name }}</td>
+                        <td class="px-4 py-3 text-slate-600">{{ $sub->plan->name }}</td>
+                        <td class="px-4 py-3">
+                            <div class="text-slate-600">{{ $sub->start_date->format('d M Y') }} → {{ $sub->end_date->format('d M Y') }}</div>
+                            @if($sub->isActive())
+                                <div class="text-xs text-emerald-600">{{ $sub->daysRemaining() }} days left</div>
                             @endif
-                            <a href="{{ route('super-admin.subscriptions.edit', $sub) }}"
-                                class="btn btn-sm btn-outline-warning py-0" title="Edit">
-                                <i class="bi bi-pencil"></i>
-                            </a>
-                            <form method="POST" action="{{ route('super-admin.subscriptions.destroy', $sub) }}">
-                                @csrf @method('DELETE')
-                                <button class="btn btn-sm btn-outline-danger py-0"
-                                    onclick="return confirm('Delete this subscription?')">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
+                        </td>
+                        <td class="px-4 py-3"><x-ui.status-badge :status="$sub->status" /></td>
+                        <td class="px-4 py-3">
+                            @php $pc = $sub->payment_status; @endphp
+                            <x-ui.badge :tone="$pc === 'paid' ? 'green' : ($pc === 'pending' ? 'amber' : 'slate')">{{ ucfirst($pc) }}</x-ui.badge>
+                        </td>
+                        <td class="px-4 py-3 font-medium text-slate-700">${{ number_format($sub->amount, 2) }}</td>
+                        <td class="px-4 py-3">
+                            <div class="flex items-center justify-end gap-1 whitespace-nowrap">
+                                @if($sub->payment_status === 'pending')
+                                    <form method="POST" action="{{ route('super-admin.subscriptions.approve', $sub) }}">
+                                        @csrf @method('PATCH')
+                                        <button type="submit" title="Approve Payment" class="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-emerald-600 transition-colors hover:bg-emerald-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"><i class="bi bi-check-circle"></i></button>
+                                    </form>
+                                @endif
+                                <a href="{{ route('super-admin.subscriptions.edit', $sub) }}" title="Edit" class="grid h-8 w-8 place-items-center rounded-lg text-brand-600 transition-colors hover:bg-brand-50"><i class="bi bi-pencil"></i></a>
+                                <form method="POST" action="{{ route('super-admin.subscriptions.destroy', $sub) }}">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" title="Delete" onclick="return confirm('Delete this subscription?')"
+                                        class="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-rose-500 transition-colors hover:bg-rose-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"><i class="bi bi-trash"></i></button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
                 @empty
-                <tr><td colspan="8" class="text-center text-muted py-4">No subscriptions found.</td></tr>
+                    <tr><td colspan="8" class="p-0"><x-ui.empty icon="bi-credit-card" title="No subscriptions found" /></td></tr>
                 @endforelse
             </tbody>
         </table>
     </div>
     @if($subscriptions->hasPages())
-    <div class="card-footer bg-white">{{ $subscriptions->links() }}</div>
+        <div class="border-t border-slate-100 px-4 py-3">{{ $subscriptions->withQueryString()->links() }}</div>
     @endif
-</div>
+</x-ui.card>
 @endsection
