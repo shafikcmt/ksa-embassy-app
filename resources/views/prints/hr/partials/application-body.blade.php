@@ -600,6 +600,15 @@
   </tbody>
 </table>
 
+{{-- Bottom-anchor spacer: reference (ksa-application-reference-0001.jpg) places
+     the barcode/"Head of consular section" footer near the page bottom (~94.6%
+     of page height). Our page-1 tables are more compact, so without this the
+     footer floats at ~90.4% with ~18mm of blank beneath it. This lowers the
+     footer to the reference's position. Sized to stay within one A4 — leaves
+     ~6.5mm headroom to the 10mm print margin so a wrapped field can't push the
+     page onto a 2nd sheet. --}}
+<div style="height:12mm;"></div>
+
 {{-- ── HEAD OF CONSULAR / BOTTOM BARCODE / CHECKED BY (below the box) ───────── --}}
 <table style="margin-top:6pt;width:100%;border-collapse:collapse;">
   <tr>
