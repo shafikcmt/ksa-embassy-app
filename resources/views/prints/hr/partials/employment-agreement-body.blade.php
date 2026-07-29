@@ -23,10 +23,11 @@
      from pages 2 and 4.) --}}
 <div class="ksa-letter" style="width:92%;margin:0 auto;font-size:13pt;line-height:1.6;color:#000;">
 
-{{-- Top spacer: content starts 2in / 50.8mm from the physical page top
-     (mPDF reserves a 10mm margin, so 10 + 40.8 = 50.8mm). Same value on
-     pages 2–4 so single-page and Complete-File PDFs match. --}}
-<div style="height:62mm;"></div>
+{{-- Top spacer: page 3's reference (ksa-application-reference-0003.jpg) has NO
+     letterhead gap — the title sits ~35.7mm from the physical page top. mPDF
+     reserves a 10mm margin, so 24mm here puts the title at ~36mm to match.
+     (Page 2 keeps its larger letterhead gap; the reference pages differ.) --}}
+<div style="height:24mm;"></div>
 
 {{-- Title — normal word/letter spacing to match reference (no extra tracking). --}}
 <div style="text-align:center;margin-bottom:16pt;">
@@ -37,26 +38,26 @@
 <table style="width:100%;border-collapse:collapse;margin-bottom:14pt;font-size:10pt;">
   <tbody>
     <tr>
-      <td style="width:50%;border-bottom:1px solid #000;padding:5pt 4pt;">NAME OF COMPANY:</td>
-      <td style="width:50%;border-bottom:1px solid #000;padding:5pt 4pt;font-weight:bold;">
+      <td style="width:50%;border-bottom:1px solid #e0e0e0;padding:5pt 4pt;">NAME OF COMPANY:</td>
+      <td style="width:50%;border-bottom:1px solid #e0e0e0;padding:5pt 4pt;font-weight:bold;">
         @if(!empty($sponsor_name_ar))<span class="ar" style="font-weight:bold;">{{ $sponsor_name_ar }}</span>@else{{ $sponsor_name ?: $agency_name }}@endif
       </td>
     </tr>
     <tr>
-      <td style="border-bottom:1px solid #000;padding:5pt 4pt;">HEREBY APPOINTED:</td>
-      <td style="border-bottom:1px solid #000;padding:5pt 4pt;font-weight:bold;">{{ $full_name_en_upper }}</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:5pt 4pt;">HEREBY APPOINTED:</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:5pt 4pt;font-weight:bold;">{{ $full_name_en_upper }}</td>
     </tr>
     <tr>
-      <td style="border-bottom:1px solid #000;padding:5pt 4pt;">PASSPORT NO WITH ISSUE DATE:</td>
-      <td style="border-bottom:1px solid #000;padding:5pt 4pt;font-weight:bold;">{{ $passport_no ?: '—' }}@if($passport_issue_date) &nbsp; Date: {{ $passport_issue_date }}@endif</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:5pt 4pt;">PASSPORT NO WITH ISSUE DATE:</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:5pt 4pt;font-weight:bold;">{{ $passport_no ?: '—' }}@if($passport_issue_date) &nbsp; Date: {{ $passport_issue_date }}@endif</td>
     </tr>
     <tr>
-      <td style="border-bottom:1px solid #000;padding:5pt 4pt;">PASSPORT HOLDER:</td>
-      <td style="border-bottom:1px solid #000;padding:5pt 4pt;font-weight:bold;">{{ $nationality }}</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:5pt 4pt;">PASSPORT HOLDER:</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:5pt 4pt;font-weight:bold;">{{ $nationality }}</td>
     </tr>
     <tr>
-      <td style="border-bottom:1px solid #000;padding:5pt 4pt;">PROFESSION:</td>
-      <td style="border-bottom:1px solid #000;padding:5pt 4pt;font-weight:bold;">{{ $profession_en ?: ($occupation ?: '—') }}</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:5pt 4pt;">PROFESSION:</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:5pt 4pt;font-weight:bold;">{{ $profession_en ?: ($occupation ?: '—') }}</td>
     </tr>
   </tbody>
 </table>
@@ -75,72 +76,75 @@
   </colgroup>
   <tbody>
     <tr>
-      <td style="border-bottom:1px solid #000;padding:4pt 6pt;text-align:center;">1</td>
-      <td style="border-bottom:1px solid #000;padding:4pt 6pt;">MONTHLY SALARY:</td>
-      <td style="border-bottom:1px solid #000;padding:4pt 6pt;">{{ $salary ?: '800/= SR' }}</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;text-align:center;">1</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">MONTHLY SALARY:</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">{{ $salary ?: '800/= SR' }}</td>
     </tr>
     <tr>
-      <td style="border-bottom:1px solid #000;padding:4pt 6pt;text-align:center;">2</td>
-      <td style="border-bottom:1px solid #000;padding:4pt 6pt;">FOOD AND ACCOMMODATION:</td>
-      <td style="border-bottom:1px solid #000;padding:4pt 6pt;">200/= SR</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;text-align:center;">2</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">FOOD AND ACCOMMODATION:</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">200/= SR</td>
     </tr>
     <tr>
-      <td style="border-bottom:1px solid #000;padding:4pt 6pt;text-align:center;">3</td>
-      <td style="border-bottom:1px solid #000;padding:4pt 6pt;">AIR PASSAGE:</td>
-      <td style="border-bottom:1px solid #000;padding:4pt 6pt;">BORNE BY THE EMPLOYER</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;text-align:center;">3</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">AIR PASSAGE:</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">BORNE BY THE EMPLOYER</td>
     </tr>
     <tr>
-      <td style="border-bottom:1px solid #000;padding:4pt 6pt;text-align:center;">4</td>
-      <td style="border-bottom:1px solid #000;padding:4pt 6pt;">DUTY HOUR:</td>
-      <td style="border-bottom:1px solid #000;padding:4pt 6pt;">8 HOURS DAILY</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;text-align:center;">4</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">DUTY HOUR:</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">8 HOURS DAILY</td>
     </tr>
     <tr>
-      <td style="border-bottom:1px solid #000;padding:4pt 6pt;text-align:center;">5</td>
-      <td style="border-bottom:1px solid #000;padding:4pt 6pt;">HOLIDAY:</td>
-      <td style="border-bottom:1px solid #000;padding:4pt 6pt;">AS PER SAUDI LABOUR LAWS</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;text-align:center;">5</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">HOLIDAY:</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">AS PER SAUDI LABOUR LAWS</td>
     </tr>
     <tr>
-      <td style="border-bottom:1px solid #000;padding:4pt 6pt;text-align:center;">6</td>
-      <td style="border-bottom:1px solid #000;padding:4pt 6pt;">LEAVE:</td>
-      <td style="border-bottom:1px solid #000;padding:4pt 6pt;">AS PER SAUDI LABOUR LAWS</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;text-align:center;">6</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">LEAVE:</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">AS PER SAUDI LABOUR LAWS</td>
     </tr>
     <tr>
-      <td style="border-bottom:1px solid #000;padding:4pt 6pt;text-align:center;">7</td>
-      <td style="border-bottom:1px solid #000;padding:4pt 6pt;">OVERTIME &amp; OTHER BENEFIT:</td>
-      <td style="border-bottom:1px solid #000;padding:4pt 6pt;">AS PER SAUDI LABOUR LAWS</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;text-align:center;">7</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">OVERTIME &amp; OTHER BENEFIT:</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">AS PER SAUDI LABOUR LAWS</td>
     </tr>
     <tr>
-      <td style="border-bottom:1px solid #000;padding:4pt 6pt;text-align:center;">8</td>
-      <td style="border-bottom:1px solid #000;padding:4pt 6pt;">MEDICAL FACILITIES:</td>
-      <td style="border-bottom:1px solid #000;padding:4pt 6pt;">FREE</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;text-align:center;">8</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">MEDICAL FACILITIES:</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">FREE</td>
     </tr>
     <tr>
-      <td style="border-bottom:1px solid #000;padding:4pt 6pt;text-align:center;">9</td>
-      <td style="border-bottom:1px solid #000;padding:4pt 6pt;">PERIOD OF CONTRACT:</td>
-      <td style="border-bottom:1px solid #000;padding:4pt 6pt;">{{ $contract_period ?: ($duration_stay_en ?: 'TWO/ONE YEARS') }}</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;text-align:center;">9</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">PERIOD OF CONTRACT:</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">{{ $contract_period ?: ($duration_stay_en ?: 'TWO/ONE YEARS') }}</td>
     </tr>
     <tr>
-      <td style="border-bottom:1px solid #000;padding:4pt 6pt;text-align:center;">10</td>
-      <td style="border-bottom:1px solid #000;padding:4pt 6pt;font-size:9pt;">REPATRIATION ARRANGEMENT INCLUDING RETURN OF DEAD BODY &amp; SERVICE BENEFIT TO THE LEGAL HEIR OF THE EMPLOYEE:</td>
-      <td style="border-bottom:1px solid #000;padding:4pt 6pt;">AS PER SAUDI LABOUR LAWS</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;text-align:center;">10</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;font-size:9pt;">REPATRIATION ARRANGEMENT INCLUDING RETURN OF DEAD BODY &amp; SERVICE BENEFIT TO THE LEGAL HEIR OF THE EMPLOYEE:</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">AS PER SAUDI LABOUR LAWS</td>
     </tr>
   </tbody>
 </table>
 
 {{-- Signatures — kept together so the row is never split across pages --}}
 <div class="ksa-signature" style="page-break-inside:avoid;break-inside:avoid;">
-  <div style="height:45mm;"></div>
+  {{-- Pre-signature spacer pushes the signature row to the page bottom (≈268mm),
+       matching the reference. Sized to absorb the smaller 24mm top spacer so the
+       signature stays bottom-anchored while the title sits near the top. --}}
+  <div style="height:83mm;"></div>
+  {{-- Reference (page 3): First Party rule/label anchored to the LEFT column edge,
+       Second Party anchored to the RIGHT. inline-block makes the top rule exactly
+       the label width (not the full cell), matching the reference. Regular weight
+       (ksaroboto Medium) — reference labels are not heavy-bold. --}}
   <table style="width:100%;border-collapse:collapse;font-size:11pt;">
     <tr>
-      <td style="width:50%;text-align:center;padding:0 6pt;vertical-align:bottom;">
-        <div style="border-top:1px solid #000;padding-top:4pt;">
-          <strong>SIGNATURE OF FIRST PARTY</strong>
-        </div>
+      <td style="width:50%;text-align:left;padding:0;vertical-align:bottom;">
+        <span style="display:inline-block;border-top:1px solid #000;padding-top:4pt;">SIGNATURE OF FIRST PARTY</span>
       </td>
-      <td style="width:50%;text-align:center;padding:0 6pt;vertical-align:bottom;">
-        <div style="border-top:1px solid #000;padding-top:4pt;">
-          <strong>SIGNATURE OF SECOND PARTY</strong>
-        </div>
+      <td style="width:50%;text-align:right;padding:0;vertical-align:bottom;">
+        <span style="display:inline-block;border-top:1px solid #000;padding-top:4pt;">SIGNATURE OF SECOND PARTY</span>
       </td>
     </tr>
   </table>
