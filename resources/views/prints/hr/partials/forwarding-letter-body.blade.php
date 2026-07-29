@@ -6,10 +6,11 @@
   font-size or any .dtbl class.
 --}}
 {{-- ── Scoped typography — match reference page 2 (ksa-application-reference-0002.jpg)
-     The reference letter's Latin text is an Arial/Helvetica style, the same
-     family page 1 uses (FreeSans, an Arial clone) — NOT the wider/rounder
-     DejaVu Sans the host body defaults to. Scoped to .ksa-letter so pages 1/3/4
-     are unaffected. --}}
+     The reference letter's Latin text is dense/semibold, not thin. Plain FreeSans
+     (400) renders too light and mPDF has no FreeSans medium face (font-weight:500
+     silently rounds to 400), so the body uses ksaroboto (Roboto-Medium — a real
+     500-weight face, same family pages 3–4 use) for density, with freesans as the
+     fallback. Scoped to .ksa-letter so pages 1/3/4 are unaffected. --}}
 <style>
 @if(empty($_pdf))
   /* BROWSER-ONLY @font-face: embed the exact TTFs mPDF renders with, so the
@@ -26,12 +27,12 @@
   @font-face { font-family: xbriyaz; font-weight: normal; font-style: normal; src: url('/fonts/XBRiyaz.ttf') format('truetype'); }
   @font-face { font-family: xbriyaz; font-weight: bold;   font-style: normal; src: url('/fonts/XBRiyaz-Bold.ttf') format('truetype'); }
 @endif
-  /* Declare freesans DIRECTLY on every element type — mPDF table cells do NOT
-     inherit font-family from an ancestor (they silently fall back to the host
+  /* Declare the body font DIRECTLY on every element type — mPDF table cells do
+     NOT inherit font-family from an ancestor (they silently fall back to the host
      body font), so the container alone is not enough. */
   .ksa-letter,
   .ksa-letter table, .ksa-letter td, .ksa-letter th,
-  .ksa-letter div, .ksa-letter span, .ksa-letter p, .ksa-letter strong { font-family: freesans, sans-serif; }
+  .ksa-letter div, .ksa-letter span, .ksa-letter p, .ksa-letter strong { font-family: ksaroboto, freesans, sans-serif; }
   /* Arabic keeps DejaVu Sans (full Arabic coverage in browser + mPDF);
      mPDF's autoLangToFont substitutes the Arabic font for RTL text anyway. */
   .ksa-letter .ar { font-family: xbriyaz, 'DejaVu Sans', sans-serif; }
