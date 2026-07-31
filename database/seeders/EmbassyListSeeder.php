@@ -106,6 +106,7 @@ class EmbassyListSeeder extends Seeder
             'snapshot_visa_no'          => $hr->visa?->visa_number,
             'snapshot_profession_en'    => $hr->occupation,
             'snapshot_sponsor_name'     => $hr->visa?->sponsor_name,
+            'snapshot_sponsor_name_ar'  => $hr->visa?->sponsor_name_ar,
             'snapshot_sponsor_id'       => $hr->visa?->sponsor_id,
             'snapshot_nationality'      => $hr->nationality,
         ];

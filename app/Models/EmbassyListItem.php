@@ -13,7 +13,7 @@ class EmbassyListItem extends Model
         'snapshot_agent_name', 'snapshot_candidate_name', 'snapshot_candidate_name_ar',
         'snapshot_passport_no', 'snapshot_visa_no',
         'snapshot_profession_en', 'snapshot_profession_ar',
-        'snapshot_sponsor_name', 'snapshot_sponsor_id', 'snapshot_nationality',
+        'snapshot_sponsor_name', 'snapshot_sponsor_name_ar', 'snapshot_sponsor_id', 'snapshot_nationality',
     ];
 
     public function embassyList(): BelongsTo
