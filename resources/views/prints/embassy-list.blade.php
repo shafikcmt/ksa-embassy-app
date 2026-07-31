@@ -3,10 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <style>
+@if(empty($_pdf))
+/* BROWSER-ONLY @font-face: load the exact TTFs mPDF renders Arabic with (XB Riyaz)
+   so the browser preview matches the PDF. mPDF ignores these — it has xbriyaz built in. */
+@font-face { font-family: xbriyaz; font-weight: normal; font-style: normal; src: url('/fonts/XBRiyaz.ttf') format('truetype'); }
+@font-face { font-family: xbriyaz; font-weight: bold;   font-style: normal; src: url('/fonts/XBRiyaz-Bold.ttf') format('truetype'); }
+@endif
 body { font-family: DejaVu Sans, sans-serif; font-size: 9pt; color: #000; margin: 0; padding: 0; line-height: 1.5; }
 table { width: 100%; border-collapse: collapse; }
 td, th { padding: 3pt 5pt; vertical-align: middle; font-size: 9pt; }
-.ar { direction: rtl; text-align: right; font-family: DejaVu Sans, sans-serif; }
+.ar { direction: rtl; text-align: right; font-family: xbriyaz, 'DejaVu Sans', sans-serif; }
 .bdr td, .bdr th { border: 1px solid #000; }
 .sl-col { width: 28px; text-align: center; }
 @media screen {
@@ -48,7 +54,7 @@ td, th { padding: 3pt 5pt; vertical-align: middle; font-size: 9pt; }
 
 {{-- Arabic title --}}
 <div style="text-align:center;margin-bottom:8pt;direction:rtl;">
-  <div style="font-size:13pt;font-weight:bold;font-family:DejaVu Sans,sans-serif;">بيان بالجوازات المقدمة</div>
+  <div style="font-size:13pt;font-weight:bold;font-family:xbriyaz,'DejaVu Sans',sans-serif;">بيان بالجوازات المقدمة</div>
 </div>
 
 {{-- Single combined table: office/license header (borderless) + column header + bilingual category bars + rows + group totals.
@@ -60,26 +66,26 @@ td, th { padding: 3pt 5pt; vertical-align: middle; font-size: 9pt; }
   <thead>
     {{-- Office / license / date / signature header — borderless rows sharing the grid columns (RTL) --}}
     <tr>
-      <td colspan="2" style="border:0;text-align:right;padding:3pt 6pt;font-weight:bold;font-size:10.5pt;direction:rtl;">اسم المكتب :</td>
+      <td colspan="2" style="border:0;text-align:right;padding:3pt 6pt;font-weight:bold;font-size:10.5pt;direction:rtl;font-family:xbriyaz,'DejaVu Sans',sans-serif;">اسم المكتب :</td>
       <td style="border:0;text-align:left;padding:3pt 6pt;font-weight:bold;font-size:11pt;direction:ltr;white-space:nowrap;">{{ $agency->name }}</td>
-      <td colspan="2" style="border:0;text-align:left;padding:10pt 29pt;font-weight:bold;font-size:9.5pt;direction:rtl;">رقم الرخصة :</td>
-      <td style="border:0;text-align:right;padding:3pt 6pt;font-weight:600;font-size:10pt;direction:ltr;">{{ $agency->rl_number ?: '—' }}</td>
+      <td colspan="2" style="border:0;text-align:left;padding:10pt 29pt;font-weight:bold;font-size:9.5pt;direction:rtl;font-family:xbriyaz,'DejaVu Sans',sans-serif;">رقم الرخصة :</td>
+      <td style="border:0;text-align:right;padding:3pt 6pt;font-weight:bold;font-size:10pt;direction:ltr;">{{ $agency->rl_number ?: '—' }}</td>
     </tr>
     <tr>
-      <td colspan="2" style="border:0;text-align:right;padding:3pt 6pt;font-weight:bold;font-size:10.5pt;direction:rtl;">توقيع :</td>
+      <td colspan="2" style="border:0;text-align:right;padding:3pt 6pt;font-weight:bold;font-size:10.5pt;direction:rtl;font-family:xbriyaz,'DejaVu Sans',sans-serif;">توقيع :</td>
       <td style="border:0;padding:3pt 6pt;">&nbsp;</td>
-      <td colspan="2" style="border:0;text-align:left;padding:3pt 47pt;font-weight:bold;font-size:9.5pt;direction:rtl;">التاريخ :</td>
-      <td style="border:0;text-align:right;padding:3pt 6pt;font-weight:600;font-size:10pt;direction:ltr;">{{ $list->list_date->format('d M, Y') }}</td>
+      <td colspan="2" style="border:0;text-align:left;padding:3pt 47pt;font-weight:bold;font-size:9.5pt;direction:rtl;font-family:xbriyaz,'DejaVu Sans',sans-serif;">التاريخ :</td>
+      <td style="border:0;text-align:right;padding:3pt 6pt;font-weight:bold;font-size:10pt;direction:ltr;">{{ $list->list_date->format('d M, Y') }}</td>
     </tr>
     {{-- spacer to keep a gap before the column-header row --}}
     <tr><td colspan="6" style="border:0;padding:0;height:15pt;font-size:1pt;line-height:15pt;">&nbsp;</td></tr>
     <tr style="background:#e9e9e9;">
-      <th style="border:1px solid #000;padding:2pt 4pt;text-align:center;">ت<br><span style="font-size:8pt;direction:ltr;unicode-bidi:embed;">SL.</span></th>
-      <th style="border:1px solid #000;padding:2pt 4pt;text-align:center;">رقم الجوازات<br><span style="font-size:8pt;direction:ltr;unicode-bidi:embed;">Passport No.</span></th>
-      <th style="border:1px solid #000;padding:2pt 4pt;text-align:center;">اسم الكفيل<br><span style="font-size:8pt;direction:ltr;unicode-bidi:embed;">Sponsor Name</span></th>
-      <th style="border:1px solid #000;padding:2pt 4pt;text-align:center;">رقم التأشيرة<br><span style="font-size:8pt;direction:ltr;unicode-bidi:embed;">Visa No</span></th>
-      <th style="border:1px solid #000;padding:2pt 4pt;text-align:center;">التاريخ<br><span style="font-size:8pt;direction:ltr;unicode-bidi:embed;">Year</span></th>
-      <th style="border:1px solid #000;padding:2pt 4pt;text-align:center;">المهنة<br><span style="font-size:8pt;direction:ltr;unicode-bidi:embed;">Profession</span></th>
+      <th style="border:1px solid #000;padding:2pt 4pt;text-align:center;background-color:#e9e9e9;font-family:xbriyaz,'DejaVu Sans',sans-serif;">ت<br><span style="font-size:8pt;direction:ltr;unicode-bidi:embed;font-family:'DejaVu Sans',sans-serif;">SL.</span></th>
+      <th style="border:1px solid #000;padding:2pt 4pt;text-align:center;background-color:#e9e9e9;font-family:xbriyaz,'DejaVu Sans',sans-serif;">رقم الجوازات<br><span style="font-size:8pt;direction:ltr;unicode-bidi:embed;font-family:'DejaVu Sans',sans-serif;">Passport No.</span></th>
+      <th style="border:1px solid #000;padding:2pt 4pt;text-align:center;background-color:#e9e9e9;font-family:xbriyaz,'DejaVu Sans',sans-serif;">اسم الكفيل<br><span style="font-size:8pt;direction:ltr;unicode-bidi:embed;font-family:'DejaVu Sans',sans-serif;">Sponsor Name</span></th>
+      <th style="border:1px solid #000;padding:2pt 4pt;text-align:center;background-color:#e9e9e9;font-family:xbriyaz,'DejaVu Sans',sans-serif;">رقم التأشيرة<br><span style="font-size:8pt;direction:ltr;unicode-bidi:embed;font-family:'DejaVu Sans',sans-serif;">Visa No</span></th>
+      <th style="border:1px solid #000;padding:2pt 4pt;text-align:center;background-color:#e9e9e9;font-family:xbriyaz,'DejaVu Sans',sans-serif;">التاريخ<br><span style="font-size:8pt;direction:ltr;unicode-bidi:embed;font-family:'DejaVu Sans',sans-serif;">Year</span></th>
+      <th style="border:1px solid #000;padding:2pt 4pt;text-align:center;background-color:#e9e9e9;font-family:xbriyaz,'DejaVu Sans',sans-serif;">المهنة<br><span style="font-size:8pt;direction:ltr;unicode-bidi:embed;font-family:'DejaVu Sans',sans-serif;">Profession</span></th>
     </tr>
   </thead>
   <tbody>
@@ -87,7 +93,7 @@ td, th { padding: 3pt 5pt; vertical-align: middle; font-size: 9pt; }
     @php $items = $itemsByCategory[$category] ?? collect(); @endphp
     {{-- bilingual category bar — always shown, like the reference (incl. empty Cancellation) --}}
     <tr>
-      <td colspan="6" style="border:1px solid #000;padding:3pt 4pt;text-align:center;font-weight:bold;direction:rtl;">{{ $categoryLabelsBi[$category] }}</td>
+      <td colspan="6" style="border:1px solid #000;padding:3pt 4pt;text-align:center;font-weight:bold;direction:rtl;font-family:xbriyaz,'DejaVu Sans',sans-serif;">{{ $categoryLabelsBi[$category] }}</td>
     </tr>
     @foreach($items as $item)
     @php
@@ -98,15 +104,15 @@ td, th { padding: 3pt 5pt; vertical-align: middle; font-size: 9pt; }
     <tr>
       <td style="border-top:0;border-bottom:0;border-left:1px solid #000;border-right:1px solid #000;padding:2pt 4pt;text-align:center;">{{ $loop->iteration }}</td>
       <td style="border-top:0;border-bottom:0;border-left:1px solid #000;border-right:1px solid #000;padding:2pt 4pt;text-align:center;direction:ltr;font-weight:bold;">{{ $item->snapshot_passport_no ?? '—' }}</td>
-      <td style="border-top:0;border-bottom:0;border-left:1px solid #000;border-right:1px solid #000;padding:2pt 6pt;text-align:right;">{{ $item->snapshot_sponsor_name_ar ?? $item->snapshot_sponsor_name ?? '—' }}</td>
+      <td style="border-top:0;border-bottom:0;border-left:1px solid #000;border-right:1px solid #000;padding:2pt 6pt;text-align:center;font-family:xbriyaz,'DejaVu Sans',sans-serif;">{{ $item->snapshot_sponsor_name_ar ?? $item->snapshot_sponsor_name ?? '—' }}</td>
       <td style="border-top:0;border-bottom:0;border-left:1px solid #000;border-right:1px solid #000;padding:2pt 4pt;text-align:center;direction:ltr;">{{ $item->snapshot_visa_no ?? '—' }}</td>
       <td style="border-top:0;border-bottom:0;border-left:1px solid #000;border-right:1px solid #000;padding:2pt 4pt;text-align:center;direction:ltr;">{{ $hijriYear ?? '—' }}</td>
-      <td style="border-top:0;border-bottom:0;border-left:1px solid #000;border-right:1px solid #000;padding:2pt 6pt;text-align:center;white-space:nowrap;">{{ $profAr ?: ($profEn ?: '—') }}</td>
+      <td style="border-top:0;border-bottom:0;border-left:1px solid #000;border-right:1px solid #000;padding:2pt 6pt;text-align:center;white-space:nowrap;font-family:xbriyaz,'DejaVu Sans',sans-serif;">{{ $profAr ?: ($profEn ?: '—') }}</td>
     </tr>
     @endforeach
     @if($items->count() > 0)
     <tr style="font-weight:bold;">
-      <td colspan="6" style="border:1px solid #000;padding:2pt 6pt;text-align:right;direction:rtl;">المجموعة : {{ $items->count() }}</td>
+      <td colspan="6" style="border:1px solid #000;padding:2pt 6pt;text-align:right;direction:rtl;font-family:xbriyaz,'DejaVu Sans',sans-serif;">المجموعة : {{ $items->count() }}</td>
     </tr>
     @endif
     @endforeach
@@ -114,7 +120,7 @@ td, th { padding: 3pt 5pt; vertical-align: middle; font-size: 9pt; }
 </table>
 
 {{-- Arabic signatures — 2 columns × 3 rows (matches reference) --}}
-<table style="margin-top:22pt;direction:rtl;font-size:10pt;width:60%;font-family:DejaVu Sans,sans-serif;">
+<table style="margin-top:22pt;direction:rtl;font-size:10pt;width:60%;font-family:xbriyaz,'DejaVu Sans',sans-serif;">
   <tr>
     <td style="text-align:right;padding:8pt 6pt;">المستلم :</td>
     <td style="text-align:right;padding:8pt 6pt;">الختم :</td>
@@ -160,12 +166,12 @@ td, th { padding: 3pt 5pt; vertical-align: middle; font-size: 9pt; }
   </colgroup>
   <thead>
     <tr style="background:#e9e9e9;">
-      <th style="border:1px solid #000;padding:3pt 4pt;text-align:center;">SL.</th>
-      <th style="border:1px solid #000;padding:3pt 4pt;text-align:center;">Agent Name</th>
-      <th style="border:1px solid #000;padding:3pt 4pt;text-align:center;">Name</th>
-      <th style="border:1px solid #000;padding:3pt 4pt;text-align:center;">Passport No.</th>
-      <th style="border:1px solid #000;padding:3pt 4pt;text-align:center;">Visa No</th>
-      <th style="border:1px solid #000;padding:3pt 4pt;text-align:center;">Profession</th>
+      <th style="border:1px solid #000;padding:3pt 4pt;text-align:center;background-color:#e9e9e9;">SL.</th>
+      <th style="border:1px solid #000;padding:3pt 4pt;text-align:center;background-color:#e9e9e9;">Agent Name</th>
+      <th style="border:1px solid #000;padding:3pt 4pt;text-align:center;background-color:#e9e9e9;">Name</th>
+      <th style="border:1px solid #000;padding:3pt 4pt;text-align:center;background-color:#e9e9e9;">Passport No.</th>
+      <th style="border:1px solid #000;padding:3pt 4pt;text-align:center;background-color:#e9e9e9;">Visa No</th>
+      <th style="border:1px solid #000;padding:3pt 4pt;text-align:center;background-color:#e9e9e9;">Profession</th>
     </tr>
   </thead>
   <tbody>
@@ -173,7 +179,7 @@ td, th { padding: 3pt 5pt; vertical-align: middle; font-size: 9pt; }
     @php $items = $itemsByCategory[$category] ?? collect(); @endphp
     {{-- bilingual category bar — always shown, like the reference (incl. empty Cancellation) --}}
     <tr>
-      <td colspan="6" style="border:1px solid #000;padding:3pt 4pt;text-align:center;font-weight:bold;">{{ $categoryLabelsBi[$category] }}</td>
+      <td colspan="6" style="border:1px solid #000;padding:3pt 4pt;text-align:center;font-weight:bold;font-family:xbriyaz,'DejaVu Sans',sans-serif;">{{ $categoryLabelsBi[$category] }}</td>
     </tr>
     @foreach($items as $item)
     @php
@@ -187,12 +193,12 @@ td, th { padding: 3pt 5pt; vertical-align: middle; font-size: 9pt; }
       <td style="border-top:0;border-bottom:0;border-left:1px solid #000;border-right:1px solid #000;padding:2pt 4pt;text-align:center;">{{ $item->snapshot_candidate_name }}</td>
       <td style="border-top:0;border-bottom:0;border-left:1px solid #000;border-right:1px solid #000;padding:2pt 4pt;text-align:center;font-weight:bold;">{{ $item->snapshot_passport_no ?? '—' }}</td>
       <td style="border-top:0;border-bottom:0;border-left:1px solid #000;border-right:1px solid #000;padding:2pt 4pt;text-align:center;">{{ $item->snapshot_visa_no ?? '—' }}</td>
-      <td style="border-top:0;border-bottom:0;border-left:1px solid #000;border-right:1px solid #000;padding:2pt 6pt;text-align:right;direction:rtl;font-family:DejaVu Sans,sans-serif;">{{ $profAr ?: ($profEn ?: '—') }}</td>
+      <td style="border-top:0;border-bottom:0;border-left:1px solid #000;border-right:1px solid #000;padding:2pt 6pt;text-align:center;direction:rtl;font-family:xbriyaz,'DejaVu Sans',sans-serif;">{{ $profAr ?: ($profEn ?: '—') }}</td>
     </tr>
     @endforeach
     @if($items->count() > 0)
     <tr style="font-weight:bold;">
-      <td colspan="6" style="border:1px solid #000;padding:2pt 6pt;text-align:right;direction:rtl;font-family:DejaVu Sans,sans-serif;">المجموعة : {{ $items->count() }}</td>
+      <td colspan="6" style="border:1px solid #000;padding:2pt 6pt;text-align:right;direction:rtl;font-family:xbriyaz,'DejaVu Sans',sans-serif;">المجموعة : {{ $items->count() }}</td>
     </tr>
     @endif
     @endforeach
