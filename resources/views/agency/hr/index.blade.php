@@ -6,10 +6,37 @@
     $active      = $statusCounts['active'] ?? 0;
     $inactive    = $statusCounts['inactive'] ?? 0;
     $blacklisted = $statusCounts['blacklisted'] ?? 0;
+
+    // Data payload for the quick-preview slide-over — built from rows already
+    // loaded in this list (no extra query / no backend endpoint).
+    $previewData = fn($hr) => [
+        'name'        => $hr->full_name_en,
+        'nameAr'      => $hr->full_name_ar ?? '',
+        'initial'     => strtoupper(mb_substr($hr->full_name_en, 0, 1)),
+        'status'      => $hr->status,
+        'mofa'        => $hr->mofa_new ?: ($hr->mofa_old ?: ''),
+        'passport'    => $hr->passport?->passport_number ?: '',
+        'agent'       => $hr->agent?->name ?? '',
+        'visa'        => $hr->visa?->visa_number ?: '',
+        'sponsorId'   => $hr->visa?->sponsor_id ?: '',
+        'sponsorName' => $hr->visa?->sponsor_name ?: '',
+        'showUrl'     => route('hr.show', $hr),
+        'docsUrl'     => route('hr.documents', $hr),
+        'editUrl'     => route('hr.edit', $hr),
+        'canEdit'     => auth()->user()->can('update', $hr),
+    ];
 @endphp
 
 @section('content')
-<div x-data="{ del: { open: false, name: '', action: '' } }">
+<div x-data="{
+        del: { open: false, name: '', action: '' },
+        preview: {
+            open: false, name: '', nameAr: '', initial: '', status: '',
+            mofa: '', passport: '', agent: '', visa: '', sponsorId: '', sponsorName: '',
+            showUrl: '', docsUrl: '', editUrl: '', canEdit: false
+        },
+        openPreview(data) { this.preview = { ...this.preview, ...data, open: true }; }
+     }">
 
     {{-- Header --}}
     <x-ui.page-header
@@ -95,7 +122,7 @@
                                         {{ strtoupper(mb_substr($hr->full_name_en, 0, 1)) }}
                                     </span>
                                     <div class="min-w-0">
-                                        <a href="{{ route('hr.show', $hr) }}" class="block break-words font-semibold text-slate-800 hover:text-brand-600">{{ $hr->full_name_en }}</a>
+                                        <a href="{{ route('hr.show', $hr) }}" @click.prevent="openPreview(@js($previewData($hr)))" class="block break-words text-left font-semibold text-slate-800 hover:text-brand-600">{{ $hr->full_name_en }}</a>
                                         @if($hr->full_name_ar)
                                             <div class="break-words text-xs text-slate-400" dir="rtl">{{ $hr->full_name_ar }}</div>
                                         @endif
@@ -114,7 +141,7 @@
                             <td class="px-3 py-3 break-words text-slate-600">{{ $hr->visa?->sponsor_name ?: '—' }}</td>
                             <td class="px-3 py-3">
                                 <div class="flex items-center justify-end gap-1 whitespace-nowrap">
-                                    <a href="{{ route('hr.show', $hr) }}" title="View" class="grid h-8 w-8 place-items-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"><i class="bi bi-eye"></i></a>
+                                    <a href="{{ route('hr.show', $hr) }}" @click.prevent="openPreview(@js($previewData($hr)))" title="Quick view" class="grid h-8 w-8 place-items-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"><i class="bi bi-eye"></i></a>
                                     <a href="{{ route('hr.documents', $hr) }}" title="Documents" class="grid h-8 w-8 place-items-center rounded-lg text-emerald-600 transition hover:bg-emerald-50"><i class="bi bi-file-earmark-pdf"></i></a>
                                     @can('update', $hr)
                                         <a href="{{ route('hr.edit', $hr) }}" title="Edit" class="grid h-8 w-8 place-items-center rounded-lg text-brand-600 transition hover:bg-brand-50"><i class="bi bi-pencil"></i></a>
@@ -166,7 +193,7 @@
                     <div><dt class="text-slate-400">Sponsor Name</dt><dd class="font-medium text-slate-700">{{ $hr->visa?->sponsor_name ?: '—' }}</dd></div>
                 </dl>
                 <div class="mt-3 flex gap-2 border-t border-slate-100 pt-3">
-                    <x-ui.button :href="route('hr.show', $hr)" variant="secondary" size="sm" class="flex-1"><i class="bi bi-eye"></i> View</x-ui.button>
+                    <x-ui.button :href="route('hr.show', $hr)" x-on:click.prevent="openPreview(@js($previewData($hr)))" variant="secondary" size="sm" class="flex-1"><i class="bi bi-eye"></i> View</x-ui.button>
                     <x-ui.button :href="route('hr.documents', $hr)" variant="secondary" size="sm" class="flex-1"><i class="bi bi-file-earmark-pdf"></i> Docs</x-ui.button>
                     @can('update', $hr)
                         <x-ui.button :href="route('hr.edit', $hr)" variant="secondary" size="sm" class="flex-1"><i class="bi bi-pencil"></i> Edit</x-ui.button>
@@ -205,6 +232,60 @@
                     @csrf @method('DELETE')
                     <x-ui.button type="submit" variant="danger" size="sm"><i class="bi bi-trash"></i> Delete</x-ui.button>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- ── Quick-view slide-over ─────────────────────────────────
+         Triage a candidate without leaving the list. Data comes from the row
+         already loaded above; the full profile / docs / edit links open the
+         real pages. Same overlay + transition pattern as the dialogs above. --}}
+    <div x-show="preview.open" x-cloak class="fixed inset-0 z-[70]" style="display:none" @keydown.escape.window="preview.open = false">
+        <div @click="preview.open = false" x-show="preview.open" x-transition.opacity class="absolute inset-0 bg-slate-900/50"></div>
+        <div x-show="preview.open"
+             x-transition:enter="transition ease-out duration-200" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0"
+             x-transition:leave="transition ease-in duration-150" x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full"
+             class="absolute inset-y-0 right-0 flex w-full max-w-md flex-col bg-white shadow-xl">
+
+            {{-- Header --}}
+            <div class="flex items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
+                <div class="flex min-w-0 items-center gap-3">
+                    <span class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand-50 text-base font-bold text-brand-700" x-text="preview.initial"></span>
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-2">
+                            <h3 class="truncate text-base font-bold text-slate-900" x-text="preview.name"></h3>
+                            <span class="shrink-0 rounded-full px-2 py-0.5 text-[0.68rem] font-semibold capitalize"
+                                  :class="{
+                                      'bg-emerald-50 text-emerald-600': preview.status === 'active',
+                                      'bg-slate-100 text-slate-500': preview.status === 'inactive',
+                                      'bg-rose-50 text-rose-600': preview.status === 'blacklisted'
+                                  }" x-text="preview.status"></span>
+                        </div>
+                        <p class="truncate text-sm text-slate-400" dir="rtl" x-show="preview.nameAr" x-text="preview.nameAr"></p>
+                    </div>
+                </div>
+                <button type="button" @click="preview.open = false" title="Close" class="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"><i class="bi bi-x-lg"></i></button>
+            </div>
+
+            {{-- Body: key fields from the row --}}
+            <div class="flex-1 overflow-y-auto px-5 py-4">
+                <dl class="divide-y divide-slate-100 text-sm">
+                    <div class="flex items-start justify-between gap-4 py-2.5"><dt class="text-slate-400">MOFA ID</dt><dd class="text-right font-mono text-xs text-slate-700" x-text="preview.mofa || '—'"></dd></div>
+                    <div class="flex items-start justify-between gap-4 py-2.5"><dt class="text-slate-400">Passport No</dt><dd class="text-right font-mono text-xs text-slate-700" x-text="preview.passport || '—'"></dd></div>
+                    <div class="flex items-start justify-between gap-4 py-2.5"><dt class="text-slate-400">Agent</dt><dd class="text-right font-medium text-slate-700" x-text="preview.agent || '—'"></dd></div>
+                    <div class="flex items-start justify-between gap-4 py-2.5"><dt class="text-slate-400">Visa No</dt><dd class="text-right font-mono text-xs text-slate-700" x-text="preview.visa || '—'"></dd></div>
+                    <div class="flex items-start justify-between gap-4 py-2.5"><dt class="text-slate-400">Sponsor ID</dt><dd class="text-right font-mono text-xs text-slate-700" x-text="preview.sponsorId || '—'"></dd></div>
+                    <div class="flex items-start justify-between gap-4 py-2.5"><dt class="text-slate-400">Sponsor Name</dt><dd class="text-right font-medium text-slate-700" x-text="preview.sponsorName || '—'"></dd></div>
+                </dl>
+            </div>
+
+            {{-- Footer actions --}}
+            <div class="border-t border-slate-100 px-5 py-4">
+                <a :href="preview.showUrl" class="mb-2 flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-brand-600 to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-brand-600/30 transition hover:shadow-md"><i class="bi bi-person-vcard"></i> Open full profile</a>
+                <div class="flex gap-2">
+                    <a :href="preview.docsUrl" class="flex flex-1 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-brand-200 hover:text-brand-700"><i class="bi bi-file-earmark-pdf"></i> Documents</a>
+                    <a x-show="preview.canEdit" :href="preview.editUrl" class="flex flex-1 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-brand-200 hover:text-brand-700"><i class="bi bi-pencil"></i> Edit</a>
+                </div>
             </div>
         </div>
     </div>

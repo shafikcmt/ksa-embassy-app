@@ -2,13 +2,23 @@
 @section('title', $hr->full_name_en)
 @section('page-title', 'HR Profile')
 
+@php
+    // Return to the list preserving filters/pagination when the user came from
+    // it; otherwise fall back to the bare index. Path-exact match on the query
+    // string avoids false positives (e.g. a "/hr/5" show URL).
+    $prev = url()->previous();
+    $backUrl = \Illuminate\Support\Str::of($prev)->before('?')->rtrim('/')->toString() === rtrim(route('hr.index'), '/')
+        ? $prev
+        : route('hr.index');
+@endphp
+
 @section('content')
 <div x-data="{ delOpen: false }">
 
     {{-- Header --}}
     <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div class="flex items-center gap-3">
-            <a href="{{ route('hr.index') }}" class="grid h-9 w-9 place-items-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-slate-50"><i class="bi bi-arrow-left"></i></a>
+            <a href="{{ $backUrl }}" title="Back to list" class="grid h-9 w-9 place-items-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-slate-50"><i class="bi bi-arrow-left"></i></a>
             <span class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand-50 text-base font-bold text-brand-700">{{ strtoupper(mb_substr($hr->full_name_en, 0, 1)) }}</span>
             <div>
                 <div class="flex items-center gap-2">

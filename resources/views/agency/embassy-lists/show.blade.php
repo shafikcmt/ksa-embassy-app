@@ -2,13 +2,23 @@
 @section('title', $embassyList->list_no)
 @section('page-title', 'Embassy List')
 
+@php
+    // Return to the list preserving filters/pagination when the user came from
+    // it; otherwise fall back to the bare index. Path-exact match on the query
+    // string avoids false positives. (Mirrors hr/show.blade.php.)
+    $prev = url()->previous();
+    $backUrl = \Illuminate\Support\Str::of($prev)->before('?')->rtrim('/')->toString() === rtrim(route('embassy-lists.index'), '/')
+        ? $prev
+        : route('embassy-lists.index');
+@endphp
+
 @section('content')
 <div x-data="{ cancelOpen: false }">
 
     {{-- Header --}}
     <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div class="flex items-center gap-3">
-            <a href="{{ route('embassy-lists.index') }}" class="grid h-9 w-9 place-items-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-slate-50"><i class="bi bi-arrow-left"></i></a>
+            <a href="{{ $backUrl }}" title="Back to list" class="grid h-9 w-9 place-items-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-slate-50"><i class="bi bi-arrow-left"></i></a>
             <div>
                 <div class="flex items-center gap-2">
                     <h1 class="font-mono text-xl font-bold text-slate-900">{{ $embassyList->list_no }}</h1>
