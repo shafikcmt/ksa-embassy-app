@@ -535,7 +535,7 @@
     </tr>
     <tr>
       <td>&nbsp;</td>
-      <td class="val">TEL: {{ $agency_phone ?: '' }}</td>
+      <td class="val">TEL:</td>
       <td>&nbsp;</td><td>&nbsp;</td>
     </tr>
     {{-- Trailing empty row — reference shows a taller dependents block. --}}
