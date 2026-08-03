@@ -33,28 +33,43 @@
     $reminders = collect($reminders)->sortBy('days')->take(4)->values();
 @endphp
 
-{{-- ════════ HERO ════════ --}}
-<div class="mb-5 overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-r from-brand-50 via-white to-violet-50 p-5 shadow-soft sm:p-6">
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+{{-- ════════ HEADER ════════ --}}
+@if(session('show_welcome'))
+    {{-- Welcome hero: shown only once, right after login (session flash flag). --}}
+    <div class="mb-5 overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-r from-brand-50 via-white to-violet-50 p-5 shadow-soft sm:p-6">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div class="min-w-0">
+                <p class="text-sm font-medium text-slate-500">{{ $greeting }},</p>
+                <h2 class="mt-0.5 truncate text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">{{ $firstName }} 👋</h2>
+                <p class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-slate-500">
+                    <span class="inline-flex items-center gap-1.5 font-medium text-slate-700"><i class="bi bi-buildings text-brand-500"></i>{{ $agency?->name }}</span>
+                    <span class="hidden text-slate-300 sm:inline">·</span>
+                    <span>Here’s a quick overview of your agency today.</span>
+                </p>
+            </div>
+            <div class="flex shrink-0 flex-wrap gap-2">
+                @if($canHr)
+                    <a href="{{ route('hr.create') }}" class="inline-flex h-10 items-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 px-4 text-sm font-semibold text-white shadow-sm shadow-brand-600/30 transition hover:shadow-md"><i class="bi bi-plus-lg"></i> Add HR</a>
+                @endif
+                @if($canList)
+                    <a href="{{ route('embassy-lists.create') }}" class="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-brand-200 hover:text-brand-700"><i class="bi bi-list-ol"></i> Embassy List</a>
+                @endif
+            </div>
+        </div>
+    </div>
+@else
+    {{-- Compact header: normal visits. Actions live in the Quick Actions card below. --}}
+    <div class="mb-5 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
         <div class="min-w-0">
-            <p class="text-sm font-medium text-slate-500">{{ $greeting }},</p>
-            <h2 class="mt-0.5 truncate text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">{{ $firstName }} 👋</h2>
-            <p class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-slate-500">
+            <h2 class="truncate text-xl font-bold tracking-tight text-slate-900">Dashboard</h2>
+            <p class="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-slate-500">
                 <span class="inline-flex items-center gap-1.5 font-medium text-slate-700"><i class="bi bi-buildings text-brand-500"></i>{{ $agency?->name }}</span>
                 <span class="hidden text-slate-300 sm:inline">·</span>
                 <span>Here’s a quick overview of your agency today.</span>
             </p>
         </div>
-        <div class="flex shrink-0 flex-wrap gap-2">
-            @if($canHr)
-                <a href="{{ route('hr.create') }}" class="inline-flex h-10 items-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 px-4 text-sm font-semibold text-white shadow-sm shadow-brand-600/30 transition hover:shadow-md"><i class="bi bi-plus-lg"></i> Add HR</a>
-            @endif
-            @if($canList)
-                <a href="{{ route('embassy-lists.create') }}" class="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-brand-200 hover:text-brand-700"><i class="bi bi-list-ol"></i> Embassy List</a>
-            @endif
-        </div>
     </div>
-</div>
+@endif
 
 {{-- Important alerts are shown in the topbar bell dropdown only (no dashboard card). --}}
 

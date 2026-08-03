@@ -28,6 +28,10 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // One-shot flag so the dashboard greeting shows only right after login,
+        // not on every subsequent visit/refresh within the same session.
+        $request->session()->flash('show_welcome', true);
+
         $user = Auth::user();
 
         if ($user->isSuperAdmin()) {
