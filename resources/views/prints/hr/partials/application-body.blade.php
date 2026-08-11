@@ -395,21 +395,29 @@
            row above keeps its default 8.5pt (its label is short enough to fit),
            and the Arabic cell is unchanged. --}}
       <td class="lbl" style="font-size:7.5pt;">Business address &amp; phone No.:</td>
-      <td colspan="3" class="val" style="font-size:7.5pt;">
-        {{-- Reference shows the business name/RL line slightly bolder/darker than
-             the surrounding values (per CLAUDE.md); the email line stays regular. --}}
+      {{-- line-height:16px pins the gap between the business-name line and the
+           email line to a fixed 16px in the browser preview, Ctrl+P print AND the
+           mPDF download alike. Without an explicit value each renderer used its own
+           default <br> leading, so the on-screen gap looked larger/inconsistent
+           with the PDF. The business-name/RL line is bold (.val cell), but the
+           email line stays REGULAR weight to match the reference — the cell is
+           .val (bold), so the email is wrapped in font-weight:normal to override. --}}
+      <td colspan="3" class="val" style="font-size:7.5pt;line-height:16px;">
         @if($business_address_en){{-- stored value already includes RL; don't append it again --}}
-          <strong>{{ $business_address_en }}</strong>@if($agency_email)<br>{{ $agency_email }}@endif
+          <strong>{{ $business_address_en }}</strong>@if($agency_email)<br><span style="font-weight:normal;">{{ $agency_email }}</span>@endif
         @else
-          <strong>{{ $agency_name }}@if($agency_rl) &nbsp; RL: {{ $agency_rl }}@endif</strong>@if($agency_email)<br>{{ $agency_email }}@endif
+          <strong>{{ $agency_name }}@if($agency_rl) &nbsp; RL: {{ $agency_rl }}@endif</strong>@if($agency_email)<br><span style="font-weight:normal;">{{ $agency_email }}</span>@endif
         @endif
       </td>
       <td colspan="2" class="ar">عنوان الشركة (المؤسسة) ورقم التلفون :</td>
     </tr>
-    {{-- Full agency address (single centered line) --}}
+    {{-- Full agency address (single centered line) — same 7.5pt + .val bold and
+         the same 16px line-height as the business-name/email lines above, so all
+         three business lines read as one uniform style (matches the reference,
+         where the full-address line is bold like the name line). --}}
     @if($agency_address)
     <tr>
-      <td colspan="6" class="val" style="font-size:7.5pt;">{{ $agency_address }}</td>
+      <td colspan="6" class="val" style="font-size:7.5pt;line-height:16px;">{{ $agency_address }}</td>
     </tr>
     @endif
     {{-- Purpose of Travel — ONE row: label · compact boxes (AR+EN) · arabic label.
@@ -565,7 +573,7 @@
   <tbody>
     <tr>
       <td style="width:60%;text-align:right;border-bottom:0.6pt solid black; border-right:0;border-top:0;">I the undersigned hereby that all the information I have provided are correct. I will abide by laws of the kingdom during the period of my residence in it.</td>
-      <td style="width:40%;border-bottom:0.6pt solid black;border-left:0;border-top:0; font-weight:500; text-align:right;">أنا الموقع أدناه أقر بأن كل المعلومات التي زودتها صحيحة وسأكون ملتزماً بقوانين المملكة العربية السعودية خلال فترة وجودي بها.</td>
+      <td style="width:33%;border-bottom:0.6pt solid black;border-left:0;border-top:0; font-weight:400; text-align:right;">أنا الموقع أدناه أقر بأن كل المعلومات التي زودتها صحيحة وسأكون ملتزماً بقوانين المملكة العربية السعودية خلال فترة وجودي بها.</td>
     </tr>
   </tbody>
 </table>
