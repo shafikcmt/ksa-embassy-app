@@ -187,7 +187,7 @@
   .ksa-app .pt td.sel { background: #333333 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact; }
   .ksa-app .pt td.sel .pa, .ksa-app .pt td.sel .pe { color: #fff !important; font-weight: bold; }
 </style>
-<div class="ksa-app" style="width:92%;margin:0 auto;">
+<div class="ksa-app" style="width:100%;margin:0 auto;">
 
 {{-- Reference leaves a little breathing space above the header block. --}}
 <div style="height:1mm;"></div>
