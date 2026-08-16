@@ -154,6 +154,17 @@
   .ksa-app .hrows td { border-left: 0; border-right: 0; }
   .ksa-app .hrows td:first-child { border-left: 0.6pt solid #000; }
   .ksa-app .hrows td:last-child  { border-right: 0.6pt solid #000; }
+  /* Merged field groups: the reference joins an Arabic-label row with its
+     English-value row into a single field group with NO divider between them —
+     e.g. Duration of stay (مدة الإقامة / تاريخ الوصول / تاريخ المغادرة) and Mahram
+     (صلته / اسم المحرم → Relationship). With border-collapse that seam is drawn by
+     the Arabic row's bottom border AND the English row's top border, so BOTH must
+     be dropped or the surviving side still shows the line. Applied only to rows
+     tagged .mrow-ar / .mrow-en, so every other .hrows separator (the outer frame
+     and the rules BETWEEN field groups) is untouched. !important + placement after
+     .bdr td guarantees these win the cascade. */
+  .ksa-app .hrows tr.mrow-ar td { border-bottom: 0 !important; }
+  .ksa-app .hrows tr.mrow-en td { border-top: 0 !important; }
   /* Signature row — reference draws NO box around it (clean, borderless). */
   .ksa-app .sig td { border: 0; padding: 2.4pt 4pt; font-size: 7.6pt; vertical-align: middle; }
   /* "For official use only" — reference has NO vertical grid: just a dashed
@@ -201,16 +212,24 @@
     <td style="width:30%;vertical-align:top;padding:0;">
       {{-- Passport-size photo box (~35mm × 41mm), thin black border, top-left --}}
       <table style="width:100pt;border-collapse:collapse;"><tr>
-        <td style="width:100pt;height:111pt;border:1px solid #000;text-align:center;vertical-align:middle;font-size:8pt;color:#555;padding:2pt;">
+        <td style="width:100pt;height:121pt;border:1px solid #000;text-align:center;vertical-align:middle;font-size:8pt;color:#555;padding:2pt;">
           Photo
         </td>
       </tr></table>
     </td>
     <td style="width:36%;text-align:center;vertical-align:top;padding:6pt 4pt 4pt 4pt;">
       {{-- Nested table: row-1 fixed height reliably pushes "New Application" down
-           (mPDF ignores margin/padding between sibling divs inside a cell). --}}
+           (mPDF ignores margin/padding between sibling divs inside a cell).
+           Height tuned to 76pt so "New Application" lands at the reference's
+           vertical position (~13.6% of page height in
+           docs/images/ksa-application-reference-0001.jpg) — at 54pt it floated too
+           high, leaving a lopsided empty band between it and the Full Name row.
+           Still shorter than the 121pt photo box, which governs header height:
+           the photo box was raised 111pt->121pt (Step 1) to lower the Full Name
+           row ~3.5mm to the reference's position (56.4mm) while New Application
+           stays put — closing the reference's taller-header gap. --}}
       <table style="width:100%;border-collapse:collapse;">
-        <tr><td style="height:54pt;text-align:center;vertical-align:top;border:0;padding:0;">
+        <tr><td style="height:76pt;text-align:center;vertical-align:top;border:0;padding:0;">
           @if(!empty($topBarcodeSrc))
             <img src="{{ $topBarcodeSrc }}" style="width:46mm;height:12mm;display:block;margin:0 auto;">
           @elseif(!empty($topBarcodeText))
@@ -383,7 +402,9 @@
          sibling "address & phone No.:" pair). Keeping both at the same size
          means both fit on one line and the shared column 1 stays consistent. --}}
     <tr>
-      <td class="lbl" style="font-size:7.5pt;">Home address &amp; phone No.:</td>
+      {{-- font-weight:normal overrides .lbl's global bold: reference renders this
+           label at regular weight, matching its sibling Business-address label. --}}
+      <td class="lbl" style="font-size:7.5pt;font-weight:normal;">Home address &amp; phone No.:</td>
       <td colspan="3" class="val" style="font-size:7.5pt;">{{ $home_address ?: ($phone ?: '') }}</td>
       <td colspan="2" class="ar">عنوان المنزل ورقم التلفون :</td>
     </tr>
@@ -394,19 +415,23 @@
            fixed 25% column in the browser, print dialog and PDF alike. The Home
            row above keeps its default 8.5pt (its label is short enough to fit),
            and the Arabic cell is unchanged. --}}
-      <td class="lbl" style="font-size:7.5pt;">Business address &amp; phone No.:</td>
+      {{-- font-weight:normal overrides .lbl's global bold: the reference renders
+           this label at regular weight (verified against docs/references
+           high-DPI crop), unlike the bold field labels elsewhere. --}}
+      <td class="lbl" style="font-size:7.5pt;font-weight:normal;">Business address &amp; phone No.:</td>
       {{-- line-height:16px pins the gap between the business-name line and the
            email line to a fixed 16px in the browser preview, Ctrl+P print AND the
            mPDF download alike. Without an explicit value each renderer used its own
            default <br> leading, so the on-screen gap looked larger/inconsistent
-           with the PDF. The business-name/RL line is bold (.val cell), but the
-           email line stays REGULAR weight to match the reference — the cell is
-           .val (bold), so the email is wrapped in font-weight:normal to override. --}}
+           with the PDF. Both the business-name/RL line AND the email line render
+           bold to match the reference (verified against the high-DPI crop: the
+           email is the same heavy weight as the agency name). The cell is .val
+           (bold), so the email inherits bold; kept explicit for clarity. --}}
       <td colspan="3" class="val" style="font-size:7.5pt;line-height:16px;">
         @if($business_address_en){{-- stored value already includes RL; don't append it again --}}
-          <strong>{{ $business_address_en }}</strong>@if($agency_email)<br><span style="font-weight:normal;">{{ $agency_email }}</span>@endif
+          <strong>{{ $business_address_en }}</strong>@if($agency_email)<br><span style="font-weight:bold;">{{ $agency_email }}</span>@endif
         @else
-          <strong>{{ $agency_name }}@if($agency_rl) &nbsp; RL: {{ $agency_rl }}@endif</strong>@if($agency_email)<br><span style="font-weight:normal;">{{ $agency_email }}</span>@endif
+          <strong>{{ $agency_name }}@if($agency_rl) &nbsp; RL: {{ $agency_rl }}@endif</strong>@if($agency_email)<br><span style="font-weight:bold;">{{ $agency_email }}</span>@endif
         @endif
       </td>
       <td colspan="2" class="ar">عنوان الشركة (المؤسسة) ورقم التلفون :</td>
@@ -475,36 +500,61 @@
   </tbody>
 </table>
 
-{{-- ── VISA / DURATION / PAYMENT / DESTINATION (independent 5-column table) ────
+{{-- ── DURATION / ARRIVAL / DEPARTURE (own 4-col table: 33/17/25/25) ────────────
+     Split out of the .hrows table so this merged block matches the reference's
+     ~50/25/25 field split — Duration 0-50% (label 0-33% + value 33-50%),
+     Date of arrival 50-75%, Date of departure 75-100% — WITHOUT disturbing the
+     Mahram/Relationship/Destination rows, which keep their own 5-col grid below.
+     Keeps the .hrows class (open text, no internal vertical dividers, outer frame
+     only) and mrow-ar/mrow-en (drops the border between the Arabic-label row and
+     its English-value row). Its top border is the single seam with the passport
+     table above (whose last row has border-bottom:0); the English row adds
+     seam-merge so the seam with the Mahram table below stays one 0.6pt line. --}}
+<table class="bdr hrows" style="margin-top:0;">
+  <colgroup>
+    <col style="width:33%"><col style="width:17%"><col style="width:25%"><col style="width:25%">
+  </colgroup>
+  <tbody>
+    {{-- Arabic labels — each right-aligned within its field (Duration 0-50%,
+         Arrival 50-75%, Departure 75-100%). --}}
+    <tr class="mrow-ar" style="border-top:0;">
+      <td style="padding-right: 133px;" colspan="2" class="ar">مدة الإقامة بالمملكة :</td>
+      <td style="padding-right: 92px;" class="ar">تاريخ الوصول :</td>
+      <td style="padding-right: 35px;" class="ar">تاريخ المغادرة :</td>
+    </tr>
+    {{-- English labels + values — label left in col1, value centered in col2
+         (~42%, matching the reference), Arrival/Departure left-aligned at the
+         50%/75% field starts. --}}
+    <tr class="mrow-en seam-merge">
+      <td class="lbl" style="font-size:7pt;">Duration of stay in the kingdom:</td>
+      <td class="val" style="text-align:left;">{{ $duration_stay_en ?: '' }}@if(!empty($duration_stay_ar)) <span class="ar">({{ $duration_stay_ar }})</span>@endif</td>
+      <td class="lbl" style="font-weight:normal;"><strong>Date of arrival:</strong> {{ $arrival_date ?: ($arrival_date_ar ?: '') }}</td>
+      <td class="lbl" style="font-weight:normal;"><strong>Date of departure:</strong> {{ $departure_date ?: ($departure_date_ar ?: '') }}</td>
+    </tr>
+  </tbody>
+</table>
+
+{{-- ── VISA / MAHRAM / DESTINATION (independent 5-column table) ────────────────
      .hrows = horizontal-rules-only: reference shows these rows with no internal
-     vertical dividers (open text lines), just the outer frame + row separators. --}}
+     vertical dividers (open text lines), just the outer frame + row separators.
+     Its first row (Mahram Arabic) keeps its top border — that IS the single seam
+     line with the Duration table above (whose last row dropped its bottom border
+     via seam-merge, so the seam is one 0.6pt line, not doubled). --}}
 <table class="bdr hrows" style="margin-top:0;">
   <colgroup>
     <col style="width:22%"><col style="width:16%"><col style="width:22%">
     <col style="width:22%"><col style="width:18%">
   </colgroup>
   <tbody>
-    {{-- Duration / Arrival / Departure — arabic labels --}}
-    <tr style="border-top:0;">
-      <td colspan="2" class="ar">مدة الإقامة بالمملكة :</td>
-      <td class="ar">تاريخ الوصول :</td>
-      <td colspan="2" class="ar">تاريخ المغادرة :</td>
-    </tr>
-    {{-- Duration / Arrival / Departure — english labels + values --}}
-    <tr>
-      <td class="lbl" style="font-size:7pt;">Duration of stay in the kingdom:</td>
-      <td class="val">{{ $duration_stay_en ?: '' }}@if(!empty($duration_stay_ar)) <span class="ar">({{ $duration_stay_ar }})</span>@endif</td>
-      <td class="lbl" style="font-weight:normal;"><strong>Date of arrival:</strong> {{ $arrival_date ?: ($arrival_date_ar ?: '') }}</td>
-      <td colspan="2" class="lbl" style="font-weight:normal;"><strong>Date of departure:</strong> {{ $departure_date ?: ($departure_date_ar ?: '') }}</td>
-    </tr>
-    {{-- Mahram name | Relationship --}}
-    <tr>
+    {{-- Mahram name | Relationship — merged like the Duration block (no divider
+         between the Arabic-label row and its English-value row). --}}
+    <tr class="mrow-ar">
       <td colspan="2" class="ar">صلته :</td>
-      <td colspan="3" class="ar">اسم المحرم :</td>
+      <td style="padding-right: 90px;" colspan="3" class="ar">اسم المحرم :</td>
     </tr>
-    <tr>
-      <td class="lbl">Relationship:</td>
-      <td colspan="4" class="val">{{ $relationship ?: 'EMPLOYER AND EMPLOYEE' }}</td>
+    <tr class="mrow-en">
+      <td class="lbl" style="vertical-align:top;padding:7pt 5pt 2pt 5pt;">Relationship:</td>
+      <td colspan="4" class="val" style="text-align:left;vertical-align:top;padding:7pt 5pt 2pt 53pt;">{{ $relationship ?: 'EMPLOYER AND EMPLOYEE' }}</td>
     </tr>
     {{-- Destination | Carrier --}}
     {{-- seam-merge: drop bottom border so the seam with the dependents table
@@ -526,8 +576,8 @@
   </colgroup>
   <tbody>
     <tr>
-      <td class="lbl" colspan="2" style="font-size:7.5pt;">Dependents traveling in the same passport</td>
-      <td colspan="2" class="ar">إصاحبات تخص أفراد العائلة المنتقلين في نفس جواز السفر</td>
+      <td class="lbl" colspan="2" style="font-size:7.5pt; border-right:0; text-align:right;">Dependents traveling in the same passport</td>
+      <td style="font-size:7.5pt; border-left:0; text-align:left;" colspan="2" class="ar">إصاحبات تخص أفراد العائلة المنتقلين في نفس جواز السفر :</td>
     </tr>
     <tr>
       <td class="val" style="font-weight:bold;"><span class="ar">نوع الصلة</span><br>Relationship</td>
@@ -535,17 +585,25 @@
       <td class="val" style="font-weight:bold;"><span class="ar">الجنس</span><br>Sex</td>
       <td class="val" style="font-weight:bold;"><span class="ar">الاسم الكامل</span><br>Full Name</td>
     </tr>
-    <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
     <tr>
       <td>&nbsp;</td>
       <td class="val">CITY: {{ $work_city ?: '' }}, K.S.A</td>
-      <td>&nbsp;</td><td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
       <td class="val">TEL:</td>
       <td>&nbsp;</td><td>&nbsp;</td>
     </tr>
+    <tr>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    <td>&nbsp;</td>
+    </tr>
+    
+    
     {{-- Trailing empty row — reference shows a taller dependents block. --}}
     <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
   </tbody>
@@ -555,12 +613,12 @@
 <table class="bdr" style="margin-top:0;font-size:7.5pt;">
   <tbody>
     <tr>
-      <td style="width:50%;border-top:0;">Name and address of company or individual in the kingdom :</td>
-      <td style="width:50%; border-top:0;" class="ar">اسم وعنوان الشركة أو اسم الشخص وعنوانه بالمملكة :</td>
+      <td style="width:53%; border-top:0; border-right:0; text-align:right;">Name and address of company or individual in the kingdom</td>
+      <td style="width:47%;  border-top:0; border-left:0; text-align:left;" class="ar">اسم وعنوان الشركة أو اسم الشخص وعنوانه بالمملكة :</td>
     </tr>
     <tr>
-      <td class="val">{{ $kingdom_address_en ?: '' }}</td>
-      <td class="ar"><strong>{{ $kingdom_address_ar ?: '' }}</strong></td>
+      <td style="padding:10px; border-right:0;" class="val">{{ $kingdom_address_en ?: '' }}</td>
+      <td style="padding:10px; border-left:0;" class="ar"><strong>{{ $kingdom_address_ar ?: '' }}</strong></td>
     </tr>
   </tbody>
 </table>
@@ -586,26 +644,26 @@
   </colgroup>
   <tbody>
     <tr>
-      <td class="lbl">Date:</td>
-      <td class="ar">التاريخ :</td>
-      <td class="lbl">Signature:</td>
-      <td class="ar">التوقيع :</td>
-      <td class="lbl"><strong>Name:</strong> <span style="font-size:9.5pt;font-weight:bold;font-family:ksaroboto,sans-serif;">{{ $U($full_name_en) }}</span></td>
-      <td class="ar">الاسم :</td>
+      <td style="padding-bottom: 15px;" class="lbl">Date:</td>
+      <td style="padding-bottom: 15px;" class="ar">التاريخ :</td>
+      <td style="padding-bottom: 15px;" class="lbl">Signature:</td>
+      <td style="padding-bottom: 15px;" class="ar">التوقيع :</td>
+      <td style="padding-bottom: 15px;" class="lbl"><strong>Name:</strong> <span style="font-size:9.5pt;font-weight:bold;font-family:ksaroboto,sans-serif;">{{ $U($full_name_en) }}</span></td>
+      <td style="padding-bottom: 15px;" class="ar">الاسم :</td>
     </tr>
   </tbody>
 </table>
 
 {{-- ── FOR OFFICIAL USE ONLY (borderless grid: dashed top + horizontal rules) --}}
-<table class="offc" style="margin-top:1pt;font-size:7.5pt;">
+<table class="offc" style="margin-top:2pt;font-size:7.5pt;">
   <colgroup>
     <col style="width:12%"><col style="width:16%"><col style="width:12%">
     <col style="width:14%"><col style="width:16%"><col style="width:30%">
   </colgroup>
   <tbody>
     <tr class="hdr">
-      <td colspan="3" style="font-weight:bold;font-size:8pt;text-decoration:underline;">For official use only</td>
-      <td colspan="3" class="ar" style="font-weight:bold;font-size:8pt;text-decoration:underline;">للاستعمال الرسمي فقط</td>
+      <td colspan="3" style="font-weight:bold;font-size:8pt;text-decoration:underline; border-bottom:none">For official use only</td>
+      <td colspan="3" class="ar" style="font-weight:bold;font-size:8pt;text-decoration:underline; border-bottom:none">للاستعمال الرسمي فقط</td>
     </tr>
     <tr>
       <td class="lbl">Date:</td>
@@ -654,24 +712,30 @@
      footer to the reference's position. Sized to stay within one A4 — leaves
      ~6.5mm headroom to the 10mm print margin so a wrapped field can't push the
      page onto a 2nd sheet. --}}
-<div style="height:12mm;"></div>
 
-{{-- ── HEAD OF CONSULAR / BOTTOM BARCODE / CHECKED BY (below the box) ───────── --}}
-<table style="margin-top:6pt;width:100%;border-collapse:collapse;">
+
+{{-- ── HEAD OF CONSULAR / BOTTOM BARCODE / CHECKED BY (below the box) ─────────
+     margin-top:2pt (Step 2 of the structural fix): the above-barcode gap
+     (Fee-row -> barcode-top) IS this footer margin, so it's reduced 12pt->2pt to
+     close that gap to the reference's ~4.9mm. The ~3.5mm removed here is added back
+     up top (Step 1: photo box 111pt->121pt), so the barcode still lands at ~281.5mm
+     (below-gap stays 15.5mm) and the page height is unchanged. signature->.offc
+     (frozen at .offc margin-top:2pt) is untouched and stays 5.3mm. --}}
+<table style="margin-top:2pt;width:100%;border-collapse:collapse;">
   <tr>
-    <td style="width:33%;vertical-align:bottom;font-size:7.5pt;">
+    <td style="width:33%;vertical-align:top;font-size:7.5pt;">
       _______________<br>
-      <span class="ar">رئيس القسم القنصلي :</span><br>
+      <span class="ar">رئيس القسم القنصلي</span><br>
       Head of consular section
     </td>
     <td style="width:34%;text-align:center;vertical-align:bottom;">
       @if(!empty($bottomBarcodeSrc))
-        <img src="{{ $bottomBarcodeSrc }}" style="width:52mm;height:9mm;display:block;margin:0 auto;">
+        <img src="{{ $bottomBarcodeSrc }}" style="width:52mm;height:9mm;display:block;margin:8px auto;">
       @endif
       <div style="text-align:center;font-size:8pt;font-weight:bold;letter-spacing:0.5pt;margin-top:2pt;">{{ $bottomBarcodeText ?? '' }}</div>
     </td>
-    <td style="width:33%;text-align:right;vertical-align:bottom;font-size:7.5pt;">
-      _______________<br>
+    <td style="width:33%;text-align:right;vertical-align:top;font-size:7.5pt;">
+      _______________________<br>
       <span class="ar">مدقق البيانات رقم صاحب العمل</span><br>
       Checked by
     </td>
