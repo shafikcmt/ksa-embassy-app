@@ -10,6 +10,11 @@
     $backUrl = \Illuminate\Support\Str::of($prev)->before('?')->rtrim('/')->toString() === rtrim(route('hr.index'), '/')
         ? $prev
         : route('hr.index');
+
+    // Muted placeholder for empty *optional* fields (Clearance + Others sections),
+    // so blank data reads as intentionally-optional instead of a broken-looking "—".
+    $np  = '<span class="text-slate-300">Not provided</span>';
+    $val = fn ($v) => filled($v) ? e($v) : $np;   // escaped value, or muted placeholder
 @endphp
 
 @section('content')
@@ -109,16 +114,20 @@
             <h2 class="mb-3 flex items-center gap-2 text-sm font-bold text-slate-800"><i class="bi bi-shield-check text-brand-600"></i> Police Clearance &amp; Driving License</h2>
             @if($hr->clearance)
                 <dl class="divide-y divide-slate-100 text-sm">
-                    <x-ui.dl-row label="P.C Reference No.">{{ $hr->clearance->police_clearance_number ?? '—' }}</x-ui.dl-row>
-                    <x-ui.dl-row label="P.C QR Code"><span class="break-all">{{ $hr->clearance->pc_qr_code ?? '—' }}</span></x-ui.dl-row>
-                    <x-ui.dl-row label="License Type">{{ $hr->clearance->license_type ?? '—' }}</x-ui.dl-row>
-                    <x-ui.dl-row label="Fingerprint">{{ $hr->clearance->fingerprint ?? '—' }}</x-ui.dl-row>
-                    <x-ui.dl-row label="Clearance Country">{{ $hr->clearance->clearance_country ?? '—' }}</x-ui.dl-row>
+                    <x-ui.dl-row label="P.C Reference No.">{!! $val($hr->clearance->police_clearance_number) !!}</x-ui.dl-row>
+                    <x-ui.dl-row label="P.C QR Code">@if(filled($hr->clearance->pc_qr_code))<span class="break-all">{{ $hr->clearance->pc_qr_code }}</span>@else{!! $np !!}@endif</x-ui.dl-row>
+                    <x-ui.dl-row label="License Type">{!! $val($hr->clearance->license_type) !!}</x-ui.dl-row>
+                    <x-ui.dl-row label="Fingerprint">{!! $val($hr->clearance->fingerprint) !!}</x-ui.dl-row>
+                    <x-ui.dl-row label="Clearance Country">{!! $val($hr->clearance->clearance_country) !!}</x-ui.dl-row>
                     <x-ui.dl-row label="Medical Fit">
-                        @if($hr->clearance->medical_fit)<x-ui.badge tone="green"><i class="bi bi-check-circle"></i> Yes</x-ui.badge>@else<x-ui.badge tone="slate">No</x-ui.badge>@endif
+                        {{-- true → "Yes". Otherwise "Not provided": the column currently defaults to
+                             false and has no form control, so a stored false is a default artifact,
+                             not a real "No". Add a false→"No" branch once the nullable migration and
+                             a visible form control land (see the migration's header note). --}}
+                        @if($hr->clearance->medical_fit)<x-ui.badge tone="green"><i class="bi bi-check-circle"></i> Yes</x-ui.badge>@else{!! $np !!}@endif
                     </x-ui.dl-row>
-                    <x-ui.dl-row label="Medical Date">{{ $hr->clearance->medical_date?->format('d M Y') ?? '—' }}</x-ui.dl-row>
-                    <x-ui.dl-row label="Medical Center">{{ $hr->clearance->medical_center ?? '—' }}</x-ui.dl-row>
+                    <x-ui.dl-row label="Medical Date">{!! $val($hr->clearance->medical_date?->format('d M Y')) !!}</x-ui.dl-row>
+                    <x-ui.dl-row label="Medical Center">{!! $val($hr->clearance->medical_center) !!}</x-ui.dl-row>
                 </dl>
             @else
                 <p class="py-6 text-center text-sm text-slate-400">No clearance data.</p>
@@ -133,16 +142,16 @@
             @php $o = $hr->otherInfo; @endphp
             <div class="grid grid-cols-1 gap-x-8 md:grid-cols-2">
                 <dl class="divide-y divide-slate-100 text-sm">
-                    <x-ui.dl-row label="Duration of Stay">{{ $o->duration_stay_en ?? '—' }}{{ $o->duration_stay_ar ? ' / '.$o->duration_stay_ar : '' }}</x-ui.dl-row>
-                    <x-ui.dl-row label="Date of Arrival">{{ $o->arrival_date?->format('d M Y') ?? '—' }}{{ $o->arrival_date_ar ? ' / '.$o->arrival_date_ar : '' }}</x-ui.dl-row>
-                    <x-ui.dl-row label="Date of Departure">{{ $o->departure_date?->format('d M Y') ?? '—' }}{{ $o->departure_date_ar ? ' / '.$o->departure_date_ar : '' }}</x-ui.dl-row>
-                    <x-ui.dl-row label="Fingerprint">{{ $hr->clearance?->fingerprint ?? '—' }}</x-ui.dl-row>
+                    <x-ui.dl-row label="Duration of Stay">{!! $val(collect([$o->duration_stay_en, $o->duration_stay_ar])->filter()->implode(' / ')) !!}</x-ui.dl-row>
+                    <x-ui.dl-row label="Date of Arrival">{!! $val(collect([$o->arrival_date?->format('d M Y'), $o->arrival_date_ar])->filter()->implode(' / ')) !!}</x-ui.dl-row>
+                    <x-ui.dl-row label="Date of Departure">{!! $val(collect([$o->departure_date?->format('d M Y'), $o->departure_date_ar])->filter()->implode(' / ')) !!}</x-ui.dl-row>
+                    <x-ui.dl-row label="Fingerprint">{!! $val($hr->clearance?->fingerprint) !!}</x-ui.dl-row>
                 </dl>
                 <dl class="divide-y divide-slate-100 text-sm">
-                    <x-ui.dl-row label="Contract Period">{{ $o->contract_period ?? '—' }}</x-ui.dl-row>
-                    <x-ui.dl-row label="Salary">{{ $o->salary ? 'SAR '.number_format($o->salary, 2) : '—' }}</x-ui.dl-row>
-                    <x-ui.dl-row label="Work City">{{ $o->work_city ?? '—' }}</x-ui.dl-row>
-                    <x-ui.dl-row label="Employer">{{ $o->employer_name ?? '—' }}</x-ui.dl-row>
+                    <x-ui.dl-row label="Contract Period">{!! $val($o->contract_period) !!}</x-ui.dl-row>
+                    <x-ui.dl-row label="Salary">{!! $val($o->salary ? 'SAR '.number_format($o->salary, 2) : null) !!}</x-ui.dl-row>
+                    <x-ui.dl-row label="Work City">{!! $val($o->work_city) !!}</x-ui.dl-row>
+                    <x-ui.dl-row label="Employer">{!! $val($o->employer_name) !!}</x-ui.dl-row>
                     @if($o->remarks)<x-ui.dl-row label="Remarks">{{ $o->remarks }}</x-ui.dl-row>@endif
                 </dl>
             </div>

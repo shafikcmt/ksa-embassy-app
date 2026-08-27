@@ -25,8 +25,8 @@
         @endif
     </div>
     @unless($unlimited)
-        <div class="h-1.5 overflow-hidden rounded-full bg-slate-100">
-            <div class="h-full rounded-full {{ $bar }} transition-all duration-500" style="width: {{ max($pct, 2) }}%"></div>
+        <div class="h-2 overflow-hidden rounded-full bg-slate-200/80">
+            <div class="h-full rounded-full {{ $bar }} transition-[width] duration-500" style="width: {{ max($pct, 2) }}%"></div>
         </div>
     @endunless
 </div>

@@ -18,7 +18,7 @@
     $ic = $tones[$tone] ?? $tones['brand'];
 @endphp
 
-<a href="{{ $href }}" {{ $attributes->merge(['class' => 'group flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 transition hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-card']) }}>
+<a href="{{ $href }}" {{ $attributes->merge(['class' => 'group flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 transition duration-200 hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 focus-visible:ring-offset-1']) }}>
     <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br text-lg transition group-hover:text-white group-hover:shadow-lg group-hover:shadow-brand-500/20 {{ $ic }}">
         <i class="bi {{ $icon }}"></i>
     </span>

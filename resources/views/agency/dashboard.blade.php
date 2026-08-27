@@ -114,7 +114,7 @@
             @if($recentHr->count())
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
-                        <thead><tr class="border-b border-slate-100 bg-slate-50/70 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        <thead><tr class="sticky top-0 z-10 border-b border-slate-100 bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                             <th class="px-5 py-2.5">Name</th>
                             <th class="px-5 py-2.5">Passport No</th>
                             <th class="px-5 py-2.5">Status</th>
@@ -123,7 +123,7 @@
                         </tr></thead>
                         <tbody class="divide-y divide-slate-100">
                             @foreach($recentHr as $hr)
-                                <tr class="hover:bg-slate-50">
+                                <tr class="odd:bg-white even:bg-slate-50/40 transition-colors hover:bg-brand-50/50">
                                     <td class="px-5 py-2.5">
                                         <a href="{{ route('hr.show', $hr) }}" class="font-semibold text-slate-800 hover:text-brand-600">{{ $hr->full_name_en }}</a>
                                         <div class="text-xs text-slate-400">{{ $hr->nationality }}</div>

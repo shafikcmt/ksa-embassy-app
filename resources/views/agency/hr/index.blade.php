@@ -38,14 +38,15 @@
         openPreview(data) { this.preview = { ...this.preview, ...data, open: true }; }
      }">
 
-    {{-- Header --}}
+    {{-- Header (premium gradient banner) --}}
     <x-ui.page-header
+        class="rounded-2xl border border-slate-200 bg-gradient-to-r from-brand-50 via-white to-indigo-50 p-5 shadow-soft"
         title="HR / Candidates"
         subtitle="{{ $totalHr }} total profile{{ $totalHr === 1 ? '' : 's' }}{{ $planLimit > 0 && $planLimit < 9999 ? ' · plan limit '.$planLimit : '' }}"
         icon="bi-person-vcard">
         <x-slot:actions>
             @can('create', \App\Models\HrProfile::class)
-                <x-ui.button :href="route('hr.create')">
+                <x-ui.button :href="route('hr.create')" variant="gradient">
                     <i class="bi bi-plus-lg"></i> Add HR Profile
                 </x-ui.button>
             @endcan
@@ -54,43 +55,49 @@
 
     {{-- Stat cards --}}
     <div class="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <x-ui.stat icon="bi-people" tone="brand"  label="Total"       :value="$totalHr" />
-        <x-ui.stat icon="bi-person-check" tone="green" label="Active" :value="$active" />
-        <x-ui.stat icon="bi-person-dash" tone="slate" label="Inactive" :value="$inactive" />
-        <x-ui.stat icon="bi-person-x" :tone="$blacklisted > 0 ? 'red' : 'slate'" label="Blacklisted" :value="$blacklisted" />
+        <x-ui.stat class="js-fade-card" accentLeft icon="bi-people" tone="brand" label="Total" :value="$totalHr" />
+        <x-ui.stat class="js-fade-card" accentLeft icon="bi-person-check" tone="green" label="Active" :value="$active" />
+        <x-ui.stat class="js-fade-card" accentLeft icon="bi-person-dash" tone="slate" label="Inactive" :value="$inactive" />
+        <x-ui.stat class="js-fade-card" accentLeft icon="bi-person-x" :tone="$blacklisted > 0 ? 'red' : 'slate'" label="Blacklisted" :value="$blacklisted" />
     </div>
 
     {{-- Filter bar --}}
     <x-ui.card class="mb-5">
         <form method="GET" action="{{ route('hr.index') }}" class="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-12">
-            <div class="lg:col-span-4">
-                <div class="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 focus-within:border-brand-400 focus-within:ring-1 focus-within:ring-brand-400">
+            <div class="lg:col-span-4" x-data="{ q: @js(request('search') ?? '') }">
+                <div class="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 transition focus-within:border-brand-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-brand-100">
                     <i class="bi bi-search text-sm text-slate-400"></i>
-                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Name, file #, passport, phone…"
-                           class="h-10 w-full border-0 bg-transparent p-0 text-sm focus:ring-0">
+                    <input type="text" name="search" x-model="q" placeholder="Name, file #, passport, phone…"
+                           class="h-11 w-full border-0 bg-transparent p-0 text-sm focus:ring-0">
+                    <button type="button" x-show="q" x-cloak @click="q = ''" title="Clear search"
+                            class="grid h-6 w-6 shrink-0 place-items-center rounded-md text-slate-400 transition hover:bg-slate-200 hover:text-slate-600">
+                        <i class="bi bi-x-lg text-xs"></i>
+                    </button>
                 </div>
             </div>
-            <select name="status" class="h-10 rounded-lg border-slate-300 text-sm focus:border-brand-400 focus:ring-brand-400 lg:col-span-2">
+            @php $selCls = 'h-11 rounded-xl border-slate-200 bg-slate-50 text-sm transition focus:border-brand-400 focus:bg-white focus:ring-brand-400'; @endphp
+            <select name="status" class="{{ $selCls }} lg:col-span-2">
                 <option value="">All status</option>
                 @foreach(['active' => 'Active', 'inactive' => 'Inactive', 'blacklisted' => 'Blacklisted'] as $val => $lbl)
                     <option value="{{ $val }}" @selected(request('status') === $val)>{{ $lbl }}</option>
                 @endforeach
             </select>
-            <select name="agent_id" class="h-10 rounded-lg border-slate-300 text-sm focus:border-brand-400 focus:ring-brand-400 lg:col-span-2">
+            <select name="agent_id" class="{{ $selCls }} lg:col-span-2">
                 <option value="">All agents</option>
                 @foreach($agents as $agent)
                     <option value="{{ $agent->id }}" @selected(request('agent_id') == $agent->id)>{{ $agent->name }}</option>
                 @endforeach
             </select>
-            <select name="nationality" class="h-10 rounded-lg border-slate-300 text-sm focus:border-brand-400 focus:ring-brand-400 lg:col-span-2">
+            <select name="nationality" class="{{ $selCls }} lg:col-span-2">
                 <option value="">All nationalities</option>
                 @foreach($nationalities as $nat)
                     <option value="{{ $nat }}" @selected(request('nationality') === $nat)>{{ $nat }}</option>
                 @endforeach
             </select>
             <div class="flex gap-2 lg:col-span-2">
-                <x-ui.button type="submit" class="flex-1"><i class="bi bi-funnel"></i> Filter</x-ui.button>
-                <x-ui.button :href="route('hr.index')" variant="secondary" size="icon" title="Clear filters"><i class="bi bi-arrow-counterclockwise"></i></x-ui.button>
+                <x-ui.button type="submit" variant="gradient" class="h-11 flex-1"><i class="bi bi-funnel-fill"></i> Filter</x-ui.button>
+                <x-ui.button :href="route('hr.index')" variant="secondary" size="icon" title="Clear all filters"
+                             class="h-11 w-11 shrink-0 hover:border-brand-200 hover:text-brand-600"><i class="bi bi-arrow-counterclockwise"></i></x-ui.button>
             </div>
         </form>
     </x-ui.card>
@@ -100,7 +107,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>
-                    <tr class="border-b border-slate-200 bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    <tr class="sticky top-0 z-10 border-b border-slate-200 bg-slate-100/95 text-left text-xs font-semibold uppercase tracking-wide text-slate-600 backdrop-blur">
                         <th class="w-[4%]  px-3 py-3">#</th>
                         <th class="w-[20%] px-3 py-3">Name</th>
                         <th class="w-[11%] px-3 py-3">MOFA ID</th>
@@ -114,11 +121,11 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($hrProfiles as $hr)
-                        <tr class="transition hover:bg-slate-50">
+                        <tr class="odd:bg-white even:bg-slate-50/60 transition-colors hover:bg-brand-50/50">
                             <td class="px-3 py-3 text-slate-400">{{ $hrProfiles->firstItem() + $loop->index }}</td>
                             <td class="px-3 py-3">
                                 <div class="flex items-center gap-3">
-                                    <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-50 text-xs font-bold text-brand-700">
+                                    <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-indigo-600 text-xs font-bold text-white shadow-sm">
                                         {{ strtoupper(mb_substr($hr->full_name_en, 0, 1)) }}
                                     </span>
                                     <div class="min-w-0">
@@ -131,7 +138,7 @@
                             </td>
                             <td class="px-3 py-3">
                                 @if($hr->mofa_new ?: $hr->mofa_old)
-                                    <span class="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs text-slate-600">{{ $hr->mofa_new ?: $hr->mofa_old }}</span>
+                                    <span class="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 font-mono text-xs text-slate-600 ring-1 ring-inset ring-slate-200">{{ $hr->mofa_new ?: $hr->mofa_old }}</span>
                                 @else <span class="text-slate-300">—</span> @endif
                             </td>
                             <td class="px-3 py-3 font-mono text-xs text-slate-600">{{ $hr->passport?->passport_number ?: '—' }}</td>
@@ -140,16 +147,18 @@
                             <td class="px-3 py-3 font-mono text-xs text-slate-600">{{ $hr->visa?->sponsor_id ?: '—' }}</td>
                             <td class="px-3 py-3 break-words text-slate-600">{{ $hr->visa?->sponsor_name ?: '—' }}</td>
                             <td class="px-3 py-3">
-                                <div class="flex items-center justify-end gap-1 whitespace-nowrap">
-                                    <a href="{{ route('hr.show', $hr) }}" @click.prevent="openPreview(@js($previewData($hr)))" title="Quick view" class="grid h-8 w-8 place-items-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"><i class="bi bi-eye"></i></a>
-                                    <a href="{{ route('hr.documents', $hr) }}" title="Documents" class="grid h-8 w-8 place-items-center rounded-lg text-emerald-600 transition hover:bg-emerald-50"><i class="bi bi-file-earmark-pdf"></i></a>
-                                    @can('update', $hr)
-                                        <a href="{{ route('hr.edit', $hr) }}" title="Edit" class="grid h-8 w-8 place-items-center rounded-lg text-brand-600 transition hover:bg-brand-50"><i class="bi bi-pencil"></i></a>
-                                    @endcan
-                                    @can('delete', $hr)
-                                        <button type="button" title="Delete" class="grid h-8 w-8 place-items-center rounded-lg text-rose-500 transition hover:bg-rose-50"
-                                            x-on:click="del.open = true; del.name = @js($hr->full_name_en); del.action = '{{ route('hr.destroy', $hr) }}'"><i class="bi bi-trash"></i></button>
-                                    @endcan
+                                <div class="flex justify-end">
+                                    <div class="inline-flex items-center gap-0.5 whitespace-nowrap rounded-lg border border-slate-200 bg-slate-50/70 p-0.5">
+                                        <a href="{{ route('hr.show', $hr) }}" @click.prevent="openPreview(@js($previewData($hr)))" title="Quick view" class="grid h-8 w-8 place-items-center rounded-md text-slate-500 transition hover:bg-white hover:text-slate-700 hover:shadow-sm"><i class="bi bi-eye"></i></a>
+                                        <a href="{{ route('hr.documents', $hr) }}" title="Documents" class="grid h-8 w-8 place-items-center rounded-md text-emerald-600 transition hover:bg-white hover:shadow-sm"><i class="bi bi-file-earmark-pdf"></i></a>
+                                        @can('update', $hr)
+                                            <a href="{{ route('hr.edit', $hr) }}" title="Edit" class="grid h-8 w-8 place-items-center rounded-md text-brand-600 transition hover:bg-white hover:shadow-sm"><i class="bi bi-pencil"></i></a>
+                                        @endcan
+                                        @can('delete', $hr)
+                                            <button type="button" title="Delete" class="grid h-8 w-8 place-items-center rounded-md text-rose-500 transition hover:bg-white hover:shadow-sm"
+                                                x-on:click="del.open = true; del.name = @js($hr->full_name_en); del.action = '{{ route('hr.destroy', $hr) }}'"><i class="bi bi-trash"></i></button>
+                                        @endcan
+                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -175,7 +184,7 @@
             <x-ui.card class="p-4">
                 <div class="flex items-start justify-between gap-3">
                     <div class="flex min-w-0 items-center gap-3">
-                        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-50 text-sm font-bold text-brand-700">
+                        <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-indigo-600 text-sm font-bold text-white shadow-sm">
                             {{ strtoupper(mb_substr($hr->full_name_en, 0, 1)) }}
                         </span>
                         <div class="min-w-0">
@@ -290,4 +299,14 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+    // Subtle fade + slide-in for the stat cards (Motion One, already bundled).
+    // Guarded so a missing bundle never throws — cards stay visible regardless.
+    document.addEventListener('DOMContentLoaded', () => {
+        if (window.fadeInCards) window.fadeInCards('.js-fade-card');
+    });
+</script>
+@endpush
 @endsection

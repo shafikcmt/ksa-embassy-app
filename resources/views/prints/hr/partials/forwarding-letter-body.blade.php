@@ -39,7 +39,7 @@
 </style>
 {{-- width:92% + margin:0 auto matches PAGE 1's .ksa-app column so all four
      Complete-File pages share the SAME left/right margin (≈17.6mm) in the PDF. --}}
-<div class="ksa-letter" style="width:92%;margin:0 auto;font-size:13pt;line-height:1.6;font-weight:normal;">
+<div class="ksa-letter" style="width:92%;margin:0 auto;font-size:11.5pt;line-height:1.6;font-weight:normal;">
 
 {{-- Top spacer: 62mm — measured to match reference page 2, where "To," sits
      ~74mm from the physical page top (mPDF's ~12mm top offset + 62mm = ~74mm).
@@ -55,14 +55,14 @@
 @endif
 
 {{-- To address --}}
-<p style="margin:0;font-size:13pt;">To,</p>
-<p style="margin:0;font-size:13pt;">The Chief Of Consular Section,</p>
-<p style="margin:0;font-size:13pt;">The Royal Embassy Kingdom Of Saudi Arabia,</p>
-<p style="margin:0 0 18pt 0;font-size:13pt;">Gulshan, Dhaka, Bangladesh.</p>
+<p style="margin:0;font-size:11.5pt;">To,</p>
+<p style="margin:0;font-size:11.5pt;">The Chief Of Consular Section,</p>
+<p style="margin:0;font-size:11.5pt;">The Royal Embassy Kingdom Of Saudi Arabia,</p>
+<p style="margin:0 0 18pt 0;font-size:11.5pt;">Gulshan, Dhaka, Bangladesh.</p>
 
-<p style="margin:0;font-size:13pt;"><strong>Excellency,</strong></p>
+<p style="margin:0;font-size:11.5pt;"><strong>Excellency,</strong></p>
 
-<p style="margin:0 0 14pt 0;font-size:13pt;">
+<p style="margin:0 0 14pt 0;font-size:11.5pt;">
 With Due Respect we are Submitting One Passport for work Visa with all Necessary Documents and Particulars mentioned as below, knowing all instruction and regulation of the consulate section.
 </p>
 
@@ -70,39 +70,39 @@ With Due Respect we are Submitting One Passport for work Visa with all Necessary
 <table style="width:100%;border-collapse:collapse;margin-bottom:14pt;font-size:10pt;">
   <tbody>
     <tr>
-      <td style="width:50%;border-bottom:0.5pt solid #000;padding:5pt 4pt;"><strong>NAME OF COMPANY:</strong></td>
-      <td style="width:50%;border-bottom:0.5pt solid #000;padding:5pt 4pt;font-weight:bold;">
+      <td style="width:50%;border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;"><strong>NAME OF COMPANY:</strong></td>
+      <td style="width:50%;border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;font-weight:bold;">
         @if(!empty($sponsor_name_ar))<span class="ar" style="font-weight:bold;">{{ $sponsor_name_ar }}</span>@else{{ $sponsor_name ?: $agency_name }}@endif
       </td>
     </tr>
     <tr>
-      <td style="border-bottom:0.5pt solid #000;padding:5pt 4pt;"><strong>VISA NUMBER &amp; DATE:</strong></td>
-      <td style="border-bottom:0.5pt solid #000;padding:5pt 4pt;font-weight:bold;">{{ $visa_no ?: '—' }}@if($visa_date) &nbsp; Date: {{ $visa_date_hijri }}@endif</td>
+      <td style="border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;"><strong>VISA NUMBER &amp; DATE:</strong></td>
+      <td style="border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;font-weight:bold;">{{ $visa_no ?: '—' }}@if($visa_date) &nbsp; Date: {{ $visa_date_hijri }}@endif</td>
     </tr>
     <tr>
-      <td style="border-bottom:0.5pt solid #000;padding:5pt 4pt;"><strong>FULL NAME OF THE EMPLOYEE:</strong></td>
-      <td style="border-bottom:0.5pt solid #000;padding:5pt 4pt;font-weight:bold;">{{ $full_name_en_upper }}</td>
+      <td style="border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;"><strong>FULL NAME OF THE EMPLOYEE:</strong></td>
+      <td style="border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;font-weight:bold;">{{ $full_name_en_upper }}</td>
     </tr>
     <tr>
-      <td style="border-bottom:0.5pt solid #000;padding:5pt 4pt;"><strong>PASSPORT NO. WITH ISSUE DATE:</strong></td>
-      <td style="border-bottom:0.5pt solid #000;padding:5pt 4pt;font-weight:bold;">{{ $passport_no ?: '—' }}@if($passport_issue_date) &nbsp; Date: {{ $passport_issue_date }}@endif</td>
+      <td style="border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;"><strong>PASSPORT NO. WITH ISSUE DATE:</strong></td>
+      <td style="border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;font-weight:bold;">{{ $passport_no ?: '—' }}@if($passport_issue_date) &nbsp; Date: {{ $passport_issue_date }}@endif</td>
     </tr>
     <tr>
-      <td style="border-bottom:0.5pt solid #000;padding:5pt 4pt;"><strong>PROFESSION:</strong></td>
-      <td style="border-bottom:0.5pt solid #000;padding:5pt 4pt;font-weight:bold;">{{ $profession_en ?: ($occupation ?: '—') }}</td>
+      <td style="border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;"><strong>PROFESSION:</strong></td>
+      <td style="border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;font-weight:bold;">{{ $profession_en ?: ($occupation ?: '—') }}</td>
     </tr>
     <tr>
-      <td style="border-bottom:0.5pt solid #000;padding:5pt 4pt;"><strong>RELIGION:</strong></td>
-      <td style="border-bottom:0.5pt solid #000;padding:5pt 4pt;font-weight:bold;">{{ $religion ?: '—' }}</td>
+      <td style="border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;"><strong>RELIGION:</strong></td>
+      <td style="border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;font-weight:bold;">{{ $religion ?: '—' }}</td>
     </tr>
   </tbody>
 </table>
 
-<p style="margin:0 0 12pt 0;font-size:13pt;">
+<p style="margin:0 0 12pt 0;font-size:11.5pt;">
 I do hereby confirm and declare that the region stated in the Visa form and forwarding letter is fully correct. I also undertake with my own responsibility to cancel the Visa and to stop functioning with my office, If the statement is found incorrect.
 </p>
 
-<p style="margin:0 0 24pt 0;font-size:13pt;">
+<p style="margin:0 0 24pt 0;font-size:11.5pt;">
 We therefore, Request your Excellency to kindly issue work Visa out of - 01 - Visas and oblige thereby.
 </p>
 

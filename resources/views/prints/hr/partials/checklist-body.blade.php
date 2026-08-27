@@ -47,16 +47,16 @@
   </colgroup>
   <thead>
     <tr>
-      <th style="border:1px solid #000;padding:8pt 6pt;text-align:center;font-weight:bold;background:#fff;">
+      <th style="border:1px solid #c6c6c6;padding:8pt 6pt;text-align:center;font-weight:bold;background:#fff;">
         الاجراء<br>Step
       </th>
-      <th style="border:1px solid #000;padding:8pt 6pt;text-align:center;font-weight:bold;background:#fff;">
+      <th style="border:1px solid #c6c6c6;padding:8pt 6pt;text-align:center;font-weight:bold;background:#fff;">
         المكتب<br>Agency
       </th>
-      <th style="border:1px solid #000;padding:8pt 6pt;text-align:center;font-weight:bold;background:#fff;">
+      <th style="border:1px solid #c6c6c6;padding:8pt 6pt;text-align:center;font-weight:bold;background:#fff;">
         المنفذ<br>Port
       </th>
-      <th style="border:1px solid #000;padding:8pt 6pt;text-align:center;font-weight:bold;background:#fff;">
+      <th style="border:1px solid #c6c6c6;padding:8pt 6pt;text-align:center;font-weight:bold;background:#fff;">
         الملاحظات<br>Notes
       </th>
     </tr>
@@ -94,10 +94,10 @@
       [$stepAr, $stepEn] = array_pad(array_map('trim', explode('/', $step, 2)), 2, '');
     @endphp
     <tr>
-      <td style="border:1px solid #000;padding:7pt 6pt;text-align:right;direction:rtl;">{{ $stepAr }} / <strong dir="ltr" style="unicode-bidi:isolate;">{{ $stepEn }}</strong></td>
-      <td style="border:1px solid #000;padding:7pt 6pt;text-align:center;{{ $arabicValue ? 'direction:rtl;' : 'direction:ltr;' }}{{ $bold ? 'font-weight:bold;' : '' }}">{!! nl2br(e($value)) !!}</td>
-      <td style="border:1px solid #000;padding:7pt 6pt;"></td>
-      <td style="border:1px solid #000;padding:7pt 6pt;"></td>
+      <td style="border:1px solid #c6c6c6;padding:7pt 6pt;text-align:right;direction:rtl;">{{ $stepAr }} / <strong dir="ltr" style="unicode-bidi:isolate;">{{ $stepEn }}</strong></td>
+      <td style="border:1px solid #c6c6c6;padding:7pt 6pt;text-align:center;{{ $arabicValue ? 'direction:rtl;' : 'direction:ltr;' }}{{ $bold ? 'font-weight:bold;' : '' }}">{!! nl2br(e($value)) !!}</td>
+      <td style="border:1px solid #c6c6c6;padding:7pt 6pt;"></td>
+      <td style="border:1px solid #c6c6c6;padding:7pt 6pt;"></td>
     </tr>
     @endforeach
   </tbody>

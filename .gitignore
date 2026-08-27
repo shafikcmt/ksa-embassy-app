@@ -39,3 +39,9 @@ Thumbs.db
 npm-debug.log
 yarn-error.log
 .claude
+# Local PDF/print QA scratch scripts and render artifacts (never commit)
+_genpdf.php
+_raster.mjs
+_*.patch
+_browser*
+docs/images/_*.png

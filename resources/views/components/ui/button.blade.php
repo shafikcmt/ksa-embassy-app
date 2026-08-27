@@ -13,6 +13,7 @@
         'ghost'     => 'bg-transparent text-slate-600 hover:bg-slate-100',
         'danger'    => 'bg-rose-600 text-white hover:bg-rose-700 shadow-sm',
         'success'   => 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm',
+        'gradient'  => 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-sm shadow-brand-600/30 transition hover:-translate-y-0.5 hover:shadow-md hover:shadow-brand-600/40',
     ];
     $sizes = [
         'sm'   => 'h-8 px-3 text-xs gap-1.5',

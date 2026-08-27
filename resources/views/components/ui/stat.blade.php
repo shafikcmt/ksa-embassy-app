@@ -7,6 +7,7 @@
     'tone'  => 'slate',     // slate | brand | green | amber | red | violet | cyan
     'subTone' => 'muted',   // muted | green | amber | red
     'accent' => false,      // tint the whole card with the tone colour
+    'accentLeft' => false,  // status-coloured left accent bar + soft gradient tint (opt-in)
     'progress' => null,     // 0-100 -> thin progress bar at the bottom
 ])
 
@@ -46,23 +47,40 @@
         'amber'  => 'bg-amber-500', 'red'   => 'bg-rose-500',  'violet' => 'bg-violet-500',
         'cyan'   => 'bg-cyan-500',
     ];
+    // Left accent bar + soft gradient tint (opt-in via :accentLeft). Literal class
+    // strings below so Tailwind's content scanner keeps them in the build.
+    $barBorder = [
+        'slate'  => 'border-l-slate-400', 'brand' => 'border-l-brand-500', 'green' => 'border-l-emerald-500',
+        'amber'  => 'border-l-amber-500', 'red'   => 'border-l-rose-500',  'violet' => 'border-l-violet-500',
+        'cyan'   => 'border-l-cyan-500',
+    ];
+    $barTint = [
+        'slate'  => 'from-slate-50', 'brand' => 'from-brand-50', 'green' => 'from-emerald-50',
+        'amber'  => 'from-amber-50', 'red'   => 'from-rose-50',  'violet' => 'from-violet-50',
+        'cyan'   => 'from-cyan-50',
+    ];
 
-    $iconCls = $accent ? ($accentIcon[$tone] ?? $accentIcon['slate']) : ($tones[$tone] ?? $tones['slate']);
+    $iconCls = ($accent || $accentLeft) ? ($accentIcon[$tone] ?? $accentIcon['slate']) : ($tones[$tone] ?? $tones['slate']);
     $cardCls = $accent
         ? ($accentCard[$tone] ?? $accentCard['slate'])
-        : 'border-slate-200 bg-white';
+        : ($accentLeft
+            ? 'border-slate-200 border-l-4 '.($barBorder[$tone] ?? $barBorder['slate']).' bg-gradient-to-br '.($barTint[$tone] ?? $barTint['slate']).' to-white'
+            : 'border-slate-200 bg-white');
 
     $subTones = ['muted' => 'text-slate-400', 'green' => 'text-emerald-600', 'amber' => 'text-amber-600', 'red' => 'text-rose-600'];
     $subCls   = $subTones[$subTone] ?? $subTones['muted'];
 
     $tag   = $href ? 'a' : 'div';
-    $hover = $href ? ' transition hover:-translate-y-0.5 hover:shadow-card' : '';
+    $hover = $href
+        ? ' transition duration-200 hover:-translate-y-1 hover:border-slate-300 hover:shadow-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 focus-visible:ring-offset-2'
+        : '';
+    $iconHover = $href ? ' transition-transform duration-200 group-hover:scale-105' : '';
 @endphp
 
 <{{ $tag }} @if($href) href="{{ $href }}" @endif
     {{ $attributes->merge(['class' => "group block rounded-2xl border $cardCls p-4 shadow-soft$hover"]) }}>
     <div class="mb-3 flex items-center justify-between">
-        <span class="grid h-10 w-10 place-items-center rounded-xl text-lg shadow-sm {{ $iconCls }}">
+        <span class="grid h-10 w-10 place-items-center rounded-xl text-lg shadow-sm {{ $iconCls }}{{ $iconHover }}">
             <i class="bi {{ $icon }}"></i>
         </span>
         @if($href)

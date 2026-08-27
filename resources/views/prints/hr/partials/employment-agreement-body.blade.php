@@ -68,13 +68,28 @@
 </div>
 
 {{-- Terms table --}}
-<table style="width:100%;margin-bottom:18pt;font-size:10pt;border-collapse:collapse;">
+{{-- table-layout:fixed pins the columns to the colgroup so (1) the item-10 label
+     wraps inside a fixed 52% column — breaking after "…DEAD BODY &" with
+     "SERVICE BENEFIT…" on line 2, matching ksa-application-reference-0003.jpg —
+     and (2) the value column starts at ~60% for EVERY row like the reference.
+     Without fixed layout, item-10's long text stretched column 2 (auto layout),
+     pushing all values rightward to ~70% and letting "SERVICE" stay on line 1. --}}
+<table style="width:100%;margin-bottom:18pt;font-size:10pt;border-collapse:collapse;table-layout:fixed;">
   <colgroup>
     <col style="width:8%">
-    <col style="width:56%">
-    <col style="width:36%">
+    <col style="width:55%">
+    <col style="width:37%">
   </colgroup>
   <tbody>
+    {{-- Zero-height sizing row: mPDF ignores <colgroup>/table-layout:fixed widths
+         and content-sizes columns instead (item-10's long text otherwise stretched
+         column 2 and pushed the values rightward). This invisible row pins all three
+         columns to the 8/55/37 grid — the same technique application-body uses. --}}
+    <tr style="font-size:0;line-height:0;">
+      <td style="border:0;padding:0;width:8%;"></td>
+      <td style="border:0;padding:0;width:55%;"></td>
+      <td style="border:0;padding:0;width:37%;"></td>
+    </tr>
     <tr>
       <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;text-align:center;">1</td>
       <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">MONTHLY SALARY:</td>
@@ -120,10 +135,18 @@
       <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">PERIOD OF CONTRACT:</td>
       <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">{{ $contract_period ?: ($duration_stay_en ?: 'TWO/ONE YEARS') }}</td>
     </tr>
+    {{-- vertical-align:top on this row only: it is the sole 2-line row, and the
+         reference top-aligns its value ("AS PER SAUDI LABOUR LAWS") to line 1 of the
+         label. Rows 1-9 are single-line, so their (default) alignment is visually
+         identical either way — no change needed there. --}}
     <tr>
-      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;text-align:center;">10</td>
-      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;font-size:9pt;">REPATRIATION ARRANGEMENT INCLUDING RETURN OF DEAD BODY &amp; SERVICE BENEFIT TO THE LEGAL HEIR OF THE EMPLOYEE:</td>
-      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">AS PER SAUDI LABOUR LAWS</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;text-align:center;vertical-align:top;">10</td>
+      {{-- No font-size override: inherit the table's 10pt (same size as rows 1-9,
+           matching the reference). At 10pt in the fixed 55% column the line breaks
+           after "…DEAD BODY &" with "SERVICE BENEFIT…" on line 2, exactly like
+           docs/images/ksa-application-reference-0003.jpg. --}}
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;vertical-align:top;">REPATRIATION ARRANGEMENT INCLUDING RETURN OF DEAD BODY &amp; SERVICE BENEFIT TO THE LEGAL HEIR OF THE EMPLOYEE:</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;vertical-align:top;">AS PER SAUDI LABOUR LAWS</td>
     </tr>
   </tbody>
 </table>
