@@ -33,10 +33,10 @@
     // reuses the EXISTING agency notes module (no duplicate ERP notes screen).
     $erpNav = [
         ['route' => 'erp.dashboard', 'active' => request()->routeIs('erp.dashboard'), 'icon' => 'bi-speedometer2',    'label' => 'ERP Dashboard'],
-        ['route' => null,            'soon' => true,                                  'icon' => 'bi-file-earmark-text', 'label' => 'MOFA Entry'],
+        ['route' => 'erp.mofa',      'active' => request()->routeIs('erp.mofa*'),     'icon' => 'bi-file-earmark-text', 'label' => 'MOFA Entry'],
         ['route' => null,            'soon' => true,                                  'icon' => 'bi-files',             'label' => 'Double MOFA'],
-        ['route' => null,            'soon' => true,                                  'icon' => 'bi-stamp',             'label' => 'Stamping'],
-        ['route' => null,            'soon' => true,                                  'icon' => 'bi-person-check',      'label' => 'Manpower Complete'],
+        ['route' => 'erp.stamping',  'active' => request()->routeIs('erp.stamping*'), 'icon' => 'bi-stamp',             'label' => 'Stamping'],
+        ['route' => 'erp.manpower',  'active' => request()->routeIs('erp.manpower*'), 'icon' => 'bi-person-check',      'label' => 'Manpower Complete'],
         ['route' => null,            'soon' => true,                                  'icon' => 'bi-truck',             'label' => 'Delivery'],
         ['route' => null,            'soon' => true,                                  'icon' => 'bi-journal-bookmark',  'label' => 'Agent Khata'],
         ['route' => null,            'soon' => true,                                  'icon' => 'bi-cash-coin',         'label' => 'Expenses'],
