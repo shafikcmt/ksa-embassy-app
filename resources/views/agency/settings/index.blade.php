@@ -60,6 +60,23 @@
                             class="{{ $inputCls }} @error('owner_name') border-rose-400 @enderror">
                     </x-ui.field>
 
+                    {{-- Company Type + Referral Code --}}
+                    @php $companyType = old('company_type', $agency->company_type); @endphp
+                    <div class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <x-ui.field label="Company Type" name="company_type" hint="Type of agency.">
+                            <select name="company_type" class="{{ $inputCls }} @error('company_type') border-rose-400 @enderror">
+                                <option value="">— Select —</option>
+                                <option value="recruiting" {{ $companyType === 'recruiting' ? 'selected' : '' }}>Recruiting Agency</option>
+                                <option value="consultancy" {{ $companyType === 'consultancy' ? 'selected' : '' }}>Consultancy Agency</option>
+                            </select>
+                        </x-ui.field>
+                        <x-ui.field label="Referral Code" name="referral_code" hint="Optional referral code.">
+                            <input type="text" name="referral_code" value="{{ old('referral_code', $agency->referral_code) }}"
+                                placeholder="e.g. REF-1234"
+                                class="{{ $inputCls }} @error('referral_code') border-rose-400 @enderror">
+                        </x-ui.field>
+                    </div>
+
                     {{-- Company + RL No — read-only (from license / registration data) --}}
                     <div class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
                         <x-ui.field label="Company" hint="Registered company name (from license data)." class="sm:col-span-2">

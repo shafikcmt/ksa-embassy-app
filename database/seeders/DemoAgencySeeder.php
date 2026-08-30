@@ -62,6 +62,10 @@ class DemoAgencySeeder extends Seeder
         if (! $staff->hasRole('agency_staff')) {
             $staff->assignRole('agency_staff');
         }
+        // Demo staff mirrors the migration backfill: full module access, so the
+        // demo continues to show every section. New staff created via the Staff
+        // Accounts screen start restricted to whatever the admin selects.
+        $staff->givePermissionTo(\App\Support\PagePermissions::permissions());
 
         // Active subscription
         \App\Models\Subscription::firstOrCreate(

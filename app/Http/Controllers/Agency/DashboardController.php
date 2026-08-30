@@ -36,6 +36,27 @@ class DashboardController extends Controller
         $agency   = $user->agency()->with(['activeSubscription.plan', 'notices' => fn($q) => $q->active()])->first();
         $subscription = $agency?->activeSubscription;
 
+        // Passenger status quick-search (optional). Always scoped to the user's own
+        // agency — the term is only ever used as a LIKE value, no agency_id is taken
+        // from the request, so an agency can only find its own passengers.
+        $pq = trim((string) request('pq', ''));
+        $passengerResults = null;
+        if ($pq !== '') {
+            $passengerResults = HrProfile::with(['agent:id,name', 'passport:id,hr_profile_id,passport_number', 'visa:id,hr_profile_id,visa_number'])
+                ->where('agency_id', $agencyId)
+                ->where(function ($q) use ($pq) {
+                    $q->where('full_name_en', 'like', "%{$pq}%")
+                      ->orWhere('full_name_ar', 'like', "%{$pq}%")
+                      ->orWhere('mofa_new', 'like', "%{$pq}%")
+                      ->orWhere('mofa_old', 'like', "%{$pq}%")
+                      ->orWhereHas('passport', fn($p) => $p->where('passport_number', 'like', "%{$pq}%"))
+                      ->orWhereHas('visa', fn($v) => $v->where('visa_number', 'like', "%{$pq}%"));
+                })
+                ->latest()
+                ->limit(25)
+                ->get();
+        }
+
         $stats   = $this->statsService->agencyStats($agencyId);
         $alerts  = $this->statsService->agencyAlerts($agencyId, $subscription, $agency);
 
@@ -56,7 +77,7 @@ class DashboardController extends Controller
 
         return view('agency.dashboard', compact(
             'agency', 'subscription', 'stats', 'alerts',
-            'recentHr', 'upcomingExpiries'
+            'recentHr', 'upcomingExpiries', 'pq', 'passengerResults'
         ));
     }
 }

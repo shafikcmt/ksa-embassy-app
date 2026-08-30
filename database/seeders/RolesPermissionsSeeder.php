@@ -35,6 +35,11 @@ class RolesPermissionsSeeder extends Seeder
             'print_pdf',
             // Notices
             'view_notices', 'manage_notices',
+            // Page access — per-staff module gating (see App\Support\PagePermissions).
+            // Admins get all of these; staff get only what an admin grants them
+            // directly, so these are intentionally NOT added to the staff role below.
+            'access_hr', 'access_embassy_list', 'access_agents', 'access_license', 'access_notes',
+            'access_attendance',
         ];
 
         foreach ($permissions as $permission) {

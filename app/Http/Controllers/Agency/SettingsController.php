@@ -46,6 +46,8 @@ class SettingsController extends Controller
 
             $validated = $request->validate([
                 'owner_name'      => 'nullable|string|max:200',
+                'company_type'    => 'nullable|in:recruiting,consultancy',
+                'referral_code'   => 'nullable|string|max:50',
                 'official_email'  => 'nullable|email|max:150',
                 'phone'           => 'nullable|string|max:30',
                 'address'         => 'nullable|string|max:500',
@@ -71,11 +73,13 @@ class SettingsController extends Controller
             // Agency-owned, editable fields. Company name (name) and RL number are
             // license/registration data and are intentionally NOT updated here.
             $agency->update([
-                'owner_name' => $validated['owner_name'] ?? null,
-                'email'      => $validated['official_email'] ?? null,
-                'phone'      => $validated['phone'] ?? null,
-                'address'    => $validated['address'] ?? null,
-                'print_logo' => (bool) $validated['print_logo'],
+                'owner_name'    => $validated['owner_name'] ?? null,
+                'company_type'  => $validated['company_type'] ?? null,
+                'referral_code' => $validated['referral_code'] ?? null,
+                'email'         => $validated['official_email'] ?? null,
+                'phone'         => $validated['phone'] ?? null,
+                'address'       => $validated['address'] ?? null,
+                'print_logo'    => (bool) $validated['print_logo'],
             ]);
 
             // Login / account email lives on the user record.

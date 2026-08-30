@@ -29,18 +29,22 @@
     $initials   = collect(explode(' ', trim($authUser->name)))->take(2)->map(fn($p) => mb_substr($p, 0, 1))->implode('');
 
     // Primary navigation — the few items a normal agency user needs every day.
+    // 'module' gates the link against the user's page-access permissions (null =
+    // always shown). Agency admins hold every module, so they see all of these.
     $primaryNav = [
-        ['route' => 'dashboard',            'active' => request()->routeIs('dashboard'),                                                                                  'icon' => 'bi-grid-1x2',         'label' => 'Dashboard'],
-        ['route' => 'hr.index',             'active' => request()->routeIs('hr.index') || request()->routeIs('hr.create') || request()->routeIs('hr.edit') || request()->routeIs('hr.show'), 'icon' => 'bi-person-vcard', 'label' => 'HR / Candidates'],
-        ['route' => 'embassy-lists.index',  'active' => request()->routeIs('embassy-lists.*'),                                                                            'icon' => 'bi-list-ol',          'label' => 'Embassy Lists'],
-        ['route' => 'hr.index',             'active' => request()->routeIs('hr.documents') || request()->routeIs('hr.print.*') || request()->routeIs('hr.download.*'),    'icon' => 'bi-printer',          'label' => 'Documents / Print'],
+        ['route' => 'dashboard',            'module' => null,           'active' => request()->routeIs('dashboard'),                                                                                  'icon' => 'bi-grid-1x2',         'label' => 'Dashboard'],
+        ['route' => 'hr.index',             'module' => 'hr',           'active' => request()->routeIs('hr.index') || request()->routeIs('hr.create') || request()->routeIs('hr.edit') || request()->routeIs('hr.show'), 'icon' => 'bi-person-vcard', 'label' => 'HR / Candidates'],
+        ['route' => 'embassy-lists.index',  'module' => 'embassy_list', 'active' => request()->routeIs('embassy-lists.*'),                                                                            'icon' => 'bi-list-ol',          'label' => 'Embassy Lists'],
+        ['route' => 'hr.index',             'module' => 'hr',           'active' => request()->routeIs('hr.documents') || request()->routeIs('hr.print.*') || request()->routeIs('hr.download.*'),    'icon' => 'bi-printer',          'label' => 'Documents / Print'],
+        ['route' => 'agents.index',         'module' => 'agents',       'active' => request()->routeIs('agents.*'),                                                                                   'icon' => 'bi-people',           'label' => 'Agents'],
+        ['route' => 'license.index',        'module' => 'license',      'active' => request()->routeIs('license.*'),                                                                                  'icon' => 'bi-patch-check',      'label' => 'License'],
+        ['route' => 'notes.index',          'module' => 'notes',        'active' => request()->routeIs('notes.*'),                                                                                    'icon' => 'bi-journal-text',     'label' => 'Smart Notes'],
+        ['route' => 'attendance.index',     'module' => 'attendance',   'active' => request()->routeIs('attendance.*'),                                                                               'icon' => 'bi-calendar-check',   'label' => 'Attendance'],
     ];
-
-    // Admin-only tools, tucked inside a collapsible group so they never crowd daily work.
-    $adminNav = [
-        ['route' => 'agents.index', 'active' => request()->routeIs('agents.*'), 'icon' => 'bi-people', 'label' => 'Agents & Staff'],
-    ];
-    $adminActive = collect($adminNav)->contains('active', true);
+    // Drop any module the current user was not granted (admins keep everything).
+    $primaryNav = array_values(array_filter($primaryNav, fn ($l) =>
+        $l['module'] === null || \App\Support\PagePermissions::userCanAccess($authUser, $l['module'])
+    ));
 @endphp
 
 <div x-data="{ sidebar: false }" class="min-h-full">
@@ -81,6 +85,14 @@
                 </a>
             @endforeach
 
+            {{-- External tool: Qatar MOI visa enquiry (opens in a new tab) --}}
+            <a href="https://portal.moi.gov.qa/wps/portal/MOIInternet/services/inquiries/visaservices/enquiryandprinting"
+               target="_blank" rel="noopener noreferrer" @click="sidebar = false"
+               @class([$navItem, $navOff])>
+                <i class="bi bi-box-arrow-up-right w-5 text-center text-base text-slate-400 group-hover:text-slate-200"></i>
+                <span>Qatar Visa Check</span>
+            </a>
+
             @if($isAdmin)
                 <a href="{{ route('settings.index') }}" @click="sidebar = false"
                    @class([$navItem, $navOn => request()->routeIs('settings.*'), $navOff => ! request()->routeIs('settings.*')])>
@@ -89,27 +101,13 @@
                     <span>Settings</span>
                 </a>
 
-                {{-- Admin Tools — collapsible so advanced options stay out of the way --}}
-                <div x-data="{ open: {{ $adminActive ? 'true' : 'false' }} }" class="mt-3">
-                    <div class="px-3 pb-1.5 text-[0.62rem] font-bold uppercase tracking-[0.13em] text-slate-500">Admin</div>
-                    <button type="button" @click="open = !open"
-                            class="group mx-0.5 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-white/5 hover:text-white">
-                        <i class="bi bi-shield-lock w-5 text-center text-base text-slate-400 group-hover:text-slate-200"></i>
-                        <span class="flex-1 text-left">Admin Tools</span>
-                        <i class="bi bi-chevron-down text-xs text-slate-400 transition-transform" :class="open && 'rotate-180'"></i>
-                    </button>
-                    <div x-show="open" x-cloak
-                         x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 -translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
-                         class="mt-0.5 space-y-0.5 pl-3">
-                        @foreach($adminNav as $link)
-                            <a href="{{ route($link['route']) }}" @click="sidebar = false"
-                               @class([$navItem, $navOn => $link['active'], $navOff => ! $link['active']])>
-                                <i class="bi {{ $link['icon'] }} w-5 text-center text-base {{ $link['active'] ? 'text-brand-300' : 'text-slate-400 group-hover:text-slate-200' }}"></i>
-                                <span>{{ $link['label'] }}</span>
-                            </a>
-                        @endforeach
-                    </div>
-                </div>
+                {{-- Staff Accounts — admin creates staff logins & per-module access --}}
+                <a href="{{ route('staff.index') }}" @click="sidebar = false"
+                   @class([$navItem, $navOn => request()->routeIs('staff.*'), $navOff => ! request()->routeIs('staff.*')])>
+                    @if(request()->routeIs('staff.*'))<span class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-brand-400"></span>@endif
+                    <i class="bi bi-people w-5 text-center text-base {{ request()->routeIs('staff.*') ? 'text-brand-300' : 'text-slate-400 group-hover:text-slate-200' }}"></i>
+                    <span>Staff Accounts</span>
+                </a>
             @endif
 
             <div class="my-3 border-t border-white/10"></div>
@@ -183,12 +181,14 @@
 
             <div class="flex items-center gap-2 sm:gap-3">
                 {{-- Quick action --}}
+                @if(\App\Support\PagePermissions::userCanAccess($authUser, 'hr'))
                 @can('create', \App\Models\HrProfile::class)
                     <a href="{{ route('hr.create') }}"
                        class="hidden items-center gap-1.5 rounded-lg bg-gradient-to-r from-brand-600 to-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm shadow-brand-600/30 transition hover:shadow-md sm:inline-flex">
                         <i class="bi bi-plus-lg"></i><span class="hidden lg:inline">Add HR</span>
                     </a>
                 @endcan
+                @endif
 
                 {{-- Notification bell --}}
                 <div x-data="{

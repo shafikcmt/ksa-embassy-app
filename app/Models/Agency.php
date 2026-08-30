@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 class Agency extends Model
 {
     protected $fillable = [
-        'name', 'owner_name', 'slug', 'license_number', 'rl_number',
+        'name', 'owner_name', 'company_type', 'referral_code', 'slug', 'license_number', 'rl_number',
         'address', 'phone', 'email', 'logo', 'print_logo',
         'license_expiry_date', 'status', 'notes',
     ];

@@ -73,6 +73,74 @@
 
 {{-- Important alerts are shown in the topbar bell dropdown only (no dashboard card). --}}
 
+{{-- ════════ PASSENGER STATUS SEARCH ════════ --}}
+<x-ui.card class="js-fade-card mb-5 overflow-hidden">
+    <div class="border-b border-slate-100 px-5 py-3">
+        <h2 class="flex items-center gap-2 text-sm font-bold text-slate-800"><i class="bi bi-search text-brand-600"></i> Passenger Status</h2>
+        <p class="mt-0.5 text-xs text-slate-500">Search your candidates by name, passport, visa or MOFA number.</p>
+    </div>
+    <div class="p-4">
+        <form method="GET" action="{{ route('dashboard') }}" class="flex flex-col gap-2 sm:flex-row">
+            <div class="flex flex-1 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 focus-within:border-brand-300 focus-within:ring-2 focus-within:ring-brand-100">
+                <i class="bi bi-person-badge text-slate-400"></i>
+                <input type="text" name="pq" value="{{ $pq ?? '' }}" placeholder="Passport / Name / Visa / MOFA…"
+                       class="h-10 w-full border-0 bg-transparent p-0 text-sm text-slate-700 placeholder:text-slate-400 focus:ring-0">
+            </div>
+            <button type="submit" class="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 px-5 text-sm font-semibold text-white shadow-sm shadow-brand-600/30 transition hover:shadow-md">
+                <i class="bi bi-search"></i> Search
+            </button>
+            @if(($pq ?? '') !== '')
+                <a href="{{ route('dashboard') }}" class="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-600 transition hover:border-slate-300">
+                    <i class="bi bi-x-lg"></i> Clear
+                </a>
+            @endif
+        </form>
+
+        @if(($pq ?? '') !== '')
+            @if($passengerResults && $passengerResults->count())
+                <div class="mt-4 overflow-x-auto rounded-xl border border-slate-100">
+                    <table class="w-full text-sm">
+                        <thead><tr class="border-b border-slate-100 bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                            <th class="px-4 py-2.5">Name</th>
+                            <th class="px-4 py-2.5">Passport No</th>
+                            <th class="px-4 py-2.5">Visa No</th>
+                            <th class="hidden px-4 py-2.5 sm:table-cell">Nationality</th>
+                            <th class="px-4 py-2.5">Status</th>
+                            <th class="hidden px-4 py-2.5 md:table-cell">Agent</th>
+                            <th class="px-4 py-2.5 text-right">Action</th>
+                        </tr></thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @foreach($passengerResults as $p)
+                                <tr class="transition-colors hover:bg-brand-50/50">
+                                    <td class="px-4 py-2.5">
+                                        <a href="{{ route('hr.show', $p) }}" class="font-semibold text-slate-800 hover:text-brand-600">{{ $p->full_name_en }}</a>
+                                        @if($p->full_name_ar)<div class="text-xs text-slate-400" dir="rtl">{{ $p->full_name_ar }}</div>@endif
+                                    </td>
+                                    <td class="px-4 py-2.5 font-mono text-xs text-slate-600">{{ $p->passport?->passport_number ?: '—' }}</td>
+                                    <td class="px-4 py-2.5 font-mono text-xs text-slate-600">{{ $p->visa?->visa_number ?: '—' }}</td>
+                                    <td class="hidden px-4 py-2.5 text-slate-500 sm:table-cell">{{ $p->nationality ?: '—' }}</td>
+                                    <td class="px-4 py-2.5"><x-ui.status-badge :status="$p->status" /></td>
+                                    <td class="hidden px-4 py-2.5 text-slate-500 md:table-cell">{{ $p->agent?->name ?: '—' }}</td>
+                                    <td class="px-4 py-2.5 text-right">
+                                        <a href="{{ route('hr.show', $p) }}" title="View" class="grid h-7 w-7 place-items-center rounded-lg text-slate-500 hover:bg-slate-100"><i class="bi bi-eye"></i></a>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <p class="mt-2 text-xs text-slate-400">Showing {{ $passengerResults->count() }} result(s) for “{{ $pq }}”.</p>
+            @else
+                <div class="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-8 text-center">
+                    <i class="bi bi-search mb-2 block text-2xl text-slate-300"></i>
+                    <p class="text-sm font-medium text-slate-600">No passenger found for “{{ $pq }}”.</p>
+                    <p class="mt-0.5 text-xs text-slate-400">Try a different name, passport, visa or MOFA number.</p>
+                </div>
+            @endif
+        @endif
+    </div>
+</x-ui.card>
+
 {{-- ════════ OVERVIEW (4 cards) ════════ --}}
 <div class="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
     <x-ui.stat class="js-fade-card" :href="route('hr.index')" icon="bi-person-vcard" tone="brand" label="Total HR Records" :value="$stats['total_hr']" :sub="$stats['active_hr'].' active'" />

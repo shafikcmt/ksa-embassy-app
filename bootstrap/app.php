@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'super-admin'         => \App\Http\Middleware\EnsureSuperAdmin::class,
             'agency-access'       => \App\Http\Middleware\EnsureAgencyAccess::class,
             'active-subscription' => \App\Http\Middleware\EnsureActiveSubscription::class,
+            'page-access'         => \App\Http\Middleware\EnsurePageAccess::class,
             'role'                => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission'          => \Spatie\Permission\Middleware\PermissionMiddleware::class,
         ]);
