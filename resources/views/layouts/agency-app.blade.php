@@ -38,6 +38,7 @@
         ['route' => 'hr.index',             'module' => 'hr',           'active' => request()->routeIs('hr.documents') || request()->routeIs('hr.print.*') || request()->routeIs('hr.download.*'),    'icon' => 'bi-printer',          'label' => 'Documents / Print'],
         ['route' => 'agents.index',         'module' => 'agents',       'active' => request()->routeIs('agents.*'),                                                                                   'icon' => 'bi-people',           'label' => 'Agents'],
         ['route' => 'license.index',        'module' => 'license',      'active' => request()->routeIs('license.*'),                                                                                  'icon' => 'bi-patch-check',      'label' => 'License'],
+        ['route' => 'erp.dashboard',        'module' => 'erp',          'active' => request()->routeIs('erp.*'),                                                                                      'icon' => 'bi-cash-stack',       'label' => 'ERP Suite'],
         ['route' => 'notes.index',          'module' => 'notes',        'active' => request()->routeIs('notes.*'),                                                                                    'icon' => 'bi-journal-text',     'label' => 'Smart Notes'],
         ['route' => 'attendance.index',     'module' => 'attendance',   'active' => request()->routeIs('attendance.*'),                                                                               'icon' => 'bi-calendar-check',   'label' => 'Attendance'],
     ];

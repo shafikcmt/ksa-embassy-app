@@ -39,7 +39,7 @@ class RolesPermissionsSeeder extends Seeder
             // Admins get all of these; staff get only what an admin grants them
             // directly, so these are intentionally NOT added to the staff role below.
             'access_hr', 'access_embassy_list', 'access_agents', 'access_license', 'access_notes',
-            'access_attendance',
+            'access_attendance', 'access_erp',
         ];
 
         foreach ($permissions as $permission) {

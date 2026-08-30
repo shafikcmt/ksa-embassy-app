@@ -54,6 +54,12 @@ class PagePermissions
             'icon'        => 'bi-journal-text',
             'description' => 'Personal notes and reminders.',
         ],
+        'erp' => [
+            'permission'  => 'access_erp',
+            'label'       => 'ERP Suite',
+            'icon'        => 'bi-cash-stack',
+            'description' => 'Accounting & operations: MOFA, stamping, delivery, ledgers, expenses.',
+        ],
         'attendance' => [
             'permission'  => 'access_attendance',
             'label'       => 'Attendance',
