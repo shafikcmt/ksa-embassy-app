@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Erp;
 
 use App\Http\Controllers\Controller;
 use App\Models\Agent;
+use App\Models\Delivery;
 use App\Models\ManpowerCompletion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -13,9 +14,8 @@ use Illuminate\Validation\Rule;
  * ERP Manpower Complete tracker (E1). Agency-scoped log; agent_id optionally
  * links to an existing Agent (feeds the E3 Agent Khata ledger later).
  *
- * The "Delivery বাকি" counter depends on the deliveries table, which does not
- * exist until E2 — so it is reported as a partial/pending placeholder here.
- * No money math in this phase.
+ * The "Delivery বাকি" counter (manpower passports not yet delivered) went live
+ * with E2 once the deliveries table existed. No money math happens here.
  */
 class ManpowerController extends Controller
 {
@@ -31,18 +31,19 @@ class ManpowerController extends Controller
         $this->assignSerials($entries, 'completed_date');
         $entries = $entries->reverse()->values();
 
-        // "Delivery বাকি" needs the deliveries table (E2). Until then, expose the
-        // pending state to the view rather than a misleading number.
-        $deliveryBakiPending = true;
+        // "Delivery বাকি": manpower-complete passports with no matching delivery row.
+        $deliveryBaki = ManpowerCompletion::forAgency($agencyId)
+            ->whereNotIn('passport_no', Delivery::forAgency($agencyId)->select('passport_no'))
+            ->count();
         $totalManpower = $entries->count();
 
         $agents = Agent::forAgency($agencyId)->active()->orderBy('name')->get(['id', 'name']);
 
         return view('erp.manpower.index', [
-            'entries'             => $entries,
-            'deliveryBakiPending' => $deliveryBakiPending,
-            'totalManpower'       => $totalManpower,
-            'agents'              => $agents,
+            'entries'       => $entries,
+            'deliveryBaki'  => $deliveryBaki,
+            'totalManpower' => $totalManpower,
+            'agents'        => $agents,
         ]);
     }
 

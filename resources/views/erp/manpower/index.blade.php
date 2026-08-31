@@ -11,14 +11,14 @@
 
 <div x-data="manpowerPage()">
 
-    {{-- Counter (Delivery বাকি pending until E2) --}}
+    {{-- Counter: manpower passports not yet delivered --}}
     <div class="mb-5 flex flex-wrap items-center gap-3">
-        <div class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5">
-            <i class="bi bi-hourglass text-slate-400"></i>
-            <span class="text-sm font-semibold text-slate-600">Delivery বাকি</span>
-            <span class="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-bold text-slate-500">Pending E2</span>
+        <div class="inline-flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5">
+            <i class="bi bi-truck text-amber-500"></i>
+            <span class="text-sm font-semibold text-amber-700">Delivery বাকি</span>
+            <span class="rounded-full bg-amber-500 px-2 py-0.5 text-xs font-bold text-white">{{ $deliveryBaki }}</span>
         </div>
-        <span class="text-xs text-slate-400">Activates once the Delivery module (E2) is built. Total manpower so far: {{ $totalManpower }}.</span>
+        <span class="text-xs text-slate-400">Passports completed but not yet delivered. Total manpower so far: {{ $totalManpower }}.</span>
     </div>
 
     {{-- Add entry --}}

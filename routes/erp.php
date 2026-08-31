@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Erp\DashboardController;
+use App\Http\Controllers\Erp\DeliveryController;
+use App\Http\Controllers\Erp\DoubleMofaController;
 use App\Http\Controllers\Erp\ManpowerController;
 use App\Http\Controllers\Erp\MofaEntryController;
 use App\Http\Controllers\Erp\SettingsController;
@@ -45,4 +47,27 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
 
         Route::put('/manpower/{manpower}', [ManpowerController::class, 'update'])->name('manpower.update');
         Route::delete('/manpower/{manpower}', [ManpowerController::class, 'destroy'])->name('manpower.destroy');
+
+        // ── E2 money modules: Delivery + Double MOFA ──────────────────────────
+        // Reads are open within the module. Adding rows and taking money in
+        // (store + payment) requires an active subscription, matching E1.
+        // Reversals/edits/deletes are corrections and stay available regardless,
+        // so an agency whose plan lapsed can still fix its own money records.
+        Route::get('/delivery', [DeliveryController::class, 'index'])->name('delivery');
+        Route::get('/double-mofa', [DoubleMofaController::class, 'index'])->name('double-mofa');
+
+        Route::middleware(['active-subscription'])->group(function () {
+            Route::post('/delivery', [DeliveryController::class, 'store'])->name('delivery.store');
+            Route::post('/delivery/{delivery}/payment', [DeliveryController::class, 'receivePayment'])->name('delivery.payment');
+            Route::post('/double-mofa', [DoubleMofaController::class, 'store'])->name('double-mofa.store');
+            Route::post('/double-mofa/{doubleMofa}/payment', [DoubleMofaController::class, 'receivePayment'])->name('double-mofa.payment');
+        });
+
+        Route::put('/delivery/{delivery}', [DeliveryController::class, 'update'])->name('delivery.update');
+        Route::delete('/delivery/{delivery}', [DeliveryController::class, 'destroy'])->name('delivery.destroy');
+        Route::post('/delivery/receipt/{receipt}/reverse', [DeliveryController::class, 'reverse'])->name('delivery.reverse');
+
+        Route::put('/double-mofa/{doubleMofa}', [DoubleMofaController::class, 'update'])->name('double-mofa.update');
+        Route::delete('/double-mofa/{doubleMofa}', [DoubleMofaController::class, 'destroy'])->name('double-mofa.destroy');
+        Route::post('/double-mofa/receipt/{receipt}/reverse', [DoubleMofaController::class, 'reverse'])->name('double-mofa.reverse');
     });

@@ -19,10 +19,12 @@ class ErpSetting extends Model
         'agency_id',
         'opening_balance', 'opening_balance_note',
         'pl_security_code', 'pl_visible_to_all',
+        'double_mofa_rate',
     ];
 
     protected $casts = [
         'opening_balance'   => 'decimal:2',
+        'double_mofa_rate'  => 'decimal:2',
         'pl_visible_to_all' => 'boolean',
     ];
 

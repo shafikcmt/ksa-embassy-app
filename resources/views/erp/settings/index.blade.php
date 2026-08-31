@@ -35,6 +35,25 @@
                 </div>
             </section>
 
+            {{-- Double MOFA billing rate --}}
+            <section class="rounded-2xl border border-slate-200 bg-white p-6">
+                <h2 class="flex items-center gap-2 text-base font-bold text-slate-900">
+                    <i class="bi bi-files text-teal-600"></i> Double MOFA Billing
+                </h2>
+                <p class="mt-1 text-sm text-slate-500">
+                    Default amount billed when a passport's MOFA is done more than once. This rate is
+                    <span class="font-semibold">snapshotted onto each Double MOFA record when it is created</span>,
+                    so changing it here never rewrites older bills.
+                </p>
+
+                <div class="mt-4 max-w-xs">
+                    <label for="double_mofa_rate" class="mb-1 block text-sm font-semibold text-slate-700">Default rate (৳)</label>
+                    <input type="number" step="0.01" min="0" id="double_mofa_rate" name="double_mofa_rate"
+                           value="{{ old('double_mofa_rate', number_format((float) ($settings->double_mofa_rate ?? 3000), 2, '.', '')) }}"
+                           class="w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                </div>
+            </section>
+
             {{-- Profit / Loss privacy --}}
             <section class="rounded-2xl border border-slate-200 bg-white p-6">
                 <h2 class="flex items-center gap-2 text-base font-bold text-slate-900">

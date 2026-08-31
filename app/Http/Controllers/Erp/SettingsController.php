@@ -34,6 +34,7 @@ class SettingsController extends Controller
         $validated = $request->validate([
             'opening_balance'      => ['required', 'numeric', 'between:-9999999999.99,9999999999.99'],
             'opening_balance_note' => ['nullable', 'string', 'max:255'],
+            'double_mofa_rate'     => ['required', 'numeric', 'min:0', 'max:99999999.99'],
             'pl_security_code'     => ['nullable', 'string', 'min:4', 'max:100'],
             'clear_security_code'  => ['nullable', 'boolean'],
             'pl_visible_to_all'    => ['nullable', 'boolean'],
@@ -44,6 +45,7 @@ class SettingsController extends Controller
         $settings->agency_id            = $agencyId;
         $settings->opening_balance      = $validated['opening_balance'];
         $settings->opening_balance_note = $validated['opening_balance_note'] ?? null;
+        $settings->double_mofa_rate     = $validated['double_mofa_rate'];
         $settings->pl_visible_to_all    = $request->boolean('pl_visible_to_all');
 
         // Security code: explicit clear wins; otherwise only overwrite when a new
