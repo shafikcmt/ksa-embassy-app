@@ -39,7 +39,7 @@
         ['route' => 'erp.manpower',    'active' => request()->routeIs('erp.manpower*'),    'icon' => 'bi-person-check',      'label' => 'Manpower Complete'],
         ['route' => 'erp.delivery',    'active' => request()->routeIs('erp.delivery*'),    'icon' => 'bi-truck',            'label' => 'Delivery'],
         ['route' => null,            'soon' => true,                                  'icon' => 'bi-journal-bookmark',  'label' => 'Agent Khata'],
-        ['route' => null,            'soon' => true,                                  'icon' => 'bi-cash-coin',         'label' => 'Expenses'],
+        ['route' => 'erp.expenses',  'active' => request()->routeIs('erp.expenses*'), 'icon' => 'bi-cash-coin',         'label' => 'Expenses'],
         ['route' => null,            'soon' => true,                                  'icon' => 'bi-hourglass-split',   'label' => 'Due List'],
         ['route' => null,            'soon' => true,                                  'icon' => 'bi-graph-up-arrow',    'label' => 'Profit / Loss'],
         ['route' => null,            'soon' => true,                                  'icon' => 'bi-bar-chart',         'label' => 'Reports'],

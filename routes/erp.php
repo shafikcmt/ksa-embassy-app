@@ -3,6 +3,7 @@
 use App\Http\Controllers\Erp\DashboardController;
 use App\Http\Controllers\Erp\DeliveryController;
 use App\Http\Controllers\Erp\DoubleMofaController;
+use App\Http\Controllers\Erp\ExpenseController;
 use App\Http\Controllers\Erp\ManpowerController;
 use App\Http\Controllers\Erp\MofaEntryController;
 use App\Http\Controllers\Erp\SettingsController;
@@ -70,4 +71,14 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
         Route::put('/double-mofa/{doubleMofa}', [DoubleMofaController::class, 'update'])->name('double-mofa.update');
         Route::delete('/double-mofa/{doubleMofa}', [DoubleMofaController::class, 'destroy'])->name('double-mofa.destroy');
         Route::post('/double-mofa/receipt/{receipt}/reverse', [DoubleMofaController::class, 'reverse'])->name('double-mofa.reverse');
+
+        // ── E3 sub-phase 1: Expenses (money-out log; no ledger) ───────────────
+        // Reads open within the module; adding an expense requires an active
+        // subscription, matching every other "store" in the suite.
+        Route::get('/expenses', [ExpenseController::class, 'index'])->name('expenses');
+        Route::middleware(['active-subscription'])->group(function () {
+            Route::post('/expenses', [ExpenseController::class, 'store'])->name('expenses.store');
+        });
+        Route::put('/expenses/{expense}', [ExpenseController::class, 'update'])->name('expenses.update');
+        Route::delete('/expenses/{expense}', [ExpenseController::class, 'destroy'])->name('expenses.destroy');
     });
