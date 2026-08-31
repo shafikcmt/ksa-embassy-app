@@ -8,6 +8,7 @@ use App\Http\Controllers\Erp\DueListController;
 use App\Http\Controllers\Erp\ExpenseController;
 use App\Http\Controllers\Erp\ManpowerController;
 use App\Http\Controllers\Erp\MofaEntryController;
+use App\Http\Controllers\Erp\ProfitLossController;
 use App\Http\Controllers\Erp\ReportController;
 use App\Http\Controllers\Erp\SettingsController;
 use App\Http\Controllers\Erp\StampingController;
@@ -110,4 +111,20 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
         Route::get('/reports', [ReportController::class, 'index'])->name('reports');
         Route::get('/reports/export/pdf', [ReportController::class, 'exportPdf'])->name('reports.export.pdf');
         Route::get('/reports/export/csv', [ReportController::class, 'exportCsv'])->name('reports.export.csv');
+
+        // ── E5: Profit / Loss (owner-only, security-code gated) ───────────────
+        // Every action is admin-only (enforced in the controller). The unlock
+        // SCREEN + verify/lock actions stay reachable while locked; the DATA view
+        // and both exports sit behind `pl-unlocked` (session unlock, 15-min
+        // absolute TTL) so P/L numbers can never render — or export — without a
+        // live unlock. Unlock attempts are throttled to resist brute force.
+        Route::get('/profit-loss/unlock', [ProfitLossController::class, 'unlockForm'])->name('profit-loss.unlock');
+        Route::post('/profit-loss/unlock', [ProfitLossController::class, 'unlock'])->middleware('throttle:5,1')->name('profit-loss.unlock.submit');
+        Route::post('/profit-loss/lock', [ProfitLossController::class, 'lock'])->name('profit-loss.lock');
+
+        Route::middleware('pl-unlocked')->group(function () {
+            Route::get('/profit-loss', [ProfitLossController::class, 'index'])->name('profit-loss');
+            Route::get('/profit-loss/export/pdf', [ProfitLossController::class, 'exportPdf'])->name('profit-loss.export.pdf');
+            Route::get('/profit-loss/export/csv', [ProfitLossController::class, 'exportCsv'])->name('profit-loss.export.csv');
+        });
     });

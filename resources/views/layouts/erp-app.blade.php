@@ -41,7 +41,9 @@
         ['route' => 'erp.agent-khata', 'active' => request()->routeIs('erp.agent-khata*'), 'icon' => 'bi-journal-bookmark', 'label' => 'Agent Khata'],
         ['route' => 'erp.expenses',  'active' => request()->routeIs('erp.expenses*'), 'icon' => 'bi-cash-coin',         'label' => 'Expenses'],
         ['route' => 'erp.due-list',  'active' => request()->routeIs('erp.due-list*'), 'icon' => 'bi-hourglass-split',   'label' => 'Due List'],
-        ['route' => null,            'soon' => true,                                  'icon' => 'bi-graph-up-arrow',    'label' => 'Profit / Loss'],
+        $isAdmin
+            ? ['route' => 'erp.profit-loss', 'active' => request()->routeIs('erp.profit-loss*'), 'icon' => 'bi-graph-up-arrow', 'label' => 'Profit / Loss']
+            : ['route' => null, 'soon' => true, 'icon' => 'bi-graph-up-arrow', 'label' => 'Profit / Loss'],
         ['route' => 'erp.reports',   'active' => request()->routeIs('erp.reports*'),  'icon' => 'bi-bar-chart',         'label' => 'Reports'],
         ['route' => 'erp.settings',  'active' => request()->routeIs('erp.settings*'), 'icon' => 'bi-sliders',           'label' => 'ERP Settings'],
         ['route' => 'notes.index',   'active' => false,                               'icon' => 'bi-journal-text',      'label' => 'Smart Notes'],
