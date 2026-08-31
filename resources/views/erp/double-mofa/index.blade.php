@@ -45,7 +45,7 @@
             <div><label class="{{ $lbl }}">Reference</label><input type="text" name="reference" value="{{ old('reference') }}" class="{{ $inp }}"></div>
             <div><label class="{{ $lbl }}">Billing Amount (৳) <span class="text-rose-500">*</span></label><input type="number" step="0.01" min="0" name="billing_amount" value="{{ old('billing_amount', number_format($defaultRate, 2, '.', '')) }}" required class="{{ $inp }}"></div>
         </div>
-        <div class="mt-4 flex justify-end">
+        <div class="mt-4 flex justify-start">
             <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md"><i class="bi bi-plus-lg"></i> Add Double MOFA</button>
         </div>
     </form>

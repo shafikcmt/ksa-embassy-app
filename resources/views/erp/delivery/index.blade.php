@@ -50,7 +50,7 @@
                 </select>
             </div>
         </div>
-        <div class="mt-4 flex justify-end">
+        <div class="mt-4 flex justify-start">
             <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md"><i class="bi bi-plus-lg"></i> Add Delivery</button>
         </div>
     </form>
