@@ -89,6 +89,7 @@ class DeliveryController extends Controller
     public function receivePayment(Request $request, Delivery $delivery, ErpPaymentService $payments)
     {
         $this->authorizeAgency($delivery);
+        abort_unless(auth()->user()->isAgencyAdmin(), 403); // money-moving action: admin-only
 
         $validated = $request->validate([
             'amount' => ['required', 'numeric', 'gt:0', 'max:9999999999.99'],
@@ -111,6 +112,7 @@ class DeliveryController extends Controller
         // Must belong to this agency AND to a Delivery (not a Double MOFA row).
         abort_unless($receipt->agency_id === auth()->user()->agency_id, 403);
         abort_unless($receipt->payable_type === Delivery::class, 404);
+        abort_unless(auth()->user()->isAgencyAdmin(), 403); // money-moving action: admin-only
 
         $validated = $request->validate([
             'note' => ['required', 'string', 'max:255'],

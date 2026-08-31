@@ -95,6 +95,7 @@ class DoubleMofaController extends Controller
     public function receivePayment(Request $request, DoubleMofa $doubleMofa, ErpPaymentService $payments)
     {
         $this->authorizeAgency($doubleMofa);
+        abort_unless(auth()->user()->isAgencyAdmin(), 403); // money-moving action: admin-only
 
         $validated = $request->validate([
             'amount' => ['required', 'numeric', 'gt:0', 'max:9999999999.99'],
@@ -116,6 +117,7 @@ class DoubleMofaController extends Controller
     {
         abort_unless($receipt->agency_id === auth()->user()->agency_id, 403);
         abort_unless($receipt->payable_type === DoubleMofa::class, 404);
+        abort_unless(auth()->user()->isAgencyAdmin(), 403); // money-moving action: admin-only
 
         $validated = $request->validate([
             'note' => ['required', 'string', 'max:255'],

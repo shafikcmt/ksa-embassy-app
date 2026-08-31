@@ -105,6 +105,13 @@ class AgentController extends Controller
     {
         $this->authorize('delete', $agent);
 
+        // Never orphan money: block deletion while the agent has khata ledger
+        // rows (ERP Agent Khata, E3). DB restrictOnDelete is the backstop.
+        if ($agent->agentTransactions()->exists()) {
+            return redirect()->route('agents.index')
+                ->with('error', 'Cannot delete an agent with khata transactions. Reverse/clear the ledger first.');
+        }
+
         $name = $agent->name;
         AuditLog::record('delete_agent', $agent, $agent->toArray(), []);
         $agent->delete();

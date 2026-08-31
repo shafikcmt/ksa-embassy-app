@@ -49,6 +49,8 @@ class ExpenseController extends Controller
 
     public function store(Request $request)
     {
+        abort_unless(auth()->user()->isAgencyAdmin(), 403); // money-moving action: admin-only
+
         $data = $this->validated($request);
 
         Expense::create($data + [
@@ -63,6 +65,7 @@ class ExpenseController extends Controller
     public function update(Request $request, Expense $expense)
     {
         $this->authorizeAgency($expense);
+        abort_unless(auth()->user()->isAgencyAdmin(), 403); // money-moving action: admin-only
 
         $expense->update($this->validated($request) + ['updated_by' => auth()->id()]);
 
@@ -72,6 +75,7 @@ class ExpenseController extends Controller
     public function destroy(Expense $expense)
     {
         $this->authorizeAgency($expense);
+        abort_unless(auth()->user()->isAgencyAdmin(), 403); // money-moving action: admin-only
 
         $expense->delete();
 

@@ -10,12 +10,13 @@ class Agent extends Model
 {
     protected $fillable = [
         'agency_id', 'name', 'email', 'phone',
-        'address', 'status', 'notes',
+        'address', 'status', 'notes', 'opening_balance',
         'created_by', 'updated_by',
     ];
 
     protected $casts = [
-        'status' => 'string',
+        'status'          => 'string',
+        'opening_balance' => 'decimal:2',
     ];
 
     public function agency(): BelongsTo
@@ -51,6 +52,11 @@ class Agent extends Model
     public function hrProfiles(): HasMany
     {
         return $this->hasMany(HrProfile::class);
+    }
+
+    public function agentTransactions(): HasMany
+    {
+        return $this->hasMany(AgentTransaction::class);
     }
 
     public function embassyListItems(): HasMany

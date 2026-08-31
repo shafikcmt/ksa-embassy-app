@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Erp\AgentKhataController;
 use App\Http\Controllers\Erp\DashboardController;
 use App\Http\Controllers\Erp\DeliveryController;
 use App\Http\Controllers\Erp\DoubleMofaController;
@@ -87,4 +88,16 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
         // No money routes of its own — inline "Receive Payment" posts to the
         // existing erp.delivery.payment / erp.double-mofa.payment endpoints.
         Route::get('/due-list', [DueListController::class, 'index'])->name('due-list');
+
+        // ── E3 sub-phase 3: Agent Khata (per-agent ledger) ────────────────────
+        // Viewing (index/show) is open to any access_erp staff. Money-moving
+        // actions (store a debit/credit, reverse one) are admin-only, enforced
+        // in the controller (abort_unless isAgencyAdmin) — same invariant as the
+        // Delivery/DoubleMofa payment actions and Expenses.
+        Route::get('/agent-khata', [AgentKhataController::class, 'index'])->name('agent-khata');
+        Route::get('/agent-khata/{agent}', [AgentKhataController::class, 'show'])->name('agent-khata.show');
+        Route::middleware(['active-subscription'])->group(function () {
+            Route::post('/agent-khata/{agent}/transactions', [AgentKhataController::class, 'store'])->name('agent-khata.store');
+        });
+        Route::post('/agent-khata/transactions/{transaction}/reverse', [AgentKhataController::class, 'reverse'])->name('agent-khata.reverse');
     });
