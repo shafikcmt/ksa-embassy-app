@@ -8,6 +8,7 @@ use App\Http\Controllers\Erp\DueListController;
 use App\Http\Controllers\Erp\ExpenseController;
 use App\Http\Controllers\Erp\ManpowerController;
 use App\Http\Controllers\Erp\MofaEntryController;
+use App\Http\Controllers\Erp\ReportController;
 use App\Http\Controllers\Erp\SettingsController;
 use App\Http\Controllers\Erp\StampingController;
 use Illuminate\Support\Facades\Route;
@@ -100,4 +101,13 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
             Route::post('/agent-khata/{agent}/transactions', [AgentKhataController::class, 'store'])->name('agent-khata.store');
         });
         Route::post('/agent-khata/transactions/{transaction}/reverse', [AgentKhataController::class, 'reverse'])->name('agent-khata.reverse');
+
+        // ── E4: Dashboard + Reports (read-only aggregation) ───────────────────
+        // Viewing the report is open to any access_erp staff (same visibility as
+        // Due List / Agent Khata index). Exports return a bulk financial file, so
+        // they are admin-only — enforced in the controller (abort_unless
+        // isAgencyAdmin), matching every money-moving action in the suite.
+        Route::get('/reports', [ReportController::class, 'index'])->name('reports');
+        Route::get('/reports/export/pdf', [ReportController::class, 'exportPdf'])->name('reports.export.pdf');
+        Route::get('/reports/export/csv', [ReportController::class, 'exportCsv'])->name('reports.export.csv');
     });
