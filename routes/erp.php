@@ -3,6 +3,7 @@
 use App\Http\Controllers\Erp\DashboardController;
 use App\Http\Controllers\Erp\DeliveryController;
 use App\Http\Controllers\Erp\DoubleMofaController;
+use App\Http\Controllers\Erp\DueListController;
 use App\Http\Controllers\Erp\ExpenseController;
 use App\Http\Controllers\Erp\ManpowerController;
 use App\Http\Controllers\Erp\MofaEntryController;
@@ -81,4 +82,9 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
         });
         Route::put('/expenses/{expense}', [ExpenseController::class, 'update'])->name('expenses.update');
         Route::delete('/expenses/{expense}', [ExpenseController::class, 'destroy'])->name('expenses.destroy');
+
+        // ── E3 sub-phase 2: Due List (read-only cross-module report) ──────────
+        // No money routes of its own — inline "Receive Payment" posts to the
+        // existing erp.delivery.payment / erp.double-mofa.payment endpoints.
+        Route::get('/due-list', [DueListController::class, 'index'])->name('due-list');
     });

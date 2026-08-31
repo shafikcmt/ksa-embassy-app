@@ -40,7 +40,7 @@
         ['route' => 'erp.delivery',    'active' => request()->routeIs('erp.delivery*'),    'icon' => 'bi-truck',            'label' => 'Delivery'],
         ['route' => null,            'soon' => true,                                  'icon' => 'bi-journal-bookmark',  'label' => 'Agent Khata'],
         ['route' => 'erp.expenses',  'active' => request()->routeIs('erp.expenses*'), 'icon' => 'bi-cash-coin',         'label' => 'Expenses'],
-        ['route' => null,            'soon' => true,                                  'icon' => 'bi-hourglass-split',   'label' => 'Due List'],
+        ['route' => 'erp.due-list',  'active' => request()->routeIs('erp.due-list*'), 'icon' => 'bi-hourglass-split',   'label' => 'Due List'],
         ['route' => null,            'soon' => true,                                  'icon' => 'bi-graph-up-arrow',    'label' => 'Profit / Loss'],
         ['route' => null,            'soon' => true,                                  'icon' => 'bi-bar-chart',         'label' => 'Reports'],
         ['route' => 'erp.settings',  'active' => request()->routeIs('erp.settings*'), 'icon' => 'bi-sliders',           'label' => 'ERP Settings'],

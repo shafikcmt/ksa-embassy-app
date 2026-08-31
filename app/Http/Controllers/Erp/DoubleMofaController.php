@@ -107,7 +107,9 @@ class DoubleMofaController extends Controller
             return back()->with('error', $e->getMessage());
         }
 
-        return redirect()->route('erp.double-mofa')->with('success', 'Payment recorded.');
+        // Return to wherever the payment was taken (module page OR Due List),
+        // falling back to the Double MOFA page if there is no referer.
+        return redirect()->back(fallback: route('erp.double-mofa'))->with('success', 'Payment recorded.');
     }
 
     public function reverse(Request $request, PaymentReceipt $receipt, ErpPaymentService $payments)
