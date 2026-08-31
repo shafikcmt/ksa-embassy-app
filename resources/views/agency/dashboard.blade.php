@@ -74,7 +74,7 @@
 {{-- Important alerts are shown in the topbar bell dropdown only (no dashboard card). --}}
 
 {{-- ════════ PASSENGER STATUS SEARCH ════════ --}}
-<x-ui.card class="js-fade-card mb-5 overflow-hidden">
+<x-ui.card id="passenger-status" class="js-fade-card mb-5 overflow-hidden">
     <div class="border-b border-slate-100 px-5 py-3">
         <h2 class="flex items-center gap-2 text-sm font-bold text-slate-800"><i class="bi bi-search text-brand-600"></i> Passenger Status</h2>
         <p class="mt-0.5 text-xs text-slate-500">Search your candidates by name, passport, visa or MOFA number.</p>

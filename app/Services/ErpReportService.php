@@ -5,7 +5,9 @@ namespace App\Services;
 use App\Models\Delivery;
 use App\Models\DoubleMofa;
 use App\Models\Expense;
+use App\Models\MofaEntry;
 use App\Models\PaymentReceipt;
+use App\Models\Stamping;
 use Illuminate\Support\Collection;
 
 /**
@@ -61,6 +63,31 @@ class ErpReportService
             'agentReceivable'  => $agents['receivable'],
             'agentPayable'     => $agents['payable'],
             'agentNet'         => $agents['net'],
+            'pendingDelivery'  => $this->pendingDeliveryCount($agencyId),
+        ];
+    }
+
+    /** Count of deliveries still awaiting fulfilment (manual status, not payment). */
+    public function pendingDeliveryCount(int $agencyId): int
+    {
+        return Delivery::forAgency($agencyId)->where('status', 'pending')->count();
+    }
+
+    /**
+     * Yearly operational + expense totals for the dashboard "yearly strip".
+     * Counts are non-money operational logs; expense is the only money term
+     * (already-verified Expense.amount). Everything is agency-scoped first.
+     *
+     * @return array{year: int, mofa: int, delivery: int, stamping: int, expense: float}
+     */
+    public function yearlySummary(int $agencyId, int $year): array
+    {
+        return [
+            'year'     => $year,
+            'mofa'     => MofaEntry::forAgency($agencyId)->whereYear('mofa_date', $year)->count(),
+            'delivery' => Delivery::forAgency($agencyId)->whereYear('delivery_date', $year)->count(),
+            'stamping' => Stamping::forAgency($agencyId)->whereYear('stamp_date', $year)->count(),
+            'expense'  => (float) Expense::forAgency($agencyId)->whereYear('expense_date', $year)->sum('amount'),
         ];
     }
 
