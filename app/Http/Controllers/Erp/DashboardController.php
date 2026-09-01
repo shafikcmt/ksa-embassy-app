@@ -86,6 +86,9 @@ class DashboardController extends Controller
             'canSeeProfit'     => $canSeeProfit,
             'thisMonthCard'    => $this->monthCard($agencyId, $thisMonth, $reports, $pl, $canSeeProfit),
             'prevMonthCard'    => $this->monthCard($agencyId, $prevMonth, $reports, $pl, $canSeeProfit),
+            // E6c trend charts (operational + income/expense/due — no profit/balance,
+            // so no E5 gate involvement; rendered client-side via Chart.js).
+            'charts'           => $reports->twelveMonthSeries($agencyId),
         ]);
     }
 

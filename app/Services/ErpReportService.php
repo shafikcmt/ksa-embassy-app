@@ -9,6 +9,7 @@ use App\Models\ManpowerCompletion;
 use App\Models\MofaEntry;
 use App\Models\PaymentReceipt;
 use App\Models\Stamping;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 /**
@@ -123,6 +124,46 @@ class ErpReportService
             'expense'         => (float) Expense::forAgency($agencyId)->whereBetween('expense_date', [$from, $to])->sum('amount'),
             'due'             => $this->outstandingDues($agencyId, ['from' => $from, 'to' => $to])['combinedDue'],
         ];
+    }
+
+    /**
+     * 12-month trend series for the E6c dashboard charts. READ-ONLY, agency-scoped.
+     *
+     * One chronological bucket per month (oldest → newest, ending at $endMonth or
+     * the current month). Every figure REUSES a verified per-window helper —
+     * collectedInRange (ledger, reversal-safe), the verified Expense.amount column,
+     * module counts, and the canonical outstandingDues — so a bucket can never
+     * diverge from the totals E4/E5 already prove. Because record-date months are
+     * disjoint, Σ(buckets) equals the same helper over the whole window (asserted
+     * by the E6c integrity check). Contains NO profit/balance, so it stays entirely
+     * outside the E5 (Profit/Loss) gate.
+     *
+     * `income` doubles as the "Collected" series of the Due Collection chart; it is
+     * paired there with `dueRaised` (record-date-scoped billed − paid, same basis
+     * as the E6b "Total Due").
+     *
+     * @return array{labels:string[], mofa:int[], delivery:int[], income:float[], expense:float[], dueRaised:float[]}
+     */
+    public function twelveMonthSeries(int $agencyId, ?Carbon $endMonth = null): array
+    {
+        $end = ($endMonth ? $endMonth->copy() : now())->startOfMonth();
+
+        $labels = $mofa = $delivery = $income = $expense = $dueRaised = [];
+
+        for ($i = 11; $i >= 0; $i--) {
+            $start  = $end->copy()->subMonthsNoOverflow($i);
+            $mStart = $start->toDateString();
+            $mEnd   = $start->copy()->endOfMonth()->toDateString();
+
+            $labels[]    = $start->format('M Y');
+            $mofa[]      = MofaEntry::forAgency($agencyId)->whereBetween('mofa_date', [$mStart, $mEnd])->count();
+            $delivery[]  = Delivery::forAgency($agencyId)->whereBetween('delivery_date', [$mStart, $mEnd])->count();
+            $income[]    = $this->collectedInRange($agencyId, $mStart, $mEnd);
+            $expense[]   = (float) Expense::forAgency($agencyId)->whereBetween('expense_date', [$mStart, $mEnd])->sum('amount');
+            $dueRaised[] = $this->outstandingDues($agencyId, ['from' => $mStart, 'to' => $mEnd])['combinedDue'];
+        }
+
+        return compact('labels', 'mofa', 'delivery', 'income', 'expense', 'dueRaised');
     }
 
     /**

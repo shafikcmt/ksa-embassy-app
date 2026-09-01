@@ -244,6 +244,32 @@
         @endforeach
     </div>
 
+    {{-- E6c — Trend charts (12-month). All series are operational or
+         income/expense/due (staff-visible); no profit/balance, so no E5 gate.
+         Data is embedded as JSON and read via JSON.parse in @push('scripts') —
+         NOT via an Alpine attribute (avoids the @js-in-attr SyntaxError pitfall). --}}
+    @php
+        $chartCards = [
+            ['id' => 'chartMofa',         'title' => 'MOFA Growth',       'icon' => 'bi-graph-up',        'tone' => 'text-indigo-500'],
+            ['id' => 'chartIncomeExpense','title' => 'Income vs Expense', 'icon' => 'bi-bar-chart-line',  'tone' => 'text-emerald-500'],
+            ['id' => 'chartDelivery',     'title' => 'Delivery Trend',    'icon' => 'bi-truck',           'tone' => 'text-sky-500'],
+            ['id' => 'chartDueCollection','title' => 'Due Collection',    'icon' => 'bi-cash-coin',       'tone' => 'text-rose-500'],
+        ];
+    @endphp
+    <div class="mb-6 grid gap-4 lg:grid-cols-2">
+        @foreach($chartCards as $cc)
+            <div class="rounded-2xl border border-slate-200 bg-white p-5">
+                <div class="mb-3 flex items-center justify-between">
+                    <h3 class="text-sm font-bold text-slate-900"><i class="bi {{ $cc['icon'] }} mr-1 {{ $cc['tone'] }}"></i>{{ $cc['title'] }}</h3>
+                    <span class="text-[0.7rem] font-semibold uppercase tracking-wide text-slate-400">Last 12 months</span>
+                </div>
+                <div class="relative h-56">
+                    <canvas id="{{ $cc['id'] }}"></canvas>
+                </div>
+            </div>
+        @endforeach
+    </div>
+
     {{-- Secondary strip: agent balances + opening balance --}}
     <div class="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
@@ -419,3 +445,94 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    {{-- E6c — Chart.js pinned via CDN (page-scoped, matches the Bootstrap-bundle
+         loading pattern) with SRI integrity + crossorigin for this new external dep. --}}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"
+            integrity="sha384-Sse/HDqcypGpyTDpvZOJNnG0TT3feGQUkF9H+mnRvic+LjR+K1NhTt8f51KIQ3v3"
+            crossorigin="anonymous"></script>
+
+    {{-- Data payload: parsed with JSON.parse (NOT bound to an Alpine attribute). --}}
+    <script type="application/json" id="erp-charts-data">@json($charts)</script>
+
+    <script>
+        (function () {
+            var raw = document.getElementById('erp-charts-data');
+            if (!raw || typeof Chart === 'undefined') return;
+
+            var d = JSON.parse(raw.textContent);
+            var money = function (v) { return '৳ ' + Number(v).toLocaleString(undefined, { minimumFractionDigits: 0 }); };
+
+            // Respect reduced-motion preference.
+            var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            Chart.defaults.font.family = 'Plus Jakarta Sans, ui-sans-serif, system-ui, sans-serif';
+            Chart.defaults.color = '#64748b';
+
+            var baseOpts = {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: reduce ? false : { duration: 500 },
+                plugins: { legend: { display: true, labels: { boxWidth: 12, usePointStyle: true, font: { size: 11 } } } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 0, autoSkip: true } },
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 } } }
+                }
+            };
+
+            function make(id, config) {
+                var el = document.getElementById(id);
+                if (el) { new Chart(el, config); }
+            }
+
+            function fill(hex) { return hex + '22'; } // ~13% alpha
+
+            // 1) MOFA Growth — single line (count).
+            make('chartMofa', {
+                type: 'line',
+                data: { labels: d.labels, datasets: [{
+                    label: 'MOFA', data: d.mofa, borderColor: '#6366f1', backgroundColor: fill('#6366f1'),
+                    fill: true, tension: 0.35, pointRadius: 2, borderWidth: 2
+                }] },
+                options: Object.assign({}, baseOpts, { plugins: { legend: { display: false } } })
+            });
+
+            // 2) Income vs Expense — two lines (money).
+            make('chartIncomeExpense', {
+                type: 'line',
+                data: { labels: d.labels, datasets: [
+                    { label: 'Income', data: d.income, borderColor: '#10b981', backgroundColor: fill('#10b981'), fill: true, tension: 0.35, pointRadius: 2, borderWidth: 2 },
+                    { label: 'Expense', data: d.expense, borderColor: '#f59e0b', backgroundColor: fill('#f59e0b'), fill: true, tension: 0.35, pointRadius: 2, borderWidth: 2 }
+                ] },
+                options: Object.assign({}, baseOpts, {
+                    plugins: Object.assign({}, baseOpts.plugins, {
+                        tooltip: { callbacks: { label: function (c) { return c.dataset.label + ': ' + money(c.parsed.y); } } }
+                    })
+                })
+            });
+
+            // 3) Delivery Trend — single bar (count).
+            make('chartDelivery', {
+                type: 'bar',
+                data: { labels: d.labels, datasets: [{
+                    label: 'Delivery', data: d.delivery, backgroundColor: '#0ea5e9', borderRadius: 4, maxBarThickness: 22
+                }] },
+                options: Object.assign({}, baseOpts, { plugins: { legend: { display: false } } })
+            });
+
+            // 4) Due Collection — Collected (income) vs New Due raised (money).
+            make('chartDueCollection', {
+                type: 'bar',
+                data: { labels: d.labels, datasets: [
+                    { label: 'Collected', data: d.income, backgroundColor: '#10b981', borderRadius: 4, maxBarThickness: 16 },
+                    { label: 'Due raised', data: d.dueRaised, backgroundColor: '#f43f5e', borderRadius: 4, maxBarThickness: 16 }
+                ] },
+                options: Object.assign({}, baseOpts, {
+                    plugins: Object.assign({}, baseOpts.plugins, {
+                        tooltip: { callbacks: { label: function (c) { return c.dataset.label + ': ' + money(c.parsed.y); } } }
+                    })
+                })
+            });
+        })();
+    </script>
+@endpush
