@@ -32,12 +32,22 @@
         </div>
     </div>
 
-    {{-- Print (full list PDF, E7a) --}}
-    <div class="mb-4 flex justify-end">
+    {{-- E7a Print · E7d Export/Import --}}
+    <div class="mb-4 flex flex-wrap justify-end gap-2">
+        <a href="{{ route('erp.expenses.export') }}"
+           class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3.5 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+            <i class="bi bi-filetype-csv text-emerald-600"></i> Export CSV
+        </a>
         <a href="{{ route('erp.expenses.print') }}" target="_blank"
            class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3.5 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
             <i class="bi bi-printer"></i> Print
         </a>
+        @if(auth()->user()->isAgencyAdmin())
+            <a href="{{ route('erp.expenses.import.form') }}"
+               class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md">
+                <i class="bi bi-upload"></i> Import CSV
+            </a>
+        @endif
     </div>
 
     {{-- Add entry --}}

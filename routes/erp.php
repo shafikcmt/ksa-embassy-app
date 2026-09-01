@@ -74,6 +74,12 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
         Route::get('/manpower/import', [ManpowerController::class, 'importForm'])->name('manpower.import.form');
         Route::get('/manpower/import/template', [ManpowerController::class, 'importTemplate'])->name('manpower.import.template');
         Route::post('/manpower/import/preview', [ManpowerController::class, 'importPreview'])->name('manpower.import.preview');
+
+        // ── E7d: Expenses CSV export (staff) + import (admin) ─────────────────
+        Route::get('/expenses/export', [ExpenseController::class, 'exportCsv'])->name('expenses.export');
+        Route::get('/expenses/import', [ExpenseController::class, 'importForm'])->name('expenses.import.form');
+        Route::get('/expenses/import/template', [ExpenseController::class, 'importTemplate'])->name('expenses.import.template');
+        Route::post('/expenses/import/preview', [ExpenseController::class, 'importPreview'])->name('expenses.import.preview');
         Route::get('/stamping/print', [StampingController::class, 'printPdf'])->name('stamping.print');
         Route::get('/manpower/print', [ManpowerController::class, 'printPdf'])->name('manpower.print');
         Route::get('/delivery/print', [DeliveryController::class, 'printPdf'])->name('delivery.print');
@@ -128,6 +134,7 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
         Route::get('/expenses', [ExpenseController::class, 'index'])->name('expenses');
         Route::middleware(['active-subscription'])->group(function () {
             Route::post('/expenses', [ExpenseController::class, 'store'])->name('expenses.store');
+            Route::post('/expenses/import', [ExpenseController::class, 'import'])->name('expenses.import'); // E7d commit
         });
         Route::put('/expenses/{expense}', [ExpenseController::class, 'update'])->name('expenses.update');
         Route::delete('/expenses/{expense}', [ExpenseController::class, 'destroy'])->name('expenses.destroy');
