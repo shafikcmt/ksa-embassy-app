@@ -63,6 +63,17 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
         Route::get('/mofa/import', [MofaEntryController::class, 'importForm'])->name('mofa.import.form');
         Route::get('/mofa/import/template', [MofaEntryController::class, 'importTemplate'])->name('mofa.import.template');
         Route::post('/mofa/import/preview', [MofaEntryController::class, 'importPreview'])->name('mofa.import.preview');
+
+        // ── E7c: Stamping + Manpower CSV export (staff) + import (admin) ──────
+        Route::get('/stamping/export', [StampingController::class, 'exportCsv'])->name('stamping.export');
+        Route::get('/stamping/import', [StampingController::class, 'importForm'])->name('stamping.import.form');
+        Route::get('/stamping/import/template', [StampingController::class, 'importTemplate'])->name('stamping.import.template');
+        Route::post('/stamping/import/preview', [StampingController::class, 'importPreview'])->name('stamping.import.preview');
+
+        Route::get('/manpower/export', [ManpowerController::class, 'exportCsv'])->name('manpower.export');
+        Route::get('/manpower/import', [ManpowerController::class, 'importForm'])->name('manpower.import.form');
+        Route::get('/manpower/import/template', [ManpowerController::class, 'importTemplate'])->name('manpower.import.template');
+        Route::post('/manpower/import/preview', [ManpowerController::class, 'importPreview'])->name('manpower.import.preview');
         Route::get('/stamping/print', [StampingController::class, 'printPdf'])->name('stamping.print');
         Route::get('/manpower/print', [ManpowerController::class, 'printPdf'])->name('manpower.print');
         Route::get('/delivery/print', [DeliveryController::class, 'printPdf'])->name('delivery.print');
@@ -74,7 +85,9 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
             Route::post('/mofa', [MofaEntryController::class, 'store'])->name('mofa.store');
             Route::post('/mofa/import', [MofaEntryController::class, 'import'])->name('mofa.import'); // E7b commit
             Route::post('/stamping', [StampingController::class, 'store'])->name('stamping.store');
+            Route::post('/stamping/import', [StampingController::class, 'import'])->name('stamping.import'); // E7c commit
             Route::post('/manpower', [ManpowerController::class, 'store'])->name('manpower.store');
+            Route::post('/manpower/import', [ManpowerController::class, 'import'])->name('manpower.import'); // E7c commit
         });
 
         Route::put('/mofa/{mofa}', [MofaEntryController::class, 'update'])->name('mofa.update');

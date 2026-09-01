@@ -35,6 +35,7 @@ class CsvImportService
         $rules     = $config['rules'];
         $normalize = $config['normalize'];
         $notices   = $config['notices'] ?? null;
+        $messages  = $config['messages'] ?? []; // optional custom validation messages
 
         if (! is_file($absolutePath) || filesize($absolutePath) === 0) {
             return $this->fileError('The file is empty.');
@@ -85,7 +86,7 @@ class CsvImportService
             }
 
             $attrs      = $normalize($assoc);
-            $errs       = Validator::make($attrs, $rules)->errors()->all();
+            $errs       = Validator::make($attrs, $rules, $messages)->errors()->all();
             $rowNotices = $notices ? $notices($attrs) : [];
 
             $errs ? $errorCount++ : $validCount++;
@@ -116,5 +117,28 @@ class CsvImportService
             'fileError' => $msg, 'total' => 0, 'validCount' => 0, 'errorCount' => 0,
             'noticeCount' => 0, 'ok' => false, 'rows' => [],
         ];
+    }
+
+    /**
+     * Shared date normaliser for module import normalizers: turns common inputs
+     * (Y-m-d, d/m/Y, d-m-Y, Y/m/d) into Y-m-d; leaves anything unparseable as-is
+     * so the module's `date` rule rejects it with a clear message. Blank → ''.
+     */
+    public static function toYmd(string $v): string
+    {
+        $v = trim($v);
+        if ($v === '') {
+            return '';
+        }
+
+        foreach (['Y-m-d', 'd/m/Y', 'd-m-Y', 'Y/m/d'] as $fmt) {
+            $d = \DateTime::createFromFormat('!' . $fmt, $v);
+            if ($d && $d->format($fmt) === $v) {
+                return $d->format('Y-m-d');
+            }
+        }
+
+        $ts = strtotime($v);
+        return $ts ? date('Y-m-d', $ts) : $v;
     }
 }

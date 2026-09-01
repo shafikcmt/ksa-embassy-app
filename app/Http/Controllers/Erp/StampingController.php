@@ -5,17 +5,31 @@ namespace App\Http\Controllers\Erp;
 use App\Http\Controllers\Controller;
 use App\Models\ManpowerCompletion;
 use App\Models\Stamping;
+use App\Services\CsvImportService;
 use App\Services\PdfGeneratorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * ERP Stamping tracker (E1). Agency-scoped log with a live "Manpower বাকি"
  * counter (stamped passports not yet completed as manpower). No money math.
+ *
+ * E7c adds CSV export (staff-visible) + import (admin-only, dry-run preview +
+ * all-or-nothing commit), reusing CsvImportService and the shared import view.
  */
 class StampingController extends Controller
 {
+    private const CSV_HEADERS = [
+        'stamp_date', 'visa_serial', 'full_name', 'passport_no',
+        'visa_number', 'id_number', 'reference', 'status',
+    ];
+
+    private const IMPORT_SESSION_KEY = 'erp_stamping_import_path';
+
     public function index()
     {
         $agencyId = auth()->user()->agency_id;
@@ -106,7 +120,13 @@ class StampingController extends Controller
 
     private function validated(Request $request): array
     {
-        return $request->validate([
+        return $request->validate($this->rules());
+    }
+
+    /** Single source of truth for validation — shared by manual Add and CSV import. */
+    private function rules(): array
+    {
+        return [
             'stamp_date'  => ['required', 'date'],
             'visa_serial' => ['nullable', 'string', 'max:100'],
             'full_name'   => ['required', 'string', 'max:255'],
@@ -115,7 +135,167 @@ class StampingController extends Controller
             'id_number'   => ['nullable', 'string', 'max:100'],
             'reference'   => ['nullable', 'string', 'max:255'],
             'status'      => ['required', Rule::in(array_keys(Stamping::STATUSES))],
-        ]);
+        ];
+    }
+
+    /** CSV data export (E7c) — staff-visible; header matches the import template. */
+    public function exportCsv(): StreamedResponse
+    {
+        $entries = $this->listing(auth()->user()->agency_id);
+
+        return response()->streamDownload(function () use ($entries) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, self::CSV_HEADERS);
+            foreach ($entries as $e) {
+                fputcsv($out, [
+                    optional($e->stamp_date)->format('Y-m-d'),
+                    $e->visa_serial, $e->full_name, $e->passport_no,
+                    $e->visa_number, $e->id_number, $e->reference, $e->statusLabel(),
+                ]);
+            }
+            fclose($out);
+        }, 'stamping-' . now()->format('Y-m-d') . '.csv', ['Content-Type' => 'text/csv']);
+    }
+
+    public function importForm()
+    {
+        abort_unless(auth()->user()->isAgencyAdmin(), 403);
+
+        return view('erp.import.form', $this->importView() + ['result' => null]);
+    }
+
+    public function importTemplate(): StreamedResponse
+    {
+        abort_unless(auth()->user()->isAgencyAdmin(), 403);
+
+        return response()->streamDownload(function () {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, self::CSV_HEADERS);
+            fclose($out);
+        }, 'stamping-import-template.csv', ['Content-Type' => 'text/csv']);
+    }
+
+    public function importPreview(Request $request, CsvImportService $importer)
+    {
+        abort_unless(auth()->user()->isAgencyAdmin(), 403);
+        $request->validate(['file' => ['required', 'file', 'mimes:csv,txt', 'max:2048']]);
+
+        $path   = $request->file('file')->store('erp-imports');
+        $result = $importer->process(Storage::path($path), $this->importConfig(auth()->user()->agency_id));
+
+        if ($result['fileError']) {
+            Storage::delete($path);
+            return redirect()->route('erp.stamping.import.form')->with('error', $result['fileError']);
+        }
+
+        $request->session()->put(self::IMPORT_SESSION_KEY, $path);
+
+        return view('erp.import.form', $this->importView() + ['result' => $result]);
+    }
+
+    public function import(Request $request, CsvImportService $importer)
+    {
+        abort_unless(auth()->user()->isAgencyAdmin(), 403);
+
+        $agencyId = auth()->user()->agency_id;
+        $path     = $request->session()->get(self::IMPORT_SESSION_KEY);
+
+        if (! $path || ! Storage::exists($path)) {
+            return redirect()->route('erp.stamping.import.form')
+                ->with('error', 'Import session expired — please upload the file again.');
+        }
+
+        $result = $importer->process(Storage::path($path), $this->importConfig($agencyId));
+
+        if (! $result['ok']) {
+            return view('erp.import.form', $this->importView() + ['result' => $result])
+                ->withErrors(['file' => 'Some rows are invalid — nothing was imported. Fix and re-upload.']);
+        }
+
+        DB::transaction(function () use ($result, $agencyId) {
+            foreach ($result['rows'] as $row) {
+                Stamping::create($row['attrs'] + [
+                    'agency_id'  => $agencyId,
+                    'created_by' => auth()->id(),
+                    'updated_by' => auth()->id(),
+                ]);
+            }
+        });
+
+        $count = $result['total'];
+        Storage::delete($path);
+        $request->session()->forget(self::IMPORT_SESSION_KEY);
+
+        return redirect()->route('erp.stamping')
+            ->with('success', "Imported {$count} stamping " . ($count === 1 ? 'entry' : 'entries') . '.');
+    }
+
+    /** Shared-view props for the parameterized import screen. */
+    private function importView(): array
+    {
+        $statusValues = collect(Stamping::STATUSES)->map(fn ($l, $k) => "$k ($l)")->implode(', ');
+
+        return [
+            'title'         => 'Import Stamping — CSV',
+            'heading'       => 'Import Stamping entries from CSV',
+            'back'          => 'erp.stamping',
+            'formRoute'     => 'erp.stamping.import.form',
+            'templateRoute' => 'erp.stamping.import.template',
+            'previewRoute'  => 'erp.stamping.import.preview',
+            'commitRoute'   => 'erp.stamping.import',
+            'columnsHint'   => 'stamp_date*, visa_serial, full_name*, passport_no*, visa_number, id_number, reference, status*',
+            'legend'        => ["status: accepts the key or its label — {$statusValues}."],
+            'previewCols'   => [
+                ['label' => 'Date', 'key' => 'stamp_date'],
+                ['label' => 'Name', 'key' => 'full_name'],
+                ['label' => 'Passport', 'key' => 'passport_no'],
+                ['label' => 'Status', 'key' => 'status'],
+            ],
+        ];
+    }
+
+    /** Import config: date → Y-m-d, lenient status key/label, duplicate-passport notice. */
+    private function importConfig(int $agencyId): array
+    {
+        $labelToKey = [];
+        foreach (Stamping::STATUSES as $key => $label) {
+            $labelToKey[strtolower($label)] = $key;
+        }
+
+        return [
+            'headers' => self::CSV_HEADERS,
+            'rules'   => $this->rules(),
+            'normalize' => function (array $r) use ($labelToKey) {
+                $a = array_map(fn ($v) => trim((string) $v), $r);
+
+                $a['stamp_date'] = CsvImportService::toYmd($a['stamp_date'] ?? '');
+
+                $st = $a['status'] ?? '';
+                if ($st !== '') {
+                    $lower = strtolower($st);
+                    if (array_key_exists($lower, Stamping::STATUSES)) {
+                        $a['status'] = $lower;
+                    } elseif (isset($labelToKey[$lower])) {
+                        $a['status'] = $labelToKey[$lower];
+                    }
+                }
+
+                foreach (['visa_serial', 'visa_number', 'id_number', 'reference'] as $f) {
+                    if (($a[$f] ?? '') === '') {
+                        $a[$f] = null;
+                    }
+                }
+
+                return $a;
+            },
+            'notices' => function (array $a) use ($agencyId) {
+                $p = $a['passport_no'] ?? '';
+                if ($p !== '' && Stamping::forAgency($agencyId)->where('passport_no', $p)->exists()) {
+                    return ["Passport {$p} already stamped — added as a repeat."];
+                }
+                return [];
+            },
+        ];
     }
 
     private function authorizeAgency(Stamping $stamping): void
