@@ -54,6 +54,15 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
         // No admin guard and no active-subscription: printing shows only what the
         // staff member already sees on the module screen. Reuses PdfGeneratorService.
         Route::get('/mofa/print', [MofaEntryController::class, 'printPdf'])->name('mofa.print');
+
+        // ── E7b: MOFA CSV export (staff-visible) + import (admin-only) ─────────
+        // Export is read-only (matches Print). Import is admin-only (enforced in
+        // the controller); the commit additionally requires an active subscription
+        // (it creates records, like store). Preview is a dry run that writes nothing.
+        Route::get('/mofa/export', [MofaEntryController::class, 'exportCsv'])->name('mofa.export');
+        Route::get('/mofa/import', [MofaEntryController::class, 'importForm'])->name('mofa.import.form');
+        Route::get('/mofa/import/template', [MofaEntryController::class, 'importTemplate'])->name('mofa.import.template');
+        Route::post('/mofa/import/preview', [MofaEntryController::class, 'importPreview'])->name('mofa.import.preview');
         Route::get('/stamping/print', [StampingController::class, 'printPdf'])->name('stamping.print');
         Route::get('/manpower/print', [ManpowerController::class, 'printPdf'])->name('manpower.print');
         Route::get('/delivery/print', [DeliveryController::class, 'printPdf'])->name('delivery.print');
@@ -63,6 +72,7 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
 
         Route::middleware(['active-subscription'])->group(function () {
             Route::post('/mofa', [MofaEntryController::class, 'store'])->name('mofa.store');
+            Route::post('/mofa/import', [MofaEntryController::class, 'import'])->name('mofa.import'); // E7b commit
             Route::post('/stamping', [StampingController::class, 'store'])->name('stamping.store');
             Route::post('/manpower', [ManpowerController::class, 'store'])->name('manpower.store');
         });
