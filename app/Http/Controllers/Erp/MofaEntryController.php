@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Erp;
 use App\Http\Controllers\Controller;
 use App\Models\MofaEntry;
 use App\Models\Stamping;
+use App\Services\PdfGeneratorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
@@ -20,15 +21,7 @@ class MofaEntryController extends Controller
     {
         $agencyId = auth()->user()->agency_id;
 
-        // Oldest-first to assign chronological Y#/M#/Total ordinals, then show
-        // newest-first for the table.
-        $entries = MofaEntry::forAgency($agencyId)
-            ->with('createdBy:id,name')
-            ->orderBy('mofa_date')->orderBy('id')
-            ->get();
-
-        $this->assignSerials($entries, 'mofa_date');
-        $entries = $entries->reverse()->values();
+        $entries = $this->listing($agencyId);
 
         // "Stamping বাকি": MOFA passports with no matching stamping row.
         $stampingBaki = MofaEntry::forAgency($agencyId)
@@ -40,6 +33,48 @@ class MofaEntryController extends Controller
             'stampingBaki'   => $stampingBaki,
             'paymentMethods' => MofaEntry::PAYMENT_METHODS,
         ]);
+    }
+
+    /** Print the full module list (E7a) — reuses the EXACT index() query. */
+    public function printPdf(PdfGeneratorService $pdf)
+    {
+        $entries = $this->listing(auth()->user()->agency_id);
+
+        $columns = [
+            ['label' => 'Y#', 'align' => 'right'], ['label' => 'M#', 'align' => 'right'],
+            ['label' => 'Date'], ['label' => 'MOFA #'], ['label' => 'Visa Serial'],
+            ['label' => 'Name'], ['label' => 'Passport'], ['label' => 'Reference'], ['label' => 'Payment'],
+        ];
+        $rows = $entries->map(fn (MofaEntry $e) => [
+            $e->y_no, $e->m_no, $e->mofa_date->format('d M Y'),
+            $e->mofa_number ?: '—', $e->visa_serial ?: '—',
+            $e->full_name, $e->passport_no, $e->reference_name ?: '—', $e->paymentMethodLabel() ?: '—',
+        ])->all();
+
+        return $pdf->generateFromView('erp.print.list', [
+            'title'    => 'MOFA Entries',
+            'agency'   => auth()->user()->agency,
+            'generated'=> now(),
+            'subtitle' => $entries->count() . ' entr' . ($entries->count() === 1 ? 'y' : 'ies'),
+            'columns'  => $columns,
+            'rows'     => $rows,
+        ], 'mofa-entries-' . now()->format('Y-m-d'));
+    }
+
+    /**
+     * Shared listing used by both index() and printPdf(): oldest-first to assign
+     * chronological Y#/M#/Total ordinals, then reversed for newest-first display.
+     */
+    private function listing(int $agencyId): Collection
+    {
+        $entries = MofaEntry::forAgency($agencyId)
+            ->with('createdBy:id,name')
+            ->orderBy('mofa_date')->orderBy('id')
+            ->get();
+
+        $this->assignSerials($entries, 'mofa_date');
+
+        return $entries->reverse()->values();
     }
 
     public function store(Request $request)

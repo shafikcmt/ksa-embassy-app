@@ -21,6 +21,14 @@
         </div>
     </div>
 
+    {{-- Print (full balances PDF, E7a) --}}
+    <div class="mb-4 flex justify-end">
+        <a href="{{ route('erp.agent-khata.print') }}" target="_blank"
+           class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3.5 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+            <i class="bi bi-printer"></i> Print
+        </a>
+    </div>
+
     {{-- Agents + balances --}}
     <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
         <div class="overflow-x-auto">

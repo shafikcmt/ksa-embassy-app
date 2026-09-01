@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Erp;
 
 use App\Http\Controllers\Controller;
 use App\Models\Expense;
+use App\Services\PdfGeneratorService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 
 /**
@@ -20,10 +22,7 @@ class ExpenseController extends Controller
     {
         $agencyId = auth()->user()->agency_id;
 
-        $expenses = Expense::forAgency($agencyId)
-            ->with('createdBy:id,name')
-            ->orderByDesc('expense_date')->orderByDesc('id')
-            ->get();
+        $expenses = $this->listing($agencyId);
 
         $now = now();
         $monthTotal = (float) $expenses
@@ -45,6 +44,45 @@ class ExpenseController extends Controller
             'allTimeTotal' => $allTimeTotal,
             'byCategory'   => $byCategory,
         ]);
+    }
+
+    /** Print the full module list (E7a) — reuses the EXACT index() query + total. */
+    public function printPdf(PdfGeneratorService $pdf)
+    {
+        $expenses = $this->listing(auth()->user()->agency_id);
+
+        $money = fn ($v) => '৳ ' . number_format((float) $v, 2);
+        $total = (float) $expenses->sum(fn ($e) => (float) $e->amount);
+
+        $columns = [
+            ['label' => 'Date'], ['label' => 'Category'], ['label' => 'Paid Via'],
+            ['label' => 'Amount', 'align' => 'right'], ['label' => 'Note'],
+        ];
+        $rows = $expenses->map(fn (Expense $e) => [
+            $e->expense_date->format('d M Y'), $e->categoryLabel(), $e->paidViaLabel() ?: '—',
+            $money($e->amount), $e->note ?: '—',
+        ])->all();
+
+        $totals = ['Total', '', '', $money($total), ''];
+
+        return $pdf->generateFromView('erp.print.list', [
+            'title'    => 'Expenses',
+            'agency'   => auth()->user()->agency,
+            'generated'=> now(),
+            'subtitle' => $expenses->count() . ' expense' . ($expenses->count() === 1 ? '' : 's') . ' · Total ' . $money($total),
+            'columns'  => $columns,
+            'rows'     => $rows,
+            'totals'   => $totals,
+        ], 'expenses-' . now()->format('Y-m-d'));
+    }
+
+    /** Shared listing used by both index() and printPdf() (newest-first). */
+    private function listing(int $agencyId): Collection
+    {
+        return Expense::forAgency($agencyId)
+            ->with('createdBy:id,name')
+            ->orderByDesc('expense_date')->orderByDesc('id')
+            ->get();
     }
 
     public function store(Request $request)

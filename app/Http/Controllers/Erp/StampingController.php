@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Erp;
 use App\Http\Controllers\Controller;
 use App\Models\ManpowerCompletion;
 use App\Models\Stamping;
+use App\Services\PdfGeneratorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
@@ -19,13 +20,7 @@ class StampingController extends Controller
     {
         $agencyId = auth()->user()->agency_id;
 
-        $entries = Stamping::forAgency($agencyId)
-            ->with('createdBy:id,name')
-            ->orderBy('stamp_date')->orderBy('id')
-            ->get();
-
-        $this->assignSerials($entries, 'stamp_date');
-        $entries = $entries->reverse()->values();
+        $entries = $this->listing($agencyId);
 
         // "Manpower বাকি": stamped passports with no matching manpower row.
         $manpowerBaki = Stamping::forAgency($agencyId)
@@ -37,6 +32,45 @@ class StampingController extends Controller
             'manpowerBaki' => $manpowerBaki,
             'statuses'     => Stamping::STATUSES,
         ]);
+    }
+
+    /** Print the full module list (E7a) — reuses the EXACT index() query. */
+    public function printPdf(PdfGeneratorService $pdf)
+    {
+        $entries = $this->listing(auth()->user()->agency_id);
+
+        $columns = [
+            ['label' => 'Y#', 'align' => 'right'], ['label' => 'M#', 'align' => 'right'],
+            ['label' => 'Date'], ['label' => 'Visa Serial'], ['label' => 'Name'], ['label' => 'Passport'],
+            ['label' => 'Visa No'], ['label' => 'ID'], ['label' => 'Reference'], ['label' => 'Status'],
+        ];
+        $rows = $entries->map(fn (Stamping $e) => [
+            $e->y_no, $e->m_no, $e->stamp_date->format('d M Y'),
+            $e->visa_serial ?: '—', $e->full_name, $e->passport_no,
+            $e->visa_number ?: '—', $e->id_number ?: '—', $e->reference ?: '—', $e->statusLabel(),
+        ])->all();
+
+        return $pdf->generateFromView('erp.print.list', [
+            'title'    => 'Stamping',
+            'agency'   => auth()->user()->agency,
+            'generated'=> now(),
+            'subtitle' => $entries->count() . ' entr' . ($entries->count() === 1 ? 'y' : 'ies'),
+            'columns'  => $columns,
+            'rows'     => $rows,
+        ], 'stamping-' . now()->format('Y-m-d'));
+    }
+
+    /** Shared listing used by both index() and printPdf() (serials + newest-first). */
+    private function listing(int $agencyId): Collection
+    {
+        $entries = Stamping::forAgency($agencyId)
+            ->with('createdBy:id,name')
+            ->orderBy('stamp_date')->orderBy('id')
+            ->get();
+
+        $this->assignSerials($entries, 'stamp_date');
+
+        return $entries->reverse()->values();
     }
 
     public function store(Request $request)

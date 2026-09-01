@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Agent;
 use App\Models\AgentTransaction;
 use App\Services\AgentKhataService;
+use App\Services\PdfGeneratorService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use RuntimeException;
@@ -38,6 +39,40 @@ class AgentKhataController extends Controller
             'payable'    => abs($payable),
             'net'        => $receivable + $payable,
         ]);
+    }
+
+    /** Print the agent balances list (E7a) — reuses the EXACT index() data. */
+    public function printPdf(AgentKhataService $khata, PdfGeneratorService $pdf)
+    {
+        $agencyId = auth()->user()->agency_id;
+        $agents   = Agent::forAgency($agencyId)->orderBy('name')->get();
+        $balances = $khata->balancesForAgency($agencyId); // keyed by agent_id
+
+        $money = fn ($v) => '৳ ' . number_format((float) $v, 2);
+        $receivable = (float) $balances->filter(fn ($b) => $b > 0)->sum();
+        $payable    = (float) $balances->filter(fn ($b) => $b < 0)->sum(); // negative
+
+        $columns = [
+            ['label' => 'Agent'], ['label' => 'Net Balance', 'align' => 'right'], ['label' => 'Direction'],
+        ];
+        $rows = $agents->map(function (Agent $a) use ($balances, $money) {
+            $bal = (float) ($balances[$a->id] ?? 0);
+            $dir = $bal > 0 ? 'Receivable' : ($bal < 0 ? 'Payable' : 'Settled');
+            return [$a->name, $money(abs($bal)), $dir];
+        })->all();
+
+        $totals = ['Totals', $money($receivable + $payable), 'Recv ' . $money($receivable) . ' · Pay ' . $money(abs($payable))];
+
+        return $pdf->generateFromView('erp.print.list', [
+            'title'    => 'Agent Khata — Balances',
+            'agency'   => auth()->user()->agency,
+            'generated'=> now(),
+            'subtitle' => $agents->count() . ' agent' . ($agents->count() === 1 ? '' : 's'),
+            'columns'  => $columns,
+            'rows'     => $rows,
+            'totals'   => $totals,
+            'empty'    => 'No agents to print.',
+        ], 'agent-khata-' . now()->format('Y-m-d'));
     }
 
     public function show(Agent $agent, AgentKhataService $khata)

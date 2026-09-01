@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Delivery;
 use App\Models\PaymentReceipt;
 use App\Services\ErpPaymentService;
+use App\Services\PdfGeneratorService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use RuntimeException;
 
@@ -24,10 +26,7 @@ class DeliveryController extends Controller
     {
         $agencyId = auth()->user()->agency_id;
 
-        $deliveries = Delivery::forAgency($agencyId)
-            ->with(['createdBy:id,name', 'receipts.receivedBy:id,name'])
-            ->orderByDesc('delivery_date')->orderByDesc('id')
-            ->get();
+        $deliveries = $this->listing($agencyId);
 
         $totalBilled    = (float) $deliveries->sum(fn ($d) => (float) $d->total_amount);
         $totalCollected = (float) $deliveries->sum(fn ($d) => (float) $d->paid_amount);
@@ -39,6 +38,49 @@ class DeliveryController extends Controller
             'totalCollected' => $totalCollected,
             'totalDue'       => $totalBilled - $totalCollected,
         ]);
+    }
+
+    /** Print the full module list (E7a) — reuses the EXACT index() query + totals. */
+    public function printPdf(PdfGeneratorService $pdf)
+    {
+        $deliveries = $this->listing(auth()->user()->agency_id);
+
+        $money = fn ($v) => '৳ ' . number_format((float) $v, 2);
+        $billed    = (float) $deliveries->sum(fn ($d) => (float) $d->total_amount);
+        $collected = (float) $deliveries->sum(fn ($d) => (float) $d->paid_amount);
+
+        $columns = [
+            ['label' => 'Date'], ['label' => 'Name'], ['label' => 'Passport'], ['label' => 'Visa Serial'],
+            ['label' => 'Reference'], ['label' => 'Total', 'align' => 'right'], ['label' => 'Paid', 'align' => 'right'],
+            ['label' => 'Due', 'align' => 'right'], ['label' => 'Status'],
+        ];
+        $rows = $deliveries->map(fn (Delivery $d) => [
+            $d->delivery_date->format('d M Y'), $d->full_name, $d->passport_no, $d->visa_serial ?: '—',
+            $d->reference ?: '—', $money($d->total_amount), $money($d->paid_amount), $money($d->due), $d->statusLabel(),
+        ])->all();
+
+        // Totals footer aligned to the money columns (indices 5/6/7).
+        $totals = ['Totals', '', '', '', '', $money($billed), $money($collected), $money($billed - $collected), ''];
+
+        return $pdf->generateFromView('erp.print.list', [
+            'title'    => 'Delivery',
+            'agency'   => auth()->user()->agency,
+            'generated'=> now(),
+            'subtitle' => $deliveries->count() . ' deliver' . ($deliveries->count() === 1 ? 'y' : 'ies')
+                          . ' · Billed ' . $money($billed) . ' · Collected ' . $money($collected),
+            'columns'  => $columns,
+            'rows'     => $rows,
+            'totals'   => $totals,
+        ], 'delivery-' . now()->format('Y-m-d'));
+    }
+
+    /** Shared listing used by both index() and printPdf() (newest-first). */
+    private function listing(int $agencyId): Collection
+    {
+        return Delivery::forAgency($agencyId)
+            ->with(['createdBy:id,name', 'receipts.receivedBy:id,name'])
+            ->orderByDesc('delivery_date')->orderByDesc('id')
+            ->get();
     }
 
     public function store(Request $request)

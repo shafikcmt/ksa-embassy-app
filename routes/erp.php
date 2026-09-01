@@ -50,6 +50,17 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
         Route::get('/stamping', [StampingController::class, 'index'])->name('stamping');
         Route::get('/manpower', [ManpowerController::class, 'index'])->name('manpower');
 
+        // ── E7a: per-module Print (full list PDF, read-only, staff-visible) ───
+        // No admin guard and no active-subscription: printing shows only what the
+        // staff member already sees on the module screen. Reuses PdfGeneratorService.
+        Route::get('/mofa/print', [MofaEntryController::class, 'printPdf'])->name('mofa.print');
+        Route::get('/stamping/print', [StampingController::class, 'printPdf'])->name('stamping.print');
+        Route::get('/manpower/print', [ManpowerController::class, 'printPdf'])->name('manpower.print');
+        Route::get('/delivery/print', [DeliveryController::class, 'printPdf'])->name('delivery.print');
+        Route::get('/double-mofa/print', [DoubleMofaController::class, 'printPdf'])->name('double-mofa.print');
+        Route::get('/expenses/print', [ExpenseController::class, 'printPdf'])->name('expenses.print');
+        Route::get('/agent-khata/print', [AgentKhataController::class, 'printPdf'])->name('agent-khata.print');
+
         Route::middleware(['active-subscription'])->group(function () {
             Route::post('/mofa', [MofaEntryController::class, 'store'])->name('mofa.store');
             Route::post('/stamping', [StampingController::class, 'store'])->name('stamping.store');

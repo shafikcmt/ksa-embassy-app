@@ -7,7 +7,9 @@ use App\Models\DoubleMofa;
 use App\Models\ErpSetting;
 use App\Models\PaymentReceipt;
 use App\Services\ErpPaymentService;
+use App\Services\PdfGeneratorService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use RuntimeException;
 
 /**
@@ -24,10 +26,7 @@ class DoubleMofaController extends Controller
     {
         $agencyId = auth()->user()->agency_id;
 
-        $entries = DoubleMofa::forAgency($agencyId)
-            ->with(['createdBy:id,name', 'receipts.receivedBy:id,name'])
-            ->orderByDesc('mofa_date')->orderByDesc('id')
-            ->get();
+        $entries = $this->listing($agencyId);
 
         $totalBilled    = (float) $entries->sum(fn ($e) => (float) $e->billing_amount);
         $totalCollected = (float) $entries->sum(fn ($e) => (float) $e->paid_amount);
@@ -40,6 +39,48 @@ class DoubleMofaController extends Controller
             'totalCollected' => $totalCollected,
             'totalDue'       => $totalBilled - $totalCollected,
         ]);
+    }
+
+    /** Print the full module list (E7a) — reuses the EXACT index() query + totals. */
+    public function printPdf(PdfGeneratorService $pdf)
+    {
+        $entries = $this->listing(auth()->user()->agency_id);
+
+        $money = fn ($v) => '৳ ' . number_format((float) $v, 2);
+        $billed    = (float) $entries->sum(fn ($e) => (float) $e->billing_amount);
+        $collected = (float) $entries->sum(fn ($e) => (float) $e->paid_amount);
+
+        $columns = [
+            ['label' => 'Date'], ['label' => 'Name'], ['label' => 'Visa Serial'], ['label' => 'Passport'],
+            ['label' => 'Reference'], ['label' => 'Billed', 'align' => 'right'], ['label' => 'Paid', 'align' => 'right'],
+            ['label' => 'Unpaid', 'align' => 'right'], ['label' => 'Status'],
+        ];
+        $rows = $entries->map(fn (DoubleMofa $e) => [
+            $e->mofa_date->format('d M Y'), $e->full_name, $e->visa_serial ?: '—', $e->passport_no,
+            $e->reference ?: '—', $money($e->billing_amount), $money($e->paid_amount), $money($e->unpaid), $e->statusLabel(),
+        ])->all();
+
+        $totals = ['Totals', '', '', '', '', $money($billed), $money($collected), $money($billed - $collected), ''];
+
+        return $pdf->generateFromView('erp.print.list', [
+            'title'    => 'Double MOFA',
+            'agency'   => auth()->user()->agency,
+            'generated'=> now(),
+            'subtitle' => $entries->count() . ' entr' . ($entries->count() === 1 ? 'y' : 'ies')
+                          . ' · Billed ' . $money($billed) . ' · Collected ' . $money($collected),
+            'columns'  => $columns,
+            'rows'     => $rows,
+            'totals'   => $totals,
+        ], 'double-mofa-' . now()->format('Y-m-d'));
+    }
+
+    /** Shared listing used by both index() and printPdf() (newest-first). */
+    private function listing(int $agencyId): Collection
+    {
+        return DoubleMofa::forAgency($agencyId)
+            ->with(['createdBy:id,name', 'receipts.receivedBy:id,name'])
+            ->orderByDesc('mofa_date')->orderByDesc('id')
+            ->get();
     }
 
     public function store(Request $request)

@@ -21,6 +21,14 @@
         <span class="text-xs text-slate-400">Passports completed but not yet delivered. Total manpower so far: {{ $totalManpower }}.</span>
     </div>
 
+    {{-- Print (full list PDF, E7a) --}}
+    <div class="mb-4 flex justify-end">
+        <a href="{{ route('erp.manpower.print') }}" target="_blank"
+           class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3.5 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+            <i class="bi bi-printer"></i> Print
+        </a>
+    </div>
+
     {{-- Add entry --}}
     <form method="POST" action="{{ route('erp.manpower.store') }}" class="mb-6 rounded-2xl border border-slate-200 bg-white p-5">
         @csrf

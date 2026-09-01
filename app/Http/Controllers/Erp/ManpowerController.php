@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Agent;
 use App\Models\Delivery;
 use App\Models\ManpowerCompletion;
+use App\Services\PdfGeneratorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
@@ -23,13 +24,7 @@ class ManpowerController extends Controller
     {
         $agencyId = auth()->user()->agency_id;
 
-        $entries = ManpowerCompletion::forAgency($agencyId)
-            ->with(['agent:id,name', 'createdBy:id,name'])
-            ->orderBy('completed_date')->orderBy('id')
-            ->get();
-
-        $this->assignSerials($entries, 'completed_date');
-        $entries = $entries->reverse()->values();
+        $entries = $this->listing($agencyId);
 
         // "Delivery বাকি": manpower-complete passports with no matching delivery row.
         $deliveryBaki = ManpowerCompletion::forAgency($agencyId)
@@ -45,6 +40,43 @@ class ManpowerController extends Controller
             'totalManpower' => $totalManpower,
             'agents'        => $agents,
         ]);
+    }
+
+    /** Print the full module list (E7a) — reuses the EXACT index() query. */
+    public function printPdf(PdfGeneratorService $pdf)
+    {
+        $entries = $this->listing(auth()->user()->agency_id);
+
+        $columns = [
+            ['label' => '#', 'align' => 'right'], ['label' => 'Date'],
+            ['label' => 'Customer'], ['label' => 'Passport'], ['label' => 'Agent'],
+        ];
+        $rows = $entries->map(fn (ManpowerCompletion $e) => [
+            $e->t_no, $e->completed_date->format('d M Y'),
+            $e->customer_name, $e->passport_no, $e->agent->name ?? '—',
+        ])->all();
+
+        return $pdf->generateFromView('erp.print.list', [
+            'title'    => 'Manpower Complete',
+            'agency'   => auth()->user()->agency,
+            'generated'=> now(),
+            'subtitle' => $entries->count() . ' entr' . ($entries->count() === 1 ? 'y' : 'ies'),
+            'columns'  => $columns,
+            'rows'     => $rows,
+        ], 'manpower-' . now()->format('Y-m-d'));
+    }
+
+    /** Shared listing used by both index() and printPdf() (serials + newest-first). */
+    private function listing(int $agencyId): Collection
+    {
+        $entries = ManpowerCompletion::forAgency($agencyId)
+            ->with(['agent:id,name', 'createdBy:id,name'])
+            ->orderBy('completed_date')->orderBy('id')
+            ->get();
+
+        $this->assignSerials($entries, 'completed_date');
+
+        return $entries->reverse()->values();
     }
 
     public function store(Request $request)
