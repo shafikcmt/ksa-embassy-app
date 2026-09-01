@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\AgentTransaction;
 use App\Models\ErpSetting;
+use Illuminate\Support\Carbon;
 
 /**
  * ProfitLossService — READ-ONLY, cash-basis Profit/Loss (E5, owner-only).
@@ -64,6 +65,42 @@ class ProfitLossService
             'openingBalance'  => (float) (ErpSetting::forAgency($agencyId)->value('opening_balance') ?? 0),
             'from'            => $from,
             'to'              => $to,
+        ];
+    }
+
+    /**
+     * SENSITIVE month figures for the E6b dashboard cards + Monthly Summary PDF:
+     * the month's cash-basis profit and the running Starting / Ending balance.
+     *
+     * This is owner-only data — callers MUST gate it exactly like the P/L screen
+     * (isAgencyAdmin AND EnsurePlUnlocked::isAccessible). It performs no new money
+     * math: it composes summary() over disjoint date ranges only.
+     *
+     *   startingBalance = openingBalance + profit(all-time up to the day BEFORE the
+     *                     month) — i.e. the carried-forward balance entering the month.
+     *   endingBalance   = startingBalance + profit(this month).
+     *
+     * Because cash-basis profit is additive over disjoint date windows (revenue,
+     * expense and agent-payout terms are each date-summed), this is internally
+     * consistent: one month's ending balance equals the next month's starting
+     * balance, and endingBalance == openingBalance + profit(all-time up to month end).
+     *
+     * @return array{profit: float, starting: float, ending: float}
+     */
+    public function monthBalances(int $agencyId, string $monthStart, string $monthEnd): array
+    {
+        $priorTo = Carbon::parse($monthStart)->subDay()->toDateString();
+        $opening = (float) (ErpSetting::forAgency($agencyId)->value('opening_balance') ?? 0);
+
+        $priorProfit = $this->summary($agencyId, null, $priorTo)['profit'];
+        $monthProfit = $this->summary($agencyId, $monthStart, $monthEnd)['profit'];
+
+        $starting = round($opening + $priorProfit, 2);
+
+        return [
+            'profit'   => $monthProfit,
+            'starting' => $starting,
+            'ending'   => round($starting + $monthProfit, 2),
         ];
     }
 

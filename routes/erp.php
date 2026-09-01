@@ -28,6 +28,18 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
     ->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
+        // ── E6b: Dashboard summary exports ────────────────────────────────────
+        // Daily Summary PDF carries NO profit → admin-only (money-action
+        // invariant) but not pl-gated. Monthly Summary PDF + Backup CSV carry the
+        // owner-only profit + Starting/Ending balance, so they are admin-only AND
+        // sit behind `pl-unlocked` — the SAME gate the P/L screen uses (reused,
+        // not modified). Admin checks are also enforced in the controller.
+        Route::get('/summary/daily/pdf', [DashboardController::class, 'dailySummaryPdf'])->name('summary.daily.pdf');
+        Route::middleware('pl-unlocked')->group(function () {
+            Route::get('/summary/monthly/pdf', [DashboardController::class, 'monthlySummaryPdf'])->name('summary.monthly.pdf');
+            Route::get('/backup/csv', [DashboardController::class, 'backupCsv'])->name('backup.csv');
+        });
+
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
         Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
 

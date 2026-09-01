@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Delivery;
 use App\Models\DoubleMofa;
 use App\Models\Expense;
+use App\Models\ManpowerCompletion;
 use App\Models\MofaEntry;
 use App\Models\PaymentReceipt;
 use App\Models\Stamping;
@@ -88,6 +89,39 @@ class ErpReportService
             'delivery' => Delivery::forAgency($agencyId)->whereYear('delivery_date', $year)->count(),
             'stamping' => Stamping::forAgency($agencyId)->whereYear('stamp_date', $year)->count(),
             'expense'  => (float) Expense::forAgency($agencyId)->whereYear('expense_date', $year)->sum('amount'),
+        ];
+    }
+
+    /**
+     * NON-SENSITIVE per-month (or per-day) operational snapshot for the E6b
+     * dashboard summary cards + Daily/Monthly Summary PDFs.
+     *
+     * Everything here is safe to show ANY access_erp staff — operational counts
+     * plus the same money-in / money-out / due figures already surfaced on the
+     * module screens and Reports. It deliberately contains NO profit and NO
+     * balance (those are computed only in ProfitLossService, behind the E5 gate).
+     *
+     * `$from`/`$to` are an inclusive date window (a single day when equal). Counts
+     * use each module's own record date; `income` reuses the reversal-safe ledger
+     * query; `expense` sums the verified amount column; `due` reuses the canonical
+     * outstanding-due computation, record-date-scoped to the window (informational
+     * — it does not enter any balance math).
+     *
+     * @return array{mofa:int, doubleMofa:int, stamping:int, manpower:int, delivery:int, pendingDelivery:int, income:float, expense:float, due:float}
+     */
+    public function monthlyOperational(int $agencyId, string $from, string $to): array
+    {
+        return [
+            'mofa'            => MofaEntry::forAgency($agencyId)->whereBetween('mofa_date', [$from, $to])->count(),
+            'doubleMofa'      => DoubleMofa::forAgency($agencyId)->whereBetween('mofa_date', [$from, $to])->count(),
+            'stamping'        => Stamping::forAgency($agencyId)->whereBetween('stamp_date', [$from, $to])->count(),
+            'manpower'        => ManpowerCompletion::forAgency($agencyId)->whereBetween('completed_date', [$from, $to])->count(),
+            'delivery'        => Delivery::forAgency($agencyId)->whereBetween('delivery_date', [$from, $to])->count(),
+            'pendingDelivery' => Delivery::forAgency($agencyId)->where('status', 'pending')
+                                    ->whereBetween('delivery_date', [$from, $to])->count(),
+            'income'          => $this->collectedInRange($agencyId, $from, $to),
+            'expense'         => (float) Expense::forAgency($agencyId)->whereBetween('expense_date', [$from, $to])->sum('amount'),
+            'due'             => $this->outstandingDues($agencyId, ['from' => $from, 'to' => $to])['combinedDue'],
         ];
     }
 

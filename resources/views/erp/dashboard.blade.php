@@ -40,6 +40,43 @@
         </div>
     </div>
 
+    {{-- E6b — Summary export toolbar (admin-only). Daily PDF carries no profit so
+         it needs only admin; Monthly PDF + Backup CSV carry owner-only figures and
+         appear only when P/L is unlocked (else a link to the unlock screen). --}}
+    @if(auth()->user()->isAgencyAdmin())
+        <div class="mb-6 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                <i class="bi bi-download text-slate-400"></i> Summary Exports
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+                <a href="{{ route('erp.summary.daily.pdf') }}"
+                   class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                    <i class="bi bi-file-earmark-pdf text-rose-500"></i> Daily Summary PDF
+                </a>
+
+                @if($canSeeProfit)
+                    <form method="GET" action="{{ route('erp.summary.monthly.pdf') }}" class="flex items-center gap-2">
+                        <input type="month" name="month" value="{{ now()->format('Y-m') }}"
+                               class="rounded-lg border-slate-300 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                        <button type="submit"
+                                class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                            <i class="bi bi-file-earmark-pdf text-rose-500"></i> Monthly Summary PDF
+                        </button>
+                    </form>
+                    <a href="{{ route('erp.backup.csv', ['year' => now()->year]) }}"
+                       class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md">
+                        <i class="bi bi-filetype-csv"></i> Backup CSV
+                    </a>
+                @else
+                    <a href="{{ route('erp.profit-loss.unlock') }}"
+                       class="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-700 transition hover:bg-amber-100">
+                        <i class="bi bi-lock-fill"></i> Unlock for Monthly Summary &amp; Backup
+                    </a>
+                @endif
+            </div>
+        </div>
+    @endif
+
     {{-- Passenger status — links to the EXISTING search on the main dashboard --}}
     <a href="{{ route('dashboard') }}#passenger-status"
        class="mb-6 flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-emerald-300 hover:shadow-sm">
@@ -121,6 +158,90 @@
                 </div>
             @endforeach
         </div>
+    </div>
+
+    {{-- E6b — This-month / Previous-month summary cards.
+         Operational + income/expense/due are shown to everyone; Profit/Loss and
+         Starting/Ending Balance render only when $canSeeProfit (admin + P/L
+         unlocked) — otherwise an inline "Unlock in Profit/Loss" placeholder. The
+         sensitive values were never computed server-side when locked. --}}
+    @php
+        $monthCards = [
+            ['card' => $thisMonthCard, 'tag' => 'This Month',     'accent' => 'emerald'],
+            ['card' => $prevMonthCard, 'tag' => 'Previous Month', 'accent' => 'slate'],
+        ];
+    @endphp
+    <div class="mb-6 grid gap-4 lg:grid-cols-2">
+        @foreach($monthCards as $mc)
+            @php $card = $mc['card']; $ops = $card['ops']; @endphp
+            <div class="rounded-2xl border border-slate-200 bg-white p-5">
+                <div class="mb-4 flex items-center justify-between">
+                    <div>
+                        <div class="text-[0.7rem] font-bold uppercase tracking-wide text-{{ $mc['accent'] }}-600">{{ $mc['tag'] }}</div>
+                        <h3 class="text-sm font-bold text-slate-900"><i class="bi bi-calendar-month mr-1 text-slate-400"></i>{{ $card['label'] }}</h3>
+                    </div>
+                </div>
+
+                {{-- Operational counts --}}
+                <div class="grid grid-cols-3 gap-2 sm:grid-cols-6">
+                    @php
+                        $opTiles = [
+                            ['label' => 'MOFA',     'value' => $ops['mofa']],
+                            ['label' => 'Dbl MOFA', 'value' => $ops['doubleMofa']],
+                            ['label' => 'Stamping', 'value' => $ops['stamping']],
+                            ['label' => 'Manpower', 'value' => $ops['manpower']],
+                            ['label' => 'Delivery', 'value' => $ops['delivery']],
+                            ['label' => 'Pending',  'value' => $ops['pendingDelivery']],
+                        ];
+                    @endphp
+                    @foreach($opTiles as $t)
+                        <div class="rounded-lg border border-slate-100 bg-slate-50 px-2 py-2 text-center">
+                            <div class="text-[0.6rem] font-semibold uppercase tracking-wide text-slate-400">{{ $t['label'] }}</div>
+                            <div class="mt-0.5 text-base font-bold text-slate-900">{{ number_format($t['value']) }}</div>
+                        </div>
+                    @endforeach
+                </div>
+
+                {{-- Money row (visible to all) --}}
+                <div class="mt-4 grid grid-cols-3 gap-3">
+                    <div class="rounded-lg bg-emerald-50 px-3 py-2.5">
+                        <div class="text-[0.62rem] font-semibold uppercase tracking-wide text-emerald-600">Income</div>
+                        <div class="mt-0.5 text-sm font-bold text-emerald-700">{{ $money($ops['income']) }}</div>
+                    </div>
+                    <div class="rounded-lg bg-amber-50 px-3 py-2.5">
+                        <div class="text-[0.62rem] font-semibold uppercase tracking-wide text-amber-600">Expense</div>
+                        <div class="mt-0.5 text-sm font-bold text-amber-700">{{ $money($ops['expense']) }}</div>
+                    </div>
+                    <div class="rounded-lg bg-rose-50 px-3 py-2.5">
+                        <div class="text-[0.62rem] font-semibold uppercase tracking-wide text-rose-600">Due</div>
+                        <div class="mt-0.5 text-sm font-bold text-rose-700">{{ $money($ops['due']) }}</div>
+                    </div>
+                </div>
+
+                {{-- Owner-only: Profit/Loss + Starting/Ending balance --}}
+                @if($canSeeProfit)
+                    <div class="mt-3 grid grid-cols-3 gap-3">
+                        <div class="rounded-lg border border-slate-200 px-3 py-2.5">
+                            <div class="text-[0.62rem] font-semibold uppercase tracking-wide text-slate-400">Profit / Loss</div>
+                            <div class="mt-0.5 text-sm font-bold {{ $card['profit'] < 0 ? 'text-rose-600' : 'text-emerald-700' }}">{{ $money($card['profit']) }}</div>
+                        </div>
+                        <div class="rounded-lg border border-slate-200 px-3 py-2.5">
+                            <div class="text-[0.62rem] font-semibold uppercase tracking-wide text-slate-400">Starting Bal.</div>
+                            <div class="mt-0.5 text-sm font-bold text-slate-900">{{ $money($card['starting']) }}</div>
+                        </div>
+                        <div class="rounded-lg border border-slate-200 px-3 py-2.5">
+                            <div class="text-[0.62rem] font-semibold uppercase tracking-wide text-slate-400">Ending Bal.</div>
+                            <div class="mt-0.5 text-sm font-bold text-slate-900">{{ $money($card['ending']) }}</div>
+                        </div>
+                    </div>
+                @else
+                    <a href="{{ route('erp.profit-loss.unlock') }}"
+                       class="mt-3 flex items-center justify-center gap-2 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 py-3 text-xs font-semibold text-slate-500 transition hover:border-amber-300 hover:text-amber-600">
+                        <i class="bi bi-lock-fill"></i> Profit/Loss &amp; balance — Unlock in Profit/Loss
+                    </a>
+                @endif
+            </div>
+        @endforeach
     </div>
 
     {{-- Secondary strip: agent balances + opening balance --}}
