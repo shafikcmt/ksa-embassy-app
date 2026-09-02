@@ -57,6 +57,13 @@ Route::middleware(['auth', 'agency-access'])->group(function () {
         Route::put('/attendance/employees/{employee}', [AttendanceController::class, 'updateEmployee'])->name('attendance.employees.update');
         Route::delete('/attendance/employees/{employee}', [AttendanceController::class, 'destroyEmployee'])->name('attendance.employees.destroy');
 
+        // H3b: self check-in/out (any linked active employee, own record only) +
+        // admin manual records (create/edit/hard-delete). No active-subscription gate.
+        Route::post('/attendance/check', [AttendanceController::class, 'check'])->name('attendance.check');
+        Route::post('/attendance/records', [AttendanceController::class, 'storeRecord'])->name('attendance.records.store');
+        Route::put('/attendance/records/{record}', [AttendanceController::class, 'updateRecord'])->name('attendance.records.update');
+        Route::delete('/attendance/records/{record}', [AttendanceController::class, 'destroyRecord'])->name('attendance.records.destroy');
+
         Route::post('/attendance/shifts', [AttendanceController::class, 'storeShift'])->name('attendance.shifts.store');
         Route::put('/attendance/shifts/{shift}', [AttendanceController::class, 'updateShift'])->name('attendance.shifts.update');
         Route::delete('/attendance/shifts/{shift}', [AttendanceController::class, 'destroyShift'])->name('attendance.shifts.destroy');

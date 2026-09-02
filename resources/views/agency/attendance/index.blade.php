@@ -31,6 +31,13 @@
         employee: { open: false, method: 'POST', action: @js(route('attendance.employees.store')), heading: 'New Employee', name: '', user_id: '', shift_id: '', designation: '', phone: '', email: '', join_date: '', status: 'active' },
         newEmployee() { this.employee = { open: true, method: 'POST', action: @js(route('attendance.employees.store')), heading: 'New Employee', name: '', user_id: '', shift_id: '', designation: '', phone: '', email: '', join_date: '', status: 'active' }; },
         editEmployee(e) { this.employee = { open: true, method: 'PUT', action: e.action, heading: 'Edit Employee', name: e.name, user_id: e.user_id ?? '', shift_id: e.shift_id ?? '', designation: e.designation ?? '', phone: e.phone ?? '', email: e.email ?? '', join_date: e.join_date ?? '', status: e.status }; },
+        recordsFor: { open: false, employeeId: null, employeeName: '' },
+        record: { open: false, method: 'POST', action: @js(route('attendance.records.store')), heading: 'Add Record', employee_id: '', employee_name: '', work_date: '', mode: 'times', check_in_time: '', check_out_time: '', status: 'absent', note: '' },
+        recordEmpIds: @js($records->pluck('employee_id')->map(fn ($v) => (int) $v)->unique()->values()),
+        hasRecords(id) { return this.recordEmpIds.includes(id); },
+        openRecords(emp) { this.recordsFor = { open: true, employeeId: emp.id, employeeName: emp.name }; },
+        newRecord(id, name) { this.record = { open: true, method: 'POST', action: @js(route('attendance.records.store')), heading: 'Add record — ' + name, employee_id: id, employee_name: name, work_date: '', mode: 'times', check_in_time: '', check_out_time: '', status: 'absent', note: '' }; },
+        editRecord(r) { this.record = { open: true, method: 'PUT', action: r.action, heading: 'Edit record — ' + r.employee_name, employee_id: r.employee_id, employee_name: r.employee_name, work_date: r.work_date, mode: r.check_in_time ? 'times' : 'mark', check_in_time: r.check_in_time ?? '', check_out_time: r.check_out_time ?? '', status: r.status, note: r.note ?? '' }; },
         newShift() { this.shift = { open: true, method: 'POST', action: @js(route('attendance.shifts.store')), heading: 'New Shift', name: '', start_time: '', end_time: '', is_default: false }; },
         editShift(s) { this.shift = { open: true, method: 'PUT', action: s.action, heading: 'Edit Shift', name: s.name, start_time: s.start_time, end_time: s.end_time, is_default: s.is_default }; },
         newHoliday() { this.holiday = { open: true, method: 'POST', action: @js(route('attendance.holidays.store')), heading: 'Add Holiday', title: '', holiday_date: '' }; },
@@ -43,6 +50,41 @@
         title="Attendance"
         subtitle="Configure shifts, holidays, leave types and attendance rules for your agency"
         icon="bi-calendar-check" />
+
+    {{-- Self check-in / check-out (only for a login linked to an active employee) --}}
+    @if($selfEmployee)
+        @php $selfTz = $settings->timezone ?: 'UTC'; @endphp
+        <div class="mb-5 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-soft sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex items-center gap-3">
+                <span class="grid h-11 w-11 place-items-center rounded-xl bg-brand-50 text-brand-600"><i class="bi bi-person-badge text-xl"></i></span>
+                <div>
+                    <div class="text-sm font-semibold text-slate-800">Your attendance today — {{ $selfEmployee->name }}</div>
+                    @if(! $selfToday)
+                        <div class="text-xs text-slate-400">You haven't checked in yet.</div>
+                    @elseif($selfToday->check_in_at && ! $selfToday->check_out_at)
+                        <div class="text-xs text-slate-500">Checked in at <span class="font-semibold">{{ $selfToday->check_in_at->timezone($selfTz)->format('h:i A') }}</span>
+                            · <x-ui.status-badge :status="$selfToday->status" :label="$selfToday->statusLabel()" /></div>
+                    @else
+                        <div class="text-xs text-slate-500">Done for today — in <span class="font-semibold">{{ $selfToday->check_in_at?->timezone($selfTz)->format('h:i A') }}</span>,
+                            out <span class="font-semibold">{{ $selfToday->check_out_at?->timezone($selfTz)->format('h:i A') }}</span>,
+                            worked {{ intdiv($selfToday->worked_minutes, 60) }}h {{ $selfToday->worked_minutes % 60 }}m</div>
+                    @endif
+                </div>
+            </div>
+            @if(! $selfToday || ($selfToday->check_in_at && ! $selfToday->check_out_at))
+                <form method="POST" action="{{ route('attendance.check') }}">
+                    @csrf
+                    <button type="submit"
+                        class="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-lg px-4 text-sm font-semibold text-white transition-colors {{ ! $selfToday ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-amber-600 hover:bg-amber-700' }}">
+                        <i class="bi {{ ! $selfToday ? 'bi-box-arrow-in-right' : 'bi-box-arrow-right' }}"></i>
+                        {{ ! $selfToday ? 'Check In' : 'Check Out' }}
+                    </button>
+                </form>
+            @else
+                <span class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700"><i class="bi bi-check-circle"></i> Complete</span>
+            @endif
+        </div>
+    @endif
 
     {{-- Config summary --}}
     <div class="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
@@ -128,6 +170,8 @@
                                 @if(auth()->user()->isAgencyAdmin())
                                     <td class="px-4 py-3">
                                         <div class="flex items-center justify-end gap-1">
+                                            <button type="button" title="Attendance records" class="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100"
+                                                x-on:click="openRecords(@js(['id' => $employee->id, 'name' => $employee->name]))"><i class="bi bi-calendar2-week"></i></button>
                                             <button type="button" title="Edit" class="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-brand-600 transition-colors hover:bg-brand-50"
                                                 x-on:click="editEmployee(@js(['action' => route('attendance.employees.update', $employee), 'name' => $employee->name, 'user_id' => $employee->user_id, 'shift_id' => $employee->shift_id, 'designation' => $employee->designation, 'phone' => $employee->phone, 'email' => $employee->email, 'join_date' => $employee->join_date?->format('Y-m-d'), 'status' => $employee->status]))"><i class="bi bi-pencil"></i></button>
                                             <button type="button" title="Retire" class="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-rose-600 transition-colors hover:bg-rose-50"
@@ -576,6 +620,118 @@
                 <div class="flex justify-end gap-2 border-t border-slate-100 px-5 py-4">
                     <x-ui.button type="button" variant="secondary" size="sm" class="cursor-pointer" x-on:click="employee.open = false">Cancel</x-ui.button>
                     <x-ui.button type="submit" size="sm" class="cursor-pointer"><i class="bi bi-check-lg"></i> Save Employee</x-ui.button>
+                </div>
+            </form>
+        </div>
+    </div>
+    @endif
+
+    {{-- ── Attendance records history modal (admin) ──────────── --}}
+    @if(auth()->user()->isAgencyAdmin())
+    <div x-show="recordsFor.open" x-cloak class="fixed inset-0 z-[60] flex items-center justify-center p-4" style="display:none">
+        <div @click="recordsFor.open = false" x-show="recordsFor.open" x-transition.opacity class="absolute inset-0 bg-slate-900/50"></div>
+        <div x-show="recordsFor.open" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+             class="relative w-full max-w-3xl rounded-2xl bg-white shadow-xl">
+            <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+                <h3 class="text-base font-semibold text-slate-900">Attendance — <span x-text="recordsFor.employeeName"></span></h3>
+                <div class="flex items-center gap-2">
+                    <button type="button" x-on:click="newRecord(recordsFor.employeeId, recordsFor.employeeName)"
+                        class="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg bg-brand-600 px-3 text-xs font-semibold text-white hover:bg-brand-700"><i class="bi bi-plus-lg"></i> Add record</button>
+                    <button type="button" class="grid h-8 w-8 place-items-center rounded-lg text-slate-400 hover:bg-slate-100" x-on:click="recordsFor.open = false"><i class="bi bi-x-lg"></i></button>
+                </div>
+            </div>
+            <div class="max-h-[65vh] overflow-auto px-5 py-4">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-slate-200 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                            <th class="py-2 pr-3">Date</th><th class="py-2 pr-3">In</th><th class="py-2 pr-3">Out</th>
+                            <th class="py-2 pr-3">Status</th><th class="py-2 pr-3 text-right">Late</th><th class="py-2 pr-3 text-right">OT</th>
+                            <th class="py-2 pr-3">Src</th><th class="py-2 pr-3">Note</th><th class="py-2 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @php $recTz = $settings->timezone ?: 'UTC'; @endphp
+                        @foreach($records as $r)
+                            <tr x-show="recordsFor.employeeId === {{ (int) $r->employee_id }}" class="align-top">
+                                <td class="py-2 pr-3 font-medium text-slate-700">{{ $r->work_date->format('d M Y') }}</td>
+                                <td class="py-2 pr-3 text-slate-600">{{ $r->check_in_at?->timezone($recTz)->format('h:i A') ?? '—' }}</td>
+                                <td class="py-2 pr-3 text-slate-600">{{ $r->check_out_at?->timezone($recTz)->format('h:i A') ?? '—' }}</td>
+                                <td class="py-2 pr-3"><x-ui.status-badge :status="$r->status" :label="$r->statusLabel()" /></td>
+                                <td class="py-2 pr-3 text-right text-slate-600">{{ $r->late_minutes ? $r->late_minutes.'m' : '—' }}</td>
+                                <td class="py-2 pr-3 text-right text-slate-600">{{ $r->overtime_minutes ? $r->overtime_minutes.'m' : '—' }}</td>
+                                <td class="py-2 pr-3 text-xs text-slate-400">{{ ucfirst($r->source) }}</td>
+                                <td class="py-2 pr-3 text-xs text-slate-500">{{ $r->note ?: '—' }}</td>
+                                <td class="py-2">
+                                    <div class="flex items-center justify-end gap-1">
+                                        <button type="button" title="Edit" class="grid h-7 w-7 cursor-pointer place-items-center rounded-lg text-brand-600 hover:bg-brand-50"
+                                            x-on:click="editRecord(@js(['action' => route('attendance.records.update', $r), 'employee_id' => $r->employee_id, 'employee_name' => $r->employee->name ?? '', 'work_date' => $r->work_date->format('Y-m-d'), 'check_in_time' => $r->check_in_at?->timezone($recTz)->format('H:i'), 'check_out_time' => $r->check_out_at?->timezone($recTz)->format('H:i'), 'status' => $r->status, 'note' => $r->note]))"><i class="bi bi-pencil"></i></button>
+                                        <button type="button" title="Delete" class="grid h-7 w-7 cursor-pointer place-items-center rounded-lg text-rose-600 hover:bg-rose-50"
+                                            x-on:click="del.open = true; del.title = @js($r->work_date->format('d M Y').' record'); del.action = @js(route('attendance.records.destroy', $r))"><i class="bi bi-trash"></i></button>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                        <tr x-show="! hasRecords(recordsFor.employeeId)">
+                            <td colspan="9" class="py-8 text-center text-sm text-slate-400">No attendance records yet. Absent/weekend/holiday days are shown in reports without needing a row.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {{-- ── Attendance record add/edit modal (admin) ──────────── --}}
+    <div x-show="record.open" x-cloak class="fixed inset-0 z-[70] flex items-center justify-center p-4" style="display:none">
+        <div @click="record.open = false" x-show="record.open" x-transition.opacity class="absolute inset-0 bg-slate-900/50"></div>
+        <div x-show="record.open" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+             class="relative w-full max-w-md rounded-2xl bg-white shadow-xl">
+            <form method="POST" :action="record.action">
+                @csrf
+                <input type="hidden" name="_method" :value="record.method">
+                <input type="hidden" name="employee_id" :value="record.employee_id">
+                <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+                    <h3 class="text-base font-semibold text-slate-900" x-text="record.heading"></h3>
+                    <button type="button" class="grid h-8 w-8 place-items-center rounded-lg text-slate-400 hover:bg-slate-100" x-on:click="record.open = false"><i class="bi bi-x-lg"></i></button>
+                </div>
+                <div class="space-y-4 px-5 py-4">
+                    <div>
+                        <label class="mb-1 block text-xs font-semibold text-slate-600">Date <span class="text-rose-500">*</span></label>
+                        <input type="date" name="work_date" x-model="record.work_date" required class="{{ $inputCls }}">
+                    </div>
+                    <div>
+                        <label class="mb-1.5 block text-xs font-semibold text-slate-600">Entry type</label>
+                        <div class="inline-flex rounded-lg border border-slate-200 p-0.5 text-sm">
+                            <button type="button" x-on:click="record.mode = 'times'" :class="record.mode === 'times' ? 'bg-brand-600 text-white' : 'text-slate-600'" class="cursor-pointer rounded-md px-3 py-1 font-medium">Check-in times</button>
+                            <button type="button" x-on:click="record.mode = 'mark'" :class="record.mode === 'mark' ? 'bg-brand-600 text-white' : 'text-slate-600'" class="cursor-pointer rounded-md px-3 py-1 font-medium">Mark status</button>
+                        </div>
+                    </div>
+                    <div x-show="record.mode === 'times'" class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="mb-1 block text-xs font-semibold text-slate-600">Check-in</label>
+                            <input type="time" name="check_in_time" x-model="record.check_in_time" :required="record.mode === 'times'" class="{{ $inputCls }}">
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-semibold text-slate-600">Check-out</label>
+                            <input type="time" name="check_out_time" x-model="record.check_out_time" :required="record.mode === 'times'" class="{{ $inputCls }}">
+                        </div>
+                    </div>
+                    <div x-show="record.mode === 'mark'">
+                        <label class="mb-1 block text-xs font-semibold text-slate-600">Status <span class="text-rose-500">*</span></label>
+                        <select name="status" x-model="record.status" class="{{ $inputCls }}">
+                            @foreach(\App\Models\AttendanceRecord::MANUAL_STATUSES as $s)
+                                <option value="{{ $s }}">{{ \App\Models\AttendanceRecord::STATUSES[$s] ?? $s }}</option>
+                            @endforeach
+                        </select>
+                        <p class="mt-1 text-xs text-slate-400">Status is computed automatically when you enter check-in times.</p>
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-xs font-semibold text-slate-600">Note</label>
+                        <input type="text" name="note" x-model="record.note" maxlength="255" class="{{ $inputCls }}" placeholder="e.g. Excused — family emergency">
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 border-t border-slate-100 px-5 py-4">
+                    <x-ui.button type="button" variant="secondary" size="sm" class="cursor-pointer" x-on:click="record.open = false">Cancel</x-ui.button>
+                    <x-ui.button type="submit" size="sm" class="cursor-pointer"><i class="bi bi-check-lg"></i> Save Record</x-ui.button>
                 </div>
             </form>
         </div>

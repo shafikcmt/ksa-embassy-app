@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Agency;
 
 use App\Http\Controllers\Controller;
+use App\Models\AttendanceRecord;
 use App\Models\AttendanceSetting;
 use App\Models\Employee;
 use App\Models\Holiday;
 use App\Models\LeaveType;
 use App\Models\Shift;
 use App\Models\User;
+use App\Services\AttendanceCalculator;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -31,7 +34,7 @@ class AttendanceController extends Controller
     /** Tabs the shell renders; used to validate the ?tab= deep link. */
     private const TABS = ['dashboard', 'employees', 'shifts', 'settings', 'leave', 'holidays', 'reports'];
 
-    public function index(Request $request)
+    public function index(Request $request, AttendanceCalculator $calc)
     {
         $agencyId = auth()->user()->agency_id;
 
@@ -47,6 +50,22 @@ class AttendanceController extends Controller
             ->orderBy('name')->get();
         $linkableUsers = $this->linkableUsers($agencyId); // agency_staff logins for the link <select>
 
+        // Self check-in/out card: the acting user's linked active employee + today's row.
+        $selfEmployee = Employee::forAgency($agencyId)->active()->where('user_id', auth()->id())->first();
+        $selfToday    = null;
+        if ($selfEmployee) {
+            $tz    = $settings->timezone ?: 'UTC';
+            $today = $calc->workDateFor(now(), $tz);
+            $selfToday = AttendanceRecord::forAgency($agencyId)
+                ->where('employee_id', $selfEmployee->id)->forDate($today)->first();
+        }
+
+        // Admin per-employee Records modal feed (recent first; filtered client-side by employee).
+        $records = $this->userIsAdmin()
+            ? AttendanceRecord::forAgency($agencyId)->with('employee:id,name')
+                ->orderByDesc('work_date')->orderByDesc('id')->limit(500)->get()
+            : collect();
+
         return view('agency.attendance.index', [
             'tab'           => $tab,
             'settings'      => $settings,
@@ -55,6 +74,10 @@ class AttendanceController extends Controller
             'leaveTypes'    => $leaveTypes,
             'employees'     => $employees,
             'linkableUsers' => $linkableUsers,
+            'selfEmployee'  => $selfEmployee,
+            'selfToday'     => $selfToday,
+            'records'       => $records,
+            'recordStatuses'=> AttendanceRecord::STATUSES,
             'timezones'     => AttendanceSetting::TIMEZONES,
             'weekdays'      => AttendanceSetting::WEEKDAYS,
         ]);
@@ -360,7 +383,228 @@ class AttendanceController extends Controller
         return $this->linkableUsers($agencyId)->pluck('id')->all();
     }
 
+    // ── Attendance records (H3b) ──────────────────────────────────────────────
+    //
+    // Self check-in/out is available to any logged-in user linked to an ACTIVE
+    // employee (own record only) — NOT admin-gated and NOT behind active-
+    // subscription (daily work flow must not depend on billing). Admin manual
+    // records (create/edit/hard-delete, any employee, any date) are admin-only.
+    // status + minute columns are always written FROM AttendanceCalculator, never
+    // from raw input. attendance_records is a truthful event log: absent/weekend/
+    // holiday are derived at read time and never stored.
+
+    /** Self check-in / check-out toggle for the acting user's linked employee. */
+    public function check(Request $request, AttendanceCalculator $calc)
+    {
+        $agencyId = auth()->user()->agency_id;
+
+        $employee = Employee::forAgency($agencyId)->active()->where('user_id', auth()->id())->first();
+        abort_unless($employee, 403); // no active linked employee → cannot self-check-in
+
+        $settings = AttendanceSetting::forAgency($agencyId)->first();
+        if (! $settings) {
+            return back()->with('error', 'Attendance settings are not configured yet — ask your admin to set them.');
+        }
+
+        $tz  = $settings->timezone ?: 'UTC';
+        $now = CarbonImmutable::now('UTC');
+
+        // A still-open row (checked in, not out) within a sane window handles
+        // overnight shifts where the check-out lands on the next calendar day.
+        $open = AttendanceRecord::forAgency($agencyId)
+            ->where('employee_id', $employee->id)->open()
+            ->where('check_in_at', '>=', $now->copy()->subHours(18))
+            ->orderByDesc('check_in_at')->first();
+
+        if ($open) {
+            $exp = $calc->resolveExpectation($employee, $open->work_date->format('Y-m-d'), $settings);
+            $res = $calc->evaluate($open->check_in_at, $now, $exp);
+            $open->update([
+                'check_out_at'     => $now,
+                'status'           => $res->status,
+                'late_minutes'     => $res->lateMinutes,
+                'overtime_minutes' => $res->overtimeMinutes,
+                'worked_minutes'   => $res->workedMinutes,
+                'updated_by'       => auth()->id(),
+            ]);
+
+            return back()->with('success', 'Checked out. Worked ' . $this->hoursLabel($res->workedMinutes) . '.');
+        }
+
+        $today   = $calc->workDateFor($now, $tz);
+        $existing = AttendanceRecord::forAgency($agencyId)
+            ->where('employee_id', $employee->id)->forDate($today)->first();
+
+        if ($existing) {
+            return back()->with('error', 'You have already completed attendance for today.');
+        }
+
+        $exp = $calc->resolveExpectation($employee, $today, $settings);
+        $res = $calc->evaluate($now, null, $exp);
+        AttendanceRecord::create([
+            'agency_id'        => $agencyId,
+            'employee_id'      => $employee->id,
+            'shift_id'         => $employee->shift_id,
+            'work_date'        => $today,
+            'check_in_at'      => $now,
+            'status'           => $res->status,
+            'late_minutes'     => $res->lateMinutes,
+            'source'           => 'self',
+            'created_by'       => auth()->id(),
+            'updated_by'       => auth()->id(),
+        ]);
+
+        $flash = $res->status === 'present' ? 'Checked in. Have a great day!' : 'Checked in (late by ' . $res->lateMinutes . 'm).';
+
+        return back()->with('success', $flash);
+    }
+
+    public function storeRecord(Request $request, AttendanceCalculator $calc)
+    {
+        $this->authorizeAdmin();
+
+        $agencyId = auth()->user()->agency_id;
+        $data     = $this->validateRecord($request, $agencyId);
+        $employee = Employee::forAgency($agencyId)->findOrFail($data['employee_id']);
+
+        AttendanceRecord::create(
+            $this->recordAttributes($data, $employee, $calc, $agencyId) + [
+                'agency_id'  => $agencyId,
+                'created_by' => auth()->id(),
+                'updated_by' => auth()->id(),
+            ]
+        );
+
+        return redirect()->route('attendance.index', ['tab' => 'employees'])
+            ->with('success', 'Attendance record saved.');
+    }
+
+    public function updateRecord(Request $request, AttendanceRecord $record, AttendanceCalculator $calc)
+    {
+        $this->authorizeAdmin();
+        $this->authorizeAgency($record);
+
+        $agencyId = auth()->user()->agency_id;
+        $data     = $this->validateRecord($request, $agencyId, $record);
+        $employee = Employee::forAgency($agencyId)->findOrFail($data['employee_id']);
+
+        $record->update(
+            $this->recordAttributes($data, $employee, $calc, $agencyId) + ['updated_by' => auth()->id()]
+        );
+
+        return redirect()->route('attendance.index', ['tab' => 'employees'])
+            ->with('success', 'Attendance record updated.');
+    }
+
+    public function destroyRecord(AttendanceRecord $record)
+    {
+        $this->authorizeAdmin();
+        $this->authorizeAgency($record);
+
+        $record->delete(); // hard delete → the day reverts to its derived status
+
+        return redirect()->route('attendance.index', ['tab' => 'employees'])
+            ->with('success', 'Attendance record deleted.');
+    }
+
+    /**
+     * Validate an admin record. Two modes:
+     *  - Times mode  (check_in_time present): status is COMPUTED by the calculator.
+     *  - Marker mode (no check_in_time): admin sets a status directly (+ optional note).
+     * employee_id is agency-scoped; unique (agency, employee, work_date) enforced.
+     */
+    private function validateRecord(Request $request, int $agencyId, ?AttendanceRecord $record = null): array
+    {
+        return $request->validate([
+            'employee_id'    => ['required', 'integer', Rule::exists('employees', 'id')->where('agency_id', $agencyId)->whereNull('deleted_at')],
+            'work_date'      => [
+                'required', 'date',
+                Rule::unique('attendance_records', 'work_date')
+                    ->where(fn ($q) => $q->where('agency_id', $agencyId)->where('employee_id', $request->input('employee_id')))
+                    ->ignore($record?->id),
+            ],
+            'check_in_time'  => ['nullable', 'date_format:H:i'],
+            'check_out_time' => ['nullable', 'date_format:H:i', 'required_with:check_in_time'],
+            'status'         => ['required_without:check_in_time', 'nullable', Rule::in(AttendanceRecord::MANUAL_STATUSES)],
+            'note'           => ['nullable', 'string', 'max:255'],
+        ], [
+            'work_date.unique' => 'This employee already has a record for that date — edit it instead.',
+        ]);
+    }
+
+    /** Build the persisted attribute set for an admin record from validated input. */
+    private function recordAttributes(array $data, Employee $employee, AttendanceCalculator $calc, int $agencyId): array
+    {
+        $settings = $this->settingsOrDefault($agencyId);
+        $tz       = $settings->timezone ?: 'UTC';
+        $date     = CarbonImmutable::parse($data['work_date'])->format('Y-m-d');
+
+        // Marker mode: no check-in time → store the admin's explicit status, no calc.
+        if (empty($data['check_in_time'])) {
+            return [
+                'employee_id'      => $employee->id,
+                'shift_id'         => $employee->shift_id,
+                'work_date'        => $date,
+                'check_in_at'      => null,
+                'check_out_at'     => null,
+                'status'           => $data['status'],
+                'late_minutes'     => 0,
+                'overtime_minutes' => 0,
+                'worked_minutes'   => 0,
+                'source'           => 'admin',
+                'note'             => $data['note'] ?? null,
+            ];
+        }
+
+        // Times mode: build UTC instants (overnight-safe) and let the calculator judge.
+        $in  = CarbonImmutable::parse("{$date} {$data['check_in_time']}", $tz);
+        $out = null;
+        if (! empty($data['check_out_time'])) {
+            $out = CarbonImmutable::parse("{$date} {$data['check_out_time']}", $tz);
+            if ($out->lessThanOrEqualTo($in)) {
+                $out = $out->addDay(); // overnight
+            }
+        }
+
+        $exp = $calc->resolveExpectation($employee, $date, $settings);
+        $res = $calc->evaluate($in->utc(), $out?->utc(), $exp);
+
+        return [
+            'employee_id'      => $employee->id,
+            'shift_id'         => $employee->shift_id,
+            'work_date'        => $date,
+            'check_in_at'      => $in->utc(),
+            'check_out_at'     => $out?->utc(),
+            'status'           => $res->status,
+            'late_minutes'     => $res->lateMinutes,
+            'overtime_minutes' => $res->overtimeMinutes,
+            'worked_minutes'   => $res->workedMinutes,
+            'source'           => 'admin',
+            'note'             => $data['note'] ?? null,
+        ];
+    }
+
+    /** Existing settings, or a transient default (UTC / 09:00–17:00 / grace 0) so check-in never hard-fails. */
+    private function settingsOrDefault(int $agencyId): AttendanceSetting
+    {
+        return AttendanceSetting::forAgency($agencyId)->first()
+            ?? new AttendanceSetting([
+                'timezone' => 'UTC', 'office_start' => '09:00', 'office_end' => '17:00', 'grace_minutes' => 0,
+            ]);
+    }
+
+    private function hoursLabel(int $minutes): string
+    {
+        return intdiv($minutes, 60) . 'h ' . ($minutes % 60) . 'm';
+    }
+
     // ── Guards ────────────────────────────────────────────────────────────────
+
+    /** Boolean form of the admin check (for view-feed decisions). */
+    private function userIsAdmin(): bool
+    {
+        return auth()->user()->isAgencyAdmin();
+    }
 
     /** Employee management is admin-only (mirrors StaffController). */
     private function authorizeAdmin(): void
