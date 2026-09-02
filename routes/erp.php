@@ -80,6 +80,17 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
         Route::get('/expenses/import', [ExpenseController::class, 'importForm'])->name('expenses.import.form');
         Route::get('/expenses/import/template', [ExpenseController::class, 'importTemplate'])->name('expenses.import.template');
         Route::post('/expenses/import/preview', [ExpenseController::class, 'importPreview'])->name('expenses.import.preview');
+        // ── E7e: Delivery + Double MOFA CSV export (staff) + import (admin) ───
+        Route::get('/delivery/export', [DeliveryController::class, 'exportCsv'])->name('delivery.export');
+        Route::get('/delivery/import', [DeliveryController::class, 'importForm'])->name('delivery.import.form');
+        Route::get('/delivery/import/template', [DeliveryController::class, 'importTemplate'])->name('delivery.import.template');
+        Route::post('/delivery/import/preview', [DeliveryController::class, 'importPreview'])->name('delivery.import.preview');
+
+        Route::get('/double-mofa/export', [DoubleMofaController::class, 'exportCsv'])->name('double-mofa.export');
+        Route::get('/double-mofa/import', [DoubleMofaController::class, 'importForm'])->name('double-mofa.import.form');
+        Route::get('/double-mofa/import/template', [DoubleMofaController::class, 'importTemplate'])->name('double-mofa.import.template');
+        Route::post('/double-mofa/import/preview', [DoubleMofaController::class, 'importPreview'])->name('double-mofa.import.preview');
+
         Route::get('/stamping/print', [StampingController::class, 'printPdf'])->name('stamping.print');
         Route::get('/manpower/print', [ManpowerController::class, 'printPdf'])->name('manpower.print');
         Route::get('/delivery/print', [DeliveryController::class, 'printPdf'])->name('delivery.print');
@@ -115,8 +126,10 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
 
         Route::middleware(['active-subscription'])->group(function () {
             Route::post('/delivery', [DeliveryController::class, 'store'])->name('delivery.store');
+            Route::post('/delivery/import', [DeliveryController::class, 'import'])->name('delivery.import'); // E7e commit
             Route::post('/delivery/{delivery}/payment', [DeliveryController::class, 'receivePayment'])->name('delivery.payment');
             Route::post('/double-mofa', [DoubleMofaController::class, 'store'])->name('double-mofa.store');
+            Route::post('/double-mofa/import', [DoubleMofaController::class, 'import'])->name('double-mofa.import'); // E7e commit
             Route::post('/double-mofa/{doubleMofa}/payment', [DoubleMofaController::class, 'receivePayment'])->name('double-mofa.payment');
         });
 

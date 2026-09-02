@@ -6,11 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Models\DoubleMofa;
 use App\Models\ErpSetting;
 use App\Models\PaymentReceipt;
+use App\Services\CsvImportService;
 use App\Services\ErpPaymentService;
 use App\Services\PdfGeneratorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use RuntimeException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * ERP Double MOFA (E2) — passports billed for a repeated MOFA. Money-bearing.
@@ -19,9 +23,23 @@ use RuntimeException;
  * (pre-filled in the form, editable per row) so later rate changes never rewrite
  * historical bills. Status (unpaid/partial/paid) is payment-derived and only
  * ErpPaymentService writes paid_amount + status. All actions are agency-scoped.
+ *
+ * E7e adds CSV export (staff-visible) + import (admin-only). Import mirrors manual
+ * Add EXACTLY: billing_amount comes straight from the CSV column (the rate is only
+ * a form pre-fill, which manual Add never reads at store() time, so import does not
+ * either); there is NO status column (status is payment-derived and defaults to
+ * 'unpaid'); paid_amount is not fillable → defaults 0 and the payment_receipts
+ * ledger is never touched. Importable columns are the manual-Add fields only.
  */
 class DoubleMofaController extends Controller
 {
+    private const CSV_HEADERS = [
+        'mofa_date', 'full_name', 'passport_no',
+        'visa_serial', 'reference', 'billing_amount',
+    ];
+
+    private const IMPORT_SESSION_KEY = 'erp_double_mofa_import_path';
+
     public function index()
     {
         $agencyId = auth()->user()->agency_id;
@@ -175,14 +193,174 @@ class DoubleMofaController extends Controller
 
     private function validated(Request $request): array
     {
-        return $request->validate([
+        return $request->validate($this->rules());
+    }
+
+    /** Single source of truth for validation — shared by manual Add and CSV import. */
+    private function rules(): array
+    {
+        return [
             'mofa_date'      => ['required', 'date'],
             'full_name'      => ['required', 'string', 'max:255'],
             'passport_no'    => ['required', 'string', 'max:100'],
             'visa_serial'    => ['nullable', 'string', 'max:100'],
             'reference'      => ['nullable', 'string', 'max:255'],
             'billing_amount' => ['required', 'numeric', 'min:0', 'max:9999999999.99'],
-        ]);
+        ];
+    }
+
+    /** CSV data export (E7e) — staff-visible; header matches the import template. */
+    public function exportCsv(): StreamedResponse
+    {
+        $entries = $this->listing(auth()->user()->agency_id);
+
+        return response()->streamDownload(function () use ($entries) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, self::CSV_HEADERS);
+            foreach ($entries as $e) {
+                fputcsv($out, [
+                    optional($e->mofa_date)->format('Y-m-d'),
+                    $e->full_name, $e->passport_no, $e->visa_serial, $e->reference,
+                    number_format((float) $e->billing_amount, 2, '.', ''), // plain decimal, no thousands sep
+                ]);
+            }
+            fclose($out);
+        }, 'double-mofa-' . now()->format('Y-m-d') . '.csv', ['Content-Type' => 'text/csv']);
+    }
+
+    public function importForm()
+    {
+        abort_unless(auth()->user()->isAgencyAdmin(), 403);
+
+        return view('erp.import.form', $this->importView() + ['result' => null]);
+    }
+
+    public function importTemplate(): StreamedResponse
+    {
+        abort_unless(auth()->user()->isAgencyAdmin(), 403);
+
+        return response()->streamDownload(function () {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, self::CSV_HEADERS);
+            fclose($out);
+        }, 'double-mofa-import-template.csv', ['Content-Type' => 'text/csv']);
+    }
+
+    public function importPreview(Request $request, CsvImportService $importer)
+    {
+        abort_unless(auth()->user()->isAgencyAdmin(), 403);
+        $request->validate(['file' => ['required', 'file', 'mimes:csv,txt', 'max:2048']]);
+
+        $path   = $request->file('file')->store('erp-imports');
+        $result = $importer->process(Storage::path($path), $this->importConfig(auth()->user()->agency_id));
+
+        if ($result['fileError']) {
+            Storage::delete($path);
+            return redirect()->route('erp.double-mofa.import.form')->with('error', $result['fileError']);
+        }
+
+        $request->session()->put(self::IMPORT_SESSION_KEY, $path);
+
+        return view('erp.import.form', $this->importView() + ['result' => $result]);
+    }
+
+    public function import(Request $request, CsvImportService $importer)
+    {
+        abort_unless(auth()->user()->isAgencyAdmin(), 403);
+
+        $agencyId = auth()->user()->agency_id;
+        $path     = $request->session()->get(self::IMPORT_SESSION_KEY);
+
+        if (! $path || ! Storage::exists($path)) {
+            return redirect()->route('erp.double-mofa.import.form')
+                ->with('error', 'Import session expired — please upload the file again.');
+        }
+
+        $result = $importer->process(Storage::path($path), $this->importConfig($agencyId));
+
+        if (! $result['ok']) {
+            return view('erp.import.form', $this->importView() + ['result' => $result])
+                ->withErrors(['file' => 'Some rows are invalid — nothing was imported. Fix and re-upload.']);
+        }
+
+        // Creates the billing row ONLY, exactly like manual Add: billing_amount is
+        // taken straight from the row; paid_amount is not fillable → defaults 0;
+        // status defaults 'unpaid'. No ErpPaymentService call, so payment_receipts
+        // is never written.
+        DB::transaction(function () use ($result, $agencyId) {
+            foreach ($result['rows'] as $row) {
+                DoubleMofa::create($row['attrs'] + [
+                    'agency_id'  => $agencyId,
+                    'created_by' => auth()->id(),
+                    'updated_by' => auth()->id(),
+                ]);
+            }
+        });
+
+        $count = $result['total'];
+        Storage::delete($path);
+        $request->session()->forget(self::IMPORT_SESSION_KEY);
+
+        return redirect()->route('erp.double-mofa')
+            ->with('success', "Imported {$count} Double MOFA entr" . ($count === 1 ? 'y' : 'ies') . '.');
+    }
+
+    /** Shared-view props for the parameterized import screen. */
+    private function importView(): array
+    {
+        return [
+            'title'         => 'Import Double MOFA — CSV',
+            'heading'       => 'Import Double MOFA entries from CSV',
+            'back'          => 'erp.double-mofa',
+            'formRoute'     => 'erp.double-mofa.import.form',
+            'templateRoute' => 'erp.double-mofa.import.template',
+            'previewRoute'  => 'erp.double-mofa.import.preview',
+            'commitRoute'   => 'erp.double-mofa.import',
+            'columnsHint'   => 'mofa_date*, full_name*, passport_no*, visa_serial, reference, billing_amount*',
+            'legend'        => [
+                'billing_amount: a number (0 or more), max 2 decimals, no thousands separators. Set the exact amount per row (the settings rate is only a form default, not applied on import).',
+                'Status and paid amount are NOT imported — every row starts Unpaid; collect payments in the module.',
+            ],
+            'previewCols'   => [
+                ['label' => 'Date', 'key' => 'mofa_date'],
+                ['label' => 'Name', 'key' => 'full_name'],
+                ['label' => 'Passport', 'key' => 'passport_no'],
+                ['label' => 'Billing', 'key' => 'billing_amount'],
+            ],
+        ];
+    }
+
+    /** Import config: date → Y-m-d, currency-strip billing_amount, duplicate-passport notice. No status column. */
+    private function importConfig(int $agencyId): array
+    {
+        return [
+            'headers' => self::CSV_HEADERS,
+            'rules'   => $this->rules(),
+            'normalize' => function (array $r) {
+                $a = array_map(fn ($v) => trim((string) $v), $r);
+
+                $a['mofa_date'] = CsvImportService::toYmd($a['mofa_date'] ?? '');
+
+                // amount: strip a stray leading currency symbol/spaces; leave the
+                // numeric string for the `numeric`/`min:0` rules to judge.
+                $a['billing_amount'] = ltrim($a['billing_amount'] ?? '', " ৳\t");
+
+                foreach (['visa_serial', 'reference'] as $f) {
+                    if (($a[$f] ?? '') === '') {
+                        $a[$f] = null;
+                    }
+                }
+
+                return $a;
+            },
+            'notices' => function (array $a) use ($agencyId) {
+                $p = $a['passport_no'] ?? '';
+                if ($p !== '' && DoubleMofa::forAgency($agencyId)->where('passport_no', $p)->exists()) {
+                    return ["Passport {$p} already has a Double MOFA — added as a repeat."];
+                }
+                return [];
+            },
+        ];
     }
 
     private function currentRate(int $agencyId): float
