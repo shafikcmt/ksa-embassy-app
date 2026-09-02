@@ -47,10 +47,15 @@ Route::middleware(['auth', 'agency-access'])->group(function () {
     });
 
     // Attendance (config phase: settings, shifts, holidays, leave types)
+    // + H3a: Employees (admin-only management enforced in-controller).
     Route::middleware('page-access:attendance')->group(function () {
         Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
 
         Route::put('/attendance/settings', [AttendanceController::class, 'updateSettings'])->name('attendance.settings.update');
+
+        Route::post('/attendance/employees', [AttendanceController::class, 'storeEmployee'])->name('attendance.employees.store');
+        Route::put('/attendance/employees/{employee}', [AttendanceController::class, 'updateEmployee'])->name('attendance.employees.update');
+        Route::delete('/attendance/employees/{employee}', [AttendanceController::class, 'destroyEmployee'])->name('attendance.employees.destroy');
 
         Route::post('/attendance/shifts', [AttendanceController::class, 'storeShift'])->name('attendance.shifts.store');
         Route::put('/attendance/shifts/{shift}', [AttendanceController::class, 'updateShift'])->name('attendance.shifts.update');

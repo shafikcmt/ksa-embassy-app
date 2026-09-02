@@ -10,7 +10,7 @@
 
     $tabs = [
         'dashboard' => ['Dashboard', 'bi-speedometer2', false],
-        'employees' => ['Employees', 'bi-people',       false],
+        'employees' => ['Employees', 'bi-people',       true],
         'shifts'    => ['Shifts',    'bi-clock-history', true],
         'settings'  => ['Settings',  'bi-gear',          true],
         'leave'     => ['Leave',     'bi-calendar-minus',true],
@@ -28,6 +28,9 @@
         shift: { open: false, method: 'POST', action: @js(route('attendance.shifts.store')), heading: 'New Shift', name: '', start_time: '', end_time: '', is_default: false },
         holiday: { open: false, method: 'POST', action: @js(route('attendance.holidays.store')), heading: 'Add Holiday', title: '', holiday_date: '' },
         leave: { open: false, method: 'POST', action: @js(route('attendance.leave-types.store')), heading: 'New Leave Type', name: '', is_paid: true, default_days: '', color: '#6366f1' },
+        employee: { open: false, method: 'POST', action: @js(route('attendance.employees.store')), heading: 'New Employee', name: '', user_id: '', shift_id: '', designation: '', phone: '', email: '', join_date: '', status: 'active' },
+        newEmployee() { this.employee = { open: true, method: 'POST', action: @js(route('attendance.employees.store')), heading: 'New Employee', name: '', user_id: '', shift_id: '', designation: '', phone: '', email: '', join_date: '', status: 'active' }; },
+        editEmployee(e) { this.employee = { open: true, method: 'PUT', action: e.action, heading: 'Edit Employee', name: e.name, user_id: e.user_id ?? '', shift_id: e.shift_id ?? '', designation: e.designation ?? '', phone: e.phone ?? '', email: e.email ?? '', join_date: e.join_date ?? '', status: e.status }; },
         newShift() { this.shift = { open: true, method: 'POST', action: @js(route('attendance.shifts.store')), heading: 'New Shift', name: '', start_time: '', end_time: '', is_default: false }; },
         editShift(s) { this.shift = { open: true, method: 'PUT', action: s.action, heading: 'Edit Shift', name: s.name, start_time: s.start_time, end_time: s.end_time, is_default: s.is_default }; },
         newHoliday() { this.holiday = { open: true, method: 'POST', action: @js(route('attendance.holidays.store')), heading: 'Add Holiday', title: '', holiday_date: '' }; },
@@ -42,7 +45,8 @@
         icon="bi-calendar-check" />
 
     {{-- Config summary --}}
-    <div class="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <div class="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <x-ui.stat icon="bi-people" tone="green" label="Employees"  :value="$employees->count()" />
         <x-ui.stat icon="bi-clock-history" tone="brand"  label="Shifts"      :value="$shifts->count()" />
         <x-ui.stat icon="bi-calendar-event" tone="amber" label="Holidays"    :value="$holidays->count()" />
         <x-ui.stat icon="bi-calendar-minus" tone="violet" label="Leave Types" :value="$leaveTypes->count()" />
@@ -78,9 +82,71 @@
 
     {{-- ══ Employees (placeholder) ═════════════════════════════ --}}
     <div x-show="tab === 'employees'" x-cloak>
-        <x-ui.card>
-            <x-ui.empty icon="bi-people" title="Employees are coming soon"
-                message="Linking HR profiles and staff logins so they can check in will be enabled in the next phase." />
+        <div class="mb-3 flex items-center justify-between">
+            <h2 class="text-sm font-semibold text-slate-700">Employees</h2>
+            @if(auth()->user()->isAgencyAdmin())
+                <button type="button" x-on:click="newEmployee()"
+                    class="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg bg-brand-600 px-3 text-sm font-semibold text-white transition-colors hover:bg-brand-700">
+                    <i class="bi bi-plus-lg"></i> New Employee
+                </button>
+            @endif
+        </div>
+        <x-ui.card class="overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-slate-200 bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                            <th class="px-4 py-3">Name</th>
+                            <th class="px-4 py-3">Login</th>
+                            <th class="px-4 py-3">Shift</th>
+                            <th class="px-4 py-3">Joined</th>
+                            <th class="px-4 py-3">Status</th>
+                            @if(auth()->user()->isAgencyAdmin())
+                                <th class="px-4 py-3 text-right">Actions</th>
+                            @endif
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @forelse($employees as $employee)
+                            <tr class="transition-colors hover:bg-slate-50">
+                                <td class="px-4 py-3">
+                                    <div class="font-semibold text-slate-800">{{ $employee->name }}</div>
+                                    @if($employee->designation)
+                                        <div class="text-xs text-slate-400">{{ $employee->designation }}</div>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3">
+                                    @if($employee->user)
+                                        <span class="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700" title="{{ $employee->user->email }}"><i class="bi bi-person-check"></i> {{ $employee->user->name }}</span>
+                                    @else
+                                        <span class="text-xs text-slate-400">No login</span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3 text-slate-600">{{ $employee->shift->name ?? '—' }}</td>
+                                <td class="px-4 py-3 text-slate-600">{{ $employee->join_date?->format('d M Y') ?? '—' }}</td>
+                                <td class="px-4 py-3"><x-ui.status-badge :status="$employee->status" /></td>
+                                @if(auth()->user()->isAgencyAdmin())
+                                    <td class="px-4 py-3">
+                                        <div class="flex items-center justify-end gap-1">
+                                            <button type="button" title="Edit" class="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-brand-600 transition-colors hover:bg-brand-50"
+                                                x-on:click="editEmployee(@js(['action' => route('attendance.employees.update', $employee), 'name' => $employee->name, 'user_id' => $employee->user_id, 'shift_id' => $employee->shift_id, 'designation' => $employee->designation, 'phone' => $employee->phone, 'email' => $employee->email, 'join_date' => $employee->join_date?->format('Y-m-d'), 'status' => $employee->status]))"><i class="bi bi-pencil"></i></button>
+                                            <button type="button" title="Retire" class="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-rose-600 transition-colors hover:bg-rose-50"
+                                                x-on:click="del.open = true; del.title = @js('Employee: '.$employee->name); del.action = @js(route('attendance.employees.destroy', $employee))"><i class="bi bi-trash"></i></button>
+                                        </div>
+                                    </td>
+                                @endif
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="{{ auth()->user()->isAgencyAdmin() ? 6 : 5 }}" class="px-4 py-10">
+                                    <x-ui.empty icon="bi-people" title="No employees yet"
+                                        message="Add your office staff here. Link a login so they can check in, or add a login-less employee whose attendance you track manually." />
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </x-ui.card>
     </div>
 
@@ -439,6 +505,82 @@
             </form>
         </div>
     </div>
+
+    {{-- ── Employee modal ────────────────────────────────────── --}}
+    @if(auth()->user()->isAgencyAdmin())
+    <div x-show="employee.open" x-cloak class="fixed inset-0 z-[60] flex items-center justify-center p-4" style="display:none">
+        <div @click="employee.open = false" x-show="employee.open" x-transition.opacity class="absolute inset-0 bg-slate-900/50"></div>
+        <div x-show="employee.open" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+             class="relative w-full max-w-lg rounded-2xl bg-white shadow-xl">
+            <form method="POST" :action="employee.action">
+                @csrf
+                <input type="hidden" name="_method" :value="employee.method">
+                <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+                    <h3 class="text-base font-semibold text-slate-900" x-text="employee.heading"></h3>
+                    <button type="button" class="grid h-8 w-8 place-items-center rounded-lg text-slate-400 hover:bg-slate-100" x-on:click="employee.open = false"><i class="bi bi-x-lg"></i></button>
+                </div>
+                <div class="space-y-4 px-5 py-4">
+                    <div>
+                        <label class="mb-1 block text-xs font-semibold text-slate-600">Employee name <span class="text-rose-500">*</span></label>
+                        <input type="text" name="name" x-model="employee.name" required maxlength="120" class="{{ $inputCls }}" placeholder="e.g. Kamal Uddin">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="mb-1 block text-xs font-semibold text-slate-600">Link to login <span class="font-normal text-slate-400">(optional)</span></label>
+                            <select name="user_id" x-model="employee.user_id" class="{{ $inputCls }}">
+                                <option value="">— No login —</option>
+                                @foreach($linkableUsers as $u)
+                                    <option value="{{ $u->id }}">{{ $u->name }} ({{ $u->email }})</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-semibold text-slate-600">Shift <span class="font-normal text-slate-400">(optional)</span></label>
+                            <select name="shift_id" x-model="employee.shift_id" class="{{ $inputCls }}">
+                                <option value="">— None —</option>
+                                @foreach($shifts as $s)
+                                    <option value="{{ $s->id }}">{{ $s->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="mb-1 block text-xs font-semibold text-slate-600">Designation</label>
+                            <input type="text" name="designation" x-model="employee.designation" maxlength="120" class="{{ $inputCls }}" placeholder="e.g. Accountant">
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-semibold text-slate-600">Join date</label>
+                            <input type="date" name="join_date" x-model="employee.join_date" class="{{ $inputCls }}">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="mb-1 block text-xs font-semibold text-slate-600">Phone</label>
+                            <input type="text" name="phone" x-model="employee.phone" maxlength="40" class="{{ $inputCls }}">
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-semibold text-slate-600">Email</label>
+                            <input type="email" name="email" x-model="employee.email" maxlength="255" class="{{ $inputCls }}">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-xs font-semibold text-slate-600">Status <span class="text-rose-500">*</span></label>
+                        <select name="status" x-model="employee.status" required class="{{ $inputCls }}">
+                            @foreach(\App\Models\Employee::STATUSES as $key => $label)
+                                <option value="{{ $key }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 border-t border-slate-100 px-5 py-4">
+                    <x-ui.button type="button" variant="secondary" size="sm" class="cursor-pointer" x-on:click="employee.open = false">Cancel</x-ui.button>
+                    <x-ui.button type="submit" size="sm" class="cursor-pointer"><i class="bi bi-check-lg"></i> Save Employee</x-ui.button>
+                </div>
+            </form>
+        </div>
+    </div>
+    @endif
 
     {{-- ── Delete dialog (shared) ────────────────────────────── --}}
     <div x-show="del.open" x-cloak class="fixed inset-0 z-[60] flex items-center justify-center p-4" style="display:none">
