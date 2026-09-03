@@ -102,29 +102,54 @@ class LeaveRequest extends Model
      */
     public static function approvedDatesFor(int $agencyId, int $employeeId, string $from, string $to): array
     {
+        return static::approvedDatesForMany($agencyId, [$employeeId], $from, $to)[$employeeId] ?? [];
+    }
+
+    /**
+     * Batched form of the seam for the H3d report read-loop: approved-leave dates
+     * for MANY employees in ONE query (avoids a query-per-employee N+1). Ranges are
+     * expanded and clipped to [$from, $to] in PHP. Every requested id is present in
+     * the result (empty array when an employee has no approved leave in the window).
+     *
+     * @param  array<int,int>  $employeeIds
+     * @return array<int,array<int,string>>  [employeeId => ['Y-m-d', …]]
+     */
+    public static function approvedDatesForMany(int $agencyId, array $employeeIds, string $from, string $to): array
+    {
+        $ids    = array_values(array_unique(array_map('intval', $employeeIds)));
+        $result = array_fill_keys($ids, []);
+        if (empty($ids)) {
+            return $result;
+        }
+
         $rows = static::query()
             ->where('agency_id', $agencyId)
-            ->where('employee_id', $employeeId)
+            ->whereIn('employee_id', $ids)
             ->approved()
             ->whereDate('start_date', '<=', $to)
             ->whereDate('end_date', '>=', $from)
-            ->get(['start_date', 'end_date']);
+            ->get(['employee_id', 'start_date', 'end_date']);
 
-        $window = [CarbonImmutable::parse($from), CarbonImmutable::parse($to)];
-        $dates  = [];
+        $windowStart = CarbonImmutable::parse($from);
+        $windowEnd   = CarbonImmutable::parse($to);
+        $sets        = [];
 
         foreach ($rows as $row) {
             $cursor = CarbonImmutable::parse($row->start_date->format('Y-m-d'));
             $last   = CarbonImmutable::parse($row->end_date->format('Y-m-d'));
             for (; $cursor->lessThanOrEqualTo($last); $cursor = $cursor->addDay()) {
-                if ($cursor->lessThan($window[0]) || $cursor->greaterThan($window[1])) {
+                if ($cursor->lessThan($windowStart) || $cursor->greaterThan($windowEnd)) {
                     continue; // clip to the requested window
                 }
-                $dates[$cursor->format('Y-m-d')] = true;
+                $sets[(int) $row->employee_id][$cursor->format('Y-m-d')] = true;
             }
         }
 
-        return array_keys($dates);
+        foreach ($sets as $empId => $dates) {
+            $result[$empId] = array_keys($dates);
+        }
+
+        return $result;
     }
 
     public function statusLabel(): string
