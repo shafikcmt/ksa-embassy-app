@@ -9,13 +9,13 @@
     $weekend = old('weekend_days', $settings->weekend_days ?? []);
 
     $tabs = [
-        'dashboard' => ['Dashboard', 'bi-speedometer2', false],
+        'dashboard' => ['Dashboard', 'bi-speedometer2', true],
         'employees' => ['Employees', 'bi-people',       true],
         'shifts'    => ['Shifts',    'bi-clock-history', true],
         'settings'  => ['Settings',  'bi-gear',          true],
         'leave'     => ['Leave',     'bi-calendar-minus',true],
         'holidays'  => ['Holidays',  'bi-calendar-event',true],
-        'reports'   => ['Reports',   'bi-bar-chart',     false],
+        'reports'   => ['Reports',   'bi-bar-chart',     true],
     ];
 
     $inputCls = 'h-10 w-full rounded-lg border-slate-300 text-sm focus:border-brand-400 focus:ring-brand-400';
@@ -125,9 +125,47 @@
 
     {{-- ══ Dashboard (placeholder) ══════════════════════════════ --}}
     <div x-show="tab === 'dashboard'" x-cloak>
+        @php
+            $b = $dashboard['board'];
+            $onTime = $b['on_time_pct'];
+            $boardCards = [
+                ['label' => 'Present',  'value' => $b['present'],  'icon' => 'bi-check-circle',   'ring' => 'border-emerald-200 bg-emerald-50', 'text' => 'text-emerald-700'],
+                ['label' => 'Late',     'value' => $b['late'],     'icon' => 'bi-clock',          'ring' => 'border-amber-200 bg-amber-50',     'text' => 'text-amber-700'],
+                ['label' => 'Absent',   'value' => $b['absent'],   'icon' => 'bi-x-circle',       'ring' => 'border-rose-200 bg-rose-50',       'text' => 'text-rose-700'],
+                ['label' => 'On leave', 'value' => $b['on_leave'], 'icon' => 'bi-airplane',       'ring' => 'border-brand-200 bg-brand-50',     'text' => 'text-brand-700'],
+            ];
+        @endphp
+        <div class="mb-3 flex items-center justify-between">
+            <h2 class="text-sm font-semibold text-slate-700">Today · {{ \Illuminate\Support\Carbon::parse($dashboard['today'])->format('D, d M Y') }}</h2>
+            <span class="text-xs text-slate-400">{{ $isReportAdmin ? $dashboard['headcount'].' active employee(s)' : 'Your attendance' }}</span>
+        </div>
+
+        <div class="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            @foreach($boardCards as $c)
+                <div class="rounded-2xl border {{ $c['ring'] }} p-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold uppercase tracking-wide {{ $c['text'] }}">{{ $c['label'] }}</span>
+                        <i class="bi {{ $c['icon'] }} {{ $c['text'] }}"></i>
+                    </div>
+                    <div class="mt-1 text-2xl font-bold {{ $c['text'] }}">{{ $c['value'] }}</div>
+                </div>
+            @endforeach
+            <div class="rounded-2xl border border-slate-200 bg-white p-4">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">On-time</span>
+                    <i class="bi bi-graph-up-arrow text-slate-400"></i>
+                </div>
+                <div class="mt-1 text-2xl font-bold text-slate-900">{{ $onTime === null ? '—' : $onTime.'%' }}</div>
+                <div class="mt-0.5 text-[0.7rem] text-slate-400">present ÷ (present+late+half-day)</div>
+            </div>
+        </div>
+
         <x-ui.card>
-            <x-ui.empty icon="bi-speedometer2" title="Attendance dashboard is coming soon"
-                message="Today's present / late / absent overview and check-in activity will appear here once employee check-in is enabled." />
+            <div class="mb-3 flex items-center justify-between">
+                <h3 class="text-sm font-bold text-slate-900"><i class="bi bi-bar-chart-line mr-1 text-brand-500"></i>This week</h3>
+                <span class="text-[0.7rem] font-semibold uppercase tracking-wide text-slate-400">Last 7 days</span>
+            </div>
+            <div class="relative h-64"><canvas id="attWeekChart"></canvas></div>
         </x-ui.card>
     </div>
 
@@ -522,11 +560,149 @@
 
     {{-- ══ Reports (placeholder) ═══════════════════════════════ --}}
     <div x-show="tab === 'reports'" x-cloak>
-        <x-ui.card>
-            <x-ui.empty icon="bi-bar-chart" title="Reports are coming soon"
-                message="Date-range attendance reports with Excel / PDF / CSV export will be available once check-in records exist." />
+        @php
+            $rf = $report['filters'];
+            $activeEmployees = $employees->where('status', 'active');
+            $exportQuery = array_filter([
+                'from' => $rf['from'], 'to' => $rf['to'], 'employee_id' => $rf['employee_id'],
+            ], fn ($v) => $v !== null && $v !== '');
+            $sumCols = [
+                'present' => 'Present', 'late' => 'Late', 'half_day' => 'Half', 'excused' => 'Excused',
+                'on_leave' => 'Leave', 'weekend' => 'W/end', 'holiday' => 'Hol', 'absent' => 'Absent', 'pending' => 'Pending',
+            ];
+        @endphp
+
+        {{-- Filters + export --}}
+        <form method="GET" action="{{ route('attendance.index') }}" class="mb-4 rounded-2xl border border-slate-200 bg-white p-5">
+            <input type="hidden" name="tab" value="reports">
+            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div>
+                    <label class="mb-1 block text-xs font-semibold text-slate-600">From</label>
+                    <input type="date" name="from" value="{{ $rf['from'] }}" class="{{ $inputCls }}">
+                </div>
+                <div>
+                    <label class="mb-1 block text-xs font-semibold text-slate-600">To</label>
+                    <input type="date" name="to" value="{{ $rf['to'] }}" class="{{ $inputCls }}">
+                </div>
+                @if($isReportAdmin)
+                    <div>
+                        <label class="mb-1 block text-xs font-semibold text-slate-600">Employee</label>
+                        <select name="employee_id" class="{{ $inputCls }}">
+                            <option value="">All active</option>
+                            @foreach($activeEmployees as $emp)
+                                <option value="{{ $emp->id }}" @selected((int) $rf['employee_id'] === (int) $emp->id)>{{ $emp->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                @endif
+                <div class="flex items-end gap-2">
+                    <button type="submit" class="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-lg bg-brand-600 px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-700"><i class="bi bi-funnel"></i> Apply</button>
+                    <a href="{{ route('attendance.index', ['tab' => 'reports']) }}" class="inline-flex h-10 items-center rounded-lg border border-slate-300 px-4 text-sm font-semibold text-slate-600 hover:bg-slate-50">Reset</a>
+                </div>
+            </div>
+            <div class="mt-4 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4">
+                <span class="text-xs font-semibold uppercase tracking-wide text-slate-400">Range</span>
+                <span class="text-xs text-slate-500">{{ $rf['from'] }} → {{ $rf['to'] }}</span>
+                @if($isReportAdmin)
+                    <span class="mx-1 text-slate-300">·</span>
+                    <span class="text-xs font-semibold uppercase tracking-wide text-slate-400">Export</span>
+                    <a href="{{ route('attendance.reports.export-pdf', $exportQuery) }}" class="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
+                    <a href="{{ route('attendance.reports.export-csv', $exportQuery) }}" class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"><i class="bi bi-filetype-csv"></i> CSV</a>
+                @else
+                    <span class="mx-1 text-slate-300">·</span>
+                    <span class="text-xs text-slate-400"><i class="bi bi-lock"></i> Exports are available to agency admins.</span>
+                @endif
+            </div>
+        </form>
+
+        {{-- Per-employee summary --}}
+        <x-ui.card class="mb-4 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-slate-200 bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                            <th class="px-4 py-3">Employee</th>
+                            @foreach($sumCols as $label)<th class="px-3 py-3 text-center">{{ $label }}</th>@endforeach
+                            <th class="px-4 py-3 text-right">On-time</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @forelse($report['summary'] as $empId => $c)
+                            <tr class="transition-colors hover:bg-slate-50">
+                                <td class="px-4 py-3 font-semibold text-slate-800">{{ $report['empNames'][$empId] ?? ('#'.$empId) }}</td>
+                                @foreach($sumCols as $key => $label)
+                                    <td class="px-3 py-3 text-center {{ $c[$key] > 0 ? 'text-slate-700' : 'text-slate-300' }}">{{ $c[$key] }}</td>
+                                @endforeach
+                                <td class="px-4 py-3 text-right font-semibold text-slate-900">{{ $c['on_time_pct'] === null ? '—' : $c['on_time_pct'].'%' }}</td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="{{ count($sumCols) + 2 }}" class="p-0">
+                                <x-ui.empty icon="bi-bar-chart" title="Nothing to report"
+                                    message="No employees in scope for this range. Add employees or widen the dates." />
+                            </td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </x-ui.card>
+
+        {{-- Per-day matrix (single employee in focus) --}}
+        @if($report['dayMatrix'] !== null)
+            <x-ui.card>
+                <h3 class="mb-3 text-sm font-bold text-slate-900"><i class="bi bi-calendar3 mr-1 text-brand-500"></i>Day-by-day — {{ $report['empNames'][$report['singleId']] ?? '' }}</h3>
+                <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+                    @foreach($report['dayMatrix'] as $date => $status)
+                        <div class="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
+                            <span class="text-xs font-medium text-slate-500">{{ \Illuminate\Support\Carbon::parse($date)->format('d M') }}</span>
+                            <x-ui.status-badge :status="$status" :label="\App\Models\AttendanceRecord::STATUSES[$status] ?? ucfirst(str_replace('_',' ',$status))" />
+                        </div>
+                    @endforeach
+                </div>
+            </x-ui.card>
+        @endif
     </div>
+
+    {{-- ── This-week chart (Chart.js via CDN + SRI, E6c pattern; data as JSON, not an Alpine attr) ── --}}
+    @push('scripts')
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"
+                integrity="sha384-Sse/HDqcypGpyTDpvZOJNnG0TT3feGQUkF9H+mnRvic+LjR+K1NhTt8f51KIQ3v3"
+                crossorigin="anonymous"></script>
+        <script type="application/json" id="att-week-data">@json($dashboard['daily'])</script>
+        <script>
+            (function () {
+                var raw = document.getElementById('att-week-data');
+                var el  = document.getElementById('attWeekChart');
+                if (!raw || !el || typeof Chart === 'undefined') return;
+                var byDate = JSON.parse(raw.textContent);
+                var labels = Object.keys(byDate).map(function (d) {
+                    var p = d.split('-'); return p[2] + '/' + p[1];
+                });
+                var series = [
+                    { key: 'present',  label: 'Present',  color: '#10b981' },
+                    { key: 'late',     label: 'Late',     color: '#f59e0b' },
+                    { key: 'absent',   label: 'Absent',   color: '#f43f5e' },
+                    { key: 'on_leave', label: 'On leave', color: '#6366f1' },
+                ];
+                var datasets = series.map(function (s) {
+                    return {
+                        label: s.label,
+                        backgroundColor: s.color,
+                        data: Object.keys(byDate).map(function (d) { return byDate[d][s.key] || 0; }),
+                        stack: 'att',
+                    };
+                });
+                new Chart(el, {
+                    type: 'bar',
+                    data: { labels: labels, datasets: datasets },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } } },
+                        plugins: { legend: { position: 'bottom' } },
+                    },
+                });
+            })();
+        </script>
+    @endpush
 
     {{-- ── Shift modal ───────────────────────────────────────── --}}
     <div x-show="shift.open" x-cloak class="fixed inset-0 z-[60] flex items-center justify-center p-4" style="display:none">

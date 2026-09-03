@@ -103,4 +103,72 @@ class AttendanceReportService
 
         return $matrix;
     }
+
+    /** Every status the matrix can contain, in display order (drives tallies + chart). */
+    public const STATUS_KEYS = ['present', 'late', 'half_day', 'excused', 'on_leave', 'weekend', 'holiday', 'absent', 'pending'];
+
+    /**
+     * PURE. Tally a status matrix into per-status counts + the punctuality figure.
+     * on_time_pct = present / (present + late + half_day) × 100 (absent excluded —
+     * it measures punctuality of those expected who showed), null when nobody was
+     * expected (denominator 0). No DB.
+     *
+     * @param  array<int,array<string,string>>  $matrix
+     * @return array<string,int|float|null>
+     */
+    public function tally(array $matrix): array
+    {
+        $counts = array_fill_keys(self::STATUS_KEYS, 0);
+        foreach ($matrix as $days) {
+            foreach ($days as $status) {
+                $counts[$status] = ($counts[$status] ?? 0) + 1;
+            }
+        }
+        $counts['on_time_pct'] = $this->onTimePct($counts);
+
+        return $counts;
+    }
+
+    /** PURE. present / (present + late + half_day) as a rounded %, or null if none expected. */
+    public function onTimePct(array $counts): ?float
+    {
+        $denom = ($counts['present'] ?? 0) + ($counts['late'] ?? 0) + ($counts['half_day'] ?? 0);
+
+        return $denom === 0 ? null : round(($counts['present'] ?? 0) / $denom * 100, 1);
+    }
+
+    /**
+     * PURE. Per-employee tallies. @return array<int,array<string,int|float|null>>
+     * @param  array<int,array<string,string>>  $matrix
+     */
+    public function perEmployee(array $matrix): array
+    {
+        $out = [];
+        foreach ($matrix as $empId => $days) {
+            $out[$empId] = $this->tally([$days]);
+        }
+
+        return $out;
+    }
+
+    /**
+     * PURE. Per-day status counts for the trend chart, date-ascending.
+     * @return array<string,array<string,int>>  ['Y-m-d' => ['present'=>n, …], …]
+     * @param  array<int,array<string,string>>  $matrix
+     */
+    public function dailyTotals(array $matrix): array
+    {
+        $byDate = [];
+        foreach ($matrix as $days) {
+            foreach ($days as $date => $status) {
+                if (! isset($byDate[$date])) {
+                    $byDate[$date] = array_fill_keys(self::STATUS_KEYS, 0);
+                }
+                $byDate[$date][$status]++;
+            }
+        }
+        ksort($byDate);
+
+        return $byDate;
+    }
 }

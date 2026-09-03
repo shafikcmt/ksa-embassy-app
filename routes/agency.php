@@ -76,6 +76,10 @@ Route::middleware(['auth', 'agency-access'])->group(function () {
         Route::put('/attendance/leave-types/{leaveType}', [AttendanceController::class, 'updateLeaveType'])->name('attendance.leave-types.update');
         Route::delete('/attendance/leave-types/{leaveType}', [AttendanceController::class, 'destroyLeaveType'])->name('attendance.leave-types.destroy');
 
+        // Reports export (H3d): read-only; admin-only enforced in-controller.
+        Route::get('/attendance/reports/export/csv', [AttendanceController::class, 'exportReportsCsv'])->name('attendance.reports.export-csv');
+        Route::get('/attendance/reports/export/pdf', [AttendanceController::class, 'exportReportsPdf'])->name('attendance.reports.export-pdf');
+
         // Leave requests (H3c): submit/cancel open to linked staff; approve/reject/delete admin-only (in-controller).
         Route::post('/attendance/leave-requests', [AttendanceController::class, 'storeLeaveRequest'])->name('attendance.leave-requests.store');
         Route::patch('/attendance/leave-requests/{leaveRequest}/cancel', [AttendanceController::class, 'cancelLeaveRequest'])->name('attendance.leave-requests.cancel');

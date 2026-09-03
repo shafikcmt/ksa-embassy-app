@@ -12,10 +12,13 @@ use App\Models\LeaveType;
 use App\Models\Shift;
 use App\Models\User;
 use App\Services\AttendanceCalculator;
+use App\Services\AttendanceReportService;
+use App\Services\PdfGeneratorService;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Attendance module — configuration phase (M4).
@@ -35,7 +38,7 @@ class AttendanceController extends Controller
     /** Tabs the shell renders; used to validate the ?tab= deep link. */
     private const TABS = ['dashboard', 'employees', 'shifts', 'settings', 'leave', 'holidays', 'reports'];
 
-    public function index(Request $request, AttendanceCalculator $calc)
+    public function index(Request $request, AttendanceCalculator $calc, AttendanceReportService $reports)
     {
         $agencyId = auth()->user()->agency_id;
 
@@ -79,6 +82,21 @@ class AttendanceController extends Controller
             ->orderByDesc('start_date')->orderByDesc('id')
             ->limit(500)->get();
 
+        // ── H3d Dashboard + Reports (READ-ONLY, resolver-backed) ──────────────────
+        // Scope: an admin sees the whole active workforce; a staff member sees only
+        // their own linked employee (empty set if they aren't linked).
+        $isAdmin  = $this->userIsAdmin();
+        $activeIds = $employees->where('status', 'active')->pluck('id')->map(fn ($v) => (int) $v)->all();
+        $scopeIds  = $isAdmin ? $activeIds : ($selfEmployee ? [$selfEmployee->id] : []);
+        $empNames  = $employees->pluck('name', 'id');
+
+        $tz     = $settings->timezone ?: 'UTC';
+        $nowUtc = CarbonImmutable::now('UTC');
+        $today  = $calc->workDateFor($nowUtc, $tz);
+
+        $dashboard = $this->buildDashboard($agencyId, $scopeIds, $today, $nowUtc, $reports);
+        $report    = $this->buildReport($request, $agencyId, $isAdmin, $selfEmployee?->id, $today, $nowUtc, $reports, $empNames);
+
         return view('agency.attendance.index', [
             'tab'           => $tab,
             'settings'      => $settings,
@@ -91,6 +109,9 @@ class AttendanceController extends Controller
             'selfToday'     => $selfToday,
             'records'       => $records,
             'leaveRequests' => $leaveRequests,
+            'dashboard'     => $dashboard,
+            'report'        => $report,
+            'isReportAdmin' => $isAdmin,
             'recordStatuses'=> AttendanceRecord::STATUSES,
             'leaveStatuses' => LeaveRequest::STATUSES,
             'timezones'     => AttendanceSetting::TIMEZONES,
@@ -783,6 +804,148 @@ class AttendanceController extends Controller
         }
 
         return $count;
+    }
+
+    // ── Dashboard + Reports (H3d) — READ-ONLY, resolver-backed ────────────────
+    //
+    // No writes: every figure is a tally over AttendanceReportService::resolveRange,
+    // which derives status from existing rows/holidays/weekends/approved-leave and
+    // never materialises anything (ErpReportService discipline). Viewing is open to
+    // any access_attendance user (staff scoped to own); bulk EXPORTS are admin-only.
+
+    /** Today's board (status counts + on-time %) and the last-7-day trend series. */
+    private function buildDashboard(int $agencyId, array $scopeIds, string $today, CarbonImmutable $nowUtc, AttendanceReportService $reports): array
+    {
+        $weekFrom   = CarbonImmutable::parse($today)->subDays(6)->format('Y-m-d');
+        $weekMatrix = $reports->resolveRange($agencyId, $scopeIds, $weekFrom, $today, $nowUtc);
+
+        // Board = tally restricted to today's column only.
+        $todayCol = [];
+        foreach ($weekMatrix as $eid => $days) {
+            if (array_key_exists($today, $days)) {
+                $todayCol[$eid] = [$today => $days[$today]];
+            }
+        }
+
+        return [
+            'today'     => $today,
+            'headcount' => count($scopeIds),
+            'board'     => $reports->tally($todayCol),
+            'daily'     => $reports->dailyTotals($weekMatrix),
+        ];
+    }
+
+    /**
+     * Shared Reports build — the SINGLE source for the screen and both exports, so
+     * they can never diverge. Staff are forced to their own employee; an admin may
+     * filter to one employee (agency-scoped) or see the whole active workforce.
+     */
+    private function buildReport(Request $request, int $agencyId, bool $isAdmin, ?int $selfEmployeeId, string $today, CarbonImmutable $nowUtc, AttendanceReportService $reports, $empNames): array
+    {
+        $monthStart = CarbonImmutable::parse($today)->startOfMonth()->format('Y-m-d');
+        $from = $this->safeDate($request->input('from'), $monthStart);
+        $to   = $this->safeDate($request->input('to'), $today);
+        if ($from > $to) {
+            [$from, $to] = [$to, $from]; // tolerate a reversed range
+        }
+
+        $employeeId = $isAdmin ? $request->input('employee_id') : $selfEmployeeId;
+        $employeeId = ($employeeId === null || $employeeId === '') ? null : (int) $employeeId;
+
+        if ($employeeId !== null) {
+            // Tenant guard: a filter id from another agency resolves to no scope.
+            $valid = Employee::forAgency($agencyId)->whereKey($employeeId)->exists();
+            $reportIds = $valid ? [$employeeId] : [];
+        } else {
+            $reportIds = Employee::forAgency($agencyId)->active()->pluck('id')->map(fn ($v) => (int) $v)->all();
+        }
+
+        $matrix  = $reports->resolveRange($agencyId, $reportIds, $from, $to, $nowUtc);
+        $summary = $reports->perEmployee($matrix);
+
+        // A single-employee focus (admin filter or any staff view) gets the per-day grid.
+        $singleId  = count($reportIds) === 1 ? (int) reset($reportIds) : null;
+        $dayMatrix = $singleId !== null ? ($matrix[$singleId] ?? []) : null;
+
+        return [
+            'filters'   => ['from' => $from, 'to' => $to, 'employee_id' => $employeeId],
+            'summary'   => $summary,
+            'dayMatrix' => $dayMatrix,
+            'singleId'  => $singleId,
+            'empNames'  => $empNames,
+        ];
+    }
+
+    /** Parse a request date to 'Y-m-d', falling back to $default on anything invalid. */
+    private function safeDate($value, string $default): string
+    {
+        if (! is_string($value) || $value === '') {
+            return $default;
+        }
+        try {
+            return CarbonImmutable::parse($value)->format('Y-m-d');
+        } catch (\Throwable) {
+            return $default;
+        }
+    }
+
+    public function exportReportsCsv(Request $request, AttendanceCalculator $calc, AttendanceReportService $reports): StreamedResponse
+    {
+        $this->authorizeAdmin(); // bulk export: admin-only
+
+        $agencyId = auth()->user()->agency_id;
+        $settings = $this->settingsOrDefault($agencyId);
+        $nowUtc   = CarbonImmutable::now('UTC');
+        $today    = $calc->workDateFor($nowUtc, $settings->timezone ?: 'UTC');
+        $empNames = Employee::forAgency($agencyId)->pluck('name', 'id');
+
+        $report = $this->buildReport($request, $agencyId, true, null, $today, $nowUtc, $reports, $empNames);
+
+        $filename = 'attendance-report-' . $report['filters']['from'] . '_to_' . $report['filters']['to'] . '.csv';
+
+        return response()->streamDownload(function () use ($report) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ['Attendance Report']);
+            fputcsv($out, ['Range', $report['filters']['from'] . ' to ' . $report['filters']['to']]);
+            fputcsv($out, []);
+            fputcsv($out, ['Employee', 'Present', 'Late', 'Half day', 'Excused', 'On leave', 'Weekend', 'Holiday', 'Absent', 'Pending', 'On-time %']);
+            foreach ($report['summary'] as $empId => $c) {
+                fputcsv($out, [
+                    $report['empNames'][$empId] ?? ('#' . $empId),
+                    $c['present'], $c['late'], $c['half_day'], $c['excused'], $c['on_leave'],
+                    $c['weekend'], $c['holiday'], $c['absent'], $c['pending'],
+                    $c['on_time_pct'] === null ? '—' : $c['on_time_pct'] . '%',
+                ]);
+            }
+            if ($report['dayMatrix'] !== null) {
+                fputcsv($out, []);
+                fputcsv($out, ['Day-by-day — ' . ($report['empNames'][$report['singleId']] ?? ('#' . $report['singleId']))]);
+                fputcsv($out, ['Date', 'Status']);
+                foreach ($report['dayMatrix'] as $date => $status) {
+                    fputcsv($out, [$date, AttendanceRecord::STATUSES[$status] ?? ucfirst(str_replace('_', ' ', $status))]);
+                }
+            }
+            fclose($out);
+        }, $filename, ['Content-Type' => 'text/csv']);
+    }
+
+    public function exportReportsPdf(Request $request, AttendanceCalculator $calc, AttendanceReportService $reports, PdfGeneratorService $pdf)
+    {
+        $this->authorizeAdmin(); // bulk export: admin-only
+
+        $agencyId = auth()->user()->agency_id;
+        $settings = $this->settingsOrDefault($agencyId);
+        $nowUtc   = CarbonImmutable::now('UTC');
+        $today    = $calc->workDateFor($nowUtc, $settings->timezone ?: 'UTC');
+        $empNames = Employee::forAgency($agencyId)->pluck('name', 'id');
+
+        $report = $this->buildReport($request, $agencyId, true, null, $today, $nowUtc, $reports, $empNames);
+
+        return $pdf->generateFromView('agency.attendance.reports-pdf', [
+            'report'    => $report,
+            'agency'    => auth()->user()->agency,
+            'generated' => now(),
+        ], 'attendance-report-' . $report['filters']['from'] . '_to_' . $report['filters']['to']);
     }
 
     // ── Guards ────────────────────────────────────────────────────────────────
