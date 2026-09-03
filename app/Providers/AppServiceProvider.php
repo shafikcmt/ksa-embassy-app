@@ -35,7 +35,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(EmbassyList::class, EmbassyListPolicy::class);
         Gate::policy(SmartNote::class, SmartNotePolicy::class);
 
-        // Feed the notification bell on the Tailwind agency layout.
-        View::composer('layouts.agency-app', NotificationComposer::class);
+        // Feed the notification bell in the shared top app-header (used by both the
+        // agency and ERP layouts), so alerts show wherever the header renders.
+        View::composer('components.app-header', NotificationComposer::class);
     }
 }

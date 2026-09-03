@@ -45,3 +45,5 @@ _raster.mjs
 _*.patch
 _browser*
 docs/images/_*.png
+# Playwright MCP browser artifacts (screenshots/snapshots)
+.playwright-mcp/
