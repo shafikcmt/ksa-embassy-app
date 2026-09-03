@@ -19,6 +19,11 @@
     ];
 
     $inputCls = 'h-10 w-full rounded-lg border-slate-300 text-sm focus:border-brand-400 focus:ring-brand-400';
+
+    // Leave Requests (H3c): admins see the full queue + approve/reject/revoke; a
+    // login linked to an active employee may submit + cancel their own pending ones.
+    $isLeaveAdmin  = auth()->user()->isAgencyAdmin();
+    $canRequestLeave = $isLeaveAdmin || $selfEmployee;
 @endphp
 
 @section('content')
@@ -43,7 +48,11 @@
         newHoliday() { this.holiday = { open: true, method: 'POST', action: @js(route('attendance.holidays.store')), heading: 'Add Holiday', title: '', holiday_date: '' }; },
         editHoliday(h) { this.holiday = { open: true, method: 'PUT', action: h.action, heading: 'Edit Holiday', title: h.title, holiday_date: h.holiday_date }; },
         newLeave() { this.leave = { open: true, method: 'POST', action: @js(route('attendance.leave-types.store')), heading: 'New Leave Type', name: '', is_paid: true, default_days: '', color: '#6366f1' }; },
-        editLeave(l) { this.leave = { open: true, method: 'PUT', action: l.action, heading: 'Edit Leave Type', name: l.name, is_paid: l.is_paid, default_days: l.default_days, color: l.color || '#6366f1' }; }
+        editLeave(l) { this.leave = { open: true, method: 'PUT', action: l.action, heading: 'Edit Leave Type', name: l.name, is_paid: l.is_paid, default_days: l.default_days, color: l.color || '#6366f1' }; },
+        leaveReq: { open: false, isAdmin: @js($isLeaveAdmin), employee_id: '', leave_type_id: '', start_date: '', end_date: '', reason: '' },
+        newLeaveReq() { this.leaveReq = { open: true, isAdmin: @js($isLeaveAdmin), employee_id: '', leave_type_id: '', start_date: '', end_date: '', reason: '' }; },
+        leaveDecide: { open: false, action: '', label: '', decision_note: '' },
+        openReject(action, label) { this.leaveDecide = { open: true, action: action, label: label, decision_note: '' }; }
     }">
 
     <x-ui.page-header
@@ -326,10 +335,91 @@
 
     {{-- ══ Leave (types) ═══════════════════════════════════════ --}}
     <div x-show="tab === 'leave'" x-cloak>
+        {{-- ── Leave Requests (H3c) ─────────────────────────────── --}}
+        <div class="mb-3 flex items-center justify-between">
+            <div>
+                <h2 class="text-sm font-semibold text-slate-700">Leave Requests</h2>
+                <p class="text-xs text-slate-400">{{ $isLeaveAdmin ? 'Review and approve staff leave. Approved leave shows as “on leave” in reports.' : 'Submit a leave request; your admin approves or rejects it.' }}</p>
+            </div>
+            @if($canRequestLeave)
+                <button type="button" x-on:click="newLeaveReq()"
+                    class="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg bg-brand-600 px-3 text-sm font-semibold text-white transition-colors hover:bg-brand-700">
+                    <i class="bi bi-plus-lg"></i> Request Leave
+                </button>
+            @endif
+        </div>
+        <x-ui.card class="mb-8 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-slate-200 bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                            @if($isLeaveAdmin)<th class="px-4 py-3">Employee</th>@endif
+                            <th class="px-4 py-3">Type</th>
+                            <th class="px-4 py-3">Dates</th>
+                            <th class="px-4 py-3">Days</th>
+                            <th class="px-4 py-3">Status</th>
+                            <th class="px-4 py-3">Note</th>
+                            <th class="px-4 py-3 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @forelse($leaveRequests as $lr)
+                            <tr class="align-top transition-colors hover:bg-slate-50">
+                                @if($isLeaveAdmin)<td class="px-4 py-3 font-semibold text-slate-800">{{ $lr->employee->name ?? '—' }}</td>@endif
+                                <td class="px-4 py-3">
+                                    <span class="inline-flex items-center gap-2 text-slate-700">
+                                        @if($lr->leaveType?->color)<span class="h-2.5 w-2.5 rounded-full" style="background: {{ $lr->leaveType->color }}"></span>@endif
+                                        {{ $lr->leaveType->name ?? '—' }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-slate-600">
+                                    {{ $lr->start_date->format('d M') }}@if($lr->start_date->ne($lr->end_date)) – {{ $lr->end_date->format('d M Y') }}@else {{ $lr->start_date->format('Y') }}@endif
+                                </td>
+                                <td class="px-4 py-3 text-slate-600">{{ $lr->days }}</td>
+                                <td class="px-4 py-3"><x-ui.status-badge :status="$lr->status" :label="$lr->statusLabel()" /></td>
+                                <td class="px-4 py-3 text-xs text-slate-400">
+                                    @if($lr->reason)<div title="Reason">{{ \Illuminate\Support\Str::limit($lr->reason, 40) }}</div>@endif
+                                    @if($lr->decision_note)<div class="text-slate-500" title="Admin note">↳ {{ \Illuminate\Support\Str::limit($lr->decision_note, 40) }}</div>@endif
+                                </td>
+                                <td class="px-4 py-3">
+                                    <div class="flex items-center justify-end gap-1">
+                                        @if($isLeaveAdmin && $lr->status === 'pending')
+                                            <form method="POST" action="{{ route('attendance.leave-requests.approve', $lr) }}" class="inline">
+                                                @csrf @method('PATCH')
+                                                <button type="submit" title="Approve" class="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-emerald-600 transition-colors hover:bg-emerald-50"><i class="bi bi-check-lg"></i></button>
+                                            </form>
+                                            <button type="button" title="Reject" class="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-amber-600 transition-colors hover:bg-amber-50"
+                                                x-on:click="openReject(@js(route('attendance.leave-requests.reject', $lr)), @js($lr->employee->name.' · '.$lr->start_date->format('d M')))"><i class="bi bi-x-lg"></i></button>
+                                        @endif
+                                        @if(! $isLeaveAdmin && $lr->status === 'pending')
+                                            <form method="POST" action="{{ route('attendance.leave-requests.cancel', $lr) }}" class="inline">
+                                                @csrf @method('PATCH')
+                                                <button type="submit" title="Cancel request" class="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100"><i class="bi bi-slash-circle"></i></button>
+                                            </form>
+                                        @endif
+                                        @if($isLeaveAdmin)
+                                            <button type="button" title="{{ $lr->status === 'approved' ? 'Revoke (remove)' : 'Remove' }}" class="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-rose-500 transition-colors hover:bg-rose-50"
+                                                x-on:click="del.open = true; del.title = @js('leave request for '.($lr->employee->name ?? '')); del.action = @js(route('attendance.leave-requests.destroy', $lr))"><i class="bi bi-trash"></i></button>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="{{ $isLeaveAdmin ? 7 : 6 }}" class="p-0">
+                                <x-ui.empty icon="bi-calendar-heart" title="No leave requests"
+                                    message="{{ $canRequestLeave ? 'Submit a request with the button above.' : 'Leave requests submitted by staff will appear here.' }}" />
+                            </td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </x-ui.card>
+
+        {{-- ── Leave Types (config) ─────────────────────────────── --}}
         <div class="mb-3 flex items-center justify-between">
             <div>
                 <h2 class="text-sm font-semibold text-slate-700">Leave Types</h2>
-                <p class="text-xs text-slate-400">Leave requests &amp; approvals arrive with employee check-in in a later phase.</p>
+                <p class="text-xs text-slate-400">The leave categories staff can request (Paid, Sick, Unpaid, …).</p>
             </div>
             <button type="button" x-on:click="newLeave()"
                 class="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg bg-brand-600 px-3 text-sm font-semibold text-white transition-colors hover:bg-brand-700">
@@ -759,5 +849,93 @@
             </div>
         </div>
     </div>
+
+    {{-- ── Leave request submit modal (H3c) ──────────────────── --}}
+    @if($canRequestLeave)
+    <div x-show="leaveReq.open" x-cloak class="fixed inset-0 z-[70] flex items-center justify-center p-4" style="display:none">
+        <div @click="leaveReq.open = false" x-show="leaveReq.open" x-transition.opacity class="absolute inset-0 bg-slate-900/50"></div>
+        <div x-show="leaveReq.open" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+             class="relative w-full max-w-md rounded-2xl bg-white shadow-xl">
+            <form method="POST" action="{{ route('attendance.leave-requests.store') }}">
+                @csrf
+                <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+                    <h3 class="text-base font-semibold text-slate-900">Request Leave</h3>
+                    <button type="button" class="grid h-8 w-8 place-items-center rounded-lg text-slate-400 hover:bg-slate-100" x-on:click="leaveReq.open = false"><i class="bi bi-x-lg"></i></button>
+                </div>
+                <div class="space-y-4 px-5 py-4">
+                    <template x-if="leaveReq.isAdmin">
+                        <div>
+                            <label class="mb-1 block text-xs font-semibold text-slate-600">Employee <span class="text-rose-500">*</span></label>
+                            <select name="employee_id" x-model="leaveReq.employee_id" :required="leaveReq.isAdmin" class="{{ $inputCls }}">
+                                <option value="">Select employee…</option>
+                                @foreach($employees->where('status', 'active') as $emp)
+                                    <option value="{{ $emp->id }}">{{ $emp->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </template>
+                    <div>
+                        <label class="mb-1 block text-xs font-semibold text-slate-600">Leave type <span class="text-rose-500">*</span></label>
+                        <select name="leave_type_id" x-model="leaveReq.leave_type_id" required class="{{ $inputCls }}">
+                            <option value="">Select type…</option>
+                            @foreach($leaveTypes as $lt)
+                                <option value="{{ $lt->id }}">{{ $lt->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="mb-1 block text-xs font-semibold text-slate-600">From <span class="text-rose-500">*</span></label>
+                            <input type="date" name="start_date" x-model="leaveReq.start_date" required class="{{ $inputCls }}">
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-semibold text-slate-600">To <span class="text-rose-500">*</span></label>
+                            <input type="date" name="end_date" x-model="leaveReq.end_date" :min="leaveReq.start_date" required class="{{ $inputCls }}">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-xs font-semibold text-slate-600">Reason</label>
+                        <input type="text" name="reason" x-model="leaveReq.reason" maxlength="255" class="{{ $inputCls }}" placeholder="Optional — e.g. family event">
+                    </div>
+                    @if($leaveTypes->isEmpty())
+                        <p class="text-xs text-amber-600">No leave types exist yet — add one below before requesting leave.</p>
+                    @endif
+                </div>
+                <div class="flex justify-end gap-2 border-t border-slate-100 px-5 py-4">
+                    <x-ui.button type="button" variant="secondary" size="sm" class="cursor-pointer" x-on:click="leaveReq.open = false">Cancel</x-ui.button>
+                    <x-ui.button type="submit" size="sm" class="cursor-pointer"><i class="bi bi-send"></i> Submit</x-ui.button>
+                </div>
+            </form>
+        </div>
+    </div>
+    @endif
+
+    {{-- ── Leave reject-with-note modal (admin) ──────────────── --}}
+    @if($isLeaveAdmin)
+    <div x-show="leaveDecide.open" x-cloak class="fixed inset-0 z-[70] flex items-center justify-center p-4" style="display:none">
+        <div @click="leaveDecide.open = false" x-show="leaveDecide.open" x-transition.opacity class="absolute inset-0 bg-slate-900/50"></div>
+        <div x-show="leaveDecide.open" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+             class="relative w-full max-w-sm rounded-2xl bg-white shadow-xl">
+            <form method="POST" :action="leaveDecide.action">
+                @csrf @method('PATCH')
+                <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+                    <h3 class="text-base font-semibold text-slate-900">Reject leave</h3>
+                    <button type="button" class="grid h-8 w-8 place-items-center rounded-lg text-slate-400 hover:bg-slate-100" x-on:click="leaveDecide.open = false"><i class="bi bi-x-lg"></i></button>
+                </div>
+                <div class="space-y-3 px-5 py-4">
+                    <p class="text-sm text-slate-500">Rejecting <strong x-text="leaveDecide.label"></strong>.</p>
+                    <div>
+                        <label class="mb-1 block text-xs font-semibold text-slate-600">Note (optional)</label>
+                        <input type="text" name="decision_note" x-model="leaveDecide.decision_note" maxlength="255" class="{{ $inputCls }}" placeholder="Reason shown to the employee">
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 border-t border-slate-100 px-5 py-4">
+                    <x-ui.button type="button" variant="secondary" size="sm" class="cursor-pointer" x-on:click="leaveDecide.open = false">Cancel</x-ui.button>
+                    <x-ui.button type="submit" variant="danger" size="sm" class="cursor-pointer"><i class="bi bi-x-lg"></i> Reject</x-ui.button>
+                </div>
+            </form>
+        </div>
+    </div>
+    @endif
 </div>
 @endsection

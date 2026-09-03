@@ -7,6 +7,7 @@ use App\Models\AttendanceRecord;
 use App\Models\AttendanceSetting;
 use App\Models\Employee;
 use App\Models\Holiday;
+use App\Models\LeaveRequest;
 use App\Models\LeaveType;
 use App\Models\Shift;
 use App\Models\User;
@@ -66,6 +67,18 @@ class AttendanceController extends Controller
                 ->orderByDesc('work_date')->orderByDesc('id')->limit(500)->get()
             : collect();
 
+        // Leave Requests (H3c): admin sees the whole agency queue; a linked staff
+        // member sees only their own. $selfEmployee (resolved above) is the staff lens.
+        $leaveRequests = LeaveRequest::forAgency($agencyId)
+            ->with(['employee:id,name', 'leaveType:id,name,color', 'decidedBy:id,name'])
+            ->when(! $this->userIsAdmin(), function ($q) use ($selfEmployee) {
+                // Non-admin: own requests only (empty set if not a linked employee).
+                $q->where('employee_id', $selfEmployee?->id ?? 0);
+            })
+            ->orderByRaw("CASE WHEN status = 'pending' THEN 0 ELSE 1 END")
+            ->orderByDesc('start_date')->orderByDesc('id')
+            ->limit(500)->get();
+
         return view('agency.attendance.index', [
             'tab'           => $tab,
             'settings'      => $settings,
@@ -77,7 +90,9 @@ class AttendanceController extends Controller
             'selfEmployee'  => $selfEmployee,
             'selfToday'     => $selfToday,
             'records'       => $records,
+            'leaveRequests' => $leaveRequests,
             'recordStatuses'=> AttendanceRecord::STATUSES,
+            'leaveStatuses' => LeaveRequest::STATUSES,
             'timezones'     => AttendanceSetting::TIMEZONES,
             'weekdays'      => AttendanceSetting::WEEKDAYS,
         ]);
@@ -596,6 +611,178 @@ class AttendanceController extends Controller
     private function hoursLabel(int $minutes): string
     {
         return intdiv($minutes, 60) . 'h ' . ($minutes % 60) . 'm';
+    }
+
+    // ── Leave requests (H3c) ──────────────────────────────────────────────────
+    //
+    // Staff submit + cancel-own-pending are open to any login linked to an ACTIVE
+    // employee (like self check-in — daily flow, not billing-gated). approve/reject/
+    // delete are admin-only. State machine: pending is the ONLY non-terminal state;
+    // every decision asserts status === 'pending' first (one guard covers both the
+    // double-decision and illegal-transition cases). An admin may also submit on
+    // behalf of any employee — it still lands as pending and is approved separately.
+    // Only APPROVED requests flip derivation (via LeaveRequest::approvedDatesFor);
+    // reverting an approval is an admin HARD delete, mirroring attendance_records.
+
+    public function storeLeaveRequest(Request $request, AttendanceCalculator $calc)
+    {
+        $agencyId = auth()->user()->agency_id;
+        $isAdmin  = $this->userIsAdmin();
+
+        // Resolve the target employee. Admin may file for anyone in the agency; a
+        // non-admin may only file for their OWN active linked employee.
+        if ($isAdmin) {
+            $rules = [
+                'employee_id' => ['required', 'integer', Rule::exists('employees', 'id')->where('agency_id', $agencyId)->whereNull('deleted_at')],
+            ];
+        } else {
+            $self = Employee::forAgency($agencyId)->active()->where('user_id', auth()->id())->first();
+            abort_unless($self, 403); // no active linked employee → cannot submit
+            $rules = [];
+        }
+
+        $rules += [
+            'leave_type_id' => ['required', 'integer', Rule::exists('leave_types', 'id')->where('agency_id', $agencyId)->whereNull('deleted_at')],
+            'start_date'    => ['required', 'date'],
+            'end_date'      => ['required', 'date', 'after_or_equal:start_date'],
+            'reason'        => ['nullable', 'string', 'max:255'],
+        ];
+        $validated = $request->validate($rules);
+
+        $employee = $isAdmin
+            ? Employee::forAgency($agencyId)->findOrFail($validated['employee_id'])
+            : $self;
+
+        $from = CarbonImmutable::parse($validated['start_date'])->format('Y-m-d');
+        $to   = CarbonImmutable::parse($validated['end_date'])->format('Y-m-d');
+
+        // Overlap: a live claim (pending/approved) for this employee blocks a new one.
+        if (LeaveRequest::forAgency($agencyId)->overlapping($employee->id, $from, $to)->exists()) {
+            return back()->with('error', 'This employee already has a pending or approved leave overlapping those dates.');
+        }
+
+        // Working days = span minus weekends minus holidays. A range with zero
+        // working days (e.g. a lone weekend) is rejected — nothing to take leave on.
+        $days = $this->workingDaysBetween($from, $to, $agencyId, $calc);
+        if ($days === 0) {
+            return back()->with('error', 'The selected range has no working days (only weekends/holidays).');
+        }
+
+        LeaveRequest::create([
+            'agency_id'     => $agencyId,
+            'employee_id'   => $employee->id,
+            'leave_type_id' => $validated['leave_type_id'],
+            'start_date'    => $from,
+            'end_date'      => $to,
+            'days'          => $days,
+            'status'        => 'pending',
+            'reason'        => $validated['reason'] ?? null,
+            'created_by'    => auth()->id(),
+            'updated_by'    => auth()->id(),
+        ]);
+
+        return redirect()->route('attendance.index', ['tab' => 'leave'])
+            ->with('success', 'Leave request submitted.');
+    }
+
+    /** Staff cancel — own request, pending only. */
+    public function cancelLeaveRequest(LeaveRequest $leaveRequest)
+    {
+        $this->authorizeAgency($leaveRequest);
+
+        // Ownership: the caller's linked employee must be this request's employee
+        // (unless they're an admin, who may cancel any pending request in-agency).
+        if (! $this->userIsAdmin()) {
+            $self = Employee::forAgency($leaveRequest->agency_id)->where('user_id', auth()->id())->first();
+            abort_unless($self && $self->id === $leaveRequest->employee_id, 403);
+        }
+
+        abort_unless($leaveRequest->isPending(), 422); // cannot cancel a decided request
+
+        $leaveRequest->update(['status' => 'cancelled', 'updated_by' => auth()->id()]);
+
+        return redirect()->route('attendance.index', ['tab' => 'leave'])
+            ->with('success', 'Leave request cancelled.');
+    }
+
+    public function approveLeaveRequest(Request $request, LeaveRequest $leaveRequest)
+    {
+        return $this->decideLeaveRequest($request, $leaveRequest, 'approved', 'Leave request approved.');
+    }
+
+    public function rejectLeaveRequest(Request $request, LeaveRequest $leaveRequest)
+    {
+        return $this->decideLeaveRequest($request, $leaveRequest, 'rejected', 'Leave request rejected.');
+    }
+
+    /** Admin revoke: hard-delete reverts any covered days back to their derived status. */
+    public function destroyLeaveRequest(LeaveRequest $leaveRequest)
+    {
+        $this->authorizeAdmin();
+        $this->authorizeAgency($leaveRequest);
+
+        $leaveRequest->delete(); // hard delete → derivation stops seeing these dates
+
+        return redirect()->route('attendance.index', ['tab' => 'leave'])
+            ->with('success', 'Leave request removed.');
+    }
+
+    /** Shared approve/reject transition — admin-only, pending-only (the state guard). */
+    private function decideLeaveRequest(Request $request, LeaveRequest $leaveRequest, string $status, string $flash)
+    {
+        $this->authorizeAdmin();
+        $this->authorizeAgency($leaveRequest);
+
+        // The single guard for BOTH double-decision and illegal-transition: only a
+        // pending request can be decided. Anything terminal is left untouched.
+        abort_unless($leaveRequest->isPending(), 422);
+
+        $validated = $request->validate([
+            'decision_note' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $leaveRequest->update([
+            'status'        => $status,
+            'decision_note' => $validated['decision_note'] ?? null,
+            'decided_by'    => auth()->id(),
+            'decided_at'    => now(),
+            'updated_by'    => auth()->id(),
+        ]);
+
+        return redirect()->route('attendance.index', ['tab' => 'leave'])->with('success', $flash);
+    }
+
+    /**
+     * Working days in [$from, $to] inclusive = calendar span minus agency weekends
+     * minus holidays. Reuses AttendanceCalculator::isWeekend() + the Holiday table;
+     * NOT a new calculation category, just a filtered day loop.
+     */
+    private function workingDaysBetween(string $from, string $to, int $agencyId, AttendanceCalculator $calc): int
+    {
+        $settings = $this->settingsOrDefault($agencyId);
+        $tz       = $settings->timezone ?: 'UTC';
+        $weekend  = $settings->weekend_days ?? [];
+
+        $holidays = Holiday::forAgency($agencyId)
+            ->whereBetween('holiday_date', [$from, $to])
+            ->pluck('holiday_date')->map(fn ($d) => $d->format('Y-m-d'))->all();
+        $holidays = array_flip($holidays);
+
+        $count  = 0;
+        $cursor = CarbonImmutable::parse($from);
+        $last   = CarbonImmutable::parse($to);
+        for (; $cursor->lessThanOrEqualTo($last); $cursor = $cursor->addDay()) {
+            $date = $cursor->format('Y-m-d');
+            if ($calc->isWeekend($date, $weekend, $tz)) {
+                continue;
+            }
+            if (isset($holidays[$date])) {
+                continue;
+            }
+            $count++;
+        }
+
+        return $count;
     }
 
     // ── Guards ────────────────────────────────────────────────────────────────

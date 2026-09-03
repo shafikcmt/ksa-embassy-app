@@ -75,6 +75,13 @@ Route::middleware(['auth', 'agency-access'])->group(function () {
         Route::post('/attendance/leave-types', [AttendanceController::class, 'storeLeaveType'])->name('attendance.leave-types.store');
         Route::put('/attendance/leave-types/{leaveType}', [AttendanceController::class, 'updateLeaveType'])->name('attendance.leave-types.update');
         Route::delete('/attendance/leave-types/{leaveType}', [AttendanceController::class, 'destroyLeaveType'])->name('attendance.leave-types.destroy');
+
+        // Leave requests (H3c): submit/cancel open to linked staff; approve/reject/delete admin-only (in-controller).
+        Route::post('/attendance/leave-requests', [AttendanceController::class, 'storeLeaveRequest'])->name('attendance.leave-requests.store');
+        Route::patch('/attendance/leave-requests/{leaveRequest}/cancel', [AttendanceController::class, 'cancelLeaveRequest'])->name('attendance.leave-requests.cancel');
+        Route::patch('/attendance/leave-requests/{leaveRequest}/approve', [AttendanceController::class, 'approveLeaveRequest'])->name('attendance.leave-requests.approve');
+        Route::patch('/attendance/leave-requests/{leaveRequest}/reject', [AttendanceController::class, 'rejectLeaveRequest'])->name('attendance.leave-requests.reject');
+        Route::delete('/attendance/leave-requests/{leaveRequest}', [AttendanceController::class, 'destroyLeaveRequest'])->name('attendance.leave-requests.destroy');
     });
 
     // Subscription expired / renewal

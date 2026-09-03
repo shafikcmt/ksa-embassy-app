@@ -29,6 +29,10 @@
         'weekend'  => 'slate',
         'holiday'  => 'slate',
         'pending'  => 'slate',
+        // Leave-request workflow (H3c): approved is good, rejected bad, cancelled muted.
+        'approved'  => 'green',
+        'rejected'  => 'red',
+        'cancelled' => 'slate',
     ];
     $tone = $map[$status] ?? 'slate';
     $dot  = [
