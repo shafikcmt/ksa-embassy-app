@@ -25,14 +25,6 @@
         'editUrl'     => route('hr.edit', $hr),
         'canEdit'     => auth()->user()->can('update', $hr),
     ];
-
-    // Status badge styling, shared by the desktop table + mobile cards.
-    // [pill classes, dot colour, label]
-    $statusBadge = [
-        'active'      => ['bg-emerald-50 text-emerald-700 ring-emerald-200', 'bg-emerald-500', 'Active'],
-        'inactive'    => ['bg-slate-100 text-slate-500 ring-slate-200',      'bg-slate-400',   'Inactive'],
-        'blacklisted' => ['bg-rose-50 text-rose-700 ring-rose-200',          'bg-rose-500',    'Blacklisted'],
-    ];
 @endphp
 
 @section('content')
@@ -123,14 +115,13 @@
                 <thead>
                     <tr class="sticky top-0 z-10 border-b border-slate-200 bg-slate-100/95 text-left text-xs font-semibold uppercase tracking-wide text-slate-600 backdrop-blur">
                         <th class="w-[4%]  px-3 py-3">#</th>
-                        <th class="w-[18%] px-3 py-3">Name</th>
-                        <th class="w-[9%]  px-3 py-3">MOFA ID</th>
-                        <th class="w-[11%] px-3 py-3">Passport No</th>
-                        <th class="w-[11%] px-3 py-3">Agent</th>
-                        <th class="w-[10%] px-3 py-3">Visa No</th>
-                        <th class="w-[13%] px-3 py-3">Sponsor</th>
-                        <th class="w-[8%]  px-3 py-3">Status</th>
-                        <th class="w-[16%] px-3 py-3 text-right">Action</th>
+                        <th class="w-[20%] px-3 py-3">Name</th>
+                        <th class="w-[10%] px-3 py-3">MOFA ID</th>
+                        <th class="w-[12%] px-3 py-3">Passport No</th>
+                        <th class="w-[12%] px-3 py-3">Agent</th>
+                        <th class="w-[11%] px-3 py-3">Visa No</th>
+                        <th class="w-[14%] px-3 py-3">Sponsor</th>
+                        <th class="w-[17%] px-3 py-3 text-right">Action</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -167,12 +158,6 @@
                                 @else <span class="text-slate-300">—</span> @endif
                             </td>
                             <td class="px-3 py-3">
-                                @php [$sCls, $sDot, $sLbl] = $statusBadge[$hr->status] ?? $statusBadge['inactive']; @endphp
-                                <span class="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset {{ $sCls }}">
-                                    <span class="h-1.5 w-1.5 rounded-full {{ $sDot }}"></span>{{ $sLbl }}
-                                </span>
-                            </td>
-                            <td class="px-3 py-3">
                                 @php $pill = 'inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold ring-1 ring-inset transition'; @endphp
                                 <div class="flex flex-nowrap justify-end gap-1.5">
                                     <a href="{{ route('hr.documents', $hr) }}" class="{{ $pill }} bg-blue-50 text-blue-700 ring-blue-200 hover:bg-blue-100"><i class="bi bi-printer"></i> Print</a>
@@ -187,7 +172,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="9" class="p-0">
+                        <tr><td colspan="8" class="p-0">
                             <x-ui.empty icon="bi-person-vcard" title="No HR profiles found"
                                 message="Try adjusting your filters, or add your first candidate profile."
                                 :actionUrl="auth()->user()->can('create', \App\Models\HrProfile::class) ? route('hr.create') : null"
@@ -216,10 +201,6 @@
                             @if($hr->full_name_ar)<div class="truncate text-xs text-slate-400" dir="rtl">{{ $hr->full_name_ar }}</div>@endif
                         </div>
                     </div>
-                    @php [$sCls, $sDot, $sLbl] = $statusBadge[$hr->status] ?? $statusBadge['inactive']; @endphp
-                    <span class="inline-flex shrink-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset {{ $sCls }}">
-                        <span class="h-1.5 w-1.5 rounded-full {{ $sDot }}"></span>{{ $sLbl }}
-                    </span>
                 </div>
                 <dl class="mt-3 grid grid-cols-2 gap-y-2 text-xs">
                     <div><dt class="text-slate-400">MOFA ID</dt><dd class="font-mono text-slate-700">{{ $hr->mofa_new ?: ($hr->mofa_old ?: '—') }}</dd></div>
