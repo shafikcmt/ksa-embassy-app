@@ -25,6 +25,14 @@
         'editUrl'     => route('hr.edit', $hr),
         'canEdit'     => auth()->user()->can('update', $hr),
     ];
+
+    // Status badge styling, shared by the desktop table + mobile cards.
+    // [pill classes, dot colour, label]
+    $statusBadge = [
+        'active'      => ['bg-emerald-50 text-emerald-700 ring-emerald-200', 'bg-emerald-500', 'Active'],
+        'inactive'    => ['bg-slate-100 text-slate-500 ring-slate-200',      'bg-slate-400',   'Inactive'],
+        'blacklisted' => ['bg-rose-50 text-rose-700 ring-rose-200',          'bg-rose-500',    'Blacklisted'],
+    ];
 @endphp
 
 @section('content')
@@ -38,20 +46,26 @@
         openPreview(data) { this.preview = { ...this.preview, ...data, open: true }; }
      }">
 
-    {{-- Header (premium gradient banner) --}}
-    <x-ui.page-header
-        class="rounded-2xl border border-slate-200 bg-gradient-to-r from-brand-50 via-white to-indigo-50 p-5 shadow-soft"
-        title="HR / Candidates"
-        subtitle="{{ $totalHr }} total profile{{ $totalHr === 1 ? '' : 's' }}{{ $planLimit > 0 && $planLimit < 9999 ? ' · plan limit '.$planLimit : '' }}"
-        icon="bi-person-vcard">
-        <x-slot:actions>
-            @can('create', \App\Models\HrProfile::class)
-                <x-ui.button :href="route('hr.create')" variant="gradient">
-                    <i class="bi bi-plus-lg"></i> Add HR Profile
-                </x-ui.button>
-            @endcan
-        </x-slot:actions>
-    </x-ui.page-header>
+    {{-- Slim header — title + count on the left, primary action on the right.
+         Replaces the old gradient banner to give the table more room and match
+         the new dashboard/header aesthetic. --}}
+    <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+            <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-600">
+                <i class="bi bi-person-vcard text-xl"></i>
+            </span>
+            <div>
+                <h1 class="text-lg font-bold text-slate-900">HR / Candidates</h1>
+                <p class="text-xs text-slate-500">{{ $totalHr }} total profile{{ $totalHr === 1 ? '' : 's' }}{{ $planLimit > 0 && $planLimit < 9999 ? ' · plan limit '.$planLimit : '' }}</p>
+            </div>
+        </div>
+        @can('create', \App\Models\HrProfile::class)
+            <a href="{{ route('hr.create') }}"
+               class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-brand-600/30 transition hover:shadow-md">
+                <i class="bi bi-plus-lg"></i> Add HR Profile
+            </a>
+        @endcan
+    </div>
 
     {{-- Stat cards --}}
     <div class="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -109,14 +123,14 @@
                 <thead>
                     <tr class="sticky top-0 z-10 border-b border-slate-200 bg-slate-100/95 text-left text-xs font-semibold uppercase tracking-wide text-slate-600 backdrop-blur">
                         <th class="w-[4%]  px-3 py-3">#</th>
-                        <th class="w-[20%] px-3 py-3">Name</th>
-                        <th class="w-[11%] px-3 py-3">MOFA ID</th>
+                        <th class="w-[18%] px-3 py-3">Name</th>
+                        <th class="w-[9%]  px-3 py-3">MOFA ID</th>
                         <th class="w-[11%] px-3 py-3">Passport No</th>
-                        <th class="w-[12%] px-3 py-3">Agent</th>
-                        <th class="w-[11%] px-3 py-3">Visa No</th>
-                        <th class="w-[11%] px-3 py-3">Sponsor ID</th>
-                        <th class="w-[12%] px-3 py-3">Sponsor Name</th>
-                        <th class="px-3 py-3 text-right">Action</th>
+                        <th class="w-[11%] px-3 py-3">Agent</th>
+                        <th class="w-[10%] px-3 py-3">Visa No</th>
+                        <th class="w-[13%] px-3 py-3">Sponsor</th>
+                        <th class="w-[8%]  px-3 py-3">Status</th>
+                        <th class="w-[16%] px-3 py-3 text-right">Action</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -144,21 +158,31 @@
                             <td class="px-3 py-3 font-mono text-xs text-slate-600">{{ $hr->passport?->passport_number ?: '—' }}</td>
                             <td class="px-3 py-3 break-words text-slate-600">{{ $hr->agent?->name ?? '—' }}</td>
                             <td class="px-3 py-3 font-mono text-xs text-slate-600">{{ $hr->visa?->visa_number ?: '—' }}</td>
-                            <td class="px-3 py-3 font-mono text-xs text-slate-600">{{ $hr->visa?->sponsor_id ?: '—' }}</td>
-                            <td class="px-3 py-3 break-words text-slate-600">{{ $hr->visa?->sponsor_name ?: '—' }}</td>
                             <td class="px-3 py-3">
-                                <div class="flex justify-end">
-                                    <div class="inline-flex items-center gap-0.5 whitespace-nowrap rounded-lg border border-slate-200 bg-slate-50/70 p-0.5">
-                                        <a href="{{ route('hr.show', $hr) }}" @click.prevent="openPreview(@js($previewData($hr)))" title="Quick view" class="grid h-8 w-8 place-items-center rounded-md text-slate-500 transition hover:bg-white hover:text-slate-700 hover:shadow-sm"><i class="bi bi-eye"></i></a>
-                                        <a href="{{ route('hr.documents', $hr) }}" title="Documents" class="grid h-8 w-8 place-items-center rounded-md text-emerald-600 transition hover:bg-white hover:shadow-sm"><i class="bi bi-file-earmark-pdf"></i></a>
-                                        @can('update', $hr)
-                                            <a href="{{ route('hr.edit', $hr) }}" title="Edit" class="grid h-8 w-8 place-items-center rounded-md text-brand-600 transition hover:bg-white hover:shadow-sm"><i class="bi bi-pencil"></i></a>
-                                        @endcan
-                                        @can('delete', $hr)
-                                            <button type="button" title="Delete" class="grid h-8 w-8 place-items-center rounded-md text-rose-500 transition hover:bg-white hover:shadow-sm"
-                                                x-on:click="del.open = true; del.name = @js($hr->full_name_en); del.action = '{{ route('hr.destroy', $hr) }}'"><i class="bi bi-trash"></i></button>
-                                        @endcan
-                                    </div>
+                                @if($hr->visa?->sponsor_name || $hr->visa?->sponsor_id)
+                                    <div class="break-words font-medium text-slate-700">{{ $hr->visa?->sponsor_name ?: '—' }}</div>
+                                    @if($hr->visa?->sponsor_id)
+                                        <div class="font-mono text-xs text-slate-400">{{ $hr->visa->sponsor_id }}</div>
+                                    @endif
+                                @else <span class="text-slate-300">—</span> @endif
+                            </td>
+                            <td class="px-3 py-3">
+                                @php [$sCls, $sDot, $sLbl] = $statusBadge[$hr->status] ?? $statusBadge['inactive']; @endphp
+                                <span class="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset {{ $sCls }}">
+                                    <span class="h-1.5 w-1.5 rounded-full {{ $sDot }}"></span>{{ $sLbl }}
+                                </span>
+                            </td>
+                            <td class="px-3 py-3">
+                                @php $pill = 'inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold ring-1 ring-inset transition'; @endphp
+                                <div class="flex flex-nowrap justify-end gap-1.5">
+                                    <a href="{{ route('hr.documents', $hr) }}" class="{{ $pill }} bg-blue-50 text-blue-700 ring-blue-200 hover:bg-blue-100"><i class="bi bi-printer"></i> Print</a>
+                                    @can('update', $hr)
+                                        <a href="{{ route('hr.edit', $hr) }}" class="{{ $pill }} bg-amber-50 text-amber-700 ring-amber-200 hover:bg-amber-100"><i class="bi bi-pencil"></i> Edit</a>
+                                    @endcan
+                                    @can('delete', $hr)
+                                        <button type="button" class="{{ $pill }} bg-rose-50 text-rose-700 ring-rose-200 hover:bg-rose-100"
+                                            x-on:click="del.open = true; del.name = @js($hr->full_name_en); del.action = '{{ route('hr.destroy', $hr) }}'"><i class="bi bi-trash"></i> Delete</button>
+                                    @endcan
                                 </div>
                             </td>
                         </tr>
@@ -188,10 +212,14 @@
                             {{ strtoupper(mb_substr($hr->full_name_en, 0, 1)) }}
                         </span>
                         <div class="min-w-0">
-                            <a href="{{ route('hr.show', $hr) }}" class="block truncate font-semibold text-slate-800">{{ $hr->full_name_en }}</a>
+                            <a href="{{ route('hr.show', $hr) }}" @click.prevent="openPreview(@js($previewData($hr)))" class="block truncate text-left font-semibold text-slate-800">{{ $hr->full_name_en }}</a>
                             @if($hr->full_name_ar)<div class="truncate text-xs text-slate-400" dir="rtl">{{ $hr->full_name_ar }}</div>@endif
                         </div>
                     </div>
+                    @php [$sCls, $sDot, $sLbl] = $statusBadge[$hr->status] ?? $statusBadge['inactive']; @endphp
+                    <span class="inline-flex shrink-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset {{ $sCls }}">
+                        <span class="h-1.5 w-1.5 rounded-full {{ $sDot }}"></span>{{ $sLbl }}
+                    </span>
                 </div>
                 <dl class="mt-3 grid grid-cols-2 gap-y-2 text-xs">
                     <div><dt class="text-slate-400">MOFA ID</dt><dd class="font-mono text-slate-700">{{ $hr->mofa_new ?: ($hr->mofa_old ?: '—') }}</dd></div>
@@ -201,11 +229,15 @@
                     <div><dt class="text-slate-400">Sponsor ID</dt><dd class="font-mono text-slate-700">{{ $hr->visa?->sponsor_id ?: '—' }}</dd></div>
                     <div><dt class="text-slate-400">Sponsor Name</dt><dd class="font-medium text-slate-700">{{ $hr->visa?->sponsor_name ?: '—' }}</dd></div>
                 </dl>
+                @php $mBtn = 'flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold ring-1 ring-inset transition'; @endphp
                 <div class="mt-3 flex gap-2 border-t border-slate-100 pt-3">
-                    <x-ui.button :href="route('hr.show', $hr)" x-on:click.prevent="openPreview(@js($previewData($hr)))" variant="secondary" size="sm" class="flex-1"><i class="bi bi-eye"></i> View</x-ui.button>
-                    <x-ui.button :href="route('hr.documents', $hr)" variant="secondary" size="sm" class="flex-1"><i class="bi bi-file-earmark-pdf"></i> Docs</x-ui.button>
+                    <a href="{{ route('hr.documents', $hr) }}" class="{{ $mBtn }} bg-blue-50 text-blue-700 ring-blue-200 hover:bg-blue-100"><i class="bi bi-printer"></i> Print</a>
                     @can('update', $hr)
-                        <x-ui.button :href="route('hr.edit', $hr)" variant="secondary" size="sm" class="flex-1"><i class="bi bi-pencil"></i> Edit</x-ui.button>
+                        <a href="{{ route('hr.edit', $hr) }}" class="{{ $mBtn }} bg-amber-50 text-amber-700 ring-amber-200 hover:bg-amber-100"><i class="bi bi-pencil"></i> Edit</a>
+                    @endcan
+                    @can('delete', $hr)
+                        <button type="button" class="{{ $mBtn }} bg-rose-50 text-rose-700 ring-rose-200 hover:bg-rose-100"
+                            x-on:click="del.open = true; del.name = @js($hr->full_name_en); del.action = '{{ route('hr.destroy', $hr) }}'"><i class="bi bi-trash"></i> Delete</button>
                     @endcan
                 </div>
             </x-ui.card>
