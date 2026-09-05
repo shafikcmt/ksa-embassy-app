@@ -11,6 +11,8 @@
 
 <div x-data="mofaPage()">
 
+    <x-ui.page-header title="MOFA Entry" subtitle="Track MOFA entries & stamping status" icon="bi-file-earmark-text" />
+
     {{-- Counter --}}
     <div class="mb-5 flex flex-wrap items-center gap-3">
         <div class="inline-flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5">
@@ -128,8 +130,9 @@
                                 @else — @endif
                             </td>
                             <td class="px-4 py-3">
-                                <div class="flex items-center justify-end gap-1.5">
-                                    <button type="button" class="grid h-8 w-8 place-items-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-emerald-600"
+                                @php $pill = 'inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold ring-1 ring-inset transition'; @endphp
+                                <div class="flex flex-nowrap items-center justify-end gap-1.5">
+                                    <button type="button" class="{{ $pill }} bg-amber-50 text-amber-700 ring-amber-200 hover:bg-amber-100"
                                             x-on:click="openEdit(@js([
                                                 'id' => $e->id,
                                                 'mofa_date' => $e->mofa_date->format('Y-m-d'),
@@ -141,10 +144,10 @@
                                                 'payment_method' => $e->payment_method,
                                                 'whatsapp_number' => $e->whatsapp_number,
                                                 'payment_note' => $e->payment_note,
-                                            ]))"><i class="bi bi-pencil"></i></button>
+                                            ]))"><i class="bi bi-pencil"></i> Edit</button>
                                     <form method="POST" action="{{ route('erp.mofa.destroy', $e) }}" onsubmit="return confirm('Delete this MOFA entry?')">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="grid h-8 w-8 place-items-center rounded-lg text-slate-500 hover:bg-rose-50 hover:text-rose-600"><i class="bi bi-trash"></i></button>
+                                        <button type="submit" class="{{ $pill }} bg-rose-50 text-rose-700 ring-rose-200 hover:bg-rose-100"><i class="bi bi-trash"></i> Delete</button>
                                     </form>
                                 </div>
                             </td>
