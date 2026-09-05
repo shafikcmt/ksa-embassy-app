@@ -78,25 +78,26 @@
                             <td class="px-4 py-3"><x-ui.status-badge :status="$list->status" /></td>
                             <td class="px-4 py-3 text-slate-400">{{ $list->createdBy?->name ?? '—' }}</td>
                             <td class="px-4 py-3">
-                                <div class="flex items-center justify-end gap-1">
-                                    <a href="{{ route('embassy-lists.show', $list) }}" title="View" class="grid h-8 w-8 place-items-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700"><i class="bi bi-eye"></i></a>
+                                @php $pill = 'inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold ring-1 ring-inset transition'; @endphp
+                                <div class="flex flex-nowrap items-center justify-end gap-1.5">
+                                    <a href="{{ route('embassy-lists.show', $list) }}" class="{{ $pill }} bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100"><i class="bi bi-eye"></i> View</a>
                                     @if($list->isDraft())
-                                        @can('update', $list)<a href="{{ route('embassy-lists.edit', $list) }}" title="Edit" class="grid h-8 w-8 place-items-center rounded-lg text-brand-600 hover:bg-brand-50"><i class="bi bi-pencil"></i></a>@endcan
+                                        @can('update', $list)<a href="{{ route('embassy-lists.edit', $list) }}" class="{{ $pill }} bg-amber-50 text-amber-700 ring-amber-200 hover:bg-amber-100"><i class="bi bi-pencil"></i> Edit</a>@endcan
                                         @can('finalize', $list)
                                             <form method="POST" action="{{ route('embassy-lists.finalize', $list) }}" onsubmit="return confirm('Finalize list {{ $list->list_no }}? This will mark all {{ $list->total_items }} candidates as listed.')">
                                                 @csrf
-                                                <button type="submit" title="Finalize" class="grid h-8 w-8 place-items-center rounded-lg text-emerald-600 hover:bg-emerald-50"><i class="bi bi-check-circle"></i></button>
+                                                <button type="submit" class="{{ $pill }} bg-emerald-50 text-emerald-700 ring-emerald-200 hover:bg-emerald-100"><i class="bi bi-check-circle"></i> Finalize</button>
                                             </form>
                                         @endcan
                                     @endif
                                     @if($list->isFinalized() || $list->status === 'printed')
-                                        <a href="{{ route('embassy-lists.print', $list) }}" target="_blank" title="Print" class="grid h-8 w-8 place-items-center rounded-lg text-cyan-600 hover:bg-cyan-50"><i class="bi bi-printer"></i></a>
-                                        <a href="{{ route('embassy-lists.download-pdf', $list) }}" title="Download PDF" class="grid h-8 w-8 place-items-center rounded-lg text-brand-600 hover:bg-brand-50"><i class="bi bi-file-earmark-pdf"></i></a>
+                                        <a href="{{ route('embassy-lists.print', $list) }}" target="_blank" class="{{ $pill }} bg-blue-50 text-blue-700 ring-blue-200 hover:bg-blue-100"><i class="bi bi-printer"></i> Print</a>
+                                        <a href="{{ route('embassy-lists.download-pdf', $list) }}" class="{{ $pill }} bg-brand-50 text-brand-700 ring-brand-200 hover:bg-brand-100"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
                                     @endif
                                     @if(!$list->isCancelled())
                                         @can('cancel', $list)
-                                            <button type="button" title="Cancel" class="grid h-8 w-8 place-items-center rounded-lg text-rose-500 hover:bg-rose-50"
-                                                x-on:click="cancel.open = true; cancel.no = @js($list->list_no); cancel.action = '{{ route('embassy-lists.cancel', $list) }}'; cancel.finalized = {{ $list->isFinalized() ? 'true' : 'false' }}"><i class="bi bi-x-circle"></i></button>
+                                            <button type="button" class="{{ $pill }} bg-rose-50 text-rose-700 ring-rose-200 hover:bg-rose-100"
+                                                x-on:click="cancel.open = true; cancel.no = @js($list->list_no); cancel.action = '{{ route('embassy-lists.cancel', $list) }}'; cancel.finalized = {{ $list->isFinalized() ? 'true' : 'false' }}"><i class="bi bi-x-circle"></i> Cancel</button>
                                         @endcan
                                     @endif
                                 </div>
@@ -135,13 +136,27 @@
                     <span class="text-brand-600">Re-stamp <strong>{{ $list->total_restamping }}</strong></span>
                     <span class="text-rose-600">Cancel <strong>{{ $list->total_cancellation }}</strong></span>
                 </div>
+                @php $mpill = 'inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold ring-1 ring-inset transition'; @endphp
                 <div class="mt-3 flex flex-wrap gap-2 border-t border-slate-100 pt-3">
-                    <x-ui.button :href="route('embassy-lists.show', $list)" variant="secondary" size="sm"><i class="bi bi-eye"></i> View</x-ui.button>
+                    <a href="{{ route('embassy-lists.show', $list) }}" class="{{ $mpill }} bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100"><i class="bi bi-eye"></i> View</a>
                     @if($list->isDraft())
-                        @can('update', $list)<x-ui.button :href="route('embassy-lists.edit', $list)" variant="secondary" size="sm"><i class="bi bi-pencil"></i> Edit</x-ui.button>@endcan
+                        @can('update', $list)<a href="{{ route('embassy-lists.edit', $list) }}" class="{{ $mpill }} bg-amber-50 text-amber-700 ring-amber-200 hover:bg-amber-100"><i class="bi bi-pencil"></i> Edit</a>@endcan
+                        @can('finalize', $list)
+                            <form method="POST" action="{{ route('embassy-lists.finalize', $list) }}" onsubmit="return confirm('Finalize list {{ $list->list_no }}? This will mark all {{ $list->total_items }} candidates as listed.')">
+                                @csrf
+                                <button type="submit" class="{{ $mpill }} bg-emerald-50 text-emerald-700 ring-emerald-200 hover:bg-emerald-100"><i class="bi bi-check-circle"></i> Finalize</button>
+                            </form>
+                        @endcan
                     @endif
                     @if($list->isFinalized() || $list->status === 'printed')
-                        <x-ui.button :href="route('embassy-lists.download-pdf', $list)" variant="secondary" size="sm"><i class="bi bi-file-earmark-pdf"></i> PDF</x-ui.button>
+                        <a href="{{ route('embassy-lists.print', $list) }}" target="_blank" class="{{ $mpill }} bg-blue-50 text-blue-700 ring-blue-200 hover:bg-blue-100"><i class="bi bi-printer"></i> Print</a>
+                        <a href="{{ route('embassy-lists.download-pdf', $list) }}" class="{{ $mpill }} bg-brand-50 text-brand-700 ring-brand-200 hover:bg-brand-100"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
+                    @endif
+                    @if(!$list->isCancelled())
+                        @can('cancel', $list)
+                            <button type="button" class="{{ $mpill }} bg-rose-50 text-rose-700 ring-rose-200 hover:bg-rose-100"
+                                x-on:click="cancel.open = true; cancel.no = @js($list->list_no); cancel.action = '{{ route('embassy-lists.cancel', $list) }}'; cancel.finalized = {{ $list->isFinalized() ? 'true' : 'false' }}"><i class="bi bi-x-circle"></i> Cancel</button>
+                        @endcan
                     @endif
                 </div>
             </x-ui.card>
