@@ -18,7 +18,7 @@
         ['route' => 'dashboard',           'module' => null,           'icon' => 'bi-grid-1x2',       'label' => 'Dashboard',       'active' => request()->routeIs('dashboard')],
         ['route' => 'hr.index',            'module' => 'hr',           'icon' => 'bi-person-vcard',   'label' => 'HR / Candidates', 'active' => request()->routeIs('hr.index') || request()->routeIs('hr.create') || request()->routeIs('hr.edit') || request()->routeIs('hr.show')],
         ['route' => 'embassy-lists.index', 'module' => 'embassy_list', 'icon' => 'bi-list-ol',        'label' => 'Embassy Lists',   'active' => request()->routeIs('embassy-lists.*')],
-        ['route' => 'erp.dashboard',       'module' => 'erp',          'icon' => 'bi-cash-stack',     'label' => 'ERP Suite',       'active' => request()->routeIs('erp.*')],
+        ['route' => 'erp.dashboard',       'module' => 'erp',          'icon' => 'bi-cash-stack',     'label' => 'ERP',             'active' => request()->routeIs('erp.*')],
         ['route' => 'attendance.index',    'module' => 'attendance',   'icon' => 'bi-calendar-check', 'label' => 'Attendance',      'active' => request()->routeIs('attendance.*')],
     ], fn ($l) => $gate($l['module'])));
 
@@ -27,7 +27,7 @@
     $secondaryNav = array_values(array_filter([
         ['route' => 'agents.index',  'module' => 'agents',  'icon' => 'bi-people',       'label' => 'Agents',      'active' => request()->routeIs('agents.*')],
         ['route' => 'license.index', 'module' => 'license', 'icon' => 'bi-patch-check',  'label' => 'License',     'active' => request()->routeIs('license.*')],
-        ['route' => 'notes.index',   'module' => 'notes',   'icon' => 'bi-journal-text', 'label' => 'Smart Notes', 'active' => request()->routeIs('notes.*')],
+        // Smart Notes intentionally lives in the ERP sidebar (erp-app), not the main nav.
     ], fn ($l) => $gate($l['module'])));
 
     $qatarUrl = 'https://portal.moi.gov.qa/wps/portal/MOIInternet/services/inquiries/visaservices/enquiryandprinting';

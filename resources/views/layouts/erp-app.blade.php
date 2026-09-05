@@ -75,7 +75,7 @@
                 <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600 text-white">
                     <i class="bi bi-cash-stack text-sm"></i>
                 </span>
-                <div class="truncate text-sm font-bold text-slate-900">ERP Suite</div>
+                <div class="truncate text-sm font-bold text-slate-900">ERP</div>
             </div>
 
             <nav class="flex-1 overflow-y-auto px-3 py-3">
