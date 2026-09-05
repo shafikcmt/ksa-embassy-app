@@ -3,7 +3,8 @@
 @section('page-title', 'License')
 
 @section('content')
-<div class="mx-auto max-w-3xl">
+<div class="mx-auto {{ !empty($payment) ? 'max-w-5xl' : 'max-w-3xl' }}">
+    @php $dt = 'text-[0.7rem] font-semibold uppercase tracking-wider text-slate-400'; @endphp
 
     <x-ui.page-header
         title="License Information"
@@ -33,13 +34,13 @@
         </div>
     </x-ui.card>
 
+    <div class="grid gap-5 {{ !empty($payment) ? 'lg:grid-cols-2 lg:items-start' : '' }}">
     {{-- License Details --}}
     <x-ui.card>
         <div class="flex items-center gap-2 border-b border-slate-100 px-5 py-3 text-sm font-bold text-slate-800">
             <i class="bi bi-card-list text-brand-600"></i> License Details
         </div>
-        @php $dt = 'text-[0.7rem] font-semibold uppercase tracking-wider text-slate-400'; @endphp
-        <dl class="grid grid-cols-1 gap-x-8 gap-y-5 px-5 py-5 sm:grid-cols-2">
+        <dl class="grid grid-cols-1 gap-x-8 gap-y-5 px-5 py-5 {{ empty($payment) ? 'sm:grid-cols-2' : '' }}">
             <div>
                 <dt class="{{ $dt }}">License Holder Name</dt>
                 <dd class="mt-1 text-sm font-semibold text-slate-800">{{ $agency->owner_name ?: '—' }}</dd>
@@ -81,9 +82,60 @@
         </dl>
     </x-ui.card>
 
+    {{-- Payment Information — only when Super Admin has configured renewal details.
+         Each row shows only if its field is set, so no fake/empty data appears. --}}
+    @if(!empty($payment))
+    <x-ui.card>
+        <div class="flex items-center gap-2 border-b border-slate-100 px-5 py-3 text-sm font-bold text-slate-800">
+            <i class="bi bi-credit-card text-brand-600"></i> Payment Information
+        </div>
+        <div class="space-y-4 px-5 py-5">
+            @isset($payment['amount'])
+                <div>
+                    <div class="{{ $dt }}">Renewal Amount</div>
+                    <div class="mt-1 text-lg font-bold text-slate-900">৳ {{ $payment['amount'] }}</div>
+                </div>
+            @endisset
+            @if(isset($payment['bkash']) || isset($payment['nagad']))
+                <div class="grid grid-cols-2 gap-4">
+                    @isset($payment['bkash'])
+                        <div>
+                            <div class="{{ $dt }}">bKash</div>
+                            <div class="mt-1 font-mono text-sm font-semibold text-slate-800">{{ $payment['bkash'] }}</div>
+                        </div>
+                    @endisset
+                    @isset($payment['nagad'])
+                        <div>
+                            <div class="{{ $dt }}">Nagad</div>
+                            <div class="mt-1 font-mono text-sm font-semibold text-slate-800">{{ $payment['nagad'] }}</div>
+                        </div>
+                    @endisset
+                </div>
+            @endif
+            @isset($payment['bank'])
+                <div>
+                    <div class="{{ $dt }}">Bank Account Details</div>
+                    <div class="mt-1 whitespace-pre-line text-sm font-medium text-slate-700">{{ $payment['bank'] }}</div>
+                </div>
+            @endisset
+            @isset($payment['instructions'])
+                <div class="rounded-lg bg-slate-50 px-4 py-3">
+                    <div class="{{ $dt }}">Renewal Instructions</div>
+                    <div class="mt-1 whitespace-pre-line text-sm leading-relaxed text-slate-600">{{ $payment['instructions'] }}</div>
+                </div>
+            @endisset
+        </div>
+    </x-ui.card>
+    @endif
+    </div>
+
     <p class="mt-4 text-xs text-slate-400">
         <i class="bi bi-info-circle"></i>
-        To renew your license or update these details, please contact your system administrator.
+        @if(!empty($payment))
+            Pay the renewal amount to any channel above, then contact your system administrator to confirm renewal.
+        @else
+            To renew your license or update these details, please contact your system administrator.
+        @endif
     </p>
 
 </div>

@@ -63,6 +63,67 @@
             </div>
         </div>
 
+        {{-- License renewal / payment details (shown read-only to agencies) --}}
+        <div class="card mt-4">
+            <div class="card-header py-2">
+                <i class="bi bi-credit-card me-1"></i> License Renewal / Payment Details
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-3">
+                    Your payment channels for license renewal. Agencies see these read-only on their
+                    License page. Leave all blank to hide the Payment Information card entirely.
+                </p>
+
+                <form method="POST" action="{{ route('super-admin.settings.update') }}">
+                    @csrf @method('PUT')
+                    <input type="hidden" name="section" value="payment">
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Renewal Amount</label>
+                        <input type="text" name="renewal_amount" class="form-control form-control-sm @error('renewal_amount') is-invalid @enderror"
+                            value="{{ old('renewal_amount', $renewalAmount) }}" placeholder="e.g. 5000">
+                        <div class="form-text">Shown to agencies as ৳ (BDT).</div>
+                        @error('renewal_amount')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-semibold">bKash Number</label>
+                            <input type="text" name="bkash_number" class="form-control form-control-sm @error('bkash_number') is-invalid @enderror"
+                                value="{{ old('bkash_number', $bkashNumber) }}" placeholder="01XXXXXXXXX">
+                            @error('bkash_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-semibold">Nagad Number</label>
+                            <input type="text" name="nagad_number" class="form-control form-control-sm @error('nagad_number') is-invalid @enderror"
+                                value="{{ old('nagad_number', $nagadNumber) }}" placeholder="01XXXXXXXXX">
+                            @error('nagad_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Bank Account Details</label>
+                        <textarea name="bank_details" rows="4" class="form-control form-control-sm @error('bank_details') is-invalid @enderror"
+                            placeholder="Bank name&#10;Account name&#10;Account number&#10;Branch">{{ old('bank_details', $bankDetails) }}</textarea>
+                        <div class="form-text">One block — bank name, account name, account number, branch.</div>
+                        @error('bank_details')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label small fw-semibold">Renewal Instructions</label>
+                        <textarea name="renewal_instructions" rows="4" class="form-control form-control-sm @error('renewal_instructions') is-invalid @enderror"
+                            placeholder="English + বাংলা instructions for how to renew">{{ old('renewal_instructions', $renewalInstructions) }}</textarea>
+                        <div class="form-text">Bilingual (English + Bangla) — line breaks are preserved on the License page.</div>
+                        @error('renewal_instructions')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="bi bi-floppy me-1"></i> Save Payment Details
+                    </button>
+                </form>
+            </div>
+        </div>
+
         {{-- Global default HR form field controls --}}
         <div class="card mt-4">
             <div class="card-header py-2 d-flex align-items-center justify-content-between">

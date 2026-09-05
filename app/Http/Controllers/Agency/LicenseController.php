@@ -54,8 +54,19 @@ class LicenseController extends Controller
             $statusTone  = 'green';
         }
 
+        // Global license-renewal payment details (Super Admin configured, read-only).
+        // Only fields actually set are kept — the view hides the whole Payment card
+        // when nothing is configured, so no fake/empty data is ever shown.
+        $payment = array_filter([
+            'amount'       => \App\Models\Setting::get('renewal_amount', null, ''),
+            'bkash'        => \App\Models\Setting::get('bkash_number', null, ''),
+            'nagad'        => \App\Models\Setting::get('nagad_number', null, ''),
+            'bank'         => \App\Models\Setting::get('bank_details', null, ''),
+            'instructions' => \App\Models\Setting::get('renewal_instructions', null, ''),
+        ], fn ($v) => filled($v));
+
         return view('agency.license.index', compact(
-            'agency', 'daysRemaining', 'statusLabel', 'statusTone'
+            'agency', 'daysRemaining', 'statusLabel', 'statusTone', 'payment'
         ));
     }
 }
