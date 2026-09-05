@@ -93,9 +93,13 @@
 
         {{-- ════════ 1 · PERSONAL INFO ════════ --}}
         <fieldset class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-            <legend class="flex items-center gap-2 px-2 text-sm font-bold text-brand-700">
-                <i class="bi bi-person-vcard"></i> Personal Info
-            </legend>
+            <div class="mb-4 flex items-center gap-3 border-b border-slate-100 pb-3">
+                <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-600"><i class="bi bi-person-vcard text-lg"></i></span>
+                <div>
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-700">Personal Info</h2>
+                    <p class="mt-0.5 text-xs text-slate-400">Identity as printed in the passport</p>
+                </div>
+            </div>
             <div class="grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-2">
                 <x-ui.field label="Name" name="full_name_en" :required="true" hint="As printed in the passport" class="sm:col-span-2">
                     <input type="text" id="full_name_en" name="full_name_en" required value="{{ $v('full_name_en') }}" placeholder="e.g. MOHAMMED RAHMAN" autocomplete="off" class="{{ $inp }} js-trim uppercase placeholder:normal-case @error('full_name_en') !border-rose-400 @enderror">
@@ -221,7 +225,7 @@
                 </x-ui.field>
 
                 @if($on('home_address'))
-                    <x-ui.field label="Home Address &amp; Phone" name="home_address" class="sm:col-span-2">
+                    <x-ui.field label="Home Address & Phone" name="home_address" class="sm:col-span-2">
                         <textarea name="home_address" rows="2" placeholder="Village / city, district — and a contact phone number" class="{{ $ta }}">{{ $v('home_address') }}</textarea>
                     </x-ui.field>
                 @elseif($isEdit)
@@ -232,9 +236,14 @@
 
         {{-- ════════ 2 · PASSPORT INFO ════════ --}}
         <fieldset class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-            <legend class="flex items-center gap-2 px-2 text-sm font-bold text-brand-700">
-                <i class="bi bi-passport"></i> Passport Info
-            </legend>
+            <div class="mb-4 flex items-center gap-3 border-b border-slate-100 pb-3">
+                <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-600"><i class="bi bi-passport text-lg"></i></span>
+                <div>
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-700">Passport Info</h2>
+                    <p class="mt-0.5 text-xs text-slate-400">Passport document details</p>
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-2">
                 @if($on('passport_issue_place'))
                     <x-ui.field label="Passport Issue Place" name="passport_issue_place">
@@ -275,9 +284,13 @@
 
         {{-- ════════ 3 · VISA INFO ════════ --}}
         <fieldset class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-            <legend class="flex items-center gap-2 px-2 text-sm font-bold text-brand-700">
-                <i class="bi bi-globe2"></i> Visa Info
-            </legend>
+            <div class="mb-4 flex items-center gap-3 border-b border-slate-100 pb-3">
+                <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-600"><i class="bi bi-globe2 text-lg"></i></span>
+                <div>
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-700">Visa Info</h2>
+                    <p class="mt-0.5 text-xs text-slate-400">Visa, sponsor &amp; profession details</p>
+                </div>
+            </div>
             <div class="grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-2">
                 <x-ui.field label="Visa No" name="visa_number" :required="true">
                     <input type="text" name="visa_number" required value="{{ $rel($visa, 'visa_number') }}" class="{{ $inp }} @error('visa_number') !border-rose-400 @enderror">
@@ -366,9 +379,13 @@
 
         {{-- ════════ 4 · POLICE CLEARANCE & DRIVING LICENSE INFO ════════ --}}
         <fieldset class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-            <legend class="flex items-center gap-2 px-2 text-sm font-bold text-brand-700">
-                <i class="bi bi-shield-check"></i> Police Clearance &amp; Driving License Info
-            </legend>
+            <div class="mb-4 flex items-center gap-3 border-b border-slate-100 pb-3">
+                <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-600"><i class="bi bi-shield-check text-lg"></i></span>
+                <div>
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-700">Police Clearance &amp; Driving License Info</h2>
+                    <p class="mt-0.5 text-xs text-slate-400">Clearance reference &amp; license type</p>
+                </div>
+            </div>
             <div class="grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-2">
                 @if($on('pc_qr_code'))
                     <x-ui.field label="P.C QRCode" name="pc_qr_code" class="sm:col-span-2">
@@ -408,9 +425,13 @@
         @endphp
         @if($anyOther)
         <fieldset class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-            <legend class="flex items-center gap-2 px-2 text-sm font-bold text-brand-700">
-                <i class="bi bi-info-circle"></i> Others Info
-            </legend>
+            <div class="mb-4 flex items-center gap-3 border-b border-slate-100 pb-3">
+                <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-600"><i class="bi bi-info-circle text-lg"></i></span>
+                <div>
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-700">Others Info</h2>
+                    <p class="mt-0.5 text-xs text-slate-400">Stay duration, dates &amp; assigned agent</p>
+                </div>
+            </div>
             <div class="grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-2">
                 @if($showDuration)
                     <x-ui.field label="Duration of Stay" name="duration_stay_en" hint="English / Arabic">
