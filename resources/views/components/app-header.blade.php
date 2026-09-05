@@ -22,15 +22,13 @@
         ['route' => 'attendance.index',    'module' => 'attendance',   'icon' => 'bi-calendar-check', 'label' => 'Attendance',      'active' => request()->routeIs('attendance.*')],
     ], fn ($l) => $gate($l['module'])));
 
-    $moreNav = array_values(array_filter([
-        ['route' => 'agents.index',  'module' => 'agents',  'icon' => 'bi-people',       'label' => 'Agents',            'active' => request()->routeIs('agents.*')],
-        ['route' => 'license.index', 'module' => 'license', 'icon' => 'bi-patch-check',  'label' => 'License',           'active' => request()->routeIs('license.*')],
-        ['route' => 'notes.index',   'module' => 'notes',   'icon' => 'bi-journal-text', 'label' => 'Smart Notes',       'active' => request()->routeIs('notes.*')],
-        ['route' => 'hr.index',      'module' => 'hr',      'icon' => 'bi-printer',      'label' => 'Documents / Print', 'active' => request()->routeIs('hr.documents') || request()->routeIs('hr.print.*') || request()->routeIs('hr.download.*')],
+    // Secondary tabs — now top-level navbar items (were under the old More ▾).
+    // "Documents / Print" was a redundant duplicate of HR (both → hr.index); removed.
+    $secondaryNav = array_values(array_filter([
+        ['route' => 'agents.index',  'module' => 'agents',  'icon' => 'bi-people',       'label' => 'Agents',      'active' => request()->routeIs('agents.*')],
+        ['route' => 'license.index', 'module' => 'license', 'icon' => 'bi-patch-check',  'label' => 'License',     'active' => request()->routeIs('license.*')],
+        ['route' => 'notes.index',   'module' => 'notes',   'icon' => 'bi-journal-text', 'label' => 'Smart Notes', 'active' => request()->routeIs('notes.*')],
     ], fn ($l) => $gate($l['module'])));
-
-    $moreActive = collect($moreNav)->contains('active', true)
-        || request()->routeIs('settings.*') || request()->routeIs('staff.*');
 
     $qatarUrl = 'https://portal.moi.gov.qa/wps/portal/MOIInternet/services/inquiries/visaservices/enquiryandprinting';
 
@@ -62,40 +60,18 @@
             <h1 class="min-w-0 flex-1 truncate text-center text-base font-bold text-slate-900 lg:hidden">@yield('page-title', 'Dashboard')</h1>
 
             {{-- Desktop primary nav --}}
-            <nav class="hidden flex-1 items-center gap-1 pl-4 lg:flex">
-                @foreach($essentialNav as $link)
+            <nav class="hidden flex-1 items-center gap-0.5 pl-3 lg:flex">
+                @foreach(array_merge($essentialNav, $secondaryNav) as $link)
                     <a href="{{ route($link['route']) }}"
                        @class([$navBase, $navOn => $link['active'], $navOff => ! $link['active']])>
                         <i class="bi {{ $link['icon'] }} text-base {{ $link['active'] ? 'text-indigo-600' : 'text-slate-400' }}"></i>
                         <span>{{ $link['label'] }}</span>
                     </a>
                 @endforeach
-
-                {{-- More ▾ --}}
-                <x-ui.dropdown align="left" width="w-60">
-                    <x-slot:trigger>
-                        <button type="button" @class([$navBase, $navOn => $moreActive, $navOff => ! $moreActive])>
-                            <i class="bi bi-grid text-base {{ $moreActive ? 'text-indigo-600' : 'text-slate-400' }}"></i>
-                            <span>More</span>
-                            <i class="bi bi-chevron-down text-xs {{ $moreActive ? 'text-indigo-400' : 'text-slate-400' }}"></i>
-                        </button>
-                    </x-slot:trigger>
-
-                    @foreach($moreNav as $link)
-                        <x-ui.dropdown-item :href="route($link['route'])" :icon="$link['icon']"
-                            @class(['bg-indigo-50 font-semibold' => $link['active']])>{{ $link['label'] }}</x-ui.dropdown-item>
-                    @endforeach
-
-                    <x-ui.dropdown-item :href="$qatarUrl" icon="bi-box-arrow-up-right" target="_blank" rel="noopener noreferrer">Qatar Visa Check</x-ui.dropdown-item>
-
-                    @if($isAdmin)
-                        <div class="my-1 border-t border-slate-100"></div>
-                        <x-ui.dropdown-item :href="route('settings.index')" icon="bi-gear"
-                            @class(['bg-indigo-50 font-semibold' => request()->routeIs('settings.*')])>Settings</x-ui.dropdown-item>
-                        <x-ui.dropdown-item :href="route('staff.index')" icon="bi-people-fill"
-                            @class(['bg-indigo-50 font-semibold' => request()->routeIs('staff.*')])>Staff Accounts</x-ui.dropdown-item>
-                    @endif
-                </x-ui.dropdown>
+                <a href="{{ $qatarUrl }}" target="_blank" rel="noopener noreferrer" @class([$navBase, $navOff])>
+                    <i class="bi bi-box-arrow-up-right text-base text-slate-400"></i>
+                    <span>Qatar Visa Check</span>
+                </a>
             </nav>
 
             {{-- Right utilities — kept minimal: notifications + account only --}}
@@ -162,8 +138,8 @@
 
                 <span class="hidden h-6 w-px bg-slate-200 sm:block"></span>
 
-                {{-- User menu --}}
-                <x-ui.dropdown align="right" width="w-60">
+                {{-- User menu — also hosts secondary nav (relocated from the old More ▾) --}}
+                <x-ui.dropdown align="right" width="w-64">
                     <x-slot:trigger>
                         <button class="flex items-center gap-2.5 rounded-lg p-1 pr-1.5 transition hover:bg-slate-100">
                             <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-brand-600 to-indigo-600 text-sm font-bold text-white">{{ strtoupper($initials ?: 'U') }}</span>
@@ -175,25 +151,26 @@
                         </button>
                     </x-slot:trigger>
 
+                    {{-- 1 · identity (read-only) --}}
                     <div class="border-b border-slate-100 px-3.5 py-2.5">
                         <div class="text-sm font-semibold text-slate-900">{{ $authUser->name }}</div>
                         <div class="truncate text-xs text-slate-400">{{ $authUser->email }}</div>
                     </div>
-                    @if($sub)
-                        <div class="border-b border-slate-100 px-3.5 py-2 text-xs">
-                            <span class="font-semibold text-slate-700"><i class="bi bi-gem text-cyan-500"></i> {{ $sub->plan->name ?? 'Plan' }}</span>
-                            <span class="text-slate-400">· {{ $sub->daysRemaining() }} days left</span>
-                        </div>
-                    @else
-                        <div class="border-b border-slate-100 px-3.5 py-2 text-xs text-rose-600"><i class="bi bi-exclamation-triangle"></i> No active subscription</div>
-                    @endif
+                    {{-- 2·3 · admin-only account management --}}
                     @if($isAdmin)
-                        <x-ui.dropdown-item :href="route('settings.index')" icon="bi-gear">Settings</x-ui.dropdown-item>
+                        <x-ui.dropdown-item :href="route('settings.index')" icon="bi-gear"
+                            @class(['bg-indigo-50 font-semibold' => request()->routeIs('settings.*')])>Settings</x-ui.dropdown-item>
+                        <x-ui.dropdown-item :href="route('staff.index')" icon="bi-people-fill"
+                            @class(['bg-indigo-50 font-semibold' => request()->routeIs('staff.*')])>Staff Accounts</x-ui.dropdown-item>
                     @endif
+                    {{-- 4 · change password (all users) --}}
+                    <x-ui.dropdown-item :href="route('password.edit')" icon="bi-key"
+                        @class(['bg-indigo-50 font-semibold' => request()->routeIs('password.edit')])>Change Password</x-ui.dropdown-item>
+                    {{-- 5 · sign out --}}
                     <div class="my-1 border-t border-slate-100"></div>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <x-ui.dropdown-item type="submit" icon="bi-box-arrow-right" tone="danger">Logout</x-ui.dropdown-item>
+                        <x-ui.dropdown-item type="submit" icon="bi-box-arrow-right" tone="danger">Sign out</x-ui.dropdown-item>
                     </form>
                 </x-ui.dropdown>
             </div>
@@ -223,7 +200,7 @@
             $drawerOff  = 'text-slate-600 hover:bg-slate-100 hover:text-slate-900';
         @endphp
         <nav class="flex-1 overflow-y-auto px-3 py-3">
-            @foreach(array_merge($essentialNav, $moreNav) as $link)
+            @foreach(array_merge($essentialNav, $secondaryNav) as $link)
                 <a href="{{ route($link['route']) }}" @click="mobileNav = false"
                    @class([$drawerItem, $drawerOn => $link['active'], $drawerOff => ! $link['active']])>
                     <i class="bi {{ $link['icon'] }} w-5 text-center text-base {{ $link['active'] ? 'text-indigo-600' : 'text-slate-400' }}"></i>
@@ -238,6 +215,7 @@
 
             @if($isAdmin)
                 <div class="my-2 border-t border-slate-100"></div>
+                <div class="px-3 pb-1 text-[0.65rem] font-semibold uppercase tracking-wider text-slate-400">Admin</div>
                 <a href="{{ route('settings.index') }}" @click="mobileNav = false" @class([$drawerItem, $drawerOn => request()->routeIs('settings.*'), $drawerOff => ! request()->routeIs('settings.*')])>
                     <i class="bi bi-gear w-5 text-center text-base {{ request()->routeIs('settings.*') ? 'text-indigo-600' : 'text-slate-400' }}"></i><span>Settings</span>
                 </a>
@@ -246,11 +224,15 @@
                 </a>
             @endif
 
+            <a href="{{ route('password.edit') }}" @click="mobileNav = false" @class([$drawerItem, $drawerOn => request()->routeIs('password.edit'), $drawerOff => ! request()->routeIs('password.edit')])>
+                <i class="bi bi-key w-5 text-center text-base {{ request()->routeIs('password.edit') ? 'text-indigo-600' : 'text-slate-400' }}"></i><span>Change Password</span>
+            </a>
+
             <div class="my-2 border-t border-slate-100"></div>
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit" class="{{ $drawerItem }} w-full text-left text-rose-600 hover:bg-rose-50">
-                    <i class="bi bi-box-arrow-right w-5 text-center text-base text-rose-500"></i><span>Logout</span>
+                    <i class="bi bi-box-arrow-right w-5 text-center text-base text-rose-500"></i><span>Sign out</span>
                 </button>
             </form>
         </nav>

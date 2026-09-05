@@ -17,6 +17,10 @@ Route::middleware(['auth', 'agency-access'])->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    // Change Password — self-service page for any signed-in user; posts to the
+    // existing Breeze password.update (PUT /password) endpoint.
+    Route::get('/password/change', [\App\Http\Controllers\ProfileController::class, 'editPassword'])->name('password.edit');
+
     // Settings (admin-only surface; controller/nav already gate non-admins)
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');

@@ -22,6 +22,17 @@ class ProfileController extends Controller
     }
 
     /**
+     * Display the self-service Change Password page.
+     * Posts to the existing Breeze password.update (PUT /password) endpoint.
+     */
+    public function editPassword(Request $request): View
+    {
+        return view('agency.account.change-password', [
+            'user' => $request->user(),
+        ]);
+    }
+
+    /**
      * Update the user's profile information.
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
