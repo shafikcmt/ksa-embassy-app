@@ -16,6 +16,8 @@
 
 <div x-data="doubleMofaPage()">
 
+    <x-ui.page-header title="Double MOFA" subtitle="Double MOFA billing & payments" icon="bi-files" />
+
     {{-- Summary --}}
     <div class="mb-5 grid gap-3 sm:grid-cols-3">
         <div class="rounded-2xl border border-slate-200 bg-white p-4">
@@ -109,12 +111,13 @@
                             <td class="px-4 py-3 text-right whitespace-nowrap {{ $unpaid > 0 ? 'font-semibold text-rose-600' : 'text-slate-400' }}">৳{{ number_format($unpaid, 2) }}</td>
                             <td class="px-4 py-3"><span class="rounded-full px-2 py-0.5 text-xs font-semibold {{ $statusChip[$e->status] ?? 'bg-slate-100 text-slate-600' }}">{{ $e->statusLabel() }}</span></td>
                             <td class="px-4 py-3">
-                                <div class="flex items-center justify-end gap-1.5">
-                                    <button type="button" title="Receive payment" class="grid h-8 w-8 place-items-center rounded-lg text-slate-500 hover:bg-emerald-50 hover:text-emerald-600"
-                                            x-on:click="openPay(@js(['id' => $e->id, 'name' => $e->full_name, 'due' => number_format($unpaid, 2, '.', '')]))"><i class="bi bi-cash-coin"></i></button>
-                                    <button type="button" title="Payment history" class="grid h-8 w-8 place-items-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700"
-                                            x-on:click="openReceipts(@js($e->full_name), @js($receiptRows))"><i class="bi bi-clock-history"></i></button>
-                                    <button type="button" title="Edit" class="grid h-8 w-8 place-items-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-emerald-600"
+                                @php $pill = 'inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold ring-1 ring-inset transition'; @endphp
+                                <div class="flex flex-nowrap items-center justify-end gap-1.5">
+                                    <button type="button" class="{{ $pill }} bg-emerald-50 text-emerald-700 ring-emerald-200 hover:bg-emerald-100"
+                                            x-on:click="openPay(@js(['id' => $e->id, 'name' => $e->full_name, 'due' => number_format($unpaid, 2, '.', '')]))"><i class="bi bi-cash-coin"></i> Receive</button>
+                                    <button type="button" class="{{ $pill }} bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100"
+                                            x-on:click="openReceipts(@js($e->full_name), @js($receiptRows))"><i class="bi bi-clock-history"></i> History</button>
+                                    <button type="button" class="{{ $pill }} bg-amber-50 text-amber-700 ring-amber-200 hover:bg-amber-100"
                                             x-on:click="openEdit(@js([
                                                 'id' => $e->id,
                                                 'mofa_date' => $e->mofa_date->format('Y-m-d'),
@@ -123,10 +126,10 @@
                                                 'visa_serial' => $e->visa_serial,
                                                 'reference' => $e->reference,
                                                 'billing_amount' => number_format((float) $e->billing_amount, 2, '.', ''),
-                                            ]))"><i class="bi bi-pencil"></i></button>
+                                            ]))"><i class="bi bi-pencil"></i> Edit</button>
                                     <form method="POST" action="{{ route('erp.double-mofa.destroy', $e) }}" onsubmit="return confirm('Delete this Double MOFA entry?')">
                                         @csrf @method('DELETE')
-                                        <button type="submit" title="Delete" class="grid h-8 w-8 place-items-center rounded-lg text-slate-500 hover:bg-rose-50 hover:text-rose-600"><i class="bi bi-trash"></i></button>
+                                        <button type="submit" class="{{ $pill }} bg-rose-50 text-rose-700 ring-rose-200 hover:bg-rose-100"><i class="bi bi-trash"></i> Delete</button>
                                     </form>
                                 </div>
                             </td>
