@@ -15,6 +15,8 @@
 
 <div x-data="dueListPage()">
 
+    <x-ui.page-header title="Due List" subtitle="Outstanding payments across Delivery & Double MOFA" icon="bi-hourglass-split" />
+
     {{-- Summary --}}
     <div class="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div class="rounded-2xl border border-sky-200 bg-sky-50 p-4">
@@ -94,7 +96,7 @@
                             <td class="px-4 py-3">{{ $r['status'] }}</td>
                             <td class="px-4 py-3">
                                 <div class="flex items-center justify-end">
-                                    <button type="button" class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
+                                    <button type="button" class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold ring-1 ring-inset transition bg-emerald-50 text-emerald-700 ring-emerald-200 hover:bg-emerald-100"
                                             x-on:click="openPay(@js([
                                                 'url' => $r['pay_url'],
                                                 'name' => $r['full_name'],

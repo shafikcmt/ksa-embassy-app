@@ -20,6 +20,8 @@
     ]);
 @endphp
 
+<x-ui.page-header title="Reports" subtitle="Financial summary & exports" icon="bi-bar-chart" />
+
 {{-- Filters + export --}}
 <form method="GET" action="{{ route('erp.reports') }}" class="mb-6 rounded-2xl border border-slate-200 bg-white p-5">
     <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

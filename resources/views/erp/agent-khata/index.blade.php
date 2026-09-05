@@ -5,6 +5,8 @@
 
 @section('content')
 <div>
+    <x-ui.page-header title="Agent Khata" subtitle="Agent ledgers & balances" icon="bi-journal-bookmark" />
+
     {{-- Summary --}}
     <div class="mb-5 grid gap-3 sm:grid-cols-3">
         <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
@@ -51,7 +53,7 @@
                             <td class="px-4 py-3 text-right whitespace-nowrap text-slate-500">৳{{ number_format((float) $agent->opening_balance, 2) }}</td>
                             <td class="px-4 py-3 text-right whitespace-nowrap font-semibold {{ $bal > 0 ? 'text-emerald-700' : ($bal < 0 ? 'text-rose-600' : 'text-slate-400') }}">৳{{ number_format($bal, 2) }}</td>
                             <td class="px-4 py-3 text-right">
-                                <a href="{{ route('erp.agent-khata.show', $agent) }}" class="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-200"><i class="bi bi-journal-text"></i> Open Khata</a>
+                                <a href="{{ route('erp.agent-khata.show', $agent) }}" class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold ring-1 ring-inset transition bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100"><i class="bi bi-journal-text"></i> Open Khata</a>
                             </td>
                         </tr>
                     @empty

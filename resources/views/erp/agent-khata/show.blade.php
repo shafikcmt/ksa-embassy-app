@@ -81,7 +81,7 @@
                                 <td class="px-4 py-3">
                                     <div class="flex items-center justify-end">
                                         @if(! $t->isReversal() && ! $isReversed)
-                                            <button type="button" class="inline-flex items-center gap-1 rounded-lg bg-rose-50 px-2.5 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100"
+                                            <button type="button" class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold ring-1 ring-inset transition bg-rose-50 text-rose-700 ring-rose-200 hover:bg-rose-100"
                                                     x-on:click="openReverse(@js(['id' => $t->id, 'type' => ucfirst($t->type), 'amount' => number_format((float) $t->amount, 2)]))"><i class="bi bi-arrow-counterclockwise"></i> Reverse</button>
                                         @else
                                             <span class="text-xs text-slate-300">—</span>
