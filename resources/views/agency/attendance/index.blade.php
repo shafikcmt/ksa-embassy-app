@@ -219,13 +219,13 @@
                                 <td class="px-4 py-3"><x-ui.status-badge :status="$employee->status" /></td>
                                 @if(auth()->user()->isAgencyAdmin())
                                     <td class="px-4 py-3">
-                                        <div class="flex items-center justify-end gap-1">
-                                            <button type="button" title="Attendance records" class="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100"
-                                                x-on:click="openRecords(@js(['id' => $employee->id, 'name' => $employee->name]))"><i class="bi bi-calendar2-week"></i></button>
-                                            <button type="button" title="Edit" class="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-brand-600 transition-colors hover:bg-brand-50"
-                                                x-on:click="editEmployee(@js(['action' => route('attendance.employees.update', $employee), 'name' => $employee->name, 'user_id' => $employee->user_id, 'shift_id' => $employee->shift_id, 'designation' => $employee->designation, 'phone' => $employee->phone, 'email' => $employee->email, 'join_date' => $employee->join_date?->format('Y-m-d'), 'status' => $employee->status]))"><i class="bi bi-pencil"></i></button>
-                                            <button type="button" title="Retire" class="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-rose-600 transition-colors hover:bg-rose-50"
-                                                x-on:click="del.open = true; del.title = @js('Employee: '.$employee->name); del.action = @js(route('attendance.employees.destroy', $employee))"><i class="bi bi-trash"></i></button>
+                                        <div class="flex flex-nowrap items-center justify-end gap-1.5">
+                                            <button type="button" class="{{ $pill }} cursor-pointer bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100"
+                                                x-on:click="openRecords(@js(['id' => $employee->id, 'name' => $employee->name]))"><i class="bi bi-calendar2-week"></i> Records</button>
+                                            <button type="button" class="{{ $pill }} cursor-pointer bg-amber-50 text-amber-700 ring-amber-200 hover:bg-amber-100"
+                                                x-on:click="editEmployee(@js(['action' => route('attendance.employees.update', $employee), 'name' => $employee->name, 'user_id' => $employee->user_id, 'shift_id' => $employee->shift_id, 'designation' => $employee->designation, 'phone' => $employee->phone, 'email' => $employee->email, 'join_date' => $employee->join_date?->format('Y-m-d'), 'status' => $employee->status]))"><i class="bi bi-pencil"></i> Edit</button>
+                                            <button type="button" class="{{ $pill }} cursor-pointer bg-rose-50 text-rose-700 ring-rose-200 hover:bg-rose-100"
+                                                x-on:click="del.open = true; del.title = @js('Employee: '.$employee->name); del.action = @js(route('attendance.employees.destroy', $employee))"><i class="bi bi-trash"></i> Retire</button>
                                         </div>
                                     </td>
                                 @endif
@@ -931,11 +931,11 @@
                                 <td class="py-2 pr-3 text-xs text-slate-400">{{ ucfirst($r->source) }}</td>
                                 <td class="py-2 pr-3 text-xs text-slate-500">{{ $r->note ?: '—' }}</td>
                                 <td class="py-2">
-                                    <div class="flex items-center justify-end gap-1">
-                                        <button type="button" title="Edit" class="grid h-7 w-7 cursor-pointer place-items-center rounded-lg text-brand-600 hover:bg-brand-50"
-                                            x-on:click="editRecord(@js(['action' => route('attendance.records.update', $r), 'employee_id' => $r->employee_id, 'employee_name' => $r->employee->name ?? '', 'work_date' => $r->work_date->format('Y-m-d'), 'check_in_time' => $r->check_in_at?->timezone($recTz)->format('H:i'), 'check_out_time' => $r->check_out_at?->timezone($recTz)->format('H:i'), 'status' => $r->status, 'note' => $r->note]))"><i class="bi bi-pencil"></i></button>
-                                        <button type="button" title="Delete" class="grid h-7 w-7 cursor-pointer place-items-center rounded-lg text-rose-600 hover:bg-rose-50"
-                                            x-on:click="del.open = true; del.title = @js($r->work_date->format('d M Y').' record'); del.action = @js(route('attendance.records.destroy', $r))"><i class="bi bi-trash"></i></button>
+                                    <div class="flex flex-nowrap items-center justify-end gap-1.5">
+                                        <button type="button" class="{{ $pill }} cursor-pointer bg-amber-50 text-amber-700 ring-amber-200 hover:bg-amber-100"
+                                            x-on:click="editRecord(@js(['action' => route('attendance.records.update', $r), 'employee_id' => $r->employee_id, 'employee_name' => $r->employee->name ?? '', 'work_date' => $r->work_date->format('Y-m-d'), 'check_in_time' => $r->check_in_at?->timezone($recTz)->format('H:i'), 'check_out_time' => $r->check_out_at?->timezone($recTz)->format('H:i'), 'status' => $r->status, 'note' => $r->note]))"><i class="bi bi-pencil"></i> Edit</button>
+                                        <button type="button" class="{{ $pill }} cursor-pointer bg-rose-50 text-rose-700 ring-rose-200 hover:bg-rose-100"
+                                            x-on:click="del.open = true; del.title = @js($r->work_date->format('d M Y').' record'); del.action = @js(route('attendance.records.destroy', $r))"><i class="bi bi-trash"></i> Delete</button>
                                     </div>
                                 </td>
                             </tr>
