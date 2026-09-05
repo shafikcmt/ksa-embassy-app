@@ -11,6 +11,8 @@
 
 <div x-data="expensePage()">
 
+    <x-ui.page-header title="Expenses" subtitle="Track agency expenses" icon="bi-cash-coin" />
+
     {{-- Summary --}}
     <div class="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <div class="rounded-2xl border border-rose-200 bg-rose-50 p-4">
@@ -101,8 +103,9 @@
                             <td class="px-4 py-3">{{ $e->paidViaLabel() ?: '—' }}</td>
                             <td class="px-4 py-3 text-slate-600">{{ $e->note ?: '—' }}</td>
                             <td class="px-4 py-3">
-                                <div class="flex items-center justify-end gap-1.5">
-                                    <button type="button" title="Edit" class="grid h-8 w-8 place-items-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-emerald-600"
+                                @php $pill = 'inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold ring-1 ring-inset transition'; @endphp
+                                <div class="flex flex-nowrap items-center justify-end gap-1.5">
+                                    <button type="button" class="{{ $pill }} bg-amber-50 text-amber-700 ring-amber-200 hover:bg-amber-100"
                                             x-on:click="openEdit(@js([
                                                 'id' => $e->id,
                                                 'expense_date' => $e->expense_date->format('Y-m-d'),
@@ -110,10 +113,10 @@
                                                 'amount' => number_format((float) $e->amount, 2, '.', ''),
                                                 'paid_via' => $e->paid_via,
                                                 'note' => $e->note,
-                                            ]))"><i class="bi bi-pencil"></i></button>
+                                            ]))"><i class="bi bi-pencil"></i> Edit</button>
                                     <form method="POST" action="{{ route('erp.expenses.destroy', $e) }}" onsubmit="return confirm('Delete this expense?')">
                                         @csrf @method('DELETE')
-                                        <button type="submit" title="Delete" class="grid h-8 w-8 place-items-center rounded-lg text-slate-500 hover:bg-rose-50 hover:text-rose-600"><i class="bi bi-trash"></i></button>
+                                        <button type="submit" class="{{ $pill }} bg-rose-50 text-rose-700 ring-rose-200 hover:bg-rose-100"><i class="bi bi-trash"></i> Delete</button>
                                     </form>
                                 </div>
                             </td>
