@@ -6,10 +6,13 @@
     <title>Login — VisaDeskPro</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,600,700,800&display=swap" rel="stylesheet">
     <style>
         body {
             background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
             min-height: 100vh; display: flex; align-items: center; justify-content: center;
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
         }
         .login-card {
             width: 100%; max-width: 420px;

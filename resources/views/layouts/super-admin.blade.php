@@ -7,6 +7,8 @@
     <title>@yield('title', 'Super Admin') — VisaDeskPro</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,600,700,800&display=swap" rel="stylesheet">
     <style>
         :root {
             --sidebar-width: 250px;
@@ -15,7 +17,7 @@
             --sidebar-active: #0d6efd;
             --topbar-height: 56px;
         }
-        body { background: #f0f2f5; font-size: 0.875rem; }
+        body { background: #f0f2f5; font-size: 0.875rem; font-family: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif; }
         #sidebar {
             position: fixed; top: 0; left: 0; height: 100vh;
             width: var(--sidebar-width); background: var(--sidebar-bg);
