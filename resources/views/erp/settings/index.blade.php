@@ -5,6 +5,8 @@
 
 @section('content')
     <div class="mx-auto max-w-2xl">
+        <x-ui.page-header title="ERP Settings" subtitle="Configure ERP defaults & security" icon="bi-sliders" />
+
         <form method="POST" action="{{ route('erp.settings.update') }}" class="space-y-6">
             @csrf
             @method('PUT')

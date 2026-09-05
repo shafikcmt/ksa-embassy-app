@@ -14,6 +14,8 @@
     $unlockLabel = $unlockedUntil > 0 ? \Illuminate\Support\Carbon::createFromTimestamp($unlockedUntil)->format('h:i A') : null;
 @endphp
 
+<x-ui.page-header title="Profit / Loss" subtitle="Revenue, expenses & net position" icon="bi-graph-up-arrow" />
+
 {{-- Unlock status + lock control --}}
 <div class="mb-5 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
     <div class="flex items-center gap-2 text-sm text-slate-500">
