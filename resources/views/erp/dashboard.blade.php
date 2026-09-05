@@ -19,16 +19,11 @@
         ];
     @endphp
 
-    {{-- Intro / status --}}
-    <div class="mb-6 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-5 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-            <h2 class="text-lg font-bold text-slate-900">Accounting &amp; Operations</h2>
-            <p class="mt-0.5 text-sm text-slate-500">
-                Live overview of collections, dues, expenses and agent balances — all read-only, drawn from the
-                same verified records as each module screen.
-            </p>
-        </div>
-        <div class="flex shrink-0 gap-2">
+    {{-- Page header (actions: Reports + ERP Settings) --}}
+    <x-ui.page-header title="ERP Dashboard"
+        subtitle="Live overview of collections, dues, expenses & agent balances — read-only"
+        icon="bi-speedometer2">
+        <x-slot:actions>
             <a href="{{ route('erp.reports') }}"
                class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3.5 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
                 <i class="bi bi-bar-chart"></i> Reports
@@ -37,8 +32,8 @@
                class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md">
                 <i class="bi bi-sliders"></i> ERP Settings
             </a>
-        </div>
-    </div>
+        </x-slot:actions>
+    </x-ui.page-header>
 
     {{-- E6b — Summary export toolbar (admin-only). Daily PDF carries no profit so
          it needs only admin; Monthly PDF + Backup CSV carry owner-only figures and
