@@ -20,6 +20,9 @@
 
     $inputCls = 'h-10 w-full rounded-lg border-slate-300 text-sm focus:border-brand-400 focus:ring-brand-400';
 
+    // Shared labeled action-pill token (matches HR / Embassy / ERP row actions).
+    $pill = 'inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold ring-1 ring-inset transition';
+
     // Leave Requests (H3c): admins see the full queue + approve/reject/revoke; a
     // login linked to an active employee may submit + cancel their own pending ones.
     $isLeaveAdmin  = auth()->user()->isAgencyAdmin();
@@ -276,11 +279,11 @@
                                     @endif
                                 </td>
                                 <td class="px-4 py-3">
-                                    <div class="flex items-center justify-end gap-1">
-                                        <button type="button" title="Edit" class="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-brand-600 transition-colors hover:bg-brand-50"
-                                            x-on:click="editShift(@js(['action' => route('attendance.shifts.update', $shift), 'name' => $shift->name, 'start_time' => $hm($shift->start_time), 'end_time' => $hm($shift->end_time), 'is_default' => (bool) $shift->is_default]))"><i class="bi bi-pencil"></i></button>
-                                        <button type="button" title="Delete" class="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-rose-500 transition-colors hover:bg-rose-50"
-                                            x-on:click="del.open = true; del.title = @js('Shift: '.$shift->name); del.action = @js(route('attendance.shifts.destroy', $shift))"><i class="bi bi-trash"></i></button>
+                                    <div class="flex flex-nowrap items-center justify-end gap-1.5">
+                                        <button type="button" class="{{ $pill }} cursor-pointer bg-amber-50 text-amber-700 ring-amber-200 hover:bg-amber-100"
+                                            x-on:click="editShift(@js(['action' => route('attendance.shifts.update', $shift), 'name' => $shift->name, 'start_time' => $hm($shift->start_time), 'end_time' => $hm($shift->end_time), 'is_default' => (bool) $shift->is_default]))"><i class="bi bi-pencil"></i> Edit</button>
+                                        <button type="button" class="{{ $pill }} cursor-pointer bg-rose-50 text-rose-700 ring-rose-200 hover:bg-rose-100"
+                                            x-on:click="del.open = true; del.title = @js('Shift: '.$shift->name); del.action = @js(route('attendance.shifts.destroy', $shift))"><i class="bi bi-trash"></i> Delete</button>
                                     </div>
                                 </td>
                             </tr>
@@ -493,11 +496,11 @@
                                 </td>
                                 <td class="px-4 py-3 text-slate-600">{{ $lt->default_days ?? '—' }}</td>
                                 <td class="px-4 py-3">
-                                    <div class="flex items-center justify-end gap-1">
-                                        <button type="button" title="Edit" class="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-brand-600 transition-colors hover:bg-brand-50"
-                                            x-on:click="editLeave(@js(['action' => route('attendance.leave-types.update', $lt), 'name' => $lt->name, 'is_paid' => (bool) $lt->is_paid, 'default_days' => $lt->default_days, 'color' => $lt->color]))"><i class="bi bi-pencil"></i></button>
-                                        <button type="button" title="Delete" class="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-rose-500 transition-colors hover:bg-rose-50"
-                                            x-on:click="del.open = true; del.title = @js('Leave type: '.$lt->name); del.action = @js(route('attendance.leave-types.destroy', $lt))"><i class="bi bi-trash"></i></button>
+                                    <div class="flex flex-nowrap items-center justify-end gap-1.5">
+                                        <button type="button" class="{{ $pill }} cursor-pointer bg-amber-50 text-amber-700 ring-amber-200 hover:bg-amber-100"
+                                            x-on:click="editLeave(@js(['action' => route('attendance.leave-types.update', $lt), 'name' => $lt->name, 'is_paid' => (bool) $lt->is_paid, 'default_days' => $lt->default_days, 'color' => $lt->color]))"><i class="bi bi-pencil"></i> Edit</button>
+                                        <button type="button" class="{{ $pill }} cursor-pointer bg-rose-50 text-rose-700 ring-rose-200 hover:bg-rose-100"
+                                            x-on:click="del.open = true; del.title = @js('Leave type: '.$lt->name); del.action = @js(route('attendance.leave-types.destroy', $lt))"><i class="bi bi-trash"></i> Delete</button>
                                     </div>
                                 </td>
                             </tr>
@@ -538,11 +541,11 @@
                                 <td class="px-4 py-3 font-semibold text-slate-800">{{ $holiday->holiday_date->format('d M Y') }}</td>
                                 <td class="px-4 py-3 text-slate-600">{{ $holiday->title }}</td>
                                 <td class="px-4 py-3">
-                                    <div class="flex items-center justify-end gap-1">
-                                        <button type="button" title="Edit" class="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-brand-600 transition-colors hover:bg-brand-50"
-                                            x-on:click="editHoliday(@js(['action' => route('attendance.holidays.update', $holiday), 'title' => $holiday->title, 'holiday_date' => $holiday->holiday_date->format('Y-m-d')]))"><i class="bi bi-pencil"></i></button>
-                                        <button type="button" title="Delete" class="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-rose-500 transition-colors hover:bg-rose-50"
-                                            x-on:click="del.open = true; del.title = @js('Holiday: '.$holiday->title); del.action = @js(route('attendance.holidays.destroy', $holiday))"><i class="bi bi-trash"></i></button>
+                                    <div class="flex flex-nowrap items-center justify-end gap-1.5">
+                                        <button type="button" class="{{ $pill }} cursor-pointer bg-amber-50 text-amber-700 ring-amber-200 hover:bg-amber-100"
+                                            x-on:click="editHoliday(@js(['action' => route('attendance.holidays.update', $holiday), 'title' => $holiday->title, 'holiday_date' => $holiday->holiday_date->format('Y-m-d')]))"><i class="bi bi-pencil"></i> Edit</button>
+                                        <button type="button" class="{{ $pill }} cursor-pointer bg-rose-50 text-rose-700 ring-rose-200 hover:bg-rose-100"
+                                            x-on:click="del.open = true; del.title = @js('Holiday: '.$holiday->title); del.action = @js(route('attendance.holidays.destroy', $holiday))"><i class="bi bi-trash"></i> Delete</button>
                                     </div>
                                 </td>
                             </tr>
