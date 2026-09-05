@@ -33,7 +33,7 @@
         ['route' => 'erp.dashboard',   'active' => request()->routeIs('erp.dashboard'),   'icon' => 'bi-speedometer2',      'label' => 'ERP Dashboard'],
         ['route' => 'erp.mofa',        'active' => request()->routeIs('erp.mofa*'),        'icon' => 'bi-file-earmark-text', 'label' => 'MOFA Entry'],
         ['route' => 'erp.double-mofa', 'active' => request()->routeIs('erp.double-mofa*'), 'icon' => 'bi-files',             'label' => 'Double MOFA'],
-        ['route' => 'erp.stamping',    'active' => request()->routeIs('erp.stamping*'),    'icon' => 'bi-stamp',             'label' => 'Stamping'],
+        ['route' => 'erp.stamping',    'active' => request()->routeIs('erp.stamping*'),    'icon' => 'bi-postage',           'label' => 'Stamping'],
         ['route' => 'erp.manpower',    'active' => request()->routeIs('erp.manpower*'),    'icon' => 'bi-person-check',      'label' => 'Manpower Complete'],
         ['route' => 'erp.delivery',    'active' => request()->routeIs('erp.delivery*'),    'icon' => 'bi-truck',             'label' => 'Delivery'],
         ['route' => 'erp.agent-khata', 'active' => request()->routeIs('erp.agent-khata*'), 'icon' => 'bi-journal-bookmark',  'label' => 'Agent Khata'],
