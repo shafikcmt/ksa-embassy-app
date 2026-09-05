@@ -423,24 +423,24 @@
                                     @if($lr->decision_note)<div class="text-slate-500" title="Admin note">↳ {{ \Illuminate\Support\Str::limit($lr->decision_note, 40) }}</div>@endif
                                 </td>
                                 <td class="px-4 py-3">
-                                    <div class="flex items-center justify-end gap-1">
+                                    <div class="flex flex-nowrap items-center justify-end gap-1.5">
                                         @if($isLeaveAdmin && $lr->status === 'pending')
                                             <form method="POST" action="{{ route('attendance.leave-requests.approve', $lr) }}" class="inline">
                                                 @csrf @method('PATCH')
-                                                <button type="submit" title="Approve" class="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-emerald-600 transition-colors hover:bg-emerald-50"><i class="bi bi-check-lg"></i></button>
+                                                <button type="submit" class="{{ $pill }} cursor-pointer bg-emerald-50 text-emerald-700 ring-emerald-200 hover:bg-emerald-100"><i class="bi bi-check-lg"></i> Approve</button>
                                             </form>
-                                            <button type="button" title="Reject" class="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-amber-600 transition-colors hover:bg-amber-50"
-                                                x-on:click="openReject(@js(route('attendance.leave-requests.reject', $lr)), @js($lr->employee->name.' · '.$lr->start_date->format('d M')))"><i class="bi bi-x-lg"></i></button>
+                                            <button type="button" class="{{ $pill }} cursor-pointer bg-amber-50 text-amber-700 ring-amber-200 hover:bg-amber-100"
+                                                x-on:click="openReject(@js(route('attendance.leave-requests.reject', $lr)), @js($lr->employee->name.' · '.$lr->start_date->format('d M')))"><i class="bi bi-x-lg"></i> Reject</button>
                                         @endif
                                         @if(! $isLeaveAdmin && $lr->status === 'pending')
                                             <form method="POST" action="{{ route('attendance.leave-requests.cancel', $lr) }}" class="inline">
                                                 @csrf @method('PATCH')
-                                                <button type="submit" title="Cancel request" class="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100"><i class="bi bi-slash-circle"></i></button>
+                                                <button type="submit" class="{{ $pill }} cursor-pointer bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100"><i class="bi bi-slash-circle"></i> Cancel</button>
                                             </form>
                                         @endif
                                         @if($isLeaveAdmin)
-                                            <button type="button" title="{{ $lr->status === 'approved' ? 'Revoke (remove)' : 'Remove' }}" class="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-rose-500 transition-colors hover:bg-rose-50"
-                                                x-on:click="del.open = true; del.title = @js('leave request for '.($lr->employee->name ?? '')); del.action = @js(route('attendance.leave-requests.destroy', $lr))"><i class="bi bi-trash"></i></button>
+                                            <button type="button" class="{{ $pill }} cursor-pointer bg-rose-50 text-rose-700 ring-rose-200 hover:bg-rose-100"
+                                                x-on:click="del.open = true; del.title = @js('leave request for '.($lr->employee->name ?? '')); del.action = @js(route('attendance.leave-requests.destroy', $lr))"><i class="bi bi-trash"></i> {{ $lr->status === 'approved' ? 'Revoke' : 'Remove' }}</button>
                                         @endif
                                     </div>
                                 </td>
