@@ -46,9 +46,9 @@
         @csrf
         <h2 class="mb-4 flex items-center gap-2 text-sm font-bold text-slate-900"><i class="bi bi-plus-circle text-emerald-600"></i> Add Manpower Entry</h2>
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <div><label class="{{ $lbl }}">Date <span class="text-rose-500">*</span></label><input type="date" name="completed_date" value="{{ old('completed_date', now()->format('Y-m-d')) }}" required class="{{ $inp }}"></div>
             <div><label class="{{ $lbl }}">Customer Name <span class="text-rose-500">*</span></label><input type="text" name="customer_name" value="{{ old('customer_name') }}" required class="{{ $inp }}"></div>
             <div><label class="{{ $lbl }}">Passport Number <span class="text-rose-500">*</span></label><input type="text" name="passport_no" value="{{ old('passport_no') }}" required class="{{ $inp }}"></div>
+            <div><label class="{{ $lbl }}">Date <span class="text-rose-500">*</span></label><input type="date" name="completed_date" value="{{ old('completed_date', now()->format('Y-m-d')) }}" required class="{{ $inp }}"></div>
             <div>
                 <label class="{{ $lbl }}">Agent</label>
                 <select name="agent_id" class="{{ $inp }}">
@@ -117,9 +117,9 @@
             @csrf @method('PUT')
             <h3 class="mb-4 text-base font-bold text-slate-900">Edit Manpower Entry</h3>
             <div class="grid gap-3 sm:grid-cols-2">
-                <div><label class="{{ $lbl }}">Date <span class="text-rose-500">*</span></label><input type="date" name="completed_date" x-model="form.completed_date" required class="{{ $inp }}"></div>
                 <div><label class="{{ $lbl }}">Customer Name <span class="text-rose-500">*</span></label><input type="text" name="customer_name" x-model="form.customer_name" required class="{{ $inp }}"></div>
                 <div><label class="{{ $lbl }}">Passport Number <span class="text-rose-500">*</span></label><input type="text" name="passport_no" x-model="form.passport_no" required class="{{ $inp }}"></div>
+                <div><label class="{{ $lbl }}">Date <span class="text-rose-500">*</span></label><input type="date" name="completed_date" x-model="form.completed_date" required class="{{ $inp }}"></div>
                 <div>
                     <label class="{{ $lbl }}">Agent</label>
                     <select name="agent_id" x-model="form.agent_id" class="{{ $inp }}">

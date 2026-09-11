@@ -47,19 +47,19 @@
         @csrf
         <h2 class="mb-4 flex items-center gap-2 text-sm font-bold text-slate-900"><i class="bi bi-plus-circle text-emerald-600"></i> Add Stamping Entry</h2>
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <div><label class="{{ $lbl }}">Date <span class="text-rose-500">*</span></label><input type="date" name="stamp_date" value="{{ old('stamp_date', now()->format('Y-m-d')) }}" required class="{{ $inp }}"></div>
-            <div><label class="{{ $lbl }}">Visa Serial</label><input type="text" name="visa_serial" value="{{ old('visa_serial') }}" class="{{ $inp }}"></div>
             <div><label class="{{ $lbl }}">Full Name <span class="text-rose-500">*</span></label><input type="text" name="full_name" value="{{ old('full_name') }}" required class="{{ $inp }}"></div>
             <div><label class="{{ $lbl }}">Passport No <span class="text-rose-500">*</span></label><input type="text" name="passport_no" value="{{ old('passport_no') }}" required class="{{ $inp }}"></div>
+            <div><label class="{{ $lbl }}">Visa Serial</label><input type="text" name="visa_serial" value="{{ old('visa_serial') }}" class="{{ $inp }}"></div>
             <div><label class="{{ $lbl }}">Visa Number</label><input type="text" name="visa_number" value="{{ old('visa_number') }}" class="{{ $inp }}"></div>
             <div><label class="{{ $lbl }}">ID Number</label><input type="text" name="id_number" value="{{ old('id_number') }}" class="{{ $inp }}"></div>
-            <div><label class="{{ $lbl }}">Reference</label><input type="text" name="reference" value="{{ old('reference') }}" class="{{ $inp }}"></div>
+            <div><label class="{{ $lbl }}">Date <span class="text-rose-500">*</span></label><input type="date" name="stamp_date" value="{{ old('stamp_date', now()->format('Y-m-d')) }}" required class="{{ $inp }}"></div>
             <div>
                 <label class="{{ $lbl }}">Status <span class="text-rose-500">*</span></label>
                 <select name="status" required class="{{ $inp }}">
                     @foreach($statuses as $val => $label)<option value="{{ $val }}" @selected(old('status', 'pending') === $val)>{{ $label }}</option>@endforeach
                 </select>
             </div>
+            <div><label class="{{ $lbl }}">Reference</label><input type="text" name="reference" value="{{ old('reference') }}" class="{{ $inp }}"></div>
         </div>
         <div class="mt-4 flex justify-end">
             <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md"><i class="bi bi-plus-lg"></i> Add Entry</button>
@@ -135,19 +135,19 @@
             @csrf @method('PUT')
             <h3 class="mb-4 text-base font-bold text-slate-900">Edit Stamping Entry</h3>
             <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                <div><label class="{{ $lbl }}">Date <span class="text-rose-500">*</span></label><input type="date" name="stamp_date" x-model="form.stamp_date" required class="{{ $inp }}"></div>
-                <div><label class="{{ $lbl }}">Visa Serial</label><input type="text" name="visa_serial" x-model="form.visa_serial" class="{{ $inp }}"></div>
                 <div><label class="{{ $lbl }}">Full Name <span class="text-rose-500">*</span></label><input type="text" name="full_name" x-model="form.full_name" required class="{{ $inp }}"></div>
                 <div><label class="{{ $lbl }}">Passport No <span class="text-rose-500">*</span></label><input type="text" name="passport_no" x-model="form.passport_no" required class="{{ $inp }}"></div>
+                <div><label class="{{ $lbl }}">Visa Serial</label><input type="text" name="visa_serial" x-model="form.visa_serial" class="{{ $inp }}"></div>
                 <div><label class="{{ $lbl }}">Visa Number</label><input type="text" name="visa_number" x-model="form.visa_number" class="{{ $inp }}"></div>
                 <div><label class="{{ $lbl }}">ID Number</label><input type="text" name="id_number" x-model="form.id_number" class="{{ $inp }}"></div>
-                <div><label class="{{ $lbl }}">Reference</label><input type="text" name="reference" x-model="form.reference" class="{{ $inp }}"></div>
+                <div><label class="{{ $lbl }}">Date <span class="text-rose-500">*</span></label><input type="date" name="stamp_date" x-model="form.stamp_date" required class="{{ $inp }}"></div>
                 <div>
                     <label class="{{ $lbl }}">Status <span class="text-rose-500">*</span></label>
                     <select name="status" x-model="form.status" required class="{{ $inp }}">
                         @foreach($statuses as $val => $label)<option value="{{ $val }}">{{ $label }}</option>@endforeach
                     </select>
                 </div>
+                <div><label class="{{ $lbl }}">Reference</label><input type="text" name="reference" x-model="form.reference" class="{{ $inp }}"></div>
             </div>
             <div class="mt-5 flex justify-end gap-3">
                 <button type="button" x-on:click="editing = false" class="rounded-lg px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900">Cancel</button>

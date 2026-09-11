@@ -57,11 +57,10 @@
         @csrf
         <h2 class="mb-4 flex items-center gap-2 text-sm font-bold text-slate-900"><i class="bi bi-plus-circle text-emerald-600"></i> Add Delivery</h2>
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <div><label class="{{ $lbl }}">Date <span class="text-rose-500">*</span></label><input type="date" name="delivery_date" value="{{ old('delivery_date', now()->format('Y-m-d')) }}" required class="{{ $inp }}"></div>
             <div><label class="{{ $lbl }}">Full Name <span class="text-rose-500">*</span></label><input type="text" name="full_name" value="{{ old('full_name') }}" required class="{{ $inp }}"></div>
             <div><label class="{{ $lbl }}">Passport Number <span class="text-rose-500">*</span></label><input type="text" name="passport_no" value="{{ old('passport_no') }}" required class="{{ $inp }}"></div>
             <div><label class="{{ $lbl }}">Visa Serial</label><input type="text" name="visa_serial" value="{{ old('visa_serial') }}" class="{{ $inp }}"></div>
-            <div><label class="{{ $lbl }}">Reference</label><input type="text" name="reference" value="{{ old('reference') }}" class="{{ $inp }}"></div>
+            <div><label class="{{ $lbl }}">Date <span class="text-rose-500">*</span></label><input type="date" name="delivery_date" value="{{ old('delivery_date', now()->format('Y-m-d')) }}" required class="{{ $inp }}"></div>
             <div><label class="{{ $lbl }}">Total Amount (৳) <span class="text-rose-500">*</span></label><input type="number" step="0.01" min="0" name="total_amount" value="{{ old('total_amount', '0.00') }}" required class="{{ $inp }}"></div>
             <div>
                 <label class="{{ $lbl }}">Status <span class="text-rose-500">*</span></label>
@@ -69,6 +68,7 @@
                     @foreach($statuses as $key => $label)<option value="{{ $key }}" @selected(old('status', 'pending') === $key)>{{ $label }}</option>@endforeach
                 </select>
             </div>
+            <div><label class="{{ $lbl }}">Reference</label><input type="text" name="reference" value="{{ old('reference') }}" class="{{ $inp }}"></div>
         </div>
         <div class="mt-4 flex justify-start">
             <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md"><i class="bi bi-plus-lg"></i> Add Delivery</button>
@@ -211,11 +211,10 @@
             @csrf @method('PUT')
             <h3 class="mb-4 text-base font-bold text-slate-900">Edit Delivery</h3>
             <div class="grid gap-3 sm:grid-cols-2">
-                <div><label class="{{ $lbl }}">Date <span class="text-rose-500">*</span></label><input type="date" name="delivery_date" x-model="form.delivery_date" required class="{{ $inp }}"></div>
                 <div><label class="{{ $lbl }}">Full Name <span class="text-rose-500">*</span></label><input type="text" name="full_name" x-model="form.full_name" required class="{{ $inp }}"></div>
                 <div><label class="{{ $lbl }}">Passport Number <span class="text-rose-500">*</span></label><input type="text" name="passport_no" x-model="form.passport_no" required class="{{ $inp }}"></div>
                 <div><label class="{{ $lbl }}">Visa Serial</label><input type="text" name="visa_serial" x-model="form.visa_serial" class="{{ $inp }}"></div>
-                <div><label class="{{ $lbl }}">Reference</label><input type="text" name="reference" x-model="form.reference" class="{{ $inp }}"></div>
+                <div><label class="{{ $lbl }}">Date <span class="text-rose-500">*</span></label><input type="date" name="delivery_date" x-model="form.delivery_date" required class="{{ $inp }}"></div>
                 <div><label class="{{ $lbl }}">Total Amount (৳) <span class="text-rose-500">*</span></label><input type="number" step="0.01" min="0" name="total_amount" x-model="form.total_amount" required class="{{ $inp }}"></div>
                 <div>
                     <label class="{{ $lbl }}">Status <span class="text-rose-500">*</span></label>
@@ -223,6 +222,7 @@
                         @foreach($statuses as $key => $label)<option value="{{ $key }}">{{ $label }}</option>@endforeach
                     </select>
                 </div>
+                <div><label class="{{ $lbl }}">Reference</label><input type="text" name="reference" x-model="form.reference" class="{{ $inp }}"></div>
             </div>
             <p class="mt-3 text-xs text-slate-400"><i class="bi bi-info-circle"></i> Paid amount is managed through payments and cannot be edited here.</p>
             <div class="mt-5 flex justify-end gap-3">

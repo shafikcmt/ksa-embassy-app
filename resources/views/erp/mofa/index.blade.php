@@ -45,19 +45,7 @@
     <form method="POST" action="{{ route('erp.mofa.store') }}" class="mb-6 rounded-2xl border border-slate-200 bg-white p-5">
         @csrf
         <h2 class="mb-4 flex items-center gap-2 text-sm font-bold text-slate-900"><i class="bi bi-plus-circle text-emerald-600"></i> Add MOFA Entry</h2>
-        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <div>
-                <label class="{{ $lbl }}">MOFA Date <span class="text-rose-500">*</span></label>
-                <input type="date" name="mofa_date" value="{{ old('mofa_date', now()->format('Y-m-d')) }}" required class="{{ $inp }}">
-            </div>
-            <div>
-                <label class="{{ $lbl }}">MOFA Number</label>
-                <input type="text" name="mofa_number" value="{{ old('mofa_number') }}" class="{{ $inp }}">
-            </div>
-            <div>
-                <label class="{{ $lbl }}">Visa Serial</label>
-                <input type="text" name="visa_serial" value="{{ old('visa_serial') }}" class="{{ $inp }}">
-            </div>
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <div>
                 <label class="{{ $lbl }}">Full Name <span class="text-rose-500">*</span></label>
                 <input type="text" name="full_name" value="{{ old('full_name') }}" required class="{{ $inp }}">
@@ -67,25 +55,20 @@
                 <input type="text" name="passport_no" value="{{ old('passport_no') }}" required class="{{ $inp }}">
             </div>
             <div>
+                <label class="{{ $lbl }}">MOFA Number</label>
+                <input type="text" name="mofa_number" value="{{ old('mofa_number') }}" class="{{ $inp }}">
+            </div>
+            <div>
+                <label class="{{ $lbl }}">MOFA Date <span class="text-rose-500">*</span></label>
+                <input type="date" name="mofa_date" value="{{ old('mofa_date', now()->format('Y-m-d')) }}" required class="{{ $inp }}">
+            </div>
+            <div>
+                <label class="{{ $lbl }}">Visa Serial</label>
+                <input type="text" name="visa_serial" value="{{ old('visa_serial') }}" class="{{ $inp }}">
+            </div>
+            <div>
                 <label class="{{ $lbl }}">Reference Name</label>
                 <input type="text" name="reference_name" value="{{ old('reference_name') }}" class="{{ $inp }}">
-            </div>
-            <div>
-                <label class="{{ $lbl }}">Payment Method</label>
-                <select name="payment_method" class="{{ $inp }}">
-                    <option value="">—</option>
-                    @foreach($paymentMethods as $val => $label)
-                        <option value="{{ $val }}" @selected(old('payment_method') === $val)>{{ $label }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div>
-                <label class="{{ $lbl }}">WhatsApp Number</label>
-                <input type="text" name="whatsapp_number" value="{{ old('whatsapp_number') }}" class="{{ $inp }}">
-            </div>
-            <div class="sm:col-span-2 lg:col-span-4">
-                <label class="{{ $lbl }}">Payment Note</label>
-                <input type="text" name="payment_note" value="{{ old('payment_note') }}" maxlength="1000" class="{{ $inp }}">
             </div>
         </div>
         <div class="mt-4 flex justify-end">
@@ -135,15 +118,12 @@
                                     <button type="button" class="{{ $pill }} bg-amber-50 text-amber-700 ring-amber-200 hover:bg-amber-100"
                                             x-on:click="openEdit(@js([
                                                 'id' => $e->id,
-                                                'mofa_date' => $e->mofa_date->format('Y-m-d'),
-                                                'mofa_number' => $e->mofa_number,
-                                                'visa_serial' => $e->visa_serial,
                                                 'full_name' => $e->full_name,
                                                 'passport_no' => $e->passport_no,
+                                                'mofa_number' => $e->mofa_number,
+                                                'mofa_date' => $e->mofa_date->format('Y-m-d'),
+                                                'visa_serial' => $e->visa_serial,
                                                 'reference_name' => $e->reference_name,
-                                                'payment_method' => $e->payment_method,
-                                                'whatsapp_number' => $e->whatsapp_number,
-                                                'payment_note' => $e->payment_note,
                                             ]))"><i class="bi bi-pencil"></i> Edit</button>
                                     <form method="POST" action="{{ route('erp.mofa.destroy', $e) }}" onsubmit="return confirm('Delete this MOFA entry?')">
                                         @csrf @method('DELETE')
@@ -169,21 +149,12 @@
             @csrf @method('PUT')
             <h3 class="mb-4 text-base font-bold text-slate-900">Edit MOFA Entry</h3>
             <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                <div><label class="{{ $lbl }}">MOFA Date <span class="text-rose-500">*</span></label><input type="date" name="mofa_date" x-model="form.mofa_date" required class="{{ $inp }}"></div>
-                <div><label class="{{ $lbl }}">MOFA Number</label><input type="text" name="mofa_number" x-model="form.mofa_number" class="{{ $inp }}"></div>
-                <div><label class="{{ $lbl }}">Visa Serial</label><input type="text" name="visa_serial" x-model="form.visa_serial" class="{{ $inp }}"></div>
                 <div><label class="{{ $lbl }}">Full Name <span class="text-rose-500">*</span></label><input type="text" name="full_name" x-model="form.full_name" required class="{{ $inp }}"></div>
                 <div><label class="{{ $lbl }}">Passport No <span class="text-rose-500">*</span></label><input type="text" name="passport_no" x-model="form.passport_no" required class="{{ $inp }}"></div>
+                <div><label class="{{ $lbl }}">MOFA Number</label><input type="text" name="mofa_number" x-model="form.mofa_number" class="{{ $inp }}"></div>
+                <div><label class="{{ $lbl }}">MOFA Date <span class="text-rose-500">*</span></label><input type="date" name="mofa_date" x-model="form.mofa_date" required class="{{ $inp }}"></div>
+                <div><label class="{{ $lbl }}">Visa Serial</label><input type="text" name="visa_serial" x-model="form.visa_serial" class="{{ $inp }}"></div>
                 <div><label class="{{ $lbl }}">Reference Name</label><input type="text" name="reference_name" x-model="form.reference_name" class="{{ $inp }}"></div>
-                <div>
-                    <label class="{{ $lbl }}">Payment Method</label>
-                    <select name="payment_method" x-model="form.payment_method" class="{{ $inp }}">
-                        <option value="">—</option>
-                        @foreach($paymentMethods as $val => $label)<option value="{{ $val }}">{{ $label }}</option>@endforeach
-                    </select>
-                </div>
-                <div><label class="{{ $lbl }}">WhatsApp Number</label><input type="text" name="whatsapp_number" x-model="form.whatsapp_number" class="{{ $inp }}"></div>
-                <div class="sm:col-span-2 lg:col-span-3"><label class="{{ $lbl }}">Payment Note</label><input type="text" name="payment_note" x-model="form.payment_note" maxlength="1000" class="{{ $inp }}"></div>
             </div>
             <div class="mt-5 flex justify-end gap-3">
                 <button type="button" x-on:click="editing = false" class="rounded-lg px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900">Cancel</button>

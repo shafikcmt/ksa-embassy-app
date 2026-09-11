@@ -62,10 +62,6 @@
     <strong>{{ $title }}</strong>
     &nbsp;&nbsp;
     <button onclick="window.print()" style="background:#2563eb;color:#fff;border:none;padding:3pt 10pt;border-radius:3pt;cursor:pointer;">&#128424; Print</button>
-    &nbsp;
-    <a href="{{ $_backUrl ?? url()->previous() }}" style="background:#374151;color:#fff;padding:3pt 10pt;border-radius:3pt;text-decoration:none;">&#8592; Back</a>
-    &nbsp;
-    <a href="{{ $_downloadUrl ?? '#' }}" style="background:#16a34a;color:#fff;padding:3pt 10pt;border-radius:3pt;text-decoration:none;">&#8595; Download PDF</a>
 </div>
 @endif
 
