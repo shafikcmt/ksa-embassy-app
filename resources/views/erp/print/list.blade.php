@@ -60,9 +60,17 @@
 @if(empty($_pdf))
 <div class="no-print" style="background:#1a1f2e;color:#fff;padding:7pt 12pt;margin-bottom:6pt;font-size:8pt;font-family:sans-serif;">
     <strong>{{ $title }}</strong>
-    &nbsp;&nbsp;
-    <button onclick="window.print()" style="background:#2563eb;color:#fff;border:none;padding:3pt 10pt;border-radius:3pt;cursor:pointer;">&#128424; Print</button>
+    <span style="opacity:.7;">&nbsp;&nbsp;&#128424; opening print dialog…</span>
 </div>
+<script>
+    /* Screen preview only — this block sits inside the empty(_pdf) guard, so it
+       is never emitted into the mPDF/?download=1 render path. Open the browser's
+       native print dialog automatically once the page (layout + fonts) has
+       fully loaded, so no button click is needed. */
+    window.addEventListener('load', function () {
+        setTimeout(function () { window.print(); }, 300);
+    });
+</script>
 @endif
 
 @if(empty($_pdf))<div class="a4-page">@endif
