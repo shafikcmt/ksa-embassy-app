@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Erp;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Erp\Concerns\RendersPrintableList;
 use App\Models\Agent;
 use App\Models\Delivery;
 use App\Models\ManpowerCompletion;
@@ -30,6 +31,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class ManpowerController extends Controller
 {
+    use RendersPrintableList;
+
     private const CSV_HEADERS = ['completed_date', 'customer_name', 'passport_no', 'agent'];
 
     private const IMPORT_SESSION_KEY = 'erp_manpower_import_path';
@@ -70,14 +73,14 @@ class ManpowerController extends Controller
             $e->customer_name, $e->passport_no, $e->agent->name ?? '—',
         ])->all();
 
-        return $pdf->generateFromView('erp.print.list', [
+        return $this->respondPrintableList($pdf, [
             'title'    => 'Manpower Complete',
             'agency'   => auth()->user()->agency,
             'generated'=> now(),
             'subtitle' => $entries->count() . ' entr' . ($entries->count() === 1 ? 'y' : 'ies'),
             'columns'  => $columns,
             'rows'     => $rows,
-        ], 'manpower-' . now()->format('Y-m-d'));
+        ], 'manpower-' . now()->format('Y-m-d'), 'erp.manpower');
     }
 
     /** Shared listing used by both index() and printPdf() (serials + newest-first). */

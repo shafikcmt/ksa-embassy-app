@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Erp;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Erp\Concerns\RendersPrintableList;
 use App\Models\DoubleMofa;
 use App\Models\ErpSetting;
 use App\Models\PaymentReceipt;
@@ -33,6 +34,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class DoubleMofaController extends Controller
 {
+    use RendersPrintableList;
+
     private const CSV_HEADERS = [
         'mofa_date', 'full_name', 'passport_no',
         'visa_serial', 'reference', 'billing_amount',
@@ -80,7 +83,7 @@ class DoubleMofaController extends Controller
 
         $totals = ['Totals', '', '', '', '', $money($billed), $money($collected), $money($billed - $collected), ''];
 
-        return $pdf->generateFromView('erp.print.list', [
+        return $this->respondPrintableList($pdf, [
             'title'    => 'Double MOFA',
             'agency'   => auth()->user()->agency,
             'generated'=> now(),
@@ -89,7 +92,7 @@ class DoubleMofaController extends Controller
             'columns'  => $columns,
             'rows'     => $rows,
             'totals'   => $totals,
-        ], 'double-mofa-' . now()->format('Y-m-d'));
+        ], 'double-mofa-' . now()->format('Y-m-d'), 'erp.double-mofa');
     }
 
     /** Shared listing used by both index() and printPdf() (newest-first). */

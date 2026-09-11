@@ -1,12 +1,18 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8">
     <style>
         /* Shared ERP module list PDF (E7a). Plain CSS only (no Tailwind); page
-           margins (10mm) are set by PdfGeneratorService — no @page margin rule.
-           Driven entirely by $columns + $rows so all 7 modules reuse this one
-           template. */
+           margins (10mm) are set by PdfGeneratorService — no @page margin rule
+           for the PDF render. Driven entirely by $columns + $rows so all 7
+           modules reuse this one template.
+
+           E7-print-consistency: this template is now ALSO the on-screen preview
+           (Print button -> browser dialog). The screen/print/page rules + the
+           toolbar only render when the _pdf flag is unset; mPDF ignores media
+           queries and never sees the toolbar (it sits inside an empty(_pdf)
+           guard), so the actual PDF output is unchanged. */
         body { font-family: dejavusans, sans-serif; color: #1e293b; font-size: 10px; }
         h1 { font-size: 16px; margin: 0 0 2px; }
         .muted { color: #64748b; font-size: 9px; }
@@ -19,9 +25,52 @@
         .r { text-align: right; white-space: nowrap; }
         tfoot td { background: #f8fafc; font-weight: bold; }
         .empty { color: #94a3b8; text-align: center; padding: 12px; }
+
+        {{-- @page is emitted ONLY for the browser. mPDF's constructor already sets
+             A4 + 10mm margins; feeding it an @page rule makes this mPDF version
+             spray blank pages, so it must be hidden from the PDF render. --}}
+        @if(empty($_pdf))
+        @page { size: A4; margin: 10mm; }
+
+        @media screen {
+            body { background: #e5e7eb; }
+            .a4-page {
+                width: 210mm;
+                min-height: 297mm;
+                margin: 10mm auto;
+                background: #fff;
+                box-shadow: 0 0 12px rgba(0,0,0,.15);
+                padding: 10mm;
+                box-sizing: border-box;
+            }
+        }
+
+        @media print {
+            body { background: #fff; margin: 0; padding: 0; }
+            .no-print { display: none !important; }
+            /* Match mPDF geometry: @page already supplies the 10mm margin, so the
+               wrapper adds no extra padding — browser print and PDF stay identical. */
+            .a4-page { width: 100%; margin: 0; padding: 0; box-shadow: none; box-sizing: border-box; }
+        }
+        @endif
     </style>
 </head>
 <body>
+
+@if(empty($_pdf))
+<div class="no-print" style="background:#1a1f2e;color:#fff;padding:7pt 12pt;margin-bottom:6pt;font-size:8pt;font-family:sans-serif;">
+    <strong>{{ $title }}</strong>
+    &nbsp;&nbsp;
+    <button onclick="window.print()" style="background:#2563eb;color:#fff;border:none;padding:3pt 10pt;border-radius:3pt;cursor:pointer;">&#128424; Print</button>
+    &nbsp;
+    <a href="{{ $_backUrl ?? url()->previous() }}" style="background:#374151;color:#fff;padding:3pt 10pt;border-radius:3pt;text-decoration:none;">&#8592; Back</a>
+    &nbsp;
+    <a href="{{ $_downloadUrl ?? '#' }}" style="background:#16a34a;color:#fff;padding:3pt 10pt;border-radius:3pt;text-decoration:none;">&#8595; Download PDF</a>
+</div>
+@endif
+
+@if(empty($_pdf))<div class="a4-page">@endif
+
     <h1>{{ $title }}</h1>
     <div class="meta muted">
         {{ $agency->name ?? 'Agency' }}<br>
@@ -58,5 +107,7 @@
             </tfoot>
         @endisset
     </table>
+
+@if(empty($_pdf))</div>@endif
 </body>
 </html>

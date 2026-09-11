@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Erp;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Erp\Concerns\RendersPrintableList;
 use App\Models\Agent;
 use App\Models\AgentTransaction;
 use App\Services\AgentKhataService;
@@ -22,6 +23,8 @@ use RuntimeException;
  */
 class AgentKhataController extends Controller
 {
+    use RendersPrintableList;
+
     public function index(AgentKhataService $khata)
     {
         $agencyId = auth()->user()->agency_id;
@@ -63,7 +66,7 @@ class AgentKhataController extends Controller
 
         $totals = ['Totals', $money($receivable + $payable), 'Recv ' . $money($receivable) . ' · Pay ' . $money(abs($payable))];
 
-        return $pdf->generateFromView('erp.print.list', [
+        return $this->respondPrintableList($pdf, [
             'title'    => 'Agent Khata — Balances',
             'agency'   => auth()->user()->agency,
             'generated'=> now(),
@@ -72,7 +75,7 @@ class AgentKhataController extends Controller
             'rows'     => $rows,
             'totals'   => $totals,
             'empty'    => 'No agents to print.',
-        ], 'agent-khata-' . now()->format('Y-m-d'));
+        ], 'agent-khata-' . now()->format('Y-m-d'), 'erp.agent-khata');
     }
 
     public function show(Agent $agent, AgentKhataService $khata)

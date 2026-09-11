@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Erp;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Erp\Concerns\RendersPrintableList;
 use App\Models\Expense;
 use App\Services\CsvImportService;
 use App\Services\PdfGeneratorService;
@@ -28,6 +29,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class ExpenseController extends Controller
 {
+    use RendersPrintableList;
+
     private const CSV_HEADERS = ['expense_date', 'category', 'amount', 'paid_via', 'note'];
 
     private const IMPORT_SESSION_KEY = 'erp_expense_import_path';
@@ -79,7 +82,7 @@ class ExpenseController extends Controller
 
         $totals = ['Total', '', '', $money($total), ''];
 
-        return $pdf->generateFromView('erp.print.list', [
+        return $this->respondPrintableList($pdf, [
             'title'    => 'Expenses',
             'agency'   => auth()->user()->agency,
             'generated'=> now(),
@@ -87,7 +90,7 @@ class ExpenseController extends Controller
             'columns'  => $columns,
             'rows'     => $rows,
             'totals'   => $totals,
-        ], 'expenses-' . now()->format('Y-m-d'));
+        ], 'expenses-' . now()->format('Y-m-d'), 'erp.expenses');
     }
 
     /** Shared listing used by both index() and printPdf() (newest-first). */

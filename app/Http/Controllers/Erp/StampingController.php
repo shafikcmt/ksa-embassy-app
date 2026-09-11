@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Erp;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Erp\Concerns\RendersPrintableList;
 use App\Models\ManpowerCompletion;
 use App\Models\Stamping;
 use App\Services\CsvImportService;
@@ -23,6 +24,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class StampingController extends Controller
 {
+    use RendersPrintableList;
+
     private const CSV_HEADERS = [
         'stamp_date', 'visa_serial', 'full_name', 'passport_no',
         'visa_number', 'id_number', 'reference', 'status',
@@ -64,14 +67,14 @@ class StampingController extends Controller
             $e->visa_number ?: '—', $e->id_number ?: '—', $e->reference ?: '—', $e->statusLabel(),
         ])->all();
 
-        return $pdf->generateFromView('erp.print.list', [
+        return $this->respondPrintableList($pdf, [
             'title'    => 'Stamping',
             'agency'   => auth()->user()->agency,
             'generated'=> now(),
             'subtitle' => $entries->count() . ' entr' . ($entries->count() === 1 ? 'y' : 'ies'),
             'columns'  => $columns,
             'rows'     => $rows,
-        ], 'stamping-' . now()->format('Y-m-d'));
+        ], 'stamping-' . now()->format('Y-m-d'), 'erp.stamping');
     }
 
     /** Shared listing used by both index() and printPdf() (serials + newest-first). */

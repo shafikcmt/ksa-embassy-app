@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Erp;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Erp\Concerns\RendersPrintableList;
 use App\Models\Delivery;
 use App\Models\PaymentReceipt;
 use App\Services\CsvImportService;
@@ -32,6 +33,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class DeliveryController extends Controller
 {
+    use RendersPrintableList;
+
     private const CSV_HEADERS = [
         'delivery_date', 'full_name', 'passport_no',
         'visa_serial', 'reference', 'total_amount', 'status',
@@ -79,7 +82,7 @@ class DeliveryController extends Controller
         // Totals footer aligned to the money columns (indices 5/6/7).
         $totals = ['Totals', '', '', '', '', $money($billed), $money($collected), $money($billed - $collected), ''];
 
-        return $pdf->generateFromView('erp.print.list', [
+        return $this->respondPrintableList($pdf, [
             'title'    => 'Delivery',
             'agency'   => auth()->user()->agency,
             'generated'=> now(),
@@ -88,7 +91,7 @@ class DeliveryController extends Controller
             'columns'  => $columns,
             'rows'     => $rows,
             'totals'   => $totals,
-        ], 'delivery-' . now()->format('Y-m-d'));
+        ], 'delivery-' . now()->format('Y-m-d'), 'erp.delivery');
     }
 
     /** Shared listing used by both index() and printPdf() (newest-first). */

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Erp;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Erp\Concerns\RendersPrintableList;
 use App\Models\MofaEntry;
 use App\Models\Stamping;
 use App\Services\CsvImportService;
@@ -25,6 +26,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class MofaEntryController extends Controller
 {
+    use RendersPrintableList;
+
     /** Import/export column order — also the downloadable template + export header. */
     private const CSV_HEADERS = [
         'mofa_date', 'mofa_number', 'visa_serial', 'full_name', 'passport_no',
@@ -68,14 +71,14 @@ class MofaEntryController extends Controller
             $e->full_name, $e->passport_no, $e->reference_name ?: '—', $e->paymentMethodLabel() ?: '—',
         ])->all();
 
-        return $pdf->generateFromView('erp.print.list', [
+        return $this->respondPrintableList($pdf, [
             'title'    => 'MOFA Entries',
             'agency'   => auth()->user()->agency,
             'generated'=> now(),
             'subtitle' => $entries->count() . ' entr' . ($entries->count() === 1 ? 'y' : 'ies'),
             'columns'  => $columns,
             'rows'     => $rows,
-        ], 'mofa-entries-' . now()->format('Y-m-d'));
+        ], 'mofa-entries-' . now()->format('Y-m-d'), 'erp.mofa');
     }
 
     /**
