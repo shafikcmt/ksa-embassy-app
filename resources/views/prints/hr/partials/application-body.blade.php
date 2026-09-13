@@ -72,12 +72,12 @@
   .ksa-app table { width: 100%; border-collapse: collapse; }
   /* Bordered grid: 8pt bold Latin + taller rows (more vertical padding) to
      match the reference form's spacing and heavier, clearer text. */
-  .ksa-app .bdr td, .ksa-app .bdr th { border: 0.6pt solid #b9babd; padding: 2pt 5pt; font-size: 8.5pt; font-weight: bold; vertical-align: middle; }
+  .ksa-app .bdr td, .ksa-app .bdr th { border: 0.75pt solid #202428; padding: 2pt 5pt; font-size: 8.5pt; font-weight: bold; vertical-align: middle; }
   /* Seam de-duplication: where two SEPARATE stacked tables meet, the upper
      table's last-row bottom border and the lower table's top border both draw a
-     0.6pt line, so the seam looked ~1.2pt (doubled) — noticeably thicker than the
-     single 0.6pt hairline used within a table. Dropping the upper row's bottom
-     border leaves the lower table's top border as the sole 0.6pt line. Applied
+     0.75pt line, so the seam looked ~1.5pt (doubled) — noticeably thicker than the
+     single 0.75pt hairline used within a table. Dropping the upper row's bottom
+     border leaves the lower table's top border as the sole 0.75pt line. Applied
      to the three flagged seams: Sect/Religion→Profession, Purpose→Passport,
      Destination→Dependents. (Placed after .bdr td so it wins the equal-specificity tie.) */
   .ksa-app .seam-merge td { border-bottom: 0 !important; }
@@ -145,15 +145,15 @@
   /* Passport No. column — the reference emphasises this field with a bolder,
      darker vertical divider on its left edge (Date of expiry | Passport No.).
      Scoped to .ppno cells only, so no other cell/border is affected. */
-  .ksa-app .bdr td.ppno { border-left: 0.8pt solid #b9babd; }
+  .ksa-app .bdr td.ppno { border-left: 0.8pt solid #202428; }
   /* Duration / Payment / Mahram / Destination block: the reference renders these
      rows as open text lines — outer frame + horizontal row rules only, with NO
      internal vertical dividers. Remove vertical cell borders, then restore the
      outer left/right frame on the first/last cell of each row. Scoped to .hrows
      so the passport grid above and dependents grid below stay untouched. */
   .ksa-app .hrows td { border-left: 0; border-right: 0; }
-  .ksa-app .hrows td:first-child { border-left: 0.6pt solid #b9babd; }
-  .ksa-app .hrows td:last-child  { border-right: 0.6pt solid #b9babd; }
+  .ksa-app .hrows td:first-child { border-left: 0.75pt solid #202428; }
+  .ksa-app .hrows td:last-child  { border-right: 0.75pt solid #202428; }
   /* Merged field groups: the reference joins an Arabic-label row with its
      English-value row into a single field group with NO divider between them —
      e.g. Duration of stay (مدة الإقامة / تاريخ الوصول / تاريخ المغادرة) and Mahram
@@ -169,9 +169,9 @@
   .ksa-app .sig td { border: 0; padding: 2.4pt 4pt; font-size: 7.6pt; vertical-align: middle; }
   /* "For official use only" — reference has NO vertical grid: just a dashed
      separator line on top and thin solid horizontal rules between rows. */
-  .ksa-app .offc { border-top: 1px dashed #b9babd; }
-  .ksa-app .offc td { border: 0; border-bottom: 1px solid #b9babd; padding: 2.4pt 4pt; font-size: 7.6pt; vertical-align: middle; }
-  .ksa-app .offc .hdr td { border-bottom: 1px solid #b9babd; padding-top: 3pt; }
+  .ksa-app .offc { border-top: 1px dashed #202428; }
+  .ksa-app .offc td { border: 0; border-bottom: 1px solid #202428; padding: 2.4pt 4pt; font-size: 7.6pt; vertical-align: middle; }
+  .ksa-app .offc .hdr td { border-bottom: 1px solid #202428; padding-top: 3pt; }
   /* Reinforce FreeSans (Arial clone) on the official-use + signature LATIN cells
      (labels/values), exactly like .pi does for the identity table. Without it
      these cells fell back to the host DejaVu Sans — whose Bold is noticeably
@@ -188,7 +188,7 @@
      so match the reference's compact sizing (6pt) + tighter padding. NOTE: in
      this mPDF the font-size must sit on the CELL — a size on the nested .pe/.pa
      <span> alone is ignored — so it is set on td.box here. */
-  .ksa-app .pt td.box { border: 1px solid #b9babd !important; text-align: center; padding: 3pt 0; line-height: 1.35; font-size: 6pt; }
+  .ksa-app .pt td.box { border: 1px solid #202428 !important; text-align: center; padding: 3pt 0; line-height: 1.35; font-size: 6pt; }
   .ksa-app .pt td.box .pa { font-size: 6pt; font-weight: normal; }
   .ksa-app .pt td.box .pe { font-size: 6pt; font-weight: bold; }
   /* print-color-adjust:exact forces the browser to PRINT this dark fill even
@@ -212,7 +212,7 @@
     <td style="width:30%;vertical-align:top;padding:0;">
       {{-- Passport-size photo box (~35mm × 41mm), thin black border, top-left --}}
       <table style="width:100pt;border-collapse:collapse;"><tr>
-        <td style="width:100pt;height:121pt;border:1px solid #b9babd;text-align:center;vertical-align:middle;font-size:8pt;color:#555;padding:2pt;">
+        <td style="width:100pt;height:121pt;border:1px solid #202428;text-align:center;vertical-align:middle;font-size:8pt;color:#555;padding:2pt;">
           Photo
         </td>
       </tr></table>
@@ -321,7 +321,7 @@
     </tr>
     {{-- Sect | Religion --}}
     {{-- seam-merge: drop this row's bottom border so the seam with the profession
-         table below is a single 0.6pt line (not a doubled ~1.2pt one). --}}
+         table below is a single 0.75pt line (not a doubled ~1.5pt one). --}}
     <tr class="seam-merge">
       <td class="lbl">Sect:</td>
       <td class="val">{{ $T($sect) }}</td>
@@ -451,7 +451,7 @@
          same colspan pattern the address rows use, so it aligns with them and the
          arabic heading is no longer squeezed. Selected purpose is grey-filled. --}}
     {{-- seam-merge: drop bottom border so the seam with the passport table below
-         is a single 0.6pt line (not doubled). --}}
+         is a single 0.75pt line (not doubled). --}}
     <tr class="seam-merge">
       <td class="lbl" style="white-space:nowrap;">Purpose of Travel:</td>
       <td colspan="3" style="padding:2pt 4pt;vertical-align:middle;">
@@ -509,7 +509,7 @@
      only) and mrow-ar/mrow-en (drops the border between the Arabic-label row and
      its English-value row). Its top border is the single seam with the passport
      table above (whose last row has border-bottom:0); the English row adds
-     seam-merge so the seam with the Mahram table below stays one 0.6pt line. --}}
+     seam-merge so the seam with the Mahram table below stays one 0.75pt line. --}}
 <table class="bdr hrows" style="margin-top:0;">
   <colgroup>
     <col style="width:33%"><col style="width:17%"><col style="width:25%"><col style="width:25%">
@@ -539,7 +539,7 @@
      vertical dividers (open text lines), just the outer frame + row separators.
      Its first row (Mahram Arabic) keeps its top border — that IS the single seam
      line with the Duration table above (whose last row dropped its bottom border
-     via seam-merge, so the seam is one 0.6pt line, not doubled). --}}
+     via seam-merge, so the seam is one 0.75pt line, not doubled). --}}
 <table class="bdr hrows" style="margin-top:0;">
   <colgroup>
     <col style="width:22%"><col style="width:16%"><col style="width:22%">
@@ -558,7 +558,7 @@
     </tr>
     {{-- Destination | Carrier --}}
     {{-- seam-merge: drop bottom border so the seam with the dependents table
-         below is a single 0.6pt line (not doubled). --}}
+         below is a single 0.75pt line (not doubled). --}}
     <tr class="seam-merge">
       <td class="lbl">Destination:</td>
       <td class="val">{{ $destination_city ?: ($work_city ?: '') }}</td>
@@ -636,8 +636,8 @@
 <table class="bdr" style="margin-top:0;font-size:7.5pt;">
   <tbody>
     <tr>
-      <td style="width:60%;text-align:right;border-bottom:0.6pt solid #b9babd; border-right:0;border-top:0;">I the undersigned hereby that all the information I have provided are correct. I will abide by laws of the kingdom during the period of my residence in it.</td>
-      <td style="width:33%;border-bottom:0.6pt solid #b9babd;border-left:0;border-top:0; font-weight:400; text-align:right;">أنا الموقع أدناه أقر بأن كل المعلومات التي زودتها صحيحة وسأكون ملتزماً بقوانين المملكة العربية السعودية خلال فترة وجودي بها.</td>
+      <td style="width:60%;text-align:right;border-bottom:0.75pt solid #202428; border-right:0;border-top:0;">I the undersigned hereby that all the information I have provided are correct. I will abide by laws of the kingdom during the period of my residence in it.</td>
+      <td style="width:33%;border-bottom:0.75pt solid #202428;border-left:0;border-top:0; font-weight:400; text-align:right;">أنا الموقع أدناه أقر بأن كل المعلومات التي زودتها صحيحة وسأكون ملتزماً بقوانين المملكة العربية السعودية خلال فترة وجودي بها.</td>
     </tr>
   </tbody>
 </table>
