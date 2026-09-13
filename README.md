@@ -34,6 +34,28 @@ php artisan serve
 
 Default super admin: `superadmin@system.local` / `password`
 
+## Running Tests
+
+Pure **Unit** tests run on the default in-memory SQLite (from `phpunit.xml`), no setup needed:
+
+```bash
+php artisan test --testsuite=Unit
+```
+
+**Feature** tests (anything using `RefreshDatabase`) **must run on MySQL, not SQLite.** A pre-existing MySQL-only migration (`add_listed_status_to_hr_profiles_table`) uses raw `ALTER TABLE ... MODIFY COLUMN status ENUM(...)`, which SQLite can't parse (`SQLSTATE[HY000] near "MODIFY"`).
+
+Use a **throwaway** database so `RefreshDatabase` (`migrate:fresh`) never wipes your dev data:
+
+```bash
+# one-time
+mysql -uroot -e "CREATE DATABASE ksa_embassy_test"
+
+# run — override the connection/db on the command line
+DB_CONNECTION=mysql DB_DATABASE=ksa_embassy_test php artisan test
+```
+
+Add `--filter=SomeTest` to scope to one test, e.g. `--filter=AgentKhata`.
+
 ## Key Routes
 
 | Path | Description |
