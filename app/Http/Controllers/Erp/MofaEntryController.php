@@ -62,12 +62,12 @@ class MofaEntryController extends Controller
 
         $columns = [
             ['label' => 'Y#', 'align' => 'right'], ['label' => 'M#', 'align' => 'right'],
-            ['label' => 'Date'], ['label' => 'MOFA #'], ['label' => 'Visa Serial'],
+            ['label' => 'Date'], ['label' => 'MOFA #'], ['label' => 'Visa Number'], ['label' => 'ID Number'],
             ['label' => 'Name'], ['label' => 'Passport'], ['label' => 'Reference'], ['label' => 'Payment'],
         ];
         $rows = $entries->map(fn (MofaEntry $e) => [
             $e->y_no, $e->m_no, $e->mofa_date->format('d M Y'),
-            $e->mofa_number ?: '—', $e->visa_serial ?: '—',
+            $e->mofa_number ?: '—', $e->visa_serial ?: '—', $e->id_number ?: '—',
             $e->full_name, $e->passport_no, $e->reference_name ?: '—', $e->paymentMethodLabel() ?: '—',
         ])->all();
 
@@ -329,6 +329,7 @@ class MofaEntryController extends Controller
             'mofa_date'       => ['required', 'date'],
             'mofa_number'     => ['nullable', 'string', 'max:100'],
             'visa_serial'     => ['nullable', 'string', 'max:100'],
+            'id_number'       => ['nullable', 'string', 'max:100'],
             'full_name'       => ['required', 'string', 'max:255'],
             'passport_no'     => ['required', 'string', 'max:100'],
             'reference_name'  => ['nullable', 'string', 'max:255'],

@@ -73,15 +73,15 @@ class DoubleMofaController extends Controller
 
         $columns = [
             ['label' => 'Date'], ['label' => 'Name'], ['label' => 'Visa Serial'], ['label' => 'Passport'],
-            ['label' => 'Reference'], ['label' => 'Billed', 'align' => 'right'], ['label' => 'Paid', 'align' => 'right'],
+            ['label' => 'Old MOFA #'], ['label' => 'Reference'], ['label' => 'Billed', 'align' => 'right'], ['label' => 'Paid', 'align' => 'right'],
             ['label' => 'Unpaid', 'align' => 'right'], ['label' => 'Status'],
         ];
         $rows = $entries->map(fn (DoubleMofa $e) => [
             $e->mofa_date->format('d M Y'), $e->full_name, $e->visa_serial ?: '—', $e->passport_no,
-            $e->reference ?: '—', $money($e->billing_amount), $money($e->paid_amount), $money($e->unpaid), $e->statusLabel(),
+            $e->old_mofa_number ?: '—', $e->reference ?: '—', $money($e->billing_amount), $money($e->paid_amount), $money($e->unpaid), $e->statusLabel(),
         ])->all();
 
-        $totals = ['Totals', '', '', '', '', $money($billed), $money($collected), $money($billed - $collected), ''];
+        $totals = ['Totals', '', '', '', '', '', $money($billed), $money($collected), $money($billed - $collected), ''];
 
         return $this->respondPrintableList($pdf, [
             'title'    => 'Double MOFA',
@@ -206,9 +206,10 @@ class DoubleMofaController extends Controller
             'mofa_date'      => ['required', 'date'],
             'full_name'      => ['required', 'string', 'max:255'],
             'passport_no'    => ['required', 'string', 'max:100'],
-            'visa_serial'    => ['nullable', 'string', 'max:100'],
-            'reference'      => ['nullable', 'string', 'max:255'],
-            'billing_amount' => ['required', 'numeric', 'min:0', 'max:9999999999.99'],
+            'visa_serial'     => ['nullable', 'string', 'max:100'],
+            'old_mofa_number' => ['nullable', 'string', 'max:100'],
+            'reference'       => ['nullable', 'string', 'max:255'],
+            'billing_amount'  => ['required', 'numeric', 'min:0', 'max:9999999999.99'],
         ];
     }
 

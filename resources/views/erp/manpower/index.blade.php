@@ -46,9 +46,10 @@
         @csrf
         <h2 class="mb-4 flex items-center gap-2 text-sm font-bold text-slate-900"><i class="bi bi-plus-circle text-emerald-600"></i> Add Manpower Entry</h2>
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <div><label class="{{ $lbl }}">Customer Name <span class="text-rose-500">*</span></label><input type="text" name="customer_name" value="{{ old('customer_name') }}" required class="{{ $inp }}"></div>
+            <div><label class="{{ $lbl }}">Passenger Name <span class="text-rose-500">*</span></label><input type="text" name="customer_name" value="{{ old('customer_name') }}" required class="{{ $inp }}"></div>
             <div><label class="{{ $lbl }}">Passport Number <span class="text-rose-500">*</span></label><input type="text" name="passport_no" value="{{ old('passport_no') }}" required class="{{ $inp }}"></div>
-            <div><label class="{{ $lbl }}">Date <span class="text-rose-500">*</span></label><input type="date" name="completed_date" value="{{ old('completed_date', now()->format('Y-m-d')) }}" required class="{{ $inp }}"></div>
+            <div><label class="{{ $lbl }}">EC Number</label><input type="text" name="ec_number" value="{{ old('ec_number') }}" class="{{ $inp }}"></div>
+            <div><label class="{{ $lbl }}">BMET Date <span class="text-rose-500">*</span></label><input type="date" name="completed_date" value="{{ old('completed_date', now()->format('Y-m-d')) }}" required class="{{ $inp }}"></div>
             <div>
                 <label class="{{ $lbl }}">Agent</label>
                 <select name="agent_id" class="{{ $inp }}">
@@ -58,7 +59,7 @@
             </div>
         </div>
         <div class="mt-4 flex justify-end">
-            <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md"><i class="bi bi-plus-lg"></i> Add Entry</button>
+            <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md"><i class="bi bi-plus-lg"></i> Save</button>
         </div>
     </form>
 
@@ -69,9 +70,10 @@
                 <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                     <tr>
                         <th class="px-4 py-3">Total Serial</th>
-                        <th class="px-4 py-3">Date</th>
-                        <th class="px-4 py-3">Customer Name</th>
+                        <th class="px-4 py-3">BMET Date</th>
+                        <th class="px-4 py-3">Passenger Name</th>
                         <th class="px-4 py-3">Passport Number</th>
+                        <th class="px-4 py-3">EC Number</th>
                         <th class="px-4 py-3">Agent Name</th>
                         <th class="px-4 py-3 text-right">Actions</th>
                     </tr>
@@ -83,6 +85,7 @@
                             <td class="px-4 py-3 whitespace-nowrap">{{ $e->completed_date->format('d M Y') }}</td>
                             <td class="px-4 py-3 font-medium text-slate-800">{{ $e->customer_name }}</td>
                             <td class="px-4 py-3">{{ $e->passport_no }}</td>
+                            <td class="px-4 py-3">{{ $e->ec_number ?: '—' }}</td>
                             <td class="px-4 py-3">{{ $e->agent?->name ?: '—' }}</td>
                             <td class="px-4 py-3">
                                 @php $pill = 'inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold ring-1 ring-inset transition'; @endphp
@@ -93,6 +96,7 @@
                                                 'completed_date' => $e->completed_date->format('Y-m-d'),
                                                 'customer_name' => $e->customer_name,
                                                 'passport_no' => $e->passport_no,
+                                                'ec_number' => $e->ec_number,
                                                 'agent_id' => $e->agent_id,
                                             ]))"><i class="bi bi-pencil"></i> Edit</button>
                                     <form method="POST" action="{{ route('erp.manpower.destroy', $e) }}" onsubmit="return confirm('Delete this manpower entry?')">
@@ -103,7 +107,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6" class="px-4 py-12 text-center text-slate-400"><i class="bi bi-inbox mb-2 block text-2xl"></i>No manpower entries yet.</td></tr>
+                        <tr><td colspan="7" class="px-4 py-12 text-center text-slate-400"><i class="bi bi-inbox mb-2 block text-2xl"></i>No manpower entries yet.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -117,9 +121,10 @@
             @csrf @method('PUT')
             <h3 class="mb-4 text-base font-bold text-slate-900">Edit Manpower Entry</h3>
             <div class="grid gap-3 sm:grid-cols-2">
-                <div><label class="{{ $lbl }}">Customer Name <span class="text-rose-500">*</span></label><input type="text" name="customer_name" x-model="form.customer_name" required class="{{ $inp }}"></div>
+                <div><label class="{{ $lbl }}">Passenger Name <span class="text-rose-500">*</span></label><input type="text" name="customer_name" x-model="form.customer_name" required class="{{ $inp }}"></div>
                 <div><label class="{{ $lbl }}">Passport Number <span class="text-rose-500">*</span></label><input type="text" name="passport_no" x-model="form.passport_no" required class="{{ $inp }}"></div>
-                <div><label class="{{ $lbl }}">Date <span class="text-rose-500">*</span></label><input type="date" name="completed_date" x-model="form.completed_date" required class="{{ $inp }}"></div>
+                <div><label class="{{ $lbl }}">EC Number</label><input type="text" name="ec_number" x-model="form.ec_number" class="{{ $inp }}"></div>
+                <div><label class="{{ $lbl }}">BMET Date <span class="text-rose-500">*</span></label><input type="date" name="completed_date" x-model="form.completed_date" required class="{{ $inp }}"></div>
                 <div>
                     <label class="{{ $lbl }}">Agent</label>
                     <select name="agent_id" x-model="form.agent_id" class="{{ $inp }}">
@@ -130,7 +135,7 @@
             </div>
             <div class="mt-5 flex justify-end gap-3">
                 <button type="button" x-on:click="editing = false" class="rounded-lg px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900">Cancel</button>
-                <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-semibold text-white"><i class="bi bi-check-lg"></i> Save Changes</button>
+                <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-semibold text-white"><i class="bi bi-check-lg"></i> Save</button>
             </div>
         </form>
     </div>

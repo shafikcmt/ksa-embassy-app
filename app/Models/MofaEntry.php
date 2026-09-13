@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class MofaEntry extends Model
 {
     protected $fillable = [
-        'agency_id', 'mofa_date', 'mofa_number', 'visa_serial',
+        'agency_id', 'mofa_date', 'mofa_number', 'visa_serial', 'id_number',
         'full_name', 'passport_no', 'reference_name',
         'payment_method', 'whatsapp_number', 'payment_note',
         'created_by', 'updated_by',

@@ -63,8 +63,12 @@
                 <input type="date" name="mofa_date" value="{{ old('mofa_date', now()->format('Y-m-d')) }}" required class="{{ $inp }}">
             </div>
             <div>
-                <label class="{{ $lbl }}">Visa Serial</label>
+                <label class="{{ $lbl }}">Visa Number</label>
                 <input type="text" name="visa_serial" value="{{ old('visa_serial') }}" class="{{ $inp }}">
+            </div>
+            <div>
+                <label class="{{ $lbl }}">ID Number</label>
+                <input type="text" name="id_number" value="{{ old('id_number') }}" class="{{ $inp }}">
             </div>
             <div>
                 <label class="{{ $lbl }}">Reference Name</label>
@@ -73,7 +77,7 @@
         </div>
         <div class="mt-4 flex justify-end">
             <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md">
-                <i class="bi bi-plus-lg"></i> Add Entry
+                <i class="bi bi-plus-lg"></i> Save
             </button>
         </div>
     </form>
@@ -88,7 +92,8 @@
                         <th class="px-4 py-3">M#</th>
                         <th class="px-4 py-3">Date</th>
                         <th class="px-4 py-3">MOFA #</th>
-                        <th class="px-4 py-3">Visa Serial</th>
+                        <th class="px-4 py-3">Visa Number</th>
+                        <th class="px-4 py-3">ID Number</th>
                         <th class="px-4 py-3">Name</th>
                         <th class="px-4 py-3">Passport</th>
                         <th class="px-4 py-3">Reference</th>
@@ -104,6 +109,7 @@
                             <td class="px-4 py-3 whitespace-nowrap">{{ $e->mofa_date->format('d M Y') }}</td>
                             <td class="px-4 py-3">{{ $e->mofa_number ?: '—' }}</td>
                             <td class="px-4 py-3">{{ $e->visa_serial ?: '—' }}</td>
+                            <td class="px-4 py-3">{{ $e->id_number ?: '—' }}</td>
                             <td class="px-4 py-3 font-medium text-slate-800">{{ $e->full_name }}</td>
                             <td class="px-4 py-3">{{ $e->passport_no }}</td>
                             <td class="px-4 py-3">{{ $e->reference_name ?: '—' }}</td>
@@ -123,6 +129,7 @@
                                                 'mofa_number' => $e->mofa_number,
                                                 'mofa_date' => $e->mofa_date->format('Y-m-d'),
                                                 'visa_serial' => $e->visa_serial,
+                                                'id_number' => $e->id_number,
                                                 'reference_name' => $e->reference_name,
                                             ]))"><i class="bi bi-pencil"></i> Edit</button>
                                     <form method="POST" action="{{ route('erp.mofa.destroy', $e) }}" onsubmit="return confirm('Delete this MOFA entry?')">
@@ -133,7 +140,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="10" class="px-4 py-12 text-center text-slate-400">
+                        <tr><td colspan="11" class="px-4 py-12 text-center text-slate-400">
                             <i class="bi bi-inbox mb-2 block text-2xl"></i>No MOFA entries yet. Add your first one above.
                         </td></tr>
                     @endforelse
@@ -153,12 +160,13 @@
                 <div><label class="{{ $lbl }}">Passport No <span class="text-rose-500">*</span></label><input type="text" name="passport_no" x-model="form.passport_no" required class="{{ $inp }}"></div>
                 <div><label class="{{ $lbl }}">MOFA Number</label><input type="text" name="mofa_number" x-model="form.mofa_number" class="{{ $inp }}"></div>
                 <div><label class="{{ $lbl }}">MOFA Date <span class="text-rose-500">*</span></label><input type="date" name="mofa_date" x-model="form.mofa_date" required class="{{ $inp }}"></div>
-                <div><label class="{{ $lbl }}">Visa Serial</label><input type="text" name="visa_serial" x-model="form.visa_serial" class="{{ $inp }}"></div>
+                <div><label class="{{ $lbl }}">Visa Number</label><input type="text" name="visa_serial" x-model="form.visa_serial" class="{{ $inp }}"></div>
+                <div><label class="{{ $lbl }}">ID Number</label><input type="text" name="id_number" x-model="form.id_number" class="{{ $inp }}"></div>
                 <div><label class="{{ $lbl }}">Reference Name</label><input type="text" name="reference_name" x-model="form.reference_name" class="{{ $inp }}"></div>
             </div>
             <div class="mt-5 flex justify-end gap-3">
                 <button type="button" x-on:click="editing = false" class="rounded-lg px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900">Cancel</button>
-                <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-semibold text-white"><i class="bi bi-check-lg"></i> Save Changes</button>
+                <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-semibold text-white"><i class="bi bi-check-lg"></i> Save</button>
             </div>
         </form>
     </div>

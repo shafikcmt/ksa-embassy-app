@@ -19,7 +19,7 @@ class DoubleMofa extends Model
 
     protected $fillable = [
         'agency_id', 'mofa_date', 'full_name', 'passport_no',
-        'visa_serial', 'reference', 'billing_amount', 'status',
+        'visa_serial', 'old_mofa_number', 'reference', 'billing_amount', 'status',
         'created_by', 'updated_by',
         // NOTE: paid_amount is deliberately NOT fillable.
     ];

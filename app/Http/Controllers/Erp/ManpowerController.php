@@ -65,12 +65,12 @@ class ManpowerController extends Controller
         $entries = $this->listing(auth()->user()->agency_id);
 
         $columns = [
-            ['label' => '#', 'align' => 'right'], ['label' => 'Date'],
-            ['label' => 'Customer'], ['label' => 'Passport'], ['label' => 'Agent'],
+            ['label' => '#', 'align' => 'right'], ['label' => 'BMET Date'],
+            ['label' => 'Passenger'], ['label' => 'Passport'], ['label' => 'EC Number'], ['label' => 'Agent'],
         ];
         $rows = $entries->map(fn (ManpowerCompletion $e) => [
             $e->t_no, $e->completed_date->format('d M Y'),
-            $e->customer_name, $e->passport_no, $e->agent->name ?? '—',
+            $e->customer_name, $e->passport_no, $e->ec_number ?: '—', $e->agent->name ?? '—',
         ])->all();
 
         return $this->respondPrintableList($pdf, [
@@ -139,6 +139,7 @@ class ManpowerController extends Controller
             'completed_date' => ['required', 'date'],
             'customer_name'  => ['required', 'string', 'max:255'],
             'passport_no'    => ['required', 'string', 'max:100'],
+            'ec_number'      => ['nullable', 'string', 'max:100'],
             // agent_id must belong to the caller's own agency (or be blank).
             'agent_id'       => ['nullable', Rule::exists('agents', 'id')->where('agency_id', $agencyId)],
         ];

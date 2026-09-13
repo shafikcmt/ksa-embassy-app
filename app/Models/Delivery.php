@@ -17,7 +17,7 @@ class Delivery extends Model
 {
     protected $fillable = [
         'agency_id', 'delivery_date', 'full_name', 'passport_no',
-        'visa_serial', 'reference', 'total_amount', 'status',
+        'visa_serial', 'reference', 'total_amount', 'status', 'payment_method',
         'created_by', 'updated_by',
         // NOTE: paid_amount is deliberately NOT fillable.
     ];
@@ -32,6 +32,13 @@ class Delivery extends Model
         'pending'   => 'Pending',
         'ready'     => 'Ready',
         'delivered' => 'Delivered',
+    ];
+
+    /** How the delivery fee was collected (separate from the workflow status). */
+    public const PAYMENT_METHODS = [
+        'cash'   => 'Cash',
+        'bank'   => 'Bank',
+        'online' => 'Online',
     ];
 
     public function agency(): BelongsTo
@@ -68,5 +75,12 @@ class Delivery extends Model
     public function statusLabel(): string
     {
         return self::STATUSES[$this->status] ?? ucfirst((string) $this->status);
+    }
+
+    public function paymentMethodLabel(): ?string
+    {
+        return $this->payment_method
+            ? (self::PAYMENT_METHODS[$this->payment_method] ?? ucfirst((string) $this->payment_method))
+            : null;
     }
 }

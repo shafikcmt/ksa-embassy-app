@@ -54,6 +54,7 @@ class DeliveryController extends Controller
         return view('erp.delivery.index', [
             'deliveries'     => $deliveries,
             'statuses'       => Delivery::STATUSES,
+            'paymentMethods' => Delivery::PAYMENT_METHODS,
             'totalBilled'    => $totalBilled,
             'totalCollected' => $totalCollected,
             'totalDue'       => $totalBilled - $totalCollected,
@@ -72,15 +73,15 @@ class DeliveryController extends Controller
         $columns = [
             ['label' => 'Date'], ['label' => 'Name'], ['label' => 'Passport'], ['label' => 'Visa Serial'],
             ['label' => 'Reference'], ['label' => 'Total', 'align' => 'right'], ['label' => 'Paid', 'align' => 'right'],
-            ['label' => 'Due', 'align' => 'right'], ['label' => 'Status'],
+            ['label' => 'Due', 'align' => 'right'], ['label' => 'Status'], ['label' => 'Payment'],
         ];
         $rows = $deliveries->map(fn (Delivery $d) => [
             $d->delivery_date->format('d M Y'), $d->full_name, $d->passport_no, $d->visa_serial ?: '—',
-            $d->reference ?: '—', $money($d->total_amount), $money($d->paid_amount), $money($d->due), $d->statusLabel(),
+            $d->reference ?: '—', $money($d->total_amount), $money($d->paid_amount), $money($d->due), $d->statusLabel(), $d->paymentMethodLabel() ?: '—',
         ])->all();
 
         // Totals footer aligned to the money columns (indices 5/6/7).
-        $totals = ['Totals', '', '', '', '', $money($billed), $money($collected), $money($billed - $collected), ''];
+        $totals = ['Totals', '', '', '', '', $money($billed), $money($collected), $money($billed - $collected), '', ''];
 
         return $this->respondPrintableList($pdf, [
             'title'    => 'Delivery',
@@ -203,8 +204,9 @@ class DeliveryController extends Controller
             'passport_no'   => ['required', 'string', 'max:100'],
             'visa_serial'   => ['nullable', 'string', 'max:100'],
             'reference'     => ['nullable', 'string', 'max:255'],
-            'total_amount'  => ['required', 'numeric', 'min:0', 'max:9999999999.99'],
-            'status'        => ['required', Rule::in(array_keys(Delivery::STATUSES))],
+            'total_amount'   => ['required', 'numeric', 'min:0', 'max:9999999999.99'],
+            'status'         => ['required', Rule::in(array_keys(Delivery::STATUSES))],
+            'payment_method' => ['nullable', Rule::in(array_keys(Delivery::PAYMENT_METHODS))],
         ];
     }
 

@@ -15,7 +15,7 @@ class ManpowerCompletion extends Model
 {
     protected $fillable = [
         'agency_id', 'completed_date', 'customer_name', 'passport_no',
-        'agent_id', 'created_by', 'updated_by',
+        'ec_number', 'agent_id', 'created_by', 'updated_by',
     ];
 
     protected $casts = [

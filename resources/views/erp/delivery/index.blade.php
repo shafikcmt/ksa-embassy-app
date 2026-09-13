@@ -59,7 +59,6 @@
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div><label class="{{ $lbl }}">Full Name <span class="text-rose-500">*</span></label><input type="text" name="full_name" value="{{ old('full_name') }}" required class="{{ $inp }}"></div>
             <div><label class="{{ $lbl }}">Passport Number <span class="text-rose-500">*</span></label><input type="text" name="passport_no" value="{{ old('passport_no') }}" required class="{{ $inp }}"></div>
-            <div><label class="{{ $lbl }}">Visa Serial</label><input type="text" name="visa_serial" value="{{ old('visa_serial') }}" class="{{ $inp }}"></div>
             <div><label class="{{ $lbl }}">Date <span class="text-rose-500">*</span></label><input type="date" name="delivery_date" value="{{ old('delivery_date', now()->format('Y-m-d')) }}" required class="{{ $inp }}"></div>
             <div><label class="{{ $lbl }}">Total Amount (৳) <span class="text-rose-500">*</span></label><input type="number" step="0.01" min="0" name="total_amount" value="{{ old('total_amount', '0.00') }}" required class="{{ $inp }}"></div>
             <div>
@@ -68,10 +67,17 @@
                     @foreach($statuses as $key => $label)<option value="{{ $key }}" @selected(old('status', 'pending') === $key)>{{ $label }}</option>@endforeach
                 </select>
             </div>
+            <div>
+                <label class="{{ $lbl }}">Payment Method</label>
+                <select name="payment_method" class="{{ $inp }}">
+                    <option value="">—</option>
+                    @foreach($paymentMethods as $key => $label)<option value="{{ $key }}" @selected(old('payment_method') === $key)>{{ $label }}</option>@endforeach
+                </select>
+            </div>
             <div><label class="{{ $lbl }}">Reference</label><input type="text" name="reference" value="{{ old('reference') }}" class="{{ $inp }}"></div>
         </div>
         <div class="mt-4 flex justify-start">
-            <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md"><i class="bi bi-plus-lg"></i> Add Delivery</button>
+            <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md"><i class="bi bi-plus-lg"></i> Save</button>
         </div>
     </form>
 
@@ -88,6 +94,7 @@
                         <th class="px-4 py-3 text-right">Paid</th>
                         <th class="px-4 py-3 text-right">Due</th>
                         <th class="px-4 py-3">Status</th>
+                        <th class="px-4 py-3">Payment</th>
                         <th class="px-4 py-3 text-right">Actions</th>
                     </tr>
                 </thead>
@@ -115,6 +122,7 @@
                             <td class="px-4 py-3 text-right whitespace-nowrap text-emerald-700">৳{{ number_format((float) $d->paid_amount, 2) }}</td>
                             <td class="px-4 py-3 text-right whitespace-nowrap {{ $due > 0 ? 'font-semibold text-rose-600' : 'text-slate-400' }}">৳{{ number_format($due, 2) }}</td>
                             <td class="px-4 py-3"><span class="rounded-full px-2 py-0.5 text-xs font-semibold {{ $statusChip[$d->status] ?? 'bg-slate-100 text-slate-600' }}">{{ $d->statusLabel() }}</span></td>
+                            <td class="px-4 py-3">{{ $d->paymentMethodLabel() ?: '—' }}</td>
                             <td class="px-4 py-3">
                                 @php $pill = 'inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold ring-1 ring-inset transition'; @endphp
                                 <div class="flex flex-nowrap items-center justify-end gap-1.5">
@@ -128,7 +136,7 @@
                                                 'delivery_date' => $d->delivery_date->format('Y-m-d'),
                                                 'full_name' => $d->full_name,
                                                 'passport_no' => $d->passport_no,
-                                                'visa_serial' => $d->visa_serial,
+                                                'payment_method' => $d->payment_method,
                                                 'reference' => $d->reference,
                                                 'total_amount' => number_format((float) $d->total_amount, 2, '.', ''),
                                                 'status' => $d->status,
@@ -141,7 +149,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="8" class="px-4 py-12 text-center text-slate-400"><i class="bi bi-inbox mb-2 block text-2xl"></i>No deliveries yet.</td></tr>
+                        <tr><td colspan="9" class="px-4 py-12 text-center text-slate-400"><i class="bi bi-inbox mb-2 block text-2xl"></i>No deliveries yet.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -213,7 +221,6 @@
             <div class="grid gap-3 sm:grid-cols-2">
                 <div><label class="{{ $lbl }}">Full Name <span class="text-rose-500">*</span></label><input type="text" name="full_name" x-model="form.full_name" required class="{{ $inp }}"></div>
                 <div><label class="{{ $lbl }}">Passport Number <span class="text-rose-500">*</span></label><input type="text" name="passport_no" x-model="form.passport_no" required class="{{ $inp }}"></div>
-                <div><label class="{{ $lbl }}">Visa Serial</label><input type="text" name="visa_serial" x-model="form.visa_serial" class="{{ $inp }}"></div>
                 <div><label class="{{ $lbl }}">Date <span class="text-rose-500">*</span></label><input type="date" name="delivery_date" x-model="form.delivery_date" required class="{{ $inp }}"></div>
                 <div><label class="{{ $lbl }}">Total Amount (৳) <span class="text-rose-500">*</span></label><input type="number" step="0.01" min="0" name="total_amount" x-model="form.total_amount" required class="{{ $inp }}"></div>
                 <div>
@@ -222,12 +229,19 @@
                         @foreach($statuses as $key => $label)<option value="{{ $key }}">{{ $label }}</option>@endforeach
                     </select>
                 </div>
+                <div>
+                    <label class="{{ $lbl }}">Payment Method</label>
+                    <select name="payment_method" x-model="form.payment_method" class="{{ $inp }}">
+                        <option value="">—</option>
+                        @foreach($paymentMethods as $key => $label)<option value="{{ $key }}">{{ $label }}</option>@endforeach
+                    </select>
+                </div>
                 <div><label class="{{ $lbl }}">Reference</label><input type="text" name="reference" x-model="form.reference" class="{{ $inp }}"></div>
             </div>
             <p class="mt-3 text-xs text-slate-400"><i class="bi bi-info-circle"></i> Paid amount is managed through payments and cannot be edited here.</p>
             <div class="mt-5 flex justify-end gap-3">
                 <button type="button" x-on:click="editing = false" class="rounded-lg px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900">Cancel</button>
-                <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-semibold text-white"><i class="bi bi-check-lg"></i> Save Changes</button>
+                <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-semibold text-white"><i class="bi bi-check-lg"></i> Save</button>
             </div>
         </form>
     </div>
