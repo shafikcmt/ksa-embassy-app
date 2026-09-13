@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Erp;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Erp\Concerns\RendersPrintableList;
+use App\Models\Agent;
 use App\Models\ManpowerCompletion;
 use App\Models\Stamping;
 use App\Services\CsvImportService;
@@ -44,10 +45,16 @@ class StampingController extends Controller
             ->whereNotIn('passport_no', ManpowerCompletion::forAgency($agencyId)->select('passport_no'))
             ->count();
 
+        // Agents for the "auto-fill Reference" dropdown — scoped to THIS agency
+        // only (multi-tenancy), never other agencies' agents. Not persisted on
+        // the stamping row; the selection just pre-fills the reference text.
+        $agents = Agent::forAgency($agencyId)->active()->orderBy('name')->get(['id', 'name']);
+
         return view('erp.stamping.index', [
             'entries'      => $entries,
             'manpowerBaki' => $manpowerBaki,
             'statuses'     => Stamping::STATUSES,
+            'agents'       => $agents,
         ]);
     }
 
