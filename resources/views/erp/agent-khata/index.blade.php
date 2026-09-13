@@ -51,7 +51,14 @@
                             <td class="px-4 py-3 font-medium text-slate-800">{{ $agent->name }}</td>
                             <td class="px-4 py-3 text-slate-500">{{ $agent->phone ?: '—' }}</td>
                             <td class="px-4 py-3 text-right whitespace-nowrap text-slate-500">৳{{ number_format((float) $agent->opening_balance, 2) }}</td>
-                            <td class="px-4 py-3 text-right whitespace-nowrap font-semibold {{ $bal > 0 ? 'text-emerald-700' : ($bal < 0 ? 'text-rose-600' : 'text-slate-400') }}">৳{{ number_format($bal, 2) }}</td>
+                            <td class="px-4 py-3 text-right whitespace-nowrap font-semibold {{ $bal > 0 ? 'text-emerald-700' : ($bal < 0 ? 'text-rose-600' : 'text-slate-400') }}">
+                                ৳{{ number_format($bal, 2) }}
+                                @if($bal > 0)
+                                    <span class="ml-1 text-xs font-normal text-slate-400">(Agent owes agency)</span>
+                                @elseif($bal < 0)
+                                    <span class="ml-1 text-xs font-normal text-slate-400">(Agency owes agent)</span>
+                                @endif
+                            </td>
                             <td class="px-4 py-3 text-right">
                                 <a href="{{ route('erp.agent-khata.show', $agent) }}" class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold ring-1 ring-inset transition bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100"><i class="bi bi-journal-text"></i> Open Khata</a>
                             </td>

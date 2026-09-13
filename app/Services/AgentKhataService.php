@@ -100,7 +100,8 @@ class AgentKhataService
     /** Live balance for one agent: opening_balance + signed-sum(ledger). */
     public function balanceFor(Agent $agent): float
     {
-        $net = (float) AgentTransaction::where('agent_id', $agent->id)
+        $net = (float) AgentTransaction::forAgency($agent->agency_id)
+            ->where('agent_id', $agent->id)
             ->selectRaw("COALESCE(SUM(CASE WHEN type='credit' THEN -amount ELSE amount END),0) net")
             ->value('net');
 
