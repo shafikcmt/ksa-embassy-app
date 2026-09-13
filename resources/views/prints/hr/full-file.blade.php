@@ -118,5 +118,31 @@ td, th { padding: 2pt 3pt; vertical-align: middle; font-size: 8pt; }
 @include('prints.hr.partials.checklist-body')
 
 @if(empty($_pdf))</div>@endif
+
+@if(empty($_pdf))
+{{-- Auto-open the browser print dialog once ALL content (incl. barcode/photo
+     images across all 4 pages) has fully loaded, so the preview shows every page
+     fully rendered. Scoped to THIS Complete-File view only: the guard hides it
+     from the mPDF render, and the single-document print views are separate blades
+     that are untouched. The visible "Print" button above stays as a manual
+     fallback (if a browser blocks the auto-trigger, or the user reopens it). --}}
+<script>
+  (function () {
+    var printed = false;
+    function autoPrint() {
+      if (printed) return;
+      printed = true;
+      // Small buffer so fonts/layout settle after images finish decoding.
+      setTimeout(function () { window.print(); }, 350);
+    }
+    // window.load waits for all <img> (barcodes/photo) to finish loading.
+    if (document.readyState === 'complete') {
+      autoPrint();
+    } else {
+      window.addEventListener('load', autoPrint);
+    }
+  })();
+</script>
+@endif
 </body>
 </html>
