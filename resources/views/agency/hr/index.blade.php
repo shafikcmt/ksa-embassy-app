@@ -160,7 +160,7 @@
                             <td class="px-3 py-3">
                                 @php $pill = 'inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold ring-1 ring-inset transition'; @endphp
                                 <div class="flex flex-nowrap justify-end gap-1.5">
-                                    <a href="{{ route('hr.documents', $hr) }}" class="{{ $pill }} bg-blue-50 text-blue-700 ring-blue-200 hover:bg-blue-100"><i class="bi bi-printer"></i> Print</a>
+                                    <a href="{{ route('hr.print.full-file', $hr) }}" target="_blank" class="{{ $pill }} bg-blue-50 text-blue-700 ring-blue-200 hover:bg-blue-100"><i class="bi bi-printer"></i> Print</a>
                                     @can('update', $hr)
                                         <a href="{{ route('hr.edit', $hr) }}" class="{{ $pill }} bg-amber-50 text-amber-700 ring-amber-200 hover:bg-amber-100"><i class="bi bi-pencil"></i> Edit</a>
                                     @endcan
@@ -212,7 +212,7 @@
                 </dl>
                 @php $mBtn = 'flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold ring-1 ring-inset transition'; @endphp
                 <div class="mt-3 flex gap-2 border-t border-slate-100 pt-3">
-                    <a href="{{ route('hr.documents', $hr) }}" class="{{ $mBtn }} bg-blue-50 text-blue-700 ring-blue-200 hover:bg-blue-100"><i class="bi bi-printer"></i> Print</a>
+                    <a href="{{ route('hr.print.full-file', $hr) }}" target="_blank" class="{{ $mBtn }} bg-blue-50 text-blue-700 ring-blue-200 hover:bg-blue-100"><i class="bi bi-printer"></i> Print</a>
                     @can('update', $hr)
                         <a href="{{ route('hr.edit', $hr) }}" class="{{ $mBtn }} bg-amber-50 text-amber-700 ring-amber-200 hover:bg-amber-100"><i class="bi bi-pencil"></i> Edit</a>
                     @endcan
