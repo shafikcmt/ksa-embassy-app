@@ -27,9 +27,13 @@ class AgentTransaction extends Model
     public const TYPE_DEBIT  = 'debit';
     public const TYPE_CREDIT = 'credit';
 
+    // Display labels for the human-facing dropdown / ledger. The stored enum
+    // keys ('debit'/'credit') and the balance math are unchanged: debit = +amount,
+    // credit = -amount. Per business convention: "Received" (money in from the
+    // agent) is a credit (-), "Paid" (money out to the agent) is a debit (+).
     public const TYPES = [
-        'debit'  => 'Debit (agent owes agency)',
-        'credit' => 'Credit (agent paid / agency owes)',
+        'credit' => 'Received',
+        'debit'  => 'Paid',
     ];
 
     public function agency(): BelongsTo

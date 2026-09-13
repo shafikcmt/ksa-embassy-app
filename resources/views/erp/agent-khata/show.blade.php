@@ -43,7 +43,7 @@
                 <div><label class="{{ $lbl }}">Note</label><input type="text" name="note" value="{{ old('note') }}" maxlength="255" class="{{ $inp }}"></div>
             </div>
             <div class="mt-4 flex justify-start">
-                <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md"><i class="bi bi-plus-lg"></i> Add Transaction</button>
+                <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md"><i class="bi bi-plus-lg"></i> Save</button>
             </div>
         </form>
     @else
@@ -70,7 +70,7 @@
                         <tr class="hover:bg-slate-50 {{ $isReversed ? 'opacity-60' : '' }}">
                             <td class="px-4 py-3 whitespace-nowrap">{{ $t->txn_date->format('d M Y') }}</td>
                             <td class="px-4 py-3">
-                                <span class="rounded-full px-2 py-0.5 text-xs font-semibold {{ $t->type === 'debit' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700' }}">{{ ucfirst($t->type) }}</span>
+                                <span class="rounded-full px-2 py-0.5 text-xs font-semibold {{ $t->type === 'debit' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700' }}">{{ $t->typeLabel() }}</span>
                                 @if($t->isReversal())<span class="ml-1 rounded-full bg-slate-200 px-2 py-0.5 text-[0.6rem] font-bold uppercase text-slate-500">Reversal</span>@endif
                                 @if($isReversed)<span class="ml-1 rounded-full bg-slate-200 px-2 py-0.5 text-[0.6rem] font-bold uppercase text-slate-500">Reversed</span>@endif
                             </td>
@@ -82,7 +82,7 @@
                                     <div class="flex items-center justify-end">
                                         @if(! $t->isReversal() && ! $isReversed)
                                             <button type="button" class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold ring-1 ring-inset transition bg-rose-50 text-rose-700 ring-rose-200 hover:bg-rose-100"
-                                                    x-on:click="openReverse(@js(['id' => $t->id, 'type' => ucfirst($t->type), 'amount' => number_format((float) $t->amount, 2)]))"><i class="bi bi-arrow-counterclockwise"></i> Reverse</button>
+                                                    x-on:click="openReverse(@js(['id' => $t->id, 'type' => $t->typeLabel(), 'amount' => number_format((float) $t->amount, 2)]))"><i class="bi bi-arrow-counterclockwise"></i> Reverse</button>
                                         @else
                                             <span class="text-xs text-slate-300">—</span>
                                         @endif
