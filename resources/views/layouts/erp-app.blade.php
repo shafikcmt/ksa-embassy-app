@@ -31,6 +31,7 @@
     // the EXISTING agency notes module (no duplicate ERP notes screen).
     $erpNav = [
         ['route' => 'erp.dashboard',   'active' => request()->routeIs('erp.dashboard'),   'icon' => 'bi-speedometer2',      'label' => 'ERP Dashboard'],
+        ['route' => 'erp.medical',     'active' => request()->routeIs('erp.medical*'),     'icon' => 'bi-heart-pulse',       'label' => 'Medical'],
         ['route' => 'erp.mofa',        'active' => request()->routeIs('erp.mofa*'),        'icon' => 'bi-file-earmark-text', 'label' => 'MOFA Entry'],
         ['route' => 'erp.double-mofa', 'active' => request()->routeIs('erp.double-mofa*'), 'icon' => 'bi-files',             'label' => 'Double MOFA'],
         ['route' => 'erp.stamping',    'active' => request()->routeIs('erp.stamping*'),    'icon' => 'bi-postage',           'label' => 'Stamping'],

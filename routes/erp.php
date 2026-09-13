@@ -7,6 +7,7 @@ use App\Http\Controllers\Erp\DoubleMofaController;
 use App\Http\Controllers\Erp\DueListController;
 use App\Http\Controllers\Erp\ExpenseController;
 use App\Http\Controllers\Erp\ManpowerController;
+use App\Http\Controllers\Erp\MedicalController;
 use App\Http\Controllers\Erp\MofaEntryController;
 use App\Http\Controllers\Erp\ProfitLossController;
 use App\Http\Controllers\Erp\ReportController;
@@ -49,6 +50,7 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
         Route::get('/mofa', [MofaEntryController::class, 'index'])->name('mofa');
         Route::get('/stamping', [StampingController::class, 'index'])->name('stamping');
         Route::get('/manpower', [ManpowerController::class, 'index'])->name('manpower');
+        Route::get('/medical', [MedicalController::class, 'index'])->name('medical');
 
         // ── E7a: per-module Print (full list PDF, read-only, staff-visible) ───
         // No admin guard and no active-subscription: printing shows only what the
@@ -75,6 +77,12 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
         Route::get('/manpower/import/template', [ManpowerController::class, 'importTemplate'])->name('manpower.import.template');
         Route::post('/manpower/import/preview', [ManpowerController::class, 'importPreview'])->name('manpower.import.preview');
 
+        // ── Medical CSV export (staff) + import (admin) ───────────────────────
+        Route::get('/medical/export', [MedicalController::class, 'exportCsv'])->name('medical.export');
+        Route::get('/medical/import', [MedicalController::class, 'importForm'])->name('medical.import.form');
+        Route::get('/medical/import/template', [MedicalController::class, 'importTemplate'])->name('medical.import.template');
+        Route::post('/medical/import/preview', [MedicalController::class, 'importPreview'])->name('medical.import.preview');
+
         // ── E7d: Expenses CSV export (staff) + import (admin) ─────────────────
         Route::get('/expenses/export', [ExpenseController::class, 'exportCsv'])->name('expenses.export');
         Route::get('/expenses/import', [ExpenseController::class, 'importForm'])->name('expenses.import.form');
@@ -93,6 +101,7 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
 
         Route::get('/stamping/print', [StampingController::class, 'printPdf'])->name('stamping.print');
         Route::get('/manpower/print', [ManpowerController::class, 'printPdf'])->name('manpower.print');
+        Route::get('/medical/print', [MedicalController::class, 'printPdf'])->name('medical.print');
         Route::get('/delivery/print', [DeliveryController::class, 'printPdf'])->name('delivery.print');
         Route::get('/double-mofa/print', [DoubleMofaController::class, 'printPdf'])->name('double-mofa.print');
         Route::get('/expenses/print', [ExpenseController::class, 'printPdf'])->name('expenses.print');
@@ -105,6 +114,8 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
             Route::post('/stamping/import', [StampingController::class, 'import'])->name('stamping.import'); // E7c commit
             Route::post('/manpower', [ManpowerController::class, 'store'])->name('manpower.store');
             Route::post('/manpower/import', [ManpowerController::class, 'import'])->name('manpower.import'); // E7c commit
+            Route::post('/medical', [MedicalController::class, 'store'])->name('medical.store');
+            Route::post('/medical/import', [MedicalController::class, 'import'])->name('medical.import'); // Medical commit
         });
 
         Route::put('/mofa/{mofa}', [MofaEntryController::class, 'update'])->name('mofa.update');
@@ -115,6 +126,9 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
 
         Route::put('/manpower/{manpower}', [ManpowerController::class, 'update'])->name('manpower.update');
         Route::delete('/manpower/{manpower}', [ManpowerController::class, 'destroy'])->name('manpower.destroy');
+
+        Route::put('/medical/{medical}', [MedicalController::class, 'update'])->name('medical.update');
+        Route::delete('/medical/{medical}', [MedicalController::class, 'destroy'])->name('medical.destroy');
 
         // ── E2 money modules: Delivery + Double MOFA ──────────────────────────
         // Reads are open within the module. Adding rows and taking money in
