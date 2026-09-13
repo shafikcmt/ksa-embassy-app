@@ -19,7 +19,7 @@
         'agent'       => $hr->agent?->name ?? '',
         'visa'        => $hr->visa?->visa_number ?: '',
         'sponsorId'   => $hr->visa?->sponsor_id ?: '',
-        'sponsorName' => $hr->visa?->sponsor_name ?: '',
+        'sponsorName' => $hr->visa?->sponsor_name_ar ?: ($hr->visa?->sponsor_name ?: ''),
         'showUrl'     => route('hr.show', $hr),
         'docsUrl'     => route('hr.documents', $hr),
         'editUrl'     => route('hr.edit', $hr),
@@ -150,8 +150,8 @@
                             <td class="px-3 py-3 break-words text-slate-600">{{ $hr->agent?->name ?? '—' }}</td>
                             <td class="px-3 py-3 font-mono text-xs text-slate-600">{{ $hr->visa?->visa_number ?: '—' }}</td>
                             <td class="px-3 py-3">
-                                @if($hr->visa?->sponsor_name || $hr->visa?->sponsor_id)
-                                    <div class="break-words font-medium text-slate-700">{{ $hr->visa?->sponsor_name ?: '—' }}</div>
+                                @if($hr->visa?->sponsor_name_ar || $hr->visa?->sponsor_name || $hr->visa?->sponsor_id)
+                                    <div class="break-words font-medium text-slate-700">{{ $hr->visa?->sponsor_name_ar ?: ($hr->visa?->sponsor_name ?: '—') }}</div>
                                     @if($hr->visa?->sponsor_id)
                                         <div class="font-mono text-xs text-slate-400">{{ $hr->visa->sponsor_id }}</div>
                                     @endif
@@ -208,7 +208,7 @@
                     <div><dt class="text-slate-400">Agent</dt><dd class="font-medium text-slate-700">{{ $hr->agent?->name ?? '—' }}</dd></div>
                     <div><dt class="text-slate-400">Visa No</dt><dd class="font-mono text-slate-700">{{ $hr->visa?->visa_number ?: '—' }}</dd></div>
                     <div><dt class="text-slate-400">Sponsor ID</dt><dd class="font-mono text-slate-700">{{ $hr->visa?->sponsor_id ?: '—' }}</dd></div>
-                    <div><dt class="text-slate-400">Sponsor Name</dt><dd class="font-medium text-slate-700">{{ $hr->visa?->sponsor_name ?: '—' }}</dd></div>
+                    <div><dt class="text-slate-400">Sponsor Name</dt><dd class="font-medium text-slate-700">{{ $hr->visa?->sponsor_name_ar ?: ($hr->visa?->sponsor_name ?: '—') }}</dd></div>
                 </dl>
                 @php $mBtn = 'flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold ring-1 ring-inset transition'; @endphp
                 <div class="mt-3 flex gap-2 border-t border-slate-100 pt-3">

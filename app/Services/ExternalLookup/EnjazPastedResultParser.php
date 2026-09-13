@@ -55,7 +55,10 @@ class EnjazPastedResultParser
                 'residence number', 'national id number', 'national id', 'residence/national id',
                 'sponsor id', 'id number', 'رقم الهوية', 'رقم الإقامة', 'الهوية/الإقامة',
             ], '/[0-9]{8,}/'),
-            'sponsor_name'     => $this->grab($text, [
+            // Sponsor name: COMPLETE Arabic only. If the source value is Latin /
+            // garbled (no Arabic letters), leave it BLANK for manual entry — we
+            // never save a transliteration. See grabArabicFull() below.
+            'sponsor_name'     => $this->grabArabicFull($text, [
                 'sponsor name', 'employer name', 'sponsor', 'اسم الكفيل', 'صاحب العمل',
             ]),
             'profession_en'    => $this->grab($text, [
@@ -73,6 +76,14 @@ class EnjazPastedResultParser
                 'delegation number', 'رقم التفويض', 'رقم الوفد',
             ], '/[0-9]{6,}/'),
         ], fn ($v) => $v !== null && $v !== '');
+
+        // Safety: a sponsor label WAS present but yielded no clean Arabic (a Latin
+        // transliteration or PDF-mangled text) — leave the field blank for manual
+        // entry and log it, rather than saving garbled/wrong sponsor text.
+        if (! isset($fields['sponsor_name'])
+            && $this->grab($text, ['sponsor name', 'employer name', 'sponsor', 'اسم الكفيل', 'صاحب العمل']) !== null) {
+            \Illuminate\Support\Facades\Log::info('Enjaz visa parse: sponsor name present but not valid Arabic — left blank for manual entry.');
+        }
 
         if (empty($fields)) {
             return $this->fail('Could not read any visa fields. Make sure you pasted the full Enjaz result page.');
@@ -175,6 +186,29 @@ class EnjazPastedResultParser
         $value = $this->grab($text, $labels);
         if ($value && preg_match('/[\x{0600}-\x{06FF}][\x{0600}-\x{06FF}\s]+/u', $value, $m)) {
             return trim($m[0]);
+        }
+        return null;
+    }
+
+    /**
+     * Extract the COMPLETE Arabic value on a label's line — Arabic letter runs
+     * joined with single spaces, so the full name is kept (no 2+ space
+     * truncation like grab()). Returns null when the matched value contains NO
+     * Arabic letters, so the caller leaves the field blank instead of saving a
+     * Latin transliteration / PDF-mangled garble.
+     */
+    private function grabArabicFull(string $text, array $labels): ?string
+    {
+        foreach ($labels as $label) {
+            $pattern = '/'.preg_quote($label, '/').'\s*[:\-]?\s*([^\r\n|]+)/iu';
+            if (preg_match($pattern, $text, $m)
+                && preg_match_all('/[\x{0600}-\x{06FF}]+/u', $m[1], $runs)
+                && ! empty($runs[0])) {
+                $value = trim(implode(' ', $runs[0]));
+                if ($value !== '' && mb_strlen($value) <= 150) { // matches sponsor_name column max
+                    return $value;
+                }
+            }
         }
         return null;
     }
