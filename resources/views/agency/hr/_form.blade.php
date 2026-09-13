@@ -68,9 +68,8 @@
         <input type="hidden" name="clearance_issue_date"  value="{{ $dt($clearance, 'clearance_issue_date') }}">
         <input type="hidden" name="clearance_expiry_date" value="{{ $dt($clearance, 'clearance_expiry_date') }}">
         <input type="hidden" name="clearance_country"     value="{{ $rel($clearance, 'clearance_country') }}">
-        <input type="hidden" name="medical_date"          value="{{ $dt($clearance, 'medical_date') }}">
-        <input type="hidden" name="medical_center"        value="{{ $rel($clearance, 'medical_center') }}">
-        @if(old('medical_fit', $clearance?->medical_fit))<input type="hidden" name="medical_fit" value="1">@endif
+        {{-- medical_date / medical_center / medical_fit are now visible fields in
+             Section 4 (Medical Status), so they are NOT preserved as hidden here. --}}
 
         <input type="hidden" name="contract_period"     value="{{ $rel($other, 'contract_period') }}">
         <input type="hidden" name="salary"              value="{{ $rel($other, 'salary') }}">
@@ -291,6 +290,28 @@
                     <p class="mt-0.5 text-xs text-slate-400">Visa, sponsor &amp; profession details</p>
                 </div>
             </div>
+
+            {{-- ── Enjaz Visa Auto-Fill (paste result / upload PDF) ─────────────
+                 The public Enjaz portal has a CAPTCHA and cannot be automated, so
+                 the agency pastes the "Visa Details" result text (or uploads the
+                 saved PDF/HTML) and we parse it into the fields below. --}}
+            <details class="mb-4 rounded-xl border border-brand-100 bg-brand-50/50" id="enjazAutofill">
+                <summary class="flex cursor-pointer select-none items-center gap-2 px-4 py-2.5 text-sm font-semibold text-brand-700">
+                    <i class="bi bi-magic"></i> Enjaz Visa Auto-Fill
+                    <span class="ml-auto text-xs font-normal text-slate-500">Paste result / upload PDF</span>
+                </summary>
+                <div class="space-y-2.5 border-t border-brand-100 px-4 py-3">
+                    <textarea id="enjazPasteText" rows="4" placeholder="Paste the full Enjaz 'Visa Details' result page text here…" class="{{ $ta }}"></textarea>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <input type="file" id="enjazPasteFile" accept=".pdf,.html,.htm,.txt" class="block w-full max-w-xs text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-600 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-brand-700">
+                        <button type="button" id="enjazParseBtn" class="inline-flex h-9 items-center gap-1.5 rounded-lg bg-brand-600 px-4 text-sm font-semibold text-white shadow-sm hover:bg-brand-700">
+                            <i class="bi bi-lightning-charge"></i> Parse &amp; Auto-Fill
+                        </button>
+                        <span id="enjazParseMsg" class="text-xs font-medium" role="status" aria-live="polite"></span>
+                    </div>
+                </div>
+            </details>
+
             <div class="grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-2">
                 <x-ui.field label="Visa No" name="visa_number" :required="true">
                     <input type="text" name="visa_number" required value="{{ $rel($visa, 'visa_number') }}" class="{{ $inp }} @error('visa_number') !border-rose-400 @enderror">
@@ -411,6 +432,37 @@
                 @elseif($isEdit)
                     <input type="hidden" name="license_type" value="{{ $rel($clearance, 'license_type') }}">
                 @endif
+
+                {{-- ── Medical Status (Wafid / GCC) ─────────────────────────────
+                     "Check Medical Status" queries Wafid using Passport No +
+                     Present Nationality and fills the fields below on success.
+                     GCC slip number is shown for reference only (no column). --}}
+                <div class="sm:col-span-2">
+                    <div class="mb-2 flex items-center justify-between gap-2">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Medical Status</span>
+                        <button type="button" id="medicalCheckBtn" class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-3 text-sm font-semibold text-brand-700 hover:bg-brand-100">
+                            <i class="bi bi-heart-pulse"></i> Check Medical Status
+                        </button>
+                    </div>
+                    <span id="medicalMsg" class="mb-2 block text-xs font-medium" role="status" aria-live="polite"></span>
+                </div>
+
+                <x-ui.field label="Medical Fitness" name="medical_fit">
+                    @php $medFit = old('medical_fit', $clearance?->medical_fit); @endphp
+                    <select id="medical_fit" name="medical_fit" class="{{ $inp }}">
+                        <option value="" {{ $medFit === null || $medFit === '' ? 'selected' : '' }}>Unknown</option>
+                        <option value="1" {{ (string) $medFit === '1' ? 'selected' : '' }}>Fit</option>
+                        <option value="0" {{ ($medFit !== null && $medFit !== '' && (string) $medFit === '0') ? 'selected' : '' }}>Unfit</option>
+                    </select>
+                </x-ui.field>
+
+                <x-ui.field label="Medical Date" name="medical_date">
+                    <input type="date" id="medical_date" name="medical_date" value="{{ $dt($clearance, 'medical_date') }}" class="{{ $inp }}">
+                </x-ui.field>
+
+                <x-ui.field label="Medical Center" name="medical_center" class="sm:col-span-2">
+                    <input type="text" id="medical_center" name="medical_center" value="{{ $rel($clearance, 'medical_center') }}" placeholder="Auto-filled from Wafid, or enter manually" class="{{ $inp }}">
+                </x-ui.field>
             </div>
         </fieldset>
 
@@ -956,6 +1008,132 @@
             el.dispatchEvent(new Event('change', { bubbles: true }));
         });
     });
+})();
+</script>
+<script>
+(function () {
+    // ── Visa & Medical Auto-Fill (Wafid medical + Enjaz visa paste/parse) ──
+    function token() {
+        var el = document.querySelector('input[name="_token"]');
+        return el ? el.value : '';
+    }
+    function byName(name) { return document.querySelector('[name="' + name + '"]'); }
+
+    // Set a field's value and fire input+change so dependent handlers
+    // (Arabic auto-translate, validation-clear) react as if typed.
+    function setField(name, value) {
+        if (value == null || value === '') return false;
+        var el = byName(name);
+        if (!el) return false;
+        el.value = value;
+        el.dispatchEvent(new Event('input',  { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+        return true;
+    }
+    function msg(el, text, kind) {
+        if (!el) return;
+        el.textContent = text || '';
+        el.className = 'text-xs font-medium ' + (
+            kind === 'ok'   ? 'text-emerald-600' :
+            kind === 'err'  ? 'text-rose-600'    :
+            kind === 'warn' ? 'text-amber-600'   : 'text-slate-500'
+        );
+    }
+
+    // ── 1) Wafid medical status ──────────────────────────────────────────
+    var medBtn = document.getElementById('medicalCheckBtn');
+    var medMsg = document.getElementById('medicalMsg');
+    if (medBtn) {
+        medBtn.addEventListener('click', function () {
+            var passport    = (byName('passport_number') || {}).value || '';
+            var nationality = (document.getElementById('nationality') || {}).value || '';
+            if (!passport.trim() || !nationality.trim()) {
+                msg(medMsg, 'Enter Passport No and Present Nationality first.', 'warn');
+                return;
+            }
+            medBtn.disabled = true;
+            msg(medMsg, 'Checking Wafid…', 'muted');
+
+            fetch('{{ route('hr.lookup-medical-status') }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token(), 'Accept': 'application/json' },
+                body: JSON.stringify({ passport_no: passport, nationality: nationality })
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+                if (!d || !d.found) {
+                    msg(medMsg, (d && d.message) || 'No medical record found. Enter it manually.', 'warn');
+                    return;
+                }
+                var sel = document.getElementById('medical_fit');
+                if (sel && d.medical_fit !== null && d.medical_fit !== undefined) {
+                    sel.value = d.medical_fit ? '1' : '0';
+                    sel.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+                if (d.medical_date)   setField('medical_date', d.medical_date);
+                if (d.medical_center) setField('medical_center', d.medical_center);
+
+                var extra = [];
+                if (d.status_text) extra.push(d.status_text);
+                if (d.gcc_slip)    extra.push('GCC slip: ' + d.gcc_slip);
+                msg(medMsg, 'Filled from Wafid.' + (extra.length ? ' (' + extra.join(' · ') + ')' : ''), 'ok');
+            })
+            .catch(function () { msg(medMsg, 'Lookup failed. Enter the medical result manually.', 'err'); })
+            .finally(function () { medBtn.disabled = false; });
+        });
+    }
+
+    // ── 2) Enjaz visa paste / upload → parse ─────────────────────────────
+    var enjBtn  = document.getElementById('enjazParseBtn');
+    var enjText = document.getElementById('enjazPasteText');
+    var enjFile = document.getElementById('enjazPasteFile');
+    var enjMsg  = document.getElementById('enjazParseMsg');
+    if (enjBtn) {
+        enjBtn.addEventListener('click', function () {
+            var hasFile = enjFile && enjFile.files && enjFile.files.length > 0;
+            var text    = enjText ? enjText.value.trim() : '';
+            if (!hasFile && !text) {
+                msg(enjMsg, 'Paste the Enjaz result text or choose a file first.', 'warn');
+                return;
+            }
+            enjBtn.disabled = true;
+            msg(enjMsg, 'Parsing…', 'muted');
+
+            var body = new FormData();
+            body.append('_token', token());
+            if (text) body.append('pasted_text', text);
+            if (hasFile) body.append('file', enjFile.files[0]);
+            var visaNo = (byName('visa_number') || {}).value || '';
+            if (visaNo.trim()) body.append('visa_number', visaNo.trim());
+
+            fetch('{{ route('hr.parse-visa-paste') }}', {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': token(), 'Accept': 'application/json' },
+                body: body
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+                if (!d || !d.found || !d.fields) {
+                    msg(enjMsg, (d && d.message) || 'Could not read the visa fields.', 'warn');
+                    return;
+                }
+                var map = {
+                    visa_number: 'visa_number', visa_issue_date: 'visa_issue_date',
+                    full_name_ar: 'full_name_ar', sponsor_id: 'sponsor_id',
+                    sponsor_name: 'sponsor_name', profession_en: 'profession_en',
+                    nationality: 'nationality', visa_issue_place: 'visa_issue_place',
+                    mofa_new: 'mofa_new'
+                };
+                var filled = 0;
+                Object.keys(map).forEach(function (k) {
+                    if (d.fields[k] && setField(map[k], d.fields[k])) filled++;
+                });
+                msg(enjMsg, filled ? ('Auto-filled ' + filled + ' field(s). Please review.') : 'No matching fields found.', filled ? 'ok' : 'warn');
+            })
+            .catch(function () { msg(enjMsg, 'Parse failed. Check the pasted text / file.', 'err'); })
+            .finally(function () { enjBtn.disabled = false; });
+        });
+    }
 })();
 </script>
 @endpush

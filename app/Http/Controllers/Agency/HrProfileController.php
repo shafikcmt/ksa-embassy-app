@@ -8,6 +8,8 @@ use App\Http\Requests\UpdateHrProfileRequest;
 use App\Models\Agent;
 use App\Models\AuditLog;
 use App\Models\HrProfile;
+use App\Services\ExternalLookup\EnjazPastedResultParser;
+use App\Services\ExternalLookup\WafidMedicalLookupService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -405,6 +407,50 @@ class HrProfileController extends Controller
             'agent_name'   => $hr->agent?->name ?? '',
             'profession'   => $hr->visa?->profession_en ?? ($hr->occupation ?? ''),
         ]);
+    }
+
+    /**
+     * Fetch medical fitness status from Wafid for the HR form's medical fields.
+     * Auth + agency scope come from the route middleware; this endpoint reads
+     * no agency data, it only proxies a lookup, so nothing tenant-sensitive is
+     * exposed. Always returns JSON (never throws) so the form degrades cleanly.
+     */
+    public function lookupMedicalStatus(Request $request, WafidMedicalLookupService $wafid)
+    {
+        $this->authorize('create', HrProfile::class);
+
+        $data = $request->validate([
+            'passport_no' => 'required|string|max:50',
+            'nationality' => 'required|string|max:60',
+        ]);
+
+        $result = $wafid->lookup($data['passport_no'], $data['nationality']);
+
+        return response()->json($result);
+    }
+
+    /**
+     * Parse a pasted / uploaded Enjaz "Visa Details" result into form values.
+     * Always returns JSON.
+     *
+     * NOTE: the automated Enjaz business-login path (EnjazVisaLookupService) is
+     * intentionally NOT wired in here — visa.mofa.gov.sa disallows automated
+     * access (robots.txt) and its login requires an OTP that cannot be scripted.
+     * Only the offline paste/upload parser is used.
+     */
+    public function parseVisaPaste(Request $request, EnjazPastedResultParser $parser)
+    {
+        $this->authorize('create', HrProfile::class);
+
+        $request->validate([
+            'pasted_text' => 'nullable|string|max:50000',
+            'file'        => 'nullable|file|mimes:pdf,html,htm,txt|max:5120',
+            'visa_number' => 'nullable|string|max:50',
+        ]);
+
+        $result = $parser->parse($request->input('pasted_text'), $request->file('file'));
+
+        return response()->json($result);
     }
 
     private function enforcePlanLimit(): void

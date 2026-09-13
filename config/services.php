@@ -35,4 +35,18 @@ return [
         ],
     ],
 
+    /*
+    | External lookups for the HR "Visa & Medical Auto-Fill" feature.
+    | All optional — leave empty to keep the paste/parse fallback flow only.
+    */
+    'enjaz' => [
+        'username' => env('ENJAZ_BUSINESS_USERNAME'),
+        'password' => env('ENJAZ_BUSINESS_PASSWORD'),
+    ],
+
+    'wafid' => [
+        'username' => env('WAFID_USERNAME'),
+        'password' => env('WAFID_PASSWORD'),
+    ],
+
 ];

@@ -125,6 +125,10 @@ Route::middleware(['auth', 'agency-access'])->group(function () {
         // HR passport lookup for embassy list quick-add (no subscription gate)
         Route::post('/hr/lookup-by-passport', [HrProfileController::class, 'lookupByPassport'])->name('hr.lookup-by-passport');
 
+        // Visa & Medical auto-fill helpers for the HR create/edit form (no subscription gate)
+        Route::post('/hr/lookup-medical-status', [HrProfileController::class, 'lookupMedicalStatus'])->name('hr.lookup-medical-status');
+        Route::post('/hr/parse-visa-paste', [HrProfileController::class, 'parseVisaPaste'])->name('hr.parse-visa-paste');
+
         Route::get('/hr', [HrProfileController::class, 'index'])->name('hr.index');
         Route::get('/hr/{hr}', [HrProfileController::class, 'show'])->name('hr.show');
         Route::get('/hr/{hr}/edit', [HrProfileController::class, 'edit'])->name('hr.edit');
