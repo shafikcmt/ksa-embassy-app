@@ -33,6 +33,9 @@ class Expense extends Model
         'marketing'       => 'Marketing',
         'office_supplies' => 'Office Supplies',
         'bank_charge'     => 'Bank Charge',
+        'enjaz_dollar'    => 'Enjaz Dollar',
+        'air_ticket'      => 'Air Ticket',
+        'manpower'        => 'Manpower',
         'other'           => 'Other',
     ];
 
