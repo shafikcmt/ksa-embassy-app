@@ -7,6 +7,10 @@
 @php
     $inp = 'w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500';
     $lbl = 'mb-1 block text-xs font-semibold text-slate-600';
+    // Display-only label context (does NOT change AgentTransaction::TYPES or any
+    // stored key/calculation). debit = "Paid" (advance out to the agent, balance ↑),
+    // credit = "Received" (repayment in from the agent, balance ↓).
+    $typeHint = ['debit' => 'Paid (Advance to agent)', 'credit' => 'Received (Repayment)'];
 @endphp
 
 <div x-data="khataPage()">
@@ -36,7 +40,7 @@
                     <label class="{{ $lbl }}">Type <span class="text-rose-500">*</span></label>
                     <select name="type" required class="{{ $inp }}">
                         <option value="">—</option>
-                        @foreach($types as $key => $label)<option value="{{ $key }}" @selected(old('type') === $key)>{{ $label }}</option>@endforeach
+                        @foreach($types as $key => $label)<option value="{{ $key }}" @selected(old('type') === $key)>{{ $typeHint[$key] ?? $label }}</option>@endforeach
                     </select>
                 </div>
                 <div><label class="{{ $lbl }}">Amount (৳) <span class="text-rose-500">*</span></label><input type="number" step="0.01" min="0.01" name="amount" value="{{ old('amount') }}" required class="{{ $inp }}"></div>
@@ -63,6 +67,13 @@
         </div>
     </div>
 
+    {{-- Legend: explains the amount direction (display only; math is unchanged) --}}
+    <p class="mb-2 text-xs text-slate-500">
+        <span class="font-semibold text-emerald-700"><i class="bi bi-arrow-up-short"></i> Paid</span> = advance to agent (increases what they owe)
+        <span class="mx-1 text-slate-300">·</span>
+        <span class="font-semibold text-rose-600"><i class="bi bi-arrow-down-short"></i> Received</span> = repayment from agent (reduces what they owe)
+    </p>
+
     {{-- Ledger --}}
     <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
         <div class="overflow-x-auto">
@@ -82,14 +93,14 @@
                         @php $isReversed = in_array($t->id, $reversedIds); @endphp
                         <tr class="hover:bg-slate-50 {{ $isReversed ? 'opacity-60' : '' }}"
                             x-show="q === '' || $el.dataset.s.includes(q.toLowerCase())"
-                            data-s="{{ \Illuminate\Support\Str::lower(trim(($t->note ?? '').' '.($t->typeLabel() ?? '').' '.number_format((float) $t->amount, 2))) }}">
+                            data-s="{{ \Illuminate\Support\Str::lower(trim(($t->note ?? '').' '.($typeHint[$t->type] ?? $t->typeLabel()).' '.number_format((float) $t->amount, 2))) }}">
                             <td class="px-4 py-3 whitespace-nowrap">{{ $t->txn_date->format('d M Y') }}</td>
                             <td class="px-4 py-3">
-                                <span class="rounded-full px-2 py-0.5 text-xs font-semibold {{ $t->type === 'debit' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700' }}">{{ $t->typeLabel() }}</span>
+                                <span class="rounded-full px-2 py-0.5 text-xs font-semibold {{ $t->type === 'debit' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700' }}">{{ $typeHint[$t->type] ?? $t->typeLabel() }}</span>
                                 @if($t->isReversal())<span class="ml-1 rounded-full bg-slate-200 px-2 py-0.5 text-[0.6rem] font-bold uppercase text-slate-500">Reversal</span>@endif
                                 @if($isReversed)<span class="ml-1 rounded-full bg-slate-200 px-2 py-0.5 text-[0.6rem] font-bold uppercase text-slate-500">Reversed</span>@endif
                             </td>
-                            <td class="px-4 py-3 text-right whitespace-nowrap font-semibold {{ $t->type === 'debit' ? 'text-emerald-700' : 'text-rose-600' }}">{{ $t->type === 'debit' ? '+' : '−' }}৳{{ number_format((float) $t->amount, 2) }}</td>
+                            <td class="px-4 py-3 text-right whitespace-nowrap font-semibold {{ $t->type === 'debit' ? 'text-emerald-700' : 'text-rose-600' }}"><i class="bi {{ $t->type === 'debit' ? 'bi-arrow-up-short' : 'bi-arrow-down-short' }}"></i>৳{{ number_format((float) $t->amount, 2) }}</td>
                             <td class="px-4 py-3 text-slate-600">{{ $t->note ?: '—' }}</td>
                             <td class="px-4 py-3 text-slate-500">{{ $t->recordedBy?->name ?: '—' }}</td>
                             @if($isAdmin)
