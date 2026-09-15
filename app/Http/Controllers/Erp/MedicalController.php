@@ -70,14 +70,13 @@ class MedicalController extends Controller
         ], 'medical-' . now()->format('Y-m-d'), 'erp.medical');
     }
 
-    /** Shared listing used by both index() and printPdf() (newest-first, null-safe). */
+    /** Shared listing used by both index() and printPdf() (oldest-first, null dates last). */
     private function listing(int $agencyId): Collection
     {
         return Medical::forAgency($agencyId)
             ->with('createdBy:id,name')
-            ->orderBy('medical_issue_date')->orderBy('id')
-            ->get()
-            ->reverse()->values();
+            ->orderByRaw('medical_issue_date IS NULL')->orderBy('medical_issue_date')->orderBy('id')
+            ->get();
     }
 
     public function store(Request $request)

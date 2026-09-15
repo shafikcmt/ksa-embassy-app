@@ -84,7 +84,7 @@ class StampingController extends Controller
         ], 'stamping-' . now()->format('Y-m-d'), 'erp.stamping');
     }
 
-    /** Shared listing used by both index() and printPdf() (serials + newest-first). */
+    /** Shared listing used by both index() and printPdf() (serials, oldest-first). */
     private function listing(int $agencyId): Collection
     {
         $entries = Stamping::forAgency($agencyId)
@@ -94,7 +94,7 @@ class StampingController extends Controller
 
         $this->assignSerials($entries, 'stamp_date');
 
-        return $entries->reverse()->values();
+        return $entries;
     }
 
     public function store(Request $request)

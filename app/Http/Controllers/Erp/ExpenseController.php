@@ -93,12 +93,12 @@ class ExpenseController extends Controller
         ], 'expenses-' . now()->format('Y-m-d'), 'erp.expenses');
     }
 
-    /** Shared listing used by both index() and printPdf() (newest-first). */
+    /** Shared listing used by both index() and printPdf() (oldest-first). */
     private function listing(int $agencyId): Collection
     {
         return Expense::forAgency($agencyId)
             ->with('createdBy:id,name')
-            ->orderByDesc('expense_date')->orderByDesc('id')
+            ->orderBy('expense_date')->orderBy('id')
             ->get();
     }
 

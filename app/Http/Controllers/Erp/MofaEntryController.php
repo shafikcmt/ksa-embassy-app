@@ -82,8 +82,8 @@ class MofaEntryController extends Controller
     }
 
     /**
-     * Shared listing used by both index() and printPdf(): oldest-first to assign
-     * chronological Y#/M#/Total ordinals, then reversed for newest-first display.
+     * Shared listing used by both index() and printPdf(): oldest-first, assigning
+     * chronological Y#/M#/Total ordinals (1 = oldest) shown top-to-bottom.
      */
     private function listing(int $agencyId): Collection
     {
@@ -94,7 +94,7 @@ class MofaEntryController extends Controller
 
         $this->assignSerials($entries, 'mofa_date');
 
-        return $entries->reverse()->values();
+        return $entries;
     }
 
     /**

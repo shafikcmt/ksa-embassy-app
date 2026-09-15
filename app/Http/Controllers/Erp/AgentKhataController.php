@@ -93,7 +93,7 @@ class AgentKhataController extends Controller
 
         return view('erp.agent-khata.show', [
             'agent'       => $agent,
-            'txns'        => $txns->reverse()->values(),
+            'txns'        => $txns,
             'reversedIds' => $reversedIds,
             'balance'     => $khata->balanceFor($agent),
             'types'       => AgentTransaction::TYPES,

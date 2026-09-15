@@ -83,7 +83,7 @@ class ManpowerController extends Controller
         ], 'manpower-' . now()->format('Y-m-d'), 'erp.manpower');
     }
 
-    /** Shared listing used by both index() and printPdf() (serials + newest-first). */
+    /** Shared listing used by both index() and printPdf() (serials, oldest-first). */
     private function listing(int $agencyId): Collection
     {
         $entries = ManpowerCompletion::forAgency($agencyId)
@@ -93,7 +93,7 @@ class ManpowerController extends Controller
 
         $this->assignSerials($entries, 'completed_date');
 
-        return $entries->reverse()->values();
+        return $entries;
     }
 
     public function store(Request $request)

@@ -95,12 +95,12 @@ class DeliveryController extends Controller
         ], 'delivery-' . now()->format('Y-m-d'), 'erp.delivery');
     }
 
-    /** Shared listing used by both index() and printPdf() (newest-first). */
+    /** Shared listing used by both index() and printPdf() (oldest-first). */
     private function listing(int $agencyId): Collection
     {
         return Delivery::forAgency($agencyId)
             ->with(['createdBy:id,name', 'receipts.receivedBy:id,name'])
-            ->orderByDesc('delivery_date')->orderByDesc('id')
+            ->orderBy('delivery_date')->orderBy('id')
             ->get();
     }
 

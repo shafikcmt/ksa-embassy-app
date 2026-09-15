@@ -95,12 +95,12 @@ class DoubleMofaController extends Controller
         ], 'double-mofa-' . now()->format('Y-m-d'), 'erp.double-mofa');
     }
 
-    /** Shared listing used by both index() and printPdf() (newest-first). */
+    /** Shared listing used by both index() and printPdf() (oldest-first). */
     private function listing(int $agencyId): Collection
     {
         return DoubleMofa::forAgency($agencyId)
             ->with(['createdBy:id,name', 'receipts.receivedBy:id,name'])
-            ->orderByDesc('mofa_date')->orderByDesc('id')
+            ->orderBy('mofa_date')->orderBy('id')
             ->get();
     }
 
