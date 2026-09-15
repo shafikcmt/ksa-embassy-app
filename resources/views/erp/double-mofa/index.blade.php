@@ -70,6 +70,19 @@
         </div>
     </form>
 
+    {{-- Live search (client-side; filters only the already-loaded, agency-scoped rows) --}}
+    <div class="mb-4 max-w-md">
+        <div class="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 transition focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-emerald-100">
+            <i class="bi bi-search text-sm text-slate-400"></i>
+            <input type="text" x-model.debounce.200ms="q" placeholder="Search name, passport, old MOFA, reference…"
+                   class="h-11 w-full border-0 bg-transparent p-0 text-sm focus:ring-0">
+            <button type="button" x-show="q" x-cloak @click="q = ''" title="Clear search"
+                    class="grid h-6 w-6 shrink-0 place-items-center rounded-md text-slate-400 transition hover:bg-slate-200 hover:text-slate-600">
+                <i class="bi bi-x-lg text-xs"></i>
+            </button>
+        </div>
+    </div>
+
     {{-- List --}}
     <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
         <div class="overflow-x-auto">
@@ -103,7 +116,8 @@
                                 'is_reversal' => $r->type === 'reversal',
                             ])->values();
                         @endphp
-                        <tr class="hover:bg-slate-50">
+                        <tr class="hover:bg-slate-50" x-show="q === '' || $el.dataset.s.includes(q.toLowerCase())"
+                            data-s="{{ \Illuminate\Support\Str::lower(trim(($e->full_name ?? '').' '.($e->passport_no ?? '').' '.($e->old_mofa_number ?? '').' '.($e->reference ?? ''))) }}">
                             <td class="px-4 py-3 whitespace-nowrap">{{ $e->mofa_date->format('d M Y') }}</td>
                             <td class="px-4 py-3 font-medium text-slate-800">{{ $e->full_name }}</td>
                             <td class="px-4 py-3">{{ $e->passport_no }}</td>
@@ -139,6 +153,9 @@
                     @empty
                         <tr><td colspan="9" class="px-4 py-12 text-center text-slate-400"><i class="bi bi-inbox mb-2 block text-2xl"></i>No Double MOFA entries yet.</td></tr>
                     @endforelse
+                    <tr x-show="q !== '' && ![...$root.querySelectorAll('tr[data-s]')].some(r => r.dataset.s.includes(q.toLowerCase()))" x-cloak>
+                        <td colspan="9" class="px-4 py-12 text-center text-slate-400"><i class="bi bi-search mb-2 block text-2xl"></i>No records match “<span x-text="q"></span>”.</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -226,6 +243,7 @@
 <script>
     function doubleMofaPage() {
         return {
+            q: '',
             editing: false, paying: false, viewing: false,
             updateBase: '{{ url('erp/double-mofa') }}',
             payBase: '{{ url('erp/double-mofa') }}',

@@ -80,6 +80,19 @@
         </div>
     </form>
 
+    {{-- Live search (client-side; filters only the already-loaded, agency-scoped rows) --}}
+    <div class="mb-4 max-w-md">
+        <div class="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 transition focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-emerald-100">
+            <i class="bi bi-search text-sm text-slate-400"></i>
+            <input type="text" x-model.debounce.200ms="q" placeholder="Search category, note, paid via…"
+                   class="h-11 w-full border-0 bg-transparent p-0 text-sm focus:ring-0">
+            <button type="button" x-show="q" x-cloak @click="q = ''" title="Clear search"
+                    class="grid h-6 w-6 shrink-0 place-items-center rounded-md text-slate-400 transition hover:bg-slate-200 hover:text-slate-600">
+                <i class="bi bi-x-lg text-xs"></i>
+            </button>
+        </div>
+    </div>
+
     {{-- List --}}
     <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
         <div class="overflow-x-auto">
@@ -96,7 +109,8 @@
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($expenses as $e)
-                        <tr class="hover:bg-slate-50">
+                        <tr class="hover:bg-slate-50" x-show="q === '' || $el.dataset.s.includes(q.toLowerCase())"
+                            data-s="{{ \Illuminate\Support\Str::lower(trim(($e->categoryLabel() ?? '').' '.($e->note ?? '').' '.($e->paidViaLabel() ?? ''))) }}">
                             <td class="px-4 py-3 whitespace-nowrap">{{ $e->expense_date->format('d M Y') }}</td>
                             <td class="px-4 py-3"><span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">{{ $e->categoryLabel() }}</span></td>
                             <td class="px-4 py-3 text-right whitespace-nowrap font-semibold text-rose-600">৳{{ number_format((float) $e->amount, 2) }}</td>
@@ -124,6 +138,9 @@
                     @empty
                         <tr><td colspan="6" class="px-4 py-12 text-center text-slate-400"><i class="bi bi-inbox mb-2 block text-2xl"></i>No expenses yet.</td></tr>
                     @endforelse
+                    <tr x-show="q !== '' && ![...$root.querySelectorAll('tr[data-s]')].some(r => r.dataset.s.includes(q.toLowerCase()))" x-cloak>
+                        <td colspan="6" class="px-4 py-12 text-center text-slate-400"><i class="bi bi-search mb-2 block text-2xl"></i>No records match “<span x-text="q"></span>”.</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -165,6 +182,7 @@
 <script>
     function expensePage() {
         return {
+            q: '',
             editing: false,
             updateBase: '{{ url('erp/expenses') }}',
             form: {},

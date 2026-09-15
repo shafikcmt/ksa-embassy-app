@@ -50,6 +50,19 @@
         <div class="mb-6 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500"><i class="bi bi-lock"></i> Only agency admins can add or reverse khata transactions.</div>
     @endif
 
+    {{-- Live search (client-side; filters only the already-loaded, agency-scoped rows) --}}
+    <div class="mb-4 max-w-md">
+        <div class="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 transition focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-emerald-100">
+            <i class="bi bi-search text-sm text-slate-400"></i>
+            <input type="text" x-model.debounce.200ms="q" placeholder="Search note, type, amount…"
+                   class="h-11 w-full border-0 bg-transparent p-0 text-sm focus:ring-0">
+            <button type="button" x-show="q" x-cloak @click="q = ''" title="Clear search"
+                    class="grid h-6 w-6 shrink-0 place-items-center rounded-md text-slate-400 transition hover:bg-slate-200 hover:text-slate-600">
+                <i class="bi bi-x-lg text-xs"></i>
+            </button>
+        </div>
+    </div>
+
     {{-- Ledger --}}
     <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
         <div class="overflow-x-auto">
@@ -67,7 +80,9 @@
                 <tbody class="divide-y divide-slate-100">
                     @forelse($txns as $t)
                         @php $isReversed = in_array($t->id, $reversedIds); @endphp
-                        <tr class="hover:bg-slate-50 {{ $isReversed ? 'opacity-60' : '' }}">
+                        <tr class="hover:bg-slate-50 {{ $isReversed ? 'opacity-60' : '' }}"
+                            x-show="q === '' || $el.dataset.s.includes(q.toLowerCase())"
+                            data-s="{{ \Illuminate\Support\Str::lower(trim(($t->note ?? '').' '.($t->typeLabel() ?? '').' '.number_format((float) $t->amount, 2))) }}">
                             <td class="px-4 py-3 whitespace-nowrap">{{ $t->txn_date->format('d M Y') }}</td>
                             <td class="px-4 py-3">
                                 <span class="rounded-full px-2 py-0.5 text-xs font-semibold {{ $t->type === 'debit' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700' }}">{{ $t->typeLabel() }}</span>
@@ -93,6 +108,9 @@
                     @empty
                         <tr><td colspan="{{ $isAdmin ? 6 : 5 }}" class="px-4 py-12 text-center text-slate-400"><i class="bi bi-inbox mb-2 block text-2xl"></i>No transactions yet.</td></tr>
                     @endforelse
+                    <tr x-show="q !== '' && ![...$root.querySelectorAll('tr[data-s]')].some(r => r.dataset.s.includes(q.toLowerCase()))" x-cloak>
+                        <td colspan="{{ $isAdmin ? 6 : 5 }}" class="px-4 py-12 text-center text-slate-400"><i class="bi bi-search mb-2 block text-2xl"></i>No transactions match “<span x-text="q"></span>”.</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -120,6 +138,7 @@
 <script>
     function khataPage() {
         return {
+            q: '',
             reversing: false,
             reverseBase: '{{ url('erp/agent-khata/transactions') }}',
             form: {},
