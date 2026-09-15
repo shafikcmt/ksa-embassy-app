@@ -71,29 +71,29 @@ With Due Respect we are Submitting One Passport for work Visa with all Necessary
   <tbody>
     <tr>
       <td style="width:50%;border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;"><strong>NAME OF COMPANY:</strong></td>
-      <td style="width:50%;border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;font-weight:bold;">
+      <td style="width:50%;border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;font-weight:bold;font-size:10.5pt;">
         @if(!empty($sponsor_name_ar))<span class="ar" style="font-weight:bold;">{{ $sponsor_name_ar }}</span>@else{{ $sponsor_name ?: $agency_name }}@endif
       </td>
     </tr>
     <tr>
       <td style="border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;"><strong>VISA NUMBER &amp; DATE:</strong></td>
-      <td style="border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;font-weight:bold;">{{ $visa_no ?: '—' }}@if($visa_date) &nbsp; Date: {{ $visa_date_hijri }}@endif</td>
+      <td style="border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;font-weight:bold;font-size:10.5pt;">{{ $visa_no ?: '—' }}@if($visa_date) &nbsp; Date: {{ $visa_date_hijri }}@endif</td>
     </tr>
     <tr>
       <td style="border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;"><strong>FULL NAME OF THE EMPLOYEE:</strong></td>
-      <td style="border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;font-weight:bold;">{{ $full_name_en_upper }}</td>
+      <td style="border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;font-weight:bold;font-size:10.5pt;">{{ $full_name_en_upper }}</td>
     </tr>
     <tr>
       <td style="border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;"><strong>PASSPORT NO. WITH ISSUE DATE:</strong></td>
-      <td style="border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;font-weight:bold;">{{ $passport_no ?: '—' }}@if($passport_issue_date) &nbsp; Date: {{ $passport_issue_date }}@endif</td>
+      <td style="border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;font-weight:bold;font-size:10.5pt;">{{ $passport_no ?: '—' }}@if($passport_issue_date) &nbsp; Date: {{ $passport_issue_date }}@endif</td>
     </tr>
     <tr>
       <td style="border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;"><strong>PROFESSION:</strong></td>
-      <td style="border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;font-weight:bold;">{{ $profession_en ?: ($occupation ?: '—') }}</td>
+      <td style="border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;font-weight:bold;font-size:10.5pt;">{{ $profession_en ?: ($occupation ?: '—') }}</td>
     </tr>
     <tr>
       <td style="border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;"><strong>RELIGION:</strong></td>
-      <td style="border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;font-weight:bold;">{{ $religion ?: '—' }}</td>
+      <td style="border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;font-weight:bold;font-size:10.5pt;">{{ $religion ?: '—' }}</td>
     </tr>
   </tbody>
 </table>

@@ -47,16 +47,16 @@
   </colgroup>
   <thead>
     <tr>
-      <th style="border:1px solid #c6c6c6;padding:8pt 6pt;text-align:center;font-weight:bold;background:#fff;">
+      <th style="border:1px solid #202428;padding:8pt 6pt;text-align:center;font-weight:bold;background:#fff;">
         الاجراء<br>Step
       </th>
-      <th style="border:1px solid #c6c6c6;padding:8pt 6pt;text-align:center;font-weight:bold;background:#fff;">
+      <th style="border:1px solid #202428;padding:8pt 6pt;text-align:center;font-weight:bold;background:#fff;">
         المكتب<br>Agency
       </th>
-      <th style="border:1px solid #c6c6c6;padding:8pt 6pt;text-align:center;font-weight:bold;background:#fff;">
+      <th style="border:1px solid #202428;padding:8pt 6pt;text-align:center;font-weight:bold;background:#fff;">
         المنفذ<br>Port
       </th>
-      <th style="border:1px solid #c6c6c6;padding:8pt 6pt;text-align:center;font-weight:bold;background:#fff;">
+      <th style="border:1px solid #202428;padding:8pt 6pt;text-align:center;font-weight:bold;background:#fff;">
         الملاحظات<br>Notes
       </th>
     </tr>
@@ -70,13 +70,13 @@
         ['رقم إنجاز / Application Number',            $application_no ?: '—',                                          false, true],
         ['رقم المستند / Visa No.',                    $visa_no ?: '—',                                                false, true],
         ['الاسم في الجواز / Passport Holder Name',    $full_name_en_upper,                                            false, true],
-        ['رقم الجواز / Passport Number',              $passport_no ?: '—',                                            false],
-        ['صلاحية الجواز / Passport Validity',         $passport_expiry_date_long ?: ($passport_expiry_date ?: '—'),   false],
+        ['رقم الجواز / Passport Number',              $passport_no ?: '—',                                            false, true],
+        ['صلاحية الجواز / Passport Validity',         $passport_expiry_date_long ?: ($passport_expiry_date ?: '—'),   false, true],
         ['العمر / Age',                               trim(($date_of_birth && $date_of_birth !== '—' ? $date_of_birth."\n" : '').($age_detail ?: ($age !== '—' ? $age.' years' : ''))) ?: '—', false],
         ['الجنس / Sex',                               $gender ?: '—',                                                 false],
         ['مساند / Musaned',                           $musaned_no ?: 'N/A',                                           false],
         ['الوكالة / Alwakala',                        $wakala_no ?: '—',                                              false],
-        ['فحص طبي / Medical Report',                  'FIT',                                                          false],
+        ['فحص طبي / Medical Report',                  'FIT',                                                          false, true],
         ['ورقة الشرطة / Police Clearance',            $pc_display ?: '—',                                             false],
         ['الرخصة / License',                          $license_type ?: 'N/A',                                         false],
         ['المهنة / Profession',                       $profession_ar ?: ($profession_en ?: ($occupation ?: '—')),    (bool) ($profession_ar ?? '')],
@@ -94,10 +94,10 @@
       [$stepAr, $stepEn] = array_pad(array_map('trim', explode('/', $step, 2)), 2, '');
     @endphp
     <tr>
-      <td style="border:1px solid #c6c6c6;padding:7pt 6pt;text-align:right;direction:rtl;">{{ $stepAr }} / <strong dir="ltr" style="unicode-bidi:isolate;">{{ $stepEn }}</strong></td>
-      <td style="border:1px solid #c6c6c6;padding:7pt 6pt;text-align:center;{{ $arabicValue ? 'direction:rtl;' : 'direction:ltr;' }}{{ $bold ? 'font-weight:bold;' : '' }}">{!! nl2br(e($value)) !!}</td>
-      <td style="border:1px solid #c6c6c6;padding:7pt 6pt;"></td>
-      <td style="border:1px solid #c6c6c6;padding:7pt 6pt;"></td>
+      <td style="border:1px solid #202428;padding:7pt 6pt;text-align:right;direction:rtl;">{{ $stepAr }} / <strong dir="ltr" style="unicode-bidi:isolate;">{{ $stepEn }}</strong></td>
+      <td style="border:1px solid #202428;padding:7pt 6pt;text-align:center;{{ $arabicValue ? 'direction:rtl;' : 'direction:ltr;' }}{{ $bold ? 'font-weight:bold;font-size:10pt;' : '' }}">{!! nl2br(e($value)) !!}</td>
+      <td style="border:1px solid #202428;padding:7pt 6pt;"></td>
+      <td style="border:1px solid #202428;padding:7pt 6pt;"></td>
     </tr>
     @endforeach
   </tbody>

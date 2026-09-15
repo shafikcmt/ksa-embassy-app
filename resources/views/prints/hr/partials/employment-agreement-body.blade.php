@@ -39,25 +39,25 @@
   <tbody>
     <tr>
       <td style="width:50%;border-bottom:1px solid #e0e0e0;padding:5pt 4pt;">NAME OF COMPANY:</td>
-      <td style="width:50%;border-bottom:1px solid #e0e0e0;padding:5pt 4pt;font-weight:bold;">
+      <td style="width:50%;border-bottom:1px solid #e0e0e0;padding:5pt 4pt;font-weight:bold;font-size:10.5pt;">
         @if(!empty($sponsor_name_ar))<span class="ar" style="font-weight:bold;">{{ $sponsor_name_ar }}</span>@else{{ $sponsor_name ?: $agency_name }}@endif
       </td>
     </tr>
     <tr>
       <td style="border-bottom:1px solid #e0e0e0;padding:5pt 4pt;">HEREBY APPOINTED:</td>
-      <td style="border-bottom:1px solid #e0e0e0;padding:5pt 4pt;font-weight:bold;">{{ $full_name_en_upper }}</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:5pt 4pt;font-weight:bold;font-size:10.5pt;">{{ $full_name_en_upper }}</td>
     </tr>
     <tr>
       <td style="border-bottom:1px solid #e0e0e0;padding:5pt 4pt;">PASSPORT NO WITH ISSUE DATE:</td>
-      <td style="border-bottom:1px solid #e0e0e0;padding:5pt 4pt;font-weight:bold;">{{ $passport_no ?: '—' }}@if($passport_issue_date) &nbsp; Date: {{ $passport_issue_date }}@endif</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:5pt 4pt;font-weight:bold;font-size:10.5pt;">{{ $passport_no ?: '—' }}@if($passport_issue_date) &nbsp; Date: {{ $passport_issue_date }}@endif</td>
     </tr>
     <tr>
       <td style="border-bottom:1px solid #e0e0e0;padding:5pt 4pt;">PASSPORT HOLDER:</td>
-      <td style="border-bottom:1px solid #e0e0e0;padding:5pt 4pt;font-weight:bold;">{{ $nationality }}</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:5pt 4pt;font-weight:bold;font-size:10.5pt;">{{ $nationality }}</td>
     </tr>
     <tr>
       <td style="border-bottom:1px solid #e0e0e0;padding:5pt 4pt;">PROFESSION:</td>
-      <td style="border-bottom:1px solid #e0e0e0;padding:5pt 4pt;font-weight:bold;">{{ $profession_en ?: ($occupation ?: '—') }}</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:5pt 4pt;font-weight:bold;font-size:10.5pt;">{{ $profession_en ?: ($occupation ?: '—') }}</td>
     </tr>
   </tbody>
 </table>
