@@ -12,6 +12,7 @@
         'partial' => 'bg-amber-100 text-amber-700',
         'paid'    => 'bg-emerald-100 text-emerald-700',
     ];
+    $canReceive = auth()->user()->isAgencyAdmin() || auth()->user()->can('erp_receive_payment');
 @endphp
 
 <div x-data="doubleMofaPage()">
@@ -129,8 +130,10 @@
                             <td class="px-4 py-3">
                                 @php $pill = 'inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold ring-1 ring-inset transition'; @endphp
                                 <div class="flex flex-nowrap items-center justify-end gap-1.5">
+                                    @if($canReceive && $unpaid > 0)
                                     <button type="button" class="{{ $pill }} bg-emerald-50 text-emerald-700 ring-emerald-200 hover:bg-emerald-100"
                                             x-on:click="openPay(@js(['id' => $e->id, 'name' => $e->full_name, 'due' => number_format($unpaid, 2, '.', '')]))"><i class="bi bi-cash-coin"></i> Receive</button>
+                                    @endif
                                     <button type="button" class="{{ $pill }} bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100"
                                             x-on:click="openReceipts(@js($e->full_name), @js($receiptRows))"><i class="bi bi-clock-history"></i> History</button>
                                     <button type="button" class="{{ $pill }} bg-amber-50 text-amber-700 ring-amber-200 hover:bg-amber-100"

@@ -8,6 +8,7 @@
     $reopenCreate = old('form') === 'create';
     $reopenEditId = old('form') === 'edit' ? (int) old('edit_id') : null;
     $oldModules   = collect(old('modules', []))->values();
+    $oldActions   = collect(old('actions', []))->values();
 @endphp
 
 @section('content')
@@ -21,6 +22,7 @@
             email: @js(old('email')),
             is_active: true,
             modules: @js($reopenEditId ? $oldModules : []),
+            actions: @js($reopenEditId ? $oldActions : []),
             action: {{ $reopenEditId ? "'".route('staff.update', $reopenEditId)."'" : "''" }}
         },
         openEdit(member) {
@@ -30,6 +32,7 @@
             this.edit.email = member.email;
             this.edit.is_active = member.is_active;
             this.edit.modules = member.modules;
+            this.edit.actions = member.actions;
             this.edit.action = member.action;
         }
     }">
@@ -99,7 +102,7 @@
                             <td class="px-3 py-3">
                                 <div class="flex items-center justify-end gap-1 whitespace-nowrap">
                                     <button type="button" title="Edit" class="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-brand-600 transition-colors hover:bg-brand-50"
-                                        x-on:click="openEdit(@js(['id' => $member->id, 'name' => $member->name, 'email' => $member->email, 'is_active' => (bool) $member->is_active, 'modules' => $granted, 'action' => route('staff.update', $member)]))"><i class="bi bi-pencil"></i></button>
+                                        x-on:click="openEdit(@js(['id' => $member->id, 'name' => $member->name, 'email' => $member->email, 'is_active' => (bool) $member->is_active, 'modules' => $granted, 'actions' => $staffActions[$member->id] ?? [], 'action' => route('staff.update', $member)]))"><i class="bi bi-pencil"></i></button>
                                     <button type="button" title="Delete" class="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-rose-500 transition-colors hover:bg-rose-50"
                                         x-on:click="del.open = true; del.name = @js($member->name); del.action = '{{ route('staff.destroy', $member) }}'"><i class="bi bi-trash"></i></button>
                                 </div>
@@ -142,7 +145,7 @@
                 @php $btnBase = 'inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50'; @endphp
                 <div class="mt-3 flex gap-2 border-t border-slate-100 pt-3">
                     <button type="button" class="flex-1 cursor-pointer {{ $btnBase }}"
-                        x-on:click="openEdit(@js(['id' => $member->id, 'name' => $member->name, 'email' => $member->email, 'is_active' => (bool) $member->is_active, 'modules' => $granted, 'action' => route('staff.update', $member)]))"><i class="bi bi-pencil"></i> Edit</button>
+                        x-on:click="openEdit(@js(['id' => $member->id, 'name' => $member->name, 'email' => $member->email, 'is_active' => (bool) $member->is_active, 'modules' => $granted, 'actions' => $staffActions[$member->id] ?? [], 'action' => route('staff.update', $member)]))"><i class="bi bi-pencil"></i> Edit</button>
                     <button type="button" class="cursor-pointer {{ $btnBase }}"
                         x-on:click="del.open = true; del.name = @js($member->name); del.action = '{{ route('staff.destroy', $member) }}'"><i class="bi bi-trash text-rose-500"></i></button>
                 </div>
@@ -189,6 +192,20 @@
                             @foreach($modules as $key => $meta)
                                 <label class="flex cursor-pointer items-start gap-2.5 rounded-lg border border-slate-200 p-3 transition hover:border-brand-300 hover:bg-brand-50/40 has-[:checked]:border-brand-400 has-[:checked]:bg-brand-50">
                                     <input type="checkbox" name="modules[]" value="{{ $key }}" @checked($reopenCreate && $oldModules->contains($key)) class="mt-0.5 rounded border-slate-300 text-brand-600 focus:ring-brand-500">
+                                    <span class="min-w-0">
+                                        <span class="flex items-center gap-1.5 text-sm font-medium text-slate-800"><i class="bi {{ $meta['icon'] }} text-brand-500"></i> {{ $meta['label'] }}</span>
+                                        <span class="mt-0.5 block text-xs text-slate-400">{{ $meta['description'] }}</span>
+                                    </span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+                    <div>
+                        <div class="mb-2 text-xs font-semibold text-slate-600">Payment Actions</div>
+                        <div class="grid grid-cols-1 gap-2">
+                            @foreach($actions as $key => $meta)
+                                <label class="flex cursor-pointer items-start gap-2.5 rounded-lg border border-slate-200 p-3 transition hover:border-brand-300 hover:bg-brand-50/40 has-[:checked]:border-brand-400 has-[:checked]:bg-brand-50">
+                                    <input type="checkbox" name="actions[]" value="{{ $key }}" @checked($reopenCreate && $oldActions->contains($key)) class="mt-0.5 rounded border-slate-300 text-brand-600 focus:ring-brand-500">
                                     <span class="min-w-0">
                                         <span class="flex items-center gap-1.5 text-sm font-medium text-slate-800"><i class="bi {{ $meta['icon'] }} text-brand-500"></i> {{ $meta['label'] }}</span>
                                         <span class="mt-0.5 block text-xs text-slate-400">{{ $meta['description'] }}</span>
@@ -247,6 +264,20 @@
                             @foreach($modules as $key => $meta)
                                 <label class="flex cursor-pointer items-start gap-2.5 rounded-lg border border-slate-200 p-3 transition hover:border-brand-300 hover:bg-brand-50/40 has-[:checked]:border-brand-400 has-[:checked]:bg-brand-50">
                                     <input type="checkbox" name="modules[]" value="{{ $key }}" x-model="edit.modules" class="mt-0.5 rounded border-slate-300 text-brand-600 focus:ring-brand-500">
+                                    <span class="min-w-0">
+                                        <span class="flex items-center gap-1.5 text-sm font-medium text-slate-800"><i class="bi {{ $meta['icon'] }} text-brand-500"></i> {{ $meta['label'] }}</span>
+                                        <span class="mt-0.5 block text-xs text-slate-400">{{ $meta['description'] }}</span>
+                                    </span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+                    <div>
+                        <div class="mb-2 text-xs font-semibold text-slate-600">Payment Actions</div>
+                        <div class="grid grid-cols-1 gap-2">
+                            @foreach($actions as $key => $meta)
+                                <label class="flex cursor-pointer items-start gap-2.5 rounded-lg border border-slate-200 p-3 transition hover:border-brand-300 hover:bg-brand-50/40 has-[:checked]:border-brand-400 has-[:checked]:bg-brand-50">
+                                    <input type="checkbox" name="actions[]" value="{{ $key }}" x-model="edit.actions" class="mt-0.5 rounded border-slate-300 text-brand-600 focus:ring-brand-500">
                                     <span class="min-w-0">
                                         <span class="flex items-center gap-1.5 text-sm font-medium text-slate-800"><i class="bi {{ $meta['icon'] }} text-brand-500"></i> {{ $meta['label'] }}</span>
                                         <span class="mt-0.5 block text-xs text-slate-400">{{ $meta['description'] }}</span>

@@ -40,6 +40,10 @@ class RolesPermissionsSeeder extends Seeder
             // directly, so these are intentionally NOT added to the staff role below.
             'access_hr', 'access_embassy_list', 'access_agents', 'access_license', 'access_notes',
             'access_attendance', 'access_erp',
+            // Action permissions (fine-grained; see App\Support\ActionPermissions).
+            // Admins get these via the syncPermissions($permissions) call below.
+            // agency_staff do NOT — omitted from the staff role list on purpose.
+            'erp_receive_payment',
         ];
 
         foreach ($permissions as $permission) {

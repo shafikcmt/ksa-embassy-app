@@ -11,6 +11,7 @@
         'delivery'    => 'bg-sky-100 text-sky-700',
         'double_mofa' => 'bg-violet-100 text-violet-700',
     ];
+    $canReceive = auth()->user()->isAgencyAdmin() || auth()->user()->can('erp_receive_payment');
 @endphp
 
 <div x-data="dueListPage()">
@@ -96,6 +97,7 @@
                             <td class="px-4 py-3">{{ $r['status'] }}</td>
                             <td class="px-4 py-3">
                                 <div class="flex items-center justify-end">
+                                    @if($canReceive && $r['due'] > 0)
                                     <button type="button" class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold ring-1 ring-inset transition bg-emerald-50 text-emerald-700 ring-emerald-200 hover:bg-emerald-100"
                                             x-on:click="openPay(@js([
                                                 'url' => $r['pay_url'],
@@ -103,6 +105,7 @@
                                                 'label' => $r['source_label'],
                                                 'due' => number_format($r['due'], 2, '.', ''),
                                             ]))"><i class="bi bi-cash-coin"></i> Receive Payment</button>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
