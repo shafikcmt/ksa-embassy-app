@@ -81,9 +81,16 @@ class ProfitLossService
      *   endingBalance   = startingBalance + profit(this month).
      *
      * Because cash-basis profit is additive over disjoint date windows (revenue,
-     * expense and agent-payout terms are each date-summed), this is internally
-     * consistent: one month's ending balance equals the next month's starting
-     * balance, and endingBalance == openingBalance + profit(all-time up to month end).
+     * expense and agent-payout terms are each date-summed), one month's ending
+     * balance carries forward as the next month's starting balance, and
+     * endingBalance corresponds to openingBalance + profit(all-time up to month end).
+     *
+     * Figures are rounded per reporting period (month/date-range). Because
+     * round(a)+round(b) may differ from round(a+b) by up to ±0.01, adjacent months'
+     * ending/starting balances, or a month's total vs an all-time equivalent, may
+     * differ by a negligible ±0.01 due to independent rounding. This is expected and
+     * does not indicate a calculation error or data drift — all figures are
+     * recomputed from raw ledger data on every call.
      *
      * @return array{profit: float, starting: float, ending: float}
      */
