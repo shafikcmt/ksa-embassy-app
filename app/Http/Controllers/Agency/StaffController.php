@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Agency;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\User;
+use App\Support\ActionPermissions;
 use App\Support\PagePermissions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -33,17 +34,23 @@ class StaffController extends Controller
             ->get();
 
         $modules = PagePermissions::all();
+        $actions = ActionPermissions::all();
 
         // module keys each staff member currently holds, for display + edit form.
         $staffAccess = [];
+        $staffActions = [];
         foreach ($staff as $member) {
             $staffAccess[$member->id] = collect($modules)
                 ->filter(fn ($meta) => $member->hasPermissionTo($meta['permission']))
                 ->keys()
                 ->all();
+            $staffActions[$member->id] = collect($actions)
+                ->filter(fn ($meta) => $member->can($meta['permission']))
+                ->keys()
+                ->all();
         }
 
-        return view('agency.staff.index', compact('staff', 'modules', 'staffAccess'));
+        return view('agency.staff.index', compact('staff', 'modules', 'actions', 'staffAccess', 'staffActions'));
     }
 
     public function store(Request $request)
@@ -56,6 +63,8 @@ class StaffController extends Controller
             'password'  => ['required', 'string', 'min:8', 'confirmed'],
             'modules'   => ['array'],
             'modules.*' => ['string', Rule::in(PagePermissions::keys())],
+            'actions'   => ['array'],
+            'actions.*' => ['string', Rule::in(ActionPermissions::keys())],
         ]);
 
         $user = User::create([
@@ -68,7 +77,10 @@ class StaffController extends Controller
         ]);
 
         $user->assignRole('agency_staff');
-        $user->syncPermissions($this->permissionsFor($validated['modules'] ?? []));
+        $user->syncPermissions(array_merge(
+            $this->permissionsFor($validated['modules'] ?? []),
+            $this->actionPermissionsFor($validated['actions'] ?? [])
+        ));
 
         AuditLog::record('create_staff', $user, [], $this->auditSnapshot($user));
 
@@ -88,6 +100,8 @@ class StaffController extends Controller
             'is_active' => ['required', 'boolean'],
             'modules'   => ['array'],
             'modules.*' => ['string', Rule::in(PagePermissions::keys())],
+            'actions'   => ['array'],
+            'actions.*' => ['string', Rule::in(ActionPermissions::keys())],
         ]);
 
         $old = $this->auditSnapshot($user);
@@ -102,7 +116,10 @@ class StaffController extends Controller
             $user->update(['password' => Hash::make($validated['password'])]);
         }
 
-        $user->syncPermissions($this->permissionsFor($validated['modules'] ?? []));
+        $user->syncPermissions(array_merge(
+            $this->permissionsFor($validated['modules'] ?? []),
+            $this->actionPermissionsFor($validated['actions'] ?? [])
+        ));
 
         AuditLog::record('update_staff', $user, $old, $this->auditSnapshot($user->fresh()));
 
@@ -148,6 +165,16 @@ class StaffController extends Controller
     {
         return collect($moduleKeys)
             ->map(fn ($key) => PagePermissions::permissionFor($key))
+            ->filter()
+            ->values()
+            ->all();
+    }
+
+    /** Map submitted action keys to their permission names. */
+    private function actionPermissionsFor(array $actionKeys): array
+    {
+        return collect($actionKeys)
+            ->map(fn ($key) => ActionPermissions::permissionFor($key))
             ->filter()
             ->values()
             ->all();
