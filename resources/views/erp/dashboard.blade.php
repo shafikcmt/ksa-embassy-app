@@ -89,12 +89,10 @@
     @php
         $quick = [
             ['label' => 'Pending Delivery', 'value' => number_format($summary['pendingDelivery']), 'icon' => 'bi-truck',          'tone' => 'text-sky-600 bg-sky-50',        'money' => false],
-            ['label' => 'Income (collected)','value' => $money($summary['collected']),             'icon' => 'bi-arrow-down-circle','tone' => 'text-emerald-600 bg-emerald-50', 'money' => true],
             ['label' => 'Expense (all-time)','value' => $money($summary['expenseAllTime']),         'icon' => 'bi-arrow-up-circle',  'tone' => 'text-amber-600 bg-amber-50',    'money' => true],
-            ['label' => 'Total Due',         'value' => $money($summary['outstandingDue']),         'icon' => 'bi-hourglass-split',  'tone' => 'text-rose-600 bg-rose-50',      'money' => true],
         ];
     @endphp
-    <div class="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="mb-6 grid gap-4 sm:grid-cols-2">
         @foreach($quick as $c)
             <div class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4">
                 <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl {{ $c['tone'] }} text-lg"><i class="bi {{ $c['icon'] }}"></i></span>
