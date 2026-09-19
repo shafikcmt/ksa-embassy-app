@@ -14,9 +14,9 @@
            queries and never sees the toolbar (it sits inside an empty(_pdf)
            guard), so the actual PDF output is unchanged. */
         body { font-family: dejavusans, sans-serif; color: #1e293b; font-size: 10px; }
-        h1 { font-size: 16px; margin: 0 0 2px; }
+        h1 { font-size: 16px; margin: 8px 0 2px; text-align: center; }
         .muted { color: #64748b; font-size: 9px; }
-        .meta { margin-bottom: 8px; }
+        .meta { margin-bottom: 8px; text-align: center; }
         table { width: 100%; border-collapse: collapse; margin-top: 4px; }
         th, td { border: 0.5px solid #cbd5e1; padding: 4px 6px; }
         th { background: #f1f5f9; font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.03em; color: #475569; }
@@ -75,9 +75,10 @@
 
 @if(empty($_pdf))<div class="a4-page">@endif
 
+    @include('prints.partials.agency-header', ['agency' => $agency])
+
     <h1>{{ $title }}</h1>
     <div class="meta muted">
-        {{ $agency->name ?? 'Agency' }}<br>
         @isset($subtitle){{ $subtitle }}<br>@endisset
         Generated: {{ $generated->format('d M Y, h:i A') }}
     </div>
