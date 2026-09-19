@@ -9,6 +9,7 @@ use App\Models\PaymentReceipt;
 use App\Services\CsvImportService;
 use App\Services\ErpPaymentService;
 use App\Services\PdfGeneratorService;
+use App\Support\NumberToWords;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -206,6 +207,56 @@ class DeliveryController extends Controller
         }
 
         return redirect()->route('erp.delivery')->with('success', 'Payment reversed.');
+    }
+
+    /**
+     * Credit Voucher (Payment Received) PDF for a single Delivery payment receipt.
+     * Ownership guards mirror reverse(): same agency, a Delivery receipt, and never
+     * a reversal row. Opened inline (new tab), not downloaded.
+     */
+    public function voucher(PaymentReceipt $receipt, PdfGeneratorService $pdf)
+    {
+        abort_unless($receipt->agency_id === auth()->user()->agency_id, 403);
+        abort_unless($receipt->payable_type === Delivery::class, 404);
+        abort_if($receipt->isReversal(), 404);
+
+        /** @var Delivery $delivery */
+        $delivery = $receipt->payable()->firstOrFail();
+        $agency   = auth()->user()->agency;
+
+        // Point-in-time due: billed − signed-sum of receipts up to and including
+        // this one (same sign convention as ErpPaymentService: payment +, reversal −).
+        $paidUpTo = (float) PaymentReceipt::where('payable_type', $receipt->payable_type)
+            ->where('payable_id', $receipt->payable_id)
+            ->where('id', '<=', $receipt->id)
+            ->selectRaw("COALESCE(SUM(CASE WHEN type = 'reversal' THEN -amount ELSE amount END), 0) AS net")
+            ->value('net');
+
+        $billed = (float) $delivery->total_amount;
+        $paid   = (float) $receipt->amount;
+        $due    = round($billed - $paidUpTo, 2);
+
+        $voucherNo = 'CV-' . $agency->id . '-' . $receipt->id;
+
+        return $pdf->generateFromView('prints.voucher', [
+            'agency'        => $agency,
+            'voucherNo'     => $voucherNo,
+            'date'          => optional($receipt->received_at)->format('d-M-Y'),
+            'referenceName' => $delivery->full_name,
+            'rows'          => [[
+                'sl'             => 1,
+                'passenger'      => $delivery->full_name,
+                'passport'       => $delivery->passport_no,
+                'processing_fee' => $billed,
+                'mofa_fee'       => null,
+                'total'          => $billed,
+                'paid'           => $paid,
+                'due'            => $due,
+                'remarks'        => $receipt->note,
+            ]],
+            'grandTotals'   => ['processing_fee' => $billed, 'mofa_fee' => null, 'total' => $billed, 'paid' => $paid],
+            'amountInWords' => NumberToWords::taka($paid),
+        ], 'voucher-' . $voucherNo, true);
     }
 
     private function validated(Request $request): array

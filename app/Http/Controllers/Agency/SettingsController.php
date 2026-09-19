@@ -51,6 +51,7 @@ class SettingsController extends Controller
                 'official_email'  => 'nullable|email|max:150',
                 'phone'           => 'nullable|string|max:30',
                 'address'         => 'nullable|string|max:500',
+                'logo'            => 'nullable|image|max:2048',
                 'print_logo'      => 'required|boolean',
                 'login_email'     => [
                     'required', 'email', 'max:150',
@@ -68,6 +69,13 @@ class SettingsController extends Controller
                     ->withErrors(['current_password' => 'The current password is incorrect.'])
                     ->withInput()
                     ->withFragment('profile');
+            }
+
+            // Agency self-upload of its own logo (stored on the public disk, same
+            // location Super Admin uses). Set directly so the subsequent update()
+            // persists it alongside the other profile fields.
+            if ($request->hasFile('logo')) {
+                $agency->logo = $request->file('logo')->store('logos', 'public');
             }
 
             // Agency-owned, editable fields. Company name (name) and RL number are

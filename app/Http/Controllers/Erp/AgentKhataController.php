@@ -8,6 +8,7 @@ use App\Models\Agent;
 use App\Models\AgentTransaction;
 use App\Services\AgentKhataService;
 use App\Services\PdfGeneratorService;
+use App\Support\NumberToWords;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use RuntimeException;
@@ -137,6 +138,47 @@ class AgentKhataController extends Controller
         }
 
         return redirect()->route('erp.agent-khata.show', $transaction->agent_id)->with('success', 'Transaction reversed.');
+    }
+
+    /**
+     * Credit Voucher (Payment Received) PDF for a single Agent Khata credit
+     * ("Received" from the agent). Guards: same agency, a CREDIT row, never a
+     * reversal. Admin-only — matches the admin-only ledger Actions column where
+     * the button lives, and the suite's admin-only money-action invariant.
+     * Opened inline (new tab). Fee/Total/Due columns are blank (no billing here).
+     */
+    public function voucher(AgentTransaction $transaction, PdfGeneratorService $pdf)
+    {
+        abort_unless($transaction->agency_id === auth()->user()->agency_id, 403);
+        abort_unless(auth()->user()->isAgencyAdmin(), 403);
+        abort_unless($transaction->type === AgentTransaction::TYPE_CREDIT, 404);
+        abort_if($transaction->isReversal(), 404);
+
+        $agent  = $transaction->agent()->firstOrFail();
+        $agency = auth()->user()->agency;
+        $paid   = (float) $transaction->amount;
+
+        $voucherNo = 'CV-A-' . $agency->id . '-' . $transaction->id;
+
+        return $pdf->generateFromView('prints.voucher', [
+            'agency'        => $agency,
+            'voucherNo'     => $voucherNo,
+            'date'          => optional($transaction->txn_date)->format('d-M-Y'),
+            'referenceName' => $agent->name,
+            'rows'          => [[
+                'sl'             => 1,
+                'passenger'      => $agent->name,
+                'passport'       => null,
+                'processing_fee' => null,
+                'mofa_fee'       => null,
+                'total'          => null,
+                'paid'           => $paid,
+                'due'            => null,
+                'remarks'        => $transaction->note,
+            ]],
+            'grandTotals'   => ['processing_fee' => null, 'mofa_fee' => null, 'total' => null, 'paid' => $paid],
+            'amountInWords' => NumberToWords::taka($paid),
+        ], 'voucher-' . $voucherNo, true);
     }
 
     private function authorizeAgency(Agent $agent): void

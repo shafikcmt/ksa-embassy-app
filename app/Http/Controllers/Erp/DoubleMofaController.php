@@ -10,6 +10,7 @@ use App\Models\PaymentReceipt;
 use App\Services\CsvImportService;
 use App\Services\ErpPaymentService;
 use App\Services\PdfGeneratorService;
+use App\Support\NumberToWords;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -200,6 +201,57 @@ class DoubleMofaController extends Controller
         }
 
         return redirect()->route('erp.double-mofa')->with('success', 'Payment reversed.');
+    }
+
+    /**
+     * Credit Voucher (Payment Received) PDF for a single Double MOFA payment
+     * receipt. Ownership guards mirror reverse(): same agency, a DoubleMofa
+     * receipt, never a reversal. Double MOFA billing maps to the "Mofa Fee"
+     * column (and Total Amount); Processing Fee is blank. Opened inline (new tab).
+     */
+    public function voucher(PaymentReceipt $receipt, PdfGeneratorService $pdf)
+    {
+        abort_unless($receipt->agency_id === auth()->user()->agency_id, 403);
+        abort_unless($receipt->payable_type === DoubleMofa::class, 404);
+        abort_if($receipt->isReversal(), 404);
+
+        /** @var DoubleMofa $mofa */
+        $mofa   = $receipt->payable()->firstOrFail();
+        $agency = auth()->user()->agency;
+
+        // Point-in-time due: billed − signed-sum of receipts up to and including
+        // this one (same sign convention as ErpPaymentService: payment +, reversal −).
+        $paidUpTo = (float) PaymentReceipt::where('payable_type', $receipt->payable_type)
+            ->where('payable_id', $receipt->payable_id)
+            ->where('id', '<=', $receipt->id)
+            ->selectRaw("COALESCE(SUM(CASE WHEN type = 'reversal' THEN -amount ELSE amount END), 0) AS net")
+            ->value('net');
+
+        $billed = (float) $mofa->billing_amount;
+        $paid   = (float) $receipt->amount;
+        $due    = round($billed - $paidUpTo, 2);
+
+        $voucherNo = 'CV-' . $agency->id . '-' . $receipt->id;
+
+        return $pdf->generateFromView('prints.voucher', [
+            'agency'        => $agency,
+            'voucherNo'     => $voucherNo,
+            'date'          => optional($receipt->received_at)->format('d-M-Y'),
+            'referenceName' => $mofa->full_name,
+            'rows'          => [[
+                'sl'             => 1,
+                'passenger'      => $mofa->full_name,
+                'passport'       => $mofa->passport_no,
+                'processing_fee' => null,
+                'mofa_fee'       => $billed,
+                'total'          => $billed,
+                'paid'           => $paid,
+                'due'            => $due,
+                'remarks'        => $receipt->note,
+            ]],
+            'grandTotals'   => ['processing_fee' => null, 'mofa_fee' => $billed, 'total' => $billed, 'paid' => $paid],
+            'amountInWords' => NumberToWords::taka($paid),
+        ], 'voucher-' . $voucherNo, true);
     }
 
     private function validated(Request $request): array

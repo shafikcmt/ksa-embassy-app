@@ -49,7 +49,7 @@
                 <i class="bi bi-building text-brand-600"></i> Agency Profile
             </div>
             <div class="p-5">
-                <form method="POST" action="{{ route('settings.update') }}" id="profileForm">
+                <form method="POST" action="{{ route('settings.update') }}" id="profileForm" enctype="multipart/form-data">
                     @csrf @method('PUT')
                     <input type="hidden" name="tab" value="profile">
 
@@ -117,6 +117,20 @@
                                 class="{{ $inputCls }} @error('phone') border-rose-400 @enderror">
                         </x-ui.field>
                     </div>
+
+                    {{-- Agency Logo (self-upload; stored on the public disk) --}}
+                    <x-ui.field label="Agency Logo" name="logo" hint="PNG/JPG, up to 2 MB. Shown on printed / PDF documents when Print Logo is enabled." class="mb-4">
+                        <div class="flex items-center gap-4">
+                            @if($agency->logo && \Illuminate\Support\Facades\Storage::disk('public')->exists($agency->logo))
+                                <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($agency->logo) }}" alt="Agency logo"
+                                     class="h-14 w-auto max-w-[120px] rounded-lg border border-slate-200 bg-white object-contain p-1">
+                            @else
+                                <span class="grid h-14 w-14 place-items-center rounded-lg border border-dashed border-slate-300 text-slate-300"><i class="bi bi-image"></i></span>
+                            @endif
+                            <input type="file" name="logo" accept="image/*"
+                                class="block w-full text-sm text-slate-600 file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-brand-700 hover:file:bg-brand-100 @error('logo') border-rose-400 @enderror">
+                        </div>
+                    </x-ui.field>
 
                     {{-- Print Logo --}}
                     <x-ui.field label="Print Logo" required hint="Show the agency logo on printed / PDF documents." class="mb-4">

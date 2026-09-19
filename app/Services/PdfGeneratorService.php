@@ -52,8 +52,13 @@ class PdfGeneratorService
 
     /**
      * Generate a single-document PDF from a Blade view.
+     *
+     * $inline defaults to false — every existing caller keeps the original
+     * "attachment" (download) behaviour untouched. Passing true sends
+     * Content-Disposition: inline so the PDF opens in a new browser tab instead
+     * (used by the Credit Voucher print action).
      */
-    public function generateFromView(string $view, array $data, string $filename): Response
+    public function generateFromView(string $view, array $data, string $filename, bool $inline = false): Response
     {
         // _pdf=true lets templates hide screen-only elements (toolbars, flex wrappers)
         $html = view($view, array_merge($data, ['_pdf' => true]))->render();
@@ -66,12 +71,14 @@ class PdfGeneratorService
         $mpdf->SetTitle($filename);
         $mpdf->WriteHTML($html);
 
+        $disposition = $inline ? 'inline' : 'attachment';
+
         return response(
             $mpdf->Output($filename . '.pdf', 'S'),
             200,
             [
                 'Content-Type'        => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="' . $filename . '.pdf"',
+                'Content-Disposition' => $disposition . '; filename="' . $filename . '.pdf"',
             ]
         );
     }
