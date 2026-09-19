@@ -52,7 +52,7 @@
             </div>
             <div>
                 <label class="{{ $lbl }}">Passport No <span class="text-rose-500">*</span></label>
-                <input type="text" name="passport_no" value="{{ old('passport_no') }}" required class="{{ $inp }}">
+                <input type="text" id="mofaPassport" name="passport_no" value="{{ old('passport_no') }}" required placeholder="Auto-fills from existing records" class="{{ $inp }}">
             </div>
             <div>
                 <label class="{{ $lbl }}">MOFA Number</label>
@@ -222,6 +222,11 @@
         </form>
     </div>
 </div>
+
+@include('erp.partials._passport-autofill', [
+    'passportId' => 'mofaPassport',
+    'map' => ['full_name' => 'full_name', 'visa_serial' => 'visa_serial', 'id_number' => 'id_number', 'reference' => 'reference_name'],
+])
 
 @push('scripts')
 <script>

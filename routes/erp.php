@@ -9,6 +9,7 @@ use App\Http\Controllers\Erp\ExpenseController;
 use App\Http\Controllers\Erp\ManpowerController;
 use App\Http\Controllers\Erp\MedicalController;
 use App\Http\Controllers\Erp\MofaEntryController;
+use App\Http\Controllers\Erp\PassportLookupController;
 use App\Http\Controllers\Erp\ProfitLossController;
 use App\Http\Controllers\Erp\ReportController;
 use App\Http\Controllers\Erp\SettingsController;
@@ -43,6 +44,13 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
 
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
         Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
+
+        // ── Cross-module passport auto-fill (read-only AJAX) ──────────────────
+        // The Add forms hit this on passport blur to pre-fill known identity
+        // fields from any of the 6 ERP modules for this agency. Read-only, so no
+        // active-subscription gate; tenancy comes from the group middleware +
+        // agency_id scoping in the controller.
+        Route::get('/passport-lookup', [PassportLookupController::class, 'lookup'])->name('passport-lookup');
 
         // ── E1 operational trackers (non-money logs) ──────────────────────────
         // Reads are open within the module; adding entries (store) requires an
@@ -150,10 +158,14 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
         Route::put('/delivery/{delivery}', [DeliveryController::class, 'update'])->name('delivery.update');
         Route::delete('/delivery/{delivery}', [DeliveryController::class, 'destroy'])->name('delivery.destroy');
         Route::post('/delivery/receipt/{receipt}/reverse', [DeliveryController::class, 'reverse'])->name('delivery.reverse');
+        // Credit Voucher (Payment Received) — read-only PDF for one receipt (staff-visible, opens inline).
+        Route::get('/delivery/voucher/{receipt}', [DeliveryController::class, 'voucher'])->name('delivery.voucher');
 
         Route::put('/double-mofa/{doubleMofa}', [DoubleMofaController::class, 'update'])->name('double-mofa.update');
         Route::delete('/double-mofa/{doubleMofa}', [DoubleMofaController::class, 'destroy'])->name('double-mofa.destroy');
         Route::post('/double-mofa/receipt/{receipt}/reverse', [DoubleMofaController::class, 'reverse'])->name('double-mofa.reverse');
+        // Credit Voucher (Payment Received) — read-only PDF for one receipt (staff-visible, opens inline).
+        Route::get('/double-mofa/voucher/{receipt}', [DoubleMofaController::class, 'voucher'])->name('double-mofa.voucher');
 
         // ── E3 sub-phase 1: Expenses (money-out log; no ledger) ───────────────
         // Reads open within the module; adding an expense requires an active
@@ -182,6 +194,8 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
             Route::post('/agent-khata/{agent}/transactions', [AgentKhataController::class, 'store'])->name('agent-khata.store');
         });
         Route::post('/agent-khata/transactions/{transaction}/reverse', [AgentKhataController::class, 'reverse'])->name('agent-khata.reverse');
+        // Credit Voucher (Payment Received) — read-only PDF for one credit txn (admin-only in controller, opens inline).
+        Route::get('/agent-khata/voucher/{transaction}', [AgentKhataController::class, 'voucher'])->name('agent-khata.voucher');
 
         // ── E4: Dashboard + Reports (read-only aggregation) ───────────────────
         // Viewing the report is open to any access_erp staff (same visibility as

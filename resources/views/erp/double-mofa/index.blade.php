@@ -60,7 +60,7 @@
         <p class="mb-4 text-xs text-slate-400">Billing defaults to the configured rate (৳{{ number_format($defaultRate, 2) }}) and is frozen on the record when saved.</p>
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <div><label class="{{ $lbl }}">Full Name <span class="text-rose-500">*</span></label><input type="text" name="full_name" value="{{ old('full_name') }}" required class="{{ $inp }}"></div>
-            <div><label class="{{ $lbl }}">Passport Number <span class="text-rose-500">*</span></label><input type="text" name="passport_no" value="{{ old('passport_no') }}" required class="{{ $inp }}"></div>
+            <div><label class="{{ $lbl }}">Passport Number <span class="text-rose-500">*</span></label><input type="text" id="doubleMofaPassport" name="passport_no" value="{{ old('passport_no') }}" required placeholder="Auto-fills from existing records" class="{{ $inp }}"></div>
             <div><label class="{{ $lbl }}">Old MOFA Number</label><input type="text" name="old_mofa_number" value="{{ old('old_mofa_number') }}" class="{{ $inp }}"></div>
             <div><label class="{{ $lbl }}">Date <span class="text-rose-500">*</span></label><input type="date" name="mofa_date" value="{{ old('mofa_date', now()->format('Y-m-d')) }}" required class="{{ $inp }}"></div>
             <div><label class="{{ $lbl }}">Billing Amount (৳) <span class="text-rose-500">*</span></label><input type="number" step="0.01" min="0" name="billing_amount" value="{{ old('billing_amount', number_format($defaultRate, 2, '.', '')) }}" required class="{{ $inp }}"></div>
@@ -106,6 +106,12 @@
                         @php
                             $reversedIds = $e->receipts->where('type', 'reversal')->pluck('reverses_id')->filter()->all();
                             $unpaid = (float) $e->billing_amount - (float) $e->paid_amount;
+                            // Latest non-reversed payment — powers the row-level Voucher shortcut.
+                            $latestPaidReceipt = $e->receipts
+                                ->where('type', 'payment')
+                                ->whereNotIn('id', $reversedIds)
+                                ->sortByDesc('received_at')
+                                ->first();
                             $receiptRows = $e->receipts->sortByDesc('received_at')->map(fn ($r) => [
                                 'id'          => $r->id,
                                 'type'        => $r->type,
@@ -136,6 +142,10 @@
                                     @endif
                                     <button type="button" class="{{ $pill }} bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100"
                                             x-on:click="openReceipts(@js($e->full_name), @js($receiptRows))"><i class="bi bi-clock-history"></i> History</button>
+                                    @if($latestPaidReceipt)
+                                    <a href="{{ route('erp.double-mofa.voucher', $latestPaidReceipt->id) }}" target="_blank"
+                                       class="{{ $pill }} bg-brand-50 text-brand-700 ring-brand-200 hover:bg-brand-100"><i class="bi bi-receipt"></i> Voucher</a>
+                                    @endif
                                     <button type="button" class="{{ $pill }} bg-amber-50 text-amber-700 ring-amber-200 hover:bg-amber-100"
                                             x-on:click="openEdit(@js([
                                                 'id' => $e->id,
@@ -199,7 +209,13 @@
                                 <span x-show="r.is_reversal" class="rounded-full bg-rose-100 px-2 py-0.5 text-[0.6rem] font-bold uppercase text-rose-600">Reversal</span>
                                 <span x-show="r.reversed" class="rounded-full bg-slate-200 px-2 py-0.5 text-[0.6rem] font-bold uppercase text-slate-500">Reversed</span>
                             </div>
-                            <span class="text-xs text-slate-400" x-text="r.at"></span>
+                            <div class="flex items-center gap-2">
+                                <template x-if="!r.is_reversal && !r.reversed">
+                                    <a x-bind:href="voucherBase + '/' + r.id" target="_blank" title="Print Credit Voucher"
+                                       class="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold ring-1 ring-inset transition bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100"><i class="bi bi-receipt"></i> Voucher</a>
+                                </template>
+                                <span class="text-xs text-slate-400" x-text="r.at"></span>
+                            </div>
                         </div>
                         <div class="mt-1 text-xs text-slate-500">By <span x-text="r.by"></span><template x-if="r.note"><span> · <span x-text="r.note"></span></span></template></div>
 
@@ -242,6 +258,11 @@
     </div>
 </div>
 
+@include('erp.partials._passport-autofill', [
+    'passportId' => 'doubleMofaPassport',
+    'map' => ['full_name' => 'full_name', 'reference' => 'reference'],
+])
+
 @push('scripts')
 <script>
     function doubleMofaPage() {
@@ -251,6 +272,7 @@
             updateBase: '{{ url('erp/double-mofa') }}',
             payBase: '{{ url('erp/double-mofa') }}',
             reverseBase: '{{ url('erp/double-mofa/receipt') }}',
+            voucherBase: '{{ url('erp/double-mofa/voucher') }}',
             form: {}, payForm: {}, receipts: [], receiptName: '',
             openEdit(row) {
                 this.form = Object.assign({}, row);

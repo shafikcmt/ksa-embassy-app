@@ -48,7 +48,7 @@
         <h2 class="mb-4 flex items-center gap-2 text-sm font-bold text-slate-900"><i class="bi bi-plus-circle text-emerald-600"></i> Add Stamping Entry</h2>
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div><label class="{{ $lbl }}">Full Name <span class="text-rose-500">*</span></label><input type="text" name="full_name" value="{{ old('full_name') }}" required class="{{ $inp }}"></div>
-            <div><label class="{{ $lbl }}">Passport No <span class="text-rose-500">*</span></label><input type="text" name="passport_no" value="{{ old('passport_no') }}" required class="{{ $inp }}"></div>
+            <div><label class="{{ $lbl }}">Passport No <span class="text-rose-500">*</span></label><input type="text" id="stampingPassport" name="passport_no" value="{{ old('passport_no') }}" required placeholder="Auto-fills from existing records" class="{{ $inp }}"></div>
             <div><label class="{{ $lbl }}">Visa Number</label><input type="text" name="visa_number" value="{{ old('visa_number') }}" class="{{ $inp }}"></div>
             <div><label class="{{ $lbl }}">ID Number</label><input type="text" name="id_number" value="{{ old('id_number') }}" class="{{ $inp }}"></div>
             <div><label class="{{ $lbl }}">Date <span class="text-rose-500">*</span></label><input type="date" name="stamp_date" value="{{ old('stamp_date', now()->format('Y-m-d')) }}" required class="{{ $inp }}"></div>
@@ -212,6 +212,11 @@
         </form>
     </div>
 </div>
+
+@include('erp.partials._passport-autofill', [
+    'passportId' => 'stampingPassport',
+    'map' => ['full_name' => 'full_name', 'id_number' => 'id_number', 'reference' => 'reference'],
+])
 
 @push('scripts')
 <script>

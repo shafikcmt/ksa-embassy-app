@@ -47,7 +47,7 @@
         <h2 class="mb-4 flex items-center gap-2 text-sm font-bold text-slate-900"><i class="bi bi-plus-circle text-emerald-600"></i> Add Manpower Entry</h2>
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div><label class="{{ $lbl }}">Passenger Name <span class="text-rose-500">*</span></label><input type="text" name="customer_name" value="{{ old('customer_name') }}" required class="{{ $inp }}"></div>
-            <div><label class="{{ $lbl }}">Passport Number <span class="text-rose-500">*</span></label><input type="text" name="passport_no" value="{{ old('passport_no') }}" required class="{{ $inp }}"></div>
+            <div><label class="{{ $lbl }}">Passport Number <span class="text-rose-500">*</span></label><input type="text" id="manpowerPassport" name="passport_no" value="{{ old('passport_no') }}" required placeholder="Auto-fills from existing records" class="{{ $inp }}"></div>
             <div><label class="{{ $lbl }}">EC Number</label><input type="text" name="ec_number" value="{{ old('ec_number') }}" class="{{ $inp }}"></div>
             <div><label class="{{ $lbl }}">BMET Date <span class="text-rose-500">*</span></label><input type="date" name="completed_date" value="{{ old('completed_date', now()->format('Y-m-d')) }}" required class="{{ $inp }}"></div>
             <div>
@@ -191,6 +191,11 @@
         </form>
     </div>
 </div>
+
+@include('erp.partials._passport-autofill', [
+    'passportId' => 'manpowerPassport',
+    'map' => ['full_name' => 'customer_name'],
+])
 
 @push('scripts')
 <script>

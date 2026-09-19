@@ -45,7 +45,7 @@
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div><label class="{{ $lbl }}">Full Name <span class="text-rose-500">*</span></label><input type="text" name="full_name" value="{{ old('full_name') }}" required class="{{ $inp }}"></div>
             <div><label class="{{ $lbl }}">Father Name <span class="text-rose-500">*</span></label><input type="text" name="father_name" value="{{ old('father_name') }}" required class="{{ $inp }}"></div>
-            <div><label class="{{ $lbl }}">Passport No <span class="text-rose-500">*</span></label><input type="text" name="passport_no" value="{{ old('passport_no') }}" required class="{{ $inp }}"></div>
+            <div><label class="{{ $lbl }}">Passport No <span class="text-rose-500">*</span></label><input type="text" id="medicalPassport" name="passport_no" value="{{ old('passport_no') }}" required placeholder="Auto-fills from existing records" class="{{ $inp }}"></div>
             <div><label class="{{ $lbl }}">Medical Center Name</label><input type="text" name="medical_center_name" value="{{ old('medical_center_name') }}" class="{{ $inp }}"></div>
             <div><label class="{{ $lbl }}">Medical Code</label><input type="text" name="medical_code" value="{{ old('medical_code') }}" class="{{ $inp }}"></div>
             <div><label class="{{ $lbl }}">Issue Date</label><input type="date" name="medical_issue_date" value="{{ old('medical_issue_date') }}" class="{{ $inp }}"></div>
@@ -199,6 +199,11 @@
         </form>
     </div>
 </div>
+
+@include('erp.partials._passport-autofill', [
+    'passportId' => 'medicalPassport',
+    'map' => ['full_name' => 'full_name'],
+])
 
 @push('scripts')
 <script>
