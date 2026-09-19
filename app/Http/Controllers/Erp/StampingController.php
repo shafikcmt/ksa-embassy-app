@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Erp\Concerns\RendersPrintableList;
 use App\Models\Agent;
 use App\Models\ManpowerCompletion;
+use App\Models\MofaEntry;
 use App\Models\Stamping;
 use App\Services\CsvImportService;
 use App\Services\PdfGeneratorService;
@@ -61,16 +62,30 @@ class StampingController extends Controller
     /** Print the full module list (E7a) — reuses the EXACT index() query. */
     public function printPdf(PdfGeneratorService $pdf)
     {
-        $entries = $this->listing(auth()->user()->agency_id);
+        $agencyId = auth()->user()->agency_id;
+        $entries  = $this->listing($agencyId);
+
+        // Bulk-fetch matching MOFA entries for every passport on this print in a
+        // single query (freshest per passport wins: ascending order + keyBy keeps
+        // the last = latest). Avoids an N+1 lookup per row.
+        $passports = $entries->pluck('passport_no')->filter()->unique()->all();
+        $mofaByPassport = MofaEntry::where('agency_id', $agencyId)
+            ->whereIn('passport_no', $passports)
+            ->orderBy('mofa_date')->orderBy('id')
+            ->get(['passport_no', 'mofa_number', 'mofa_date'])
+            ->keyBy('passport_no');
 
         $columns = [
             ['label' => 'Y#', 'align' => 'right'], ['label' => 'M#', 'align' => 'right'],
-            ['label' => 'Date'], ['label' => 'Visa Serial'], ['label' => 'Name'], ['label' => 'Passport'],
+            ['label' => 'Date'], ['label' => 'Name'], ['label' => 'Passport'],
+            ['label' => 'Mofa No'], ['label' => 'Mofa Date'],
             ['label' => 'Visa No'], ['label' => 'ID'], ['label' => 'Reference'], ['label' => 'Status'],
         ];
         $rows = $entries->map(fn (Stamping $e) => [
             $e->y_no, $e->m_no, $e->stamp_date->format('d M Y'),
-            $e->visa_serial ?: '—', $e->full_name, $e->passport_no,
+            $e->full_name, $e->passport_no,
+            optional($mofaByPassport->get($e->passport_no))->mofa_number ?: '—',
+            optional($mofaByPassport->get($e->passport_no))->mofa_date?->format('d M Y') ?: '—',
             $e->visa_number ?: '—', $e->id_number ?: '—', $e->reference ?: '—', $e->statusLabel(),
         ])->all();
 
