@@ -107,16 +107,24 @@ class DoubleMofaController extends Controller
     public function store(Request $request)
     {
         $data = $this->validated($request);
+        $agencyId = auth()->user()->agency_id;
 
         // Snapshot: whatever billing_amount is submitted is frozen on the row.
         DoubleMofa::create($data + [
-            'agency_id'  => auth()->user()->agency_id,
+            'agency_id'  => $agencyId,
             'created_by' => auth()->id(),
             'updated_by' => auth()->id(),
             // status defaults to 'unpaid'; paid_amount defaults 0 (not fillable).
         ]);
 
-        return redirect()->route('erp.double-mofa')->with('success', 'Double MOFA entry added.');
+        // Non-blocking info folded into the existing success flash (no new flash key,
+        // no view change). Same forAgency + passport_no predicate as the CSV-import
+        // notice; .count() replaces .exists() to tally. Only shown when > 1.
+        $count = DoubleMofa::forAgency($agencyId)->where('passport_no', $data['passport_no'])->count();
+        $message = 'Double MOFA entry added.'
+            . ($count > 1 ? " Note: this passport now has {$count} Double MOFA entries." : '');
+
+        return redirect()->route('erp.double-mofa')->with('success', $message);
     }
 
     public function update(Request $request, DoubleMofa $doubleMofa, ErpPaymentService $payments)

@@ -80,6 +80,40 @@
         <div class="mt-4 flex justify-start">
             <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md"><i class="bi bi-plus-lg"></i> Save</button>
         </div>
+
+        {{-- Duplicate-passport confirm modal — auto-opens when the controller flashes
+             'duplicate_warning'. Lives INSIDE the form so "Yes, Add Anyway" submits it
+             with confirm_duplicate=1 (same mechanism as before, now in a modal). Reuses
+             the app's standard modal shell (staff delete dialog / Receive Payment modal). --}}
+        @if(session('duplicate_warning'))
+            <div x-data="{ open: true }">
+                <div x-show="open" x-cloak class="fixed inset-0 z-[60] flex items-center justify-center p-4" style="display:none">
+                    <div x-show="open" x-transition.opacity class="absolute inset-0 bg-slate-900/50" x-on:click="open = false"></div>
+                    <div x-show="open"
+                         x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                         class="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+                        <div class="flex items-start gap-3">
+                            <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-amber-50 text-amber-600"><i class="bi bi-exclamation-triangle text-lg"></i></span>
+                            <div class="min-w-0">
+                                <h3 class="text-base font-semibold text-slate-900">Possible Duplicate Entry</h3>
+                                <p class="mt-1 text-sm text-slate-500">{{ session('duplicate_warning') }}</p>
+                            </div>
+                        </div>
+
+                        {{-- Read-only recap of what was entered --}}
+                        <dl class="mt-4 space-y-1.5 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm">
+                            <div class="flex justify-between gap-3"><dt class="text-slate-400">Full Name</dt><dd class="font-medium text-slate-700">{{ old('full_name') ?: '—' }}</dd></div>
+                            <div class="flex justify-between gap-3"><dt class="text-slate-400">Passport Number</dt><dd class="font-medium text-slate-700">{{ old('passport_no') ?: '—' }}</dd></div>
+                        </dl>
+
+                        <div class="mt-5 flex justify-end gap-2">
+                            <button type="button" x-on:click="open = false" class="rounded-lg px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900">Cancel / Edit Entry</button>
+                            <button type="submit" name="confirm_duplicate" value="1" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md"><i class="bi bi-check-lg"></i> Yes, Add Anyway</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
     </form>
 
     {{-- Live search (client-side; filters only the already-loaded, agency-scoped rows) --}}

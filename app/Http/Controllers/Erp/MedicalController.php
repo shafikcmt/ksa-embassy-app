@@ -82,9 +82,30 @@ class MedicalController extends Controller
     public function store(Request $request)
     {
         $data = $this->validated($request);
+        $agencyId = auth()->user()->agency_id;
+
+        // Warn-and-confirm on a duplicate passport. Same forAgency + passport_no
+        // predicate as the CSV-import notice; .first() replaces .exists() only so the
+        // message can show the prior entry's issue/expiry (a renewal). Ordered by
+        // latest expiry so staff see the most recent medical. Skipped once confirmed.
+        if (! $request->boolean('confirm_duplicate')) {
+            $existing = Medical::forAgency($agencyId)
+                ->where('passport_no', $data['passport_no'])
+                ->orderByDesc('medical_expire_date')
+                ->first();
+
+            if ($existing) {
+                $issue  = $existing->medical_issue_date?->format('d M Y') ?? 'not set';
+                $expire = $existing->medical_expire_date?->format('d M Y') ?? 'not set';
+                return back()->withInput()->with(
+                    'duplicate_warning',
+                    "A Medical entry already exists for this passport (issued {$issue}, expires {$expire})."
+                );
+            }
+        }
 
         Medical::create($data + [
-            'agency_id'  => auth()->user()->agency_id,
+            'agency_id'  => $agencyId,
             'created_by' => auth()->id(),
             'updated_by' => auth()->id(),
         ]);

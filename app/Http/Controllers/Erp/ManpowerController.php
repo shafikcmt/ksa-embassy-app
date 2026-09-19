@@ -99,9 +99,27 @@ class ManpowerController extends Controller
     public function store(Request $request)
     {
         $data = $this->validated($request);
+        $agencyId = auth()->user()->agency_id;
+
+        // Warn-and-confirm on a duplicate passport. Same forAgency + passport_no
+        // predicate as the CSV-import notice; .first() replaces .exists() only so the
+        // message can show the existing entry's date. Skipped once the user confirms.
+        if (! $request->boolean('confirm_duplicate')) {
+            $existing = ManpowerCompletion::forAgency($agencyId)
+                ->where('passport_no', $data['passport_no'])
+                ->orderByDesc('completed_date')
+                ->first();
+
+            if ($existing) {
+                return back()->withInput()->with(
+                    'duplicate_warning',
+                    "A Manpower entry already exists for this passport (added on {$existing->completed_date->format('d M Y')})."
+                );
+            }
+        }
 
         ManpowerCompletion::create($data + [
-            'agency_id'  => auth()->user()->agency_id,
+            'agency_id'  => $agencyId,
             'created_by' => auth()->id(),
             'updated_by' => auth()->id(),
         ]);
