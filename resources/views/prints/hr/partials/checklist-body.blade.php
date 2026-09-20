@@ -41,7 +41,7 @@
 </div>
 
 {{-- RTL table: visual columns L→R are Notes | Port | Agency | Step --}}
-<table style="width:100%;margin:0 auto;border-collapse:collapse;direction:rtl;font-size:9.5pt;">
+<table style="width:100%;margin:0 auto;border-collapse:collapse;direction:rtl;font-size:10pt;">
   <colgroup>
     <col style="width:36%"><col style="width:30%"><col style="width:16%"><col style="width:18%">
   </colgroup>
@@ -95,7 +95,7 @@
     @endphp
     <tr>
       <td style="border:1px solid #202428;padding:7pt 6pt;text-align:right;direction:rtl;">{{ $stepAr }} / <strong dir="ltr" style="unicode-bidi:isolate;">{{ $stepEn }}</strong></td>
-      <td style="border:1px solid #202428;padding:7pt 6pt;text-align:center;{{ $arabicValue ? 'direction:rtl;' : 'direction:ltr;' }}{{ $bold ? 'font-weight:bold;font-size:10pt;' : '' }}">{!! nl2br(e($value)) !!}</td>
+      <td style="border:1px solid #202428;padding:7pt 6pt;text-align:center;{{ $arabicValue ? 'direction:rtl;' : 'direction:ltr;' }}">{!! nl2br(e($value)) !!}</td>
       <td style="border:1px solid #202428;padding:7pt 6pt;"></td>
       <td style="border:1px solid #202428;padding:7pt 6pt;"></td>
     </tr>
