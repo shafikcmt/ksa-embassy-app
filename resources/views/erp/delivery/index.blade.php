@@ -75,7 +75,9 @@
                     @foreach($paymentMethods as $key => $label)<option value="{{ $key }}" @selected(old('payment_method') === $key)>{{ $label }}</option>@endforeach
                 </select>
             </div>
-            <div><label class="{{ $lbl }}">Reference</label><input type="text" name="reference" value="{{ old('reference') }}" class="{{ $inp }}"></div>
+            {{-- Reference suggestions (Agents + past references); free text still allowed. Shared by Add + Edit. --}}
+            <datalist id="deliveryReferenceList">@foreach($referenceOptions as $opt)<option value="{{ $opt }}">@endforeach</datalist>
+            <div><label class="{{ $lbl }}">Reference</label><input type="text" name="reference" list="deliveryReferenceList" autocomplete="off" value="{{ old('reference') }}" class="{{ $inp }}"></div>
         </div>
         <div class="mt-4 flex justify-start">
             <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md"><i class="bi bi-plus-lg"></i> Save</button>
@@ -306,7 +308,7 @@
                         @foreach($paymentMethods as $key => $label)<option value="{{ $key }}">{{ $label }}</option>@endforeach
                     </select>
                 </div>
-                <div><label class="{{ $lbl }}">Reference</label><input type="text" name="reference" x-model="form.reference" class="{{ $inp }}"></div>
+                <div><label class="{{ $lbl }}">Reference</label><input type="text" name="reference" list="deliveryReferenceList" autocomplete="off" x-model="form.reference" class="{{ $inp }}"></div>
             </div>
             <p class="mt-3 text-xs text-slate-400"><i class="bi bi-info-circle"></i> Paid amount is managed through payments and cannot be edited here.</p>
             <div class="mt-5 flex justify-end gap-3">

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Erp;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Erp\Concerns\RendersPrintableList;
+use App\Models\Agent;
 use App\Models\Delivery;
 use App\Models\PaymentReceipt;
 use App\Services\CsvImportService;
@@ -52,13 +53,24 @@ class DeliveryController extends Controller
         $totalBilled    = (float) $deliveries->sum(fn ($d) => (float) $d->total_amount);
         $totalCollected = (float) $deliveries->sum(fn ($d) => (float) $d->paid_amount);
 
+        // Reference combo-box suggestions: active Agent names + this agency's own
+        // previously-typed references, deduped and sorted. Free text still allowed.
+        $referenceOptions = Agent::forAgency($agencyId)->active()->orderBy('name')->pluck('name')
+            ->merge(Delivery::forAgency($agencyId)->whereNotNull('reference')->distinct()->pluck('reference'))
+            ->map(fn ($v) => trim((string) $v))
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
+
         return view('erp.delivery.index', [
-            'deliveries'     => $deliveries,
-            'statuses'       => Delivery::STATUSES,
-            'paymentMethods' => Delivery::PAYMENT_METHODS,
-            'totalBilled'    => $totalBilled,
-            'totalCollected' => $totalCollected,
-            'totalDue'       => $totalBilled - $totalCollected,
+            'deliveries'       => $deliveries,
+            'statuses'         => Delivery::STATUSES,
+            'paymentMethods'   => Delivery::PAYMENT_METHODS,
+            'totalBilled'      => $totalBilled,
+            'totalCollected'   => $totalCollected,
+            'totalDue'         => $totalBilled - $totalCollected,
+            'referenceOptions' => $referenceOptions,
         ]);
     }
 

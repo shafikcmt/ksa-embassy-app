@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Erp;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Erp\Concerns\RendersPrintableList;
+use App\Models\Agent;
 use App\Models\MofaEntry;
 use App\Models\Stamping;
 use App\Services\CsvImportService;
@@ -48,10 +49,21 @@ class MofaEntryController extends Controller
             ->whereNotIn('passport_no', Stamping::forAgency($agencyId)->select('passport_no'))
             ->count();
 
+        // Reference combo-box suggestions: active Agent names + this agency's own
+        // previously-typed references, deduped and sorted. Free text still allowed.
+        $referenceOptions = Agent::forAgency($agencyId)->active()->orderBy('name')->pluck('name')
+            ->merge(MofaEntry::forAgency($agencyId)->whereNotNull('reference_name')->distinct()->pluck('reference_name'))
+            ->map(fn ($v) => trim((string) $v))
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
+
         return view('erp.mofa.index', [
-            'entries'        => $entries,
-            'stampingBaki'   => $stampingBaki,
-            'paymentMethods' => MofaEntry::PAYMENT_METHODS,
+            'entries'          => $entries,
+            'stampingBaki'     => $stampingBaki,
+            'paymentMethods'   => MofaEntry::PAYMENT_METHODS,
+            'referenceOptions' => $referenceOptions,
         ]);
     }
 

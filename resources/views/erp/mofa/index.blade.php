@@ -70,9 +70,11 @@
                 <label class="{{ $lbl }}">ID Number</label>
                 <input type="text" name="id_number" value="{{ old('id_number') }}" class="{{ $inp }}">
             </div>
+            {{-- Reference suggestions (Agents + past references); free text still allowed. Shared by Add + Edit. --}}
+            <datalist id="mofaReferenceList">@foreach($referenceOptions as $opt)<option value="{{ $opt }}">@endforeach</datalist>
             <div>
                 <label class="{{ $lbl }}">Reference Name</label>
-                <input type="text" name="reference_name" value="{{ old('reference_name') }}" class="{{ $inp }}">
+                <input type="text" name="reference_name" list="mofaReferenceList" autocomplete="off" value="{{ old('reference_name') }}" class="{{ $inp }}">
             </div>
         </div>
         <div class="mt-4 flex justify-end">
@@ -213,7 +215,7 @@
                 <div><label class="{{ $lbl }}">MOFA Date <span class="text-rose-500">*</span></label><input type="date" name="mofa_date" x-model="form.mofa_date" required class="{{ $inp }}"></div>
                 <div><label class="{{ $lbl }}">Visa Number</label><input type="text" name="visa_serial" x-model="form.visa_serial" class="{{ $inp }}"></div>
                 <div><label class="{{ $lbl }}">ID Number</label><input type="text" name="id_number" x-model="form.id_number" class="{{ $inp }}"></div>
-                <div><label class="{{ $lbl }}">Reference Name</label><input type="text" name="reference_name" x-model="form.reference_name" class="{{ $inp }}"></div>
+                <div><label class="{{ $lbl }}">Reference Name</label><input type="text" name="reference_name" list="mofaReferenceList" autocomplete="off" x-model="form.reference_name" class="{{ $inp }}"></div>
             </div>
             <div class="mt-5 flex justify-end gap-3">
                 <button type="button" x-on:click="editing = false" class="rounded-lg px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900">Cancel</button>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Erp;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Erp\Concerns\RendersPrintableList;
+use App\Models\Agent;
 use App\Models\DoubleMofa;
 use App\Models\ErpSetting;
 use App\Models\PaymentReceipt;
@@ -53,6 +54,16 @@ class DoubleMofaController extends Controller
         $totalBilled    = (float) $entries->sum(fn ($e) => (float) $e->billing_amount);
         $totalCollected = (float) $entries->sum(fn ($e) => (float) $e->paid_amount);
 
+        // Reference combo-box suggestions: active Agent names + this agency's own
+        // previously-typed references, deduped and sorted. Free text still allowed.
+        $referenceOptions = Agent::forAgency($agencyId)->active()->orderBy('name')->pluck('name')
+            ->merge(DoubleMofa::forAgency($agencyId)->whereNotNull('reference')->distinct()->pluck('reference'))
+            ->map(fn ($v) => trim((string) $v))
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
+
         return view('erp.double-mofa.index', [
             'entries'        => $entries,
             'statuses'       => DoubleMofa::STATUSES,
@@ -60,6 +71,7 @@ class DoubleMofaController extends Controller
             'totalBilled'    => $totalBilled,
             'totalCollected' => $totalCollected,
             'totalDue'       => $totalBilled - $totalCollected,
+            'referenceOptions' => $referenceOptions,
         ]);
     }
 

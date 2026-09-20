@@ -64,7 +64,9 @@
             <div><label class="{{ $lbl }}">Old MOFA Number</label><input type="text" name="old_mofa_number" value="{{ old('old_mofa_number') }}" class="{{ $inp }}"></div>
             <div><label class="{{ $lbl }}">Date <span class="text-rose-500">*</span></label><input type="date" name="mofa_date" value="{{ old('mofa_date', now()->format('Y-m-d')) }}" required class="{{ $inp }}"></div>
             <div><label class="{{ $lbl }}">Billing Amount (৳) <span class="text-rose-500">*</span></label><input type="number" step="0.01" min="0" name="billing_amount" value="{{ old('billing_amount', number_format($defaultRate, 2, '.', '')) }}" required class="{{ $inp }}"></div>
-            <div><label class="{{ $lbl }}">Reference</label><input type="text" name="reference" value="{{ old('reference') }}" class="{{ $inp }}"></div>
+            {{-- Reference suggestions (Agents + past references); free text still allowed. Shared by Add + Edit. --}}
+            <datalist id="doubleMofaReferenceList">@foreach($referenceOptions as $opt)<option value="{{ $opt }}">@endforeach</datalist>
+            <div><label class="{{ $lbl }}">Reference</label><input type="text" name="reference" list="doubleMofaReferenceList" autocomplete="off" value="{{ old('reference') }}" class="{{ $inp }}"></div>
         </div>
         <div class="mt-4 flex justify-start">
             <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md"><i class="bi bi-plus-lg"></i> Save</button>
@@ -247,7 +249,7 @@
                 <div><label class="{{ $lbl }}">Old MOFA Number</label><input type="text" name="old_mofa_number" x-model="form.old_mofa_number" class="{{ $inp }}"></div>
                 <div><label class="{{ $lbl }}">Date <span class="text-rose-500">*</span></label><input type="date" name="mofa_date" x-model="form.mofa_date" required class="{{ $inp }}"></div>
                 <div><label class="{{ $lbl }}">Billing Amount (৳) <span class="text-rose-500">*</span></label><input type="number" step="0.01" min="0" name="billing_amount" x-model="form.billing_amount" required class="{{ $inp }}"></div>
-                <div><label class="{{ $lbl }}">Reference</label><input type="text" name="reference" x-model="form.reference" class="{{ $inp }}"></div>
+                <div><label class="{{ $lbl }}">Reference</label><input type="text" name="reference" list="doubleMofaReferenceList" autocomplete="off" x-model="form.reference" class="{{ $inp }}"></div>
             </div>
             <p class="mt-3 text-xs text-slate-400"><i class="bi bi-info-circle"></i> Status and paid amount are derived from payments and cannot be edited here.</p>
             <div class="mt-5 flex justify-end gap-3">
