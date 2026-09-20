@@ -32,10 +32,10 @@
             @endif
         </td>
         <td style="width:66%; vertical-align:middle; padding:6pt 2pt; text-align:center; border-bottom:0.8px solid #cbd5e1;">
-            <div style="font-size:16pt; font-weight:bold; letter-spacing:0pt; line-height:1.0; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ $agency->name }}</div>
-            <div style="font-size:11.5pt; font-weight:bold; margin-top:3pt; color:#334155;">Recruiting Licence No. : {{ $agency->rl_number ?: '—' }}</div>
+            <div style="font-size:12pt; font-weight:bold; letter-spacing:0pt; line-height:1.0; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ $agency->name }}</div>
+            <div style="font-size:10.5pt; font-weight:bold; margin-top:3pt; color:#334155;">Recruiting Licence No. : {{ $agency->rl_number ?: '—' }}</div>
             @if($agency->address)
-                <div style="font-size:10pt; font-style:italic; margin-top:2pt; color:#64748b;">{{ $agency->address }}</div>
+                <div style="font-size:10.5pt; font-style:italic; margin-top:2pt; color:#475569;">{{ $agency->address }}</div>
             @endif
         </td>
         <td style="width:17%; border-bottom:0.8px solid #cbd5e1;"></td>
