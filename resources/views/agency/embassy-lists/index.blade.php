@@ -3,7 +3,7 @@
 @section('page-title', 'Embassy Lists')
 
 @section('content')
-<div x-data="{ cancel: { open: false, no: '', action: '', finalized: false } }">
+<div x-data="{ cancel: { open: false, no: '', action: '', finalized: false }, del: { open: false, no: '', action: '' } }">
 
     <x-ui.page-header title="Embassy Lists"
         subtitle="{{ $monthlyCount }} this month{{ $monthlyLimit > 0 && $monthlyLimit < 999 ? ' · limit '.$monthlyLimit : '' }}"
@@ -100,6 +100,12 @@
                                                 x-on:click="cancel.open = true; cancel.no = @js($list->list_no); cancel.action = '{{ route('embassy-lists.cancel', $list) }}'; cancel.finalized = {{ $list->isFinalized() ? 'true' : 'false' }}"><i class="bi bi-x-circle"></i> Cancel</button>
                                         @endcan
                                     @endif
+                                    @if($list->canDelete())
+                                        @can('delete', $list)
+                                            <button type="button" class="{{ $pill }} bg-rose-50 text-rose-700 ring-rose-200 hover:bg-rose-100"
+                                                x-on:click="del.open = true; del.no = @js($list->list_no); del.action = '{{ route('embassy-lists.destroy', $list) }}'"><i class="bi bi-trash"></i> Delete</button>
+                                        @endcan
+                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -158,6 +164,12 @@
                                 x-on:click="cancel.open = true; cancel.no = @js($list->list_no); cancel.action = '{{ route('embassy-lists.cancel', $list) }}'; cancel.finalized = {{ $list->isFinalized() ? 'true' : 'false' }}"><i class="bi bi-x-circle"></i> Cancel</button>
                         @endcan
                     @endif
+                    @if($list->canDelete())
+                        @can('delete', $list)
+                            <button type="button" class="{{ $mpill }} bg-rose-50 text-rose-700 ring-rose-200 hover:bg-rose-100"
+                                x-on:click="del.open = true; del.no = @js($list->list_no); del.action = '{{ route('embassy-lists.destroy', $list) }}'"><i class="bi bi-trash"></i> Delete</button>
+                        @endcan
+                    @endif
                 </div>
             </x-ui.card>
         @empty
@@ -186,6 +198,29 @@
                 <form :action="cancel.action" method="POST">
                     @csrf
                     <x-ui.button type="submit" variant="danger" size="sm"><i class="bi bi-x-circle"></i> Cancel List</x-ui.button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- ── Delete dialog ─────────────────────────────────────── --}}
+    <div x-show="del.open" x-cloak class="fixed inset-0 z-[60] flex items-center justify-center p-4" style="display:none">
+        <div @click="del.open = false" x-show="del.open" x-transition.opacity class="absolute inset-0 bg-slate-900/50"></div>
+        <div x-show="del.open" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+             class="relative w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
+            <div class="flex items-start gap-3">
+                <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-rose-50 text-rose-600"><i class="bi bi-trash text-lg"></i></span>
+                <div>
+                    <h3 class="text-base font-semibold text-slate-900">Delete List</h3>
+                    <p class="mt-1 text-sm text-slate-500">Delete <strong x-text="del.no"></strong>? It will be removed from your embassy lists.</p>
+                </div>
+            </div>
+            <div class="mt-5 flex justify-end gap-2">
+                <x-ui.button type="button" variant="secondary" size="sm" x-on:click="del.open = false">Back</x-ui.button>
+                <form :action="del.action" method="POST" x-on:submit="$el.querySelector('[type=submit]').disabled = true">
+                    @csrf
+                    @method('DELETE')
+                    <x-ui.button type="submit" variant="danger" size="sm"><i class="bi bi-trash"></i> Delete List</x-ui.button>
                 </form>
             </div>
         </div>

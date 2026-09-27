@@ -13,7 +13,7 @@
 @endphp
 
 @section('content')
-<div x-data="{ cancelOpen: false }">
+<div x-data="{ cancelOpen: false, deleteOpen: false }">
 
     {{-- Header --}}
     <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -45,6 +45,9 @@
             @endif
             @if(!$embassyList->isCancelled())
                 @can('cancel', $embassyList)<x-ui.button type="button" variant="secondary" size="sm" x-on:click="cancelOpen = true" class="!text-rose-600"><i class="bi bi-x-circle"></i> Cancel</x-ui.button>@endcan
+            @endif
+            @if($embassyList->canDelete())
+                @can('delete', $embassyList)<x-ui.button type="button" variant="secondary" size="sm" x-on:click="deleteOpen = true" class="!text-rose-600"><i class="bi bi-trash"></i> Delete</x-ui.button>@endcan
             @endif
         </div>
     </div>
@@ -150,5 +153,27 @@
             </div>
         </div>
     @endcan
+
+    {{-- Delete dialog --}}
+    @if($embassyList->canDelete())
+        @can('delete', $embassyList)
+            <div x-show="deleteOpen" x-cloak class="fixed inset-0 z-[60] flex items-center justify-center p-4" style="display:none">
+                <div @click="deleteOpen = false" x-show="deleteOpen" x-transition.opacity class="absolute inset-0 bg-slate-900/50"></div>
+                <div x-show="deleteOpen" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                     class="relative w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
+                    <h3 class="text-base font-semibold text-slate-900">Delete list {{ $embassyList->list_no }}?</h3>
+                    <p class="mt-1 text-sm text-slate-500">It will be removed from your embassy lists.</p>
+                    <div class="mt-5 flex justify-end gap-2">
+                        <x-ui.button type="button" variant="secondary" size="sm" x-on:click="deleteOpen = false">Back</x-ui.button>
+                        <form method="POST" action="{{ route('embassy-lists.destroy', $embassyList) }}" x-on:submit="$el.querySelector('[type=submit]').disabled = true">
+                            @csrf
+                            @method('DELETE')
+                            <x-ui.button type="submit" variant="danger" size="sm"><i class="bi bi-trash"></i> Delete List</x-ui.button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        @endcan
+    @endif
 </div>
 @endsection

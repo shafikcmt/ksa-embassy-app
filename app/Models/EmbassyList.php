@@ -5,9 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class EmbassyList extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'agency_id', 'list_no', 'title', 'list_date', 'status',
         'total_new', 'total_restamping', 'total_cancellation', 'total_items',
@@ -83,6 +86,12 @@ class EmbassyList extends Model
     public function canEdit(): bool
     {
         return $this->isDraft();
+    }
+
+    /** Only Draft/Cancelled lists may be deleted; Finalized/Printed must be cancelled first. */
+    public function canDelete(): bool
+    {
+        return $this->isDraft() || $this->isCancelled();
     }
 
     public function recalculateTotals(): void

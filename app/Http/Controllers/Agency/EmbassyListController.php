@@ -226,20 +226,48 @@ class EmbassyListController extends Controller
             ->with('success', 'Embassy list updated successfully.');
     }
 
-    public function destroy(EmbassyList $embassyList)
+    /**
+     * Soft-deletes a Draft/Cancelled list. Resolved manually (not implicit
+     * binding) so an already-trashed list — e.g. a double submit — gets a
+     * flash error instead of a 404. Candidate statuses need no revert: only
+     * finalize() marks HR as "listed", and cancel() already reverts it.
+     */
+    public function destroy(string $embassyList)
     {
-        $this->authorize('delete', $embassyList);
+        $agencyId = auth()->user()->agency_id;
+        abort_if($agencyId === null, 403);
 
-        if ($embassyList->isFinalized()) {
-            return redirect()->route('embassy-lists.show', $embassyList)
-                ->with('error', 'Finalized lists cannot be deleted. Cancel the list first.');
-        }
+        $result = DB::transaction(function () use ($embassyList, $agencyId) {
+            $list = EmbassyList::withTrashed()
+                ->where('agency_id', $agencyId)
+                ->lockForUpdate()
+                ->findOrFail($embassyList);
 
-        AuditLog::record('delete', $embassyList, ['list_no' => $embassyList->list_no], []);
-        $embassyList->delete();
+            $this->authorize('delete', $list);
 
-        return redirect()->route('embassy-lists.index')
-            ->with('success', "Embassy list {$embassyList->list_no} deleted.");
+            // Already trashed (double submit): its show page would 404, so go to index.
+            if ($list->trashed()) {
+                return [redirect()->route('embassy-lists.index'), 'error', "Embassy list {$list->list_no} is already deleted."];
+            }
+
+            if (! $list->canDelete()) {
+                return [redirect()->back(fallback: route('embassy-lists.show', $list)), 'error', 'Finalized/printed lists cannot be deleted. Cancel the list first.'];
+            }
+
+            $list->delete();
+
+            AuditLog::record('delete', $list, [
+                'list_no'     => $list->list_no,
+                'status'      => $list->status,
+                'total_items' => $list->total_items,
+            ], []);
+
+            return [redirect()->route('embassy-lists.index'), 'success', "Embassy list {$list->list_no} deleted."];
+        });
+
+        [$redirect, $type, $message] = $result;
+
+        return $redirect->with($type, $message);
     }
 
     public function finalize(EmbassyList $embassyList)
@@ -476,7 +504,10 @@ class EmbassyListController extends Controller
         $year   = now()->year;
         $prefix = 'EL-' . $year . '-';
 
-        $last = EmbassyList::where('agency_id', $agencyId)
+        // withTrashed: soft-deleted lists still own their number (unique
+        // agency_id+list_no), so it must never be handed out again.
+        $last = EmbassyList::withTrashed()
+            ->where('agency_id', $agencyId)
             ->where('list_no', 'like', $prefix . '%')
             ->max('list_no');
 

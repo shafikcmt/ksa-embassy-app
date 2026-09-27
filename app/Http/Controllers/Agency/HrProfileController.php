@@ -231,6 +231,8 @@ class HrProfileController extends Controller
         $this->authorize('view', $hr);
 
         $hr->load(['agent', 'passport', 'visa', 'clearance', 'otherInfo', 'createdBy', 'updatedBy',
+            // whereHas drops items of soft-deleted lists (their embassyList would load as null)
+            'embassyListItems' => fn ($q) => $q->whereHas('embassyList'),
             'embassyListItems.embassyList']);
 
         return view('agency.hr.show', compact('hr'));
