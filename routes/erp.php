@@ -9,6 +9,7 @@ use App\Http\Controllers\Erp\DueListController;
 use App\Http\Controllers\Erp\ExpenseController;
 use App\Http\Controllers\Erp\InvoiceController;
 use App\Http\Controllers\Erp\ManpowerController;
+use App\Http\Controllers\Erp\BmetController;
 use App\Http\Controllers\Erp\MedicalController;
 use App\Http\Controllers\Erp\MofaEntryController;
 use App\Http\Controllers\Erp\MofaController;
@@ -65,8 +66,8 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
         // Reads are open within the module; adding entries (store) requires an
         // active subscription, matching the HR/Embassy/Agents modules.
         Route::get('/stamping', [StampingController::class, 'index'])->name('stamping');
-        Route::get('/manpower', [ManpowerController::class, 'index'])->name('manpower');
         Route::get('/mofa', [MofaController::class, 'index'])->name('mofa');
+        Route::get('/manpower', [BmetController::class, 'index'])->name('manpower');
         Route::get('/medical', [MedicalController::class, 'index'])->name('medical');
 
         // ── E7a: per-module Print (full list PDF, read-only, staff-visible) ───
@@ -89,7 +90,7 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
         Route::get('/stamping/import/template', [StampingController::class, 'importTemplate'])->name('stamping.import.template');
         Route::post('/stamping/import/preview', [StampingController::class, 'importPreview'])->name('stamping.import.preview');
 
-        Route::get('/manpower/export', [ManpowerController::class, 'exportCsv'])->name('manpower.export');
+        Route::get('/manpower/export', [BmetController::class, 'exportCsv'])->name('manpower.export');
         Route::get('/manpower/import', [ManpowerController::class, 'importForm'])->name('manpower.import.form');
         Route::get('/manpower/import/template', [ManpowerController::class, 'importTemplate'])->name('manpower.import.template');
         Route::post('/manpower/import/preview', [ManpowerController::class, 'importPreview'])->name('manpower.import.preview');
@@ -117,7 +118,7 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
         Route::post('/double-mofa/import/preview', [DoubleMofaController::class, 'importPreview'])->name('double-mofa.import.preview');
 
         Route::get('/stamping/print', [StampingController::class, 'printPdf'])->name('stamping.print');
-        Route::get('/manpower/print', [ManpowerController::class, 'printPdf'])->name('manpower.print');
+        Route::get('/manpower/print', [BmetController::class, 'printPdf'])->name('manpower.print');
         Route::get('/medical/print', [MedicalController::class, 'printPdf'])->name('medical.print');
         Route::get('/delivery/print', [DeliveryController::class, 'printPdf'])->name('delivery.print');
         Route::get('/double-mofa/print', [DoubleMofaController::class, 'printPdf'])->name('double-mofa.print');
@@ -129,12 +130,25 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
             Route::post('/mofa/import', [MofaEntryController::class, 'import'])->name('mofa.import'); // E7b commit
             Route::post('/stamping', [StampingController::class, 'store'])->name('stamping.store');
             Route::post('/stamping/import', [StampingController::class, 'import'])->name('stamping.import'); // E7c commit
-            Route::post('/manpower', [ManpowerController::class, 'store'])->name('manpower.store');
+            Route::post('/manpower', [BmetController::class, 'store'])->name('manpower.store');
             Route::post('/manpower/import', [ManpowerController::class, 'import'])->name('manpower.import'); // E7c commit
             Route::get('/medical/add', [MedicalController::class, 'create'])->name('medical.create');
             Route::post('/medical', [MedicalController::class, 'store'])->name('medical.store');
             Route::post('/medical/import', [MedicalController::class, 'import'])->name('medical.import'); // Medical commit
         });
+
+        // BMET is the expanded manpower register. Static endpoints precede model binding.
+        Route::get('/bmet', [BmetController::class, 'index'])->name('bmet.index');
+        Route::get('/bmet/add', [BmetController::class, 'create'])->name('bmet.create');
+        Route::get('/bmet/hr-search', [BmetController::class, 'hrSearch'])->name('bmet.hr-search');
+        Route::get('/bmet/export', [BmetController::class, 'exportCsv'])->name('bmet.export');
+        Route::get('/bmet/print', [BmetController::class, 'printPdf'])->name('bmet.print');
+        Route::post('/bmet', [BmetController::class, 'store'])->middleware('active-subscription')->name('bmet.store');
+        Route::get('/bmet/{bmetEntry}/edit', [BmetController::class, 'edit'])->whereNumber('bmetEntry')->name('bmet.edit');
+        Route::get('/bmet/{bmetEntry}/print-pdf', [BmetController::class, 'printPdf'])->whereNumber('bmetEntry')->name('bmet.print-pdf');
+        Route::get('/bmet/{bmetEntry}', [BmetController::class, 'show'])->whereNumber('bmetEntry')->name('bmet.show');
+        Route::put('/bmet/{bmetEntry}', [BmetController::class, 'update'])->whereNumber('bmetEntry')->name('bmet.update');
+        Route::delete('/bmet/{bmetEntry}', [BmetController::class, 'destroy'])->whereNumber('bmetEntry')->name('bmet.destroy');
 
         Route::get('/mofa/add', [MofaController::class, 'create'])->name('mofa.create');
         Route::get('/mofa/hr-search', [MofaController::class, 'hrSearch'])->name('mofa.hr-search');
@@ -147,8 +161,8 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
         Route::put('/stamping/{stamping}', [StampingController::class, 'update'])->name('stamping.update');
         Route::delete('/stamping/{stamping}', [StampingController::class, 'destroy'])->name('stamping.destroy');
 
-        Route::put('/manpower/{manpower}', [ManpowerController::class, 'update'])->name('manpower.update');
-        Route::delete('/manpower/{manpower}', [ManpowerController::class, 'destroy'])->name('manpower.destroy');
+        Route::put('/manpower/{bmetEntry}', [BmetController::class, 'update'])->name('manpower.update');
+        Route::delete('/manpower/{bmetEntry}', [BmetController::class, 'destroy'])->name('manpower.destroy');
 
         // ── Medical Entry: passport lookup, detail/edit pages, per-entry print,
         // restore (admin, enforced in controller). {medical} is numeric-only so it

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * ERP manpower completion log entry (E1 operational tracker).
@@ -13,6 +14,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class ManpowerCompletion extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'agency_id', 'completed_date', 'customer_name', 'passport_no',
         'ec_number', 'agent_id', 'created_by', 'updated_by',
@@ -20,7 +23,18 @@ class ManpowerCompletion extends Model
 
     protected $casts = [
         'completed_date' => 'date',
+        'ec_expiry_date' => 'date',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (self $entry) {
+            $entry->ec_expiry_date = $entry->completed_date?->copy()->addYearNoOverflow();
+            if (! $entry->status) {
+                $entry->status = filled($entry->ec_number) ? 'cleared' : 'pending';
+            }
+        });
+    }
 
     public function agency(): BelongsTo
     {

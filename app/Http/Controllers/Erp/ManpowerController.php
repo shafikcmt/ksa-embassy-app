@@ -154,9 +154,9 @@ class ManpowerController extends Controller
     private function rules(int $agencyId): array
     {
         return [
-            'completed_date' => ['required', 'date'],
+            'completed_date' => ['required', 'date', 'before_or_equal:today'],
             'customer_name'  => ['required', 'string', 'max:255'],
-            'passport_no'    => ['required', 'string', 'max:100'],
+            'passport_no'    => ['required', 'string', 'max:100', Rule::unique('manpower_completions', 'passport_no')->where('agency_id', $agencyId)->whereNull('deleted_at')],
             'ec_number'      => ['nullable', 'string', 'max:100'],
             // agent_id must belong to the caller's own agency (or be blank).
             'agent_id'       => ['nullable', Rule::exists('agents', 'id')->where('agency_id', $agencyId)],
@@ -237,8 +237,12 @@ class ManpowerController extends Controller
         }
 
         DB::transaction(function () use ($result, $agencyId) {
+            \App\Models\Agency::whereKey($agencyId)->lockForUpdate()->firstOrFail();
             foreach ($result['rows'] as $row) {
                 $data = $row['attrs'];
+                if (ManpowerCompletion::forAgency($agencyId)->where('passport_no', $data['passport_no'])->exists()) {
+                    throw \Illuminate\Validation\ValidationException::withMessages(['file' => 'Passport number already exists. Nothing was imported.']);
+                }
                 unset($data['agent']); // display-only name; only agent_id is persisted
                 ManpowerCompletion::create($data + [
                     'agency_id'  => $agencyId,
@@ -282,7 +286,7 @@ class ManpowerController extends Controller
      * Import config: date → Y-m-d; agent NAME → agent_id (agency-scoped,
      * case-insensitive). Blank → null; unmatched name → agent_id 0 which fails the
      * exists rule with a clear message (custom `messages`), blocking the whole file.
-     * A duplicate passport is a non-blocking notice.
+     * Duplicate passports are rejected, including repeats within the same batch.
      */
     private function importConfig(int $agencyId): array
     {
@@ -292,6 +296,7 @@ class ManpowerController extends Controller
             'messages' => ['agent_id.exists' => 'Agent not found for this agency — create the agent first or leave the column blank.'],
             'normalize' => function (array $r) use ($agencyId) {
                 $a = array_map(fn ($v) => trim((string) $v), $r);
+                $a['passport_no'] = strtoupper($a['passport_no'] ?? '');
 
                 $a['completed_date'] = CsvImportService::toYmd($a['completed_date'] ?? '');
 
@@ -308,13 +313,6 @@ class ManpowerController extends Controller
                 }
 
                 return $a;
-            },
-            'notices' => function (array $a) use ($agencyId) {
-                $p = $a['passport_no'] ?? '';
-                if ($p !== '' && ManpowerCompletion::forAgency($agencyId)->where('passport_no', $p)->exists()) {
-                    return ["Passport {$p} already completed — added as a repeat."];
-                }
-                return [];
             },
         ];
     }

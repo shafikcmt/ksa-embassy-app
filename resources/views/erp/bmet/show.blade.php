@@ -1,0 +1,6 @@
+@extends('layouts.erp-app')
+@section('title', 'BMET Clearance Entry')
+@section('content')
+@include('erp.bmet._styles')
+<div class="bmet"><a class="bm-btn mb-5" href="{{ route('erp.bmet.index') }}">Back to BMET Clearance</a><section class="bm-card"><header class="mb-6 flex flex-wrap items-start justify-between gap-4"><div><h1 class="mb-3 text-2xl font-bold">{{ $entry->full_name }}</h1>@include('erp.bmet._badge',['entry'=>$entry])</div><div class="flex gap-2"><a class="bm-btn bm-primary" href="{{ route('erp.bmet.edit',$entry) }}">Edit entry</a><a class="bm-btn" href="{{ route('erp.bmet.print-pdf',$entry) }}" target="_blank" rel="noopener">Print PDF</a></div></header><dl class="bm-row">@foreach(\App\Http\Controllers\Erp\BmetController::FIELDS as $i=>$field)<div><dt class="bm-label text-gray-500">{{ \App\Http\Controllers\Erp\BmetController::COLUMNS[$i+1] }}</dt><dd class="break-words">{{ \App\Http\Controllers\Erp\BmetController::value($entry,$field) ?: '—' }}</dd></div>@endforeach<div><dt class="bm-label text-gray-500">Agent</dt><dd>{{ $entry->agent?->name ?? '—' }}</dd></div><div><dt class="bm-label text-gray-500">Tracked expiry</dt><dd>{{ $entry->ec_expiry_date?->format('d-M-Y') ?? '—' }}</dd><p class="bm-hint">One year from the EC date.</p></div></dl></section></div>
+@endsection
