@@ -130,6 +130,7 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
             Route::post('/stamping/import', [StampingController::class, 'import'])->name('stamping.import'); // E7c commit
             Route::post('/manpower', [ManpowerController::class, 'store'])->name('manpower.store');
             Route::post('/manpower/import', [ManpowerController::class, 'import'])->name('manpower.import'); // E7c commit
+            Route::get('/medical/add', [MedicalController::class, 'create'])->name('medical.create');
             Route::post('/medical', [MedicalController::class, 'store'])->name('medical.store');
             Route::post('/medical/import', [MedicalController::class, 'import'])->name('medical.import'); // Medical commit
         });
@@ -143,6 +144,15 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
         Route::put('/manpower/{manpower}', [ManpowerController::class, 'update'])->name('manpower.update');
         Route::delete('/manpower/{manpower}', [ManpowerController::class, 'destroy'])->name('manpower.destroy');
 
+        // ── Medical Entry: passport lookup, detail/edit pages, per-entry print,
+        // restore (admin, enforced in controller). {medical} is numeric-only so it
+        // never swallows the static /medical/* paths above.
+        Route::get('/medical/lookup', [MedicalController::class, 'lookup'])->name('medical.lookup');
+        Route::get('/medical/hr-search', [MedicalController::class, 'hrSearch'])->name('medical.hr-search');
+        Route::get('/medical/{medical}', [MedicalController::class, 'show'])->whereNumber('medical')->name('medical.show');
+        Route::get('/medical/{medical}/edit', [MedicalController::class, 'edit'])->whereNumber('medical')->name('medical.edit');
+        Route::get('/medical/{medical}/print-pdf', [MedicalController::class, 'printEntry'])->whereNumber('medical')->name('medical.print-pdf');
+        Route::patch('/medical/{id}/restore', [MedicalController::class, 'restore'])->whereNumber('id')->name('medical.restore');
         Route::put('/medical/{medical}', [MedicalController::class, 'update'])->name('medical.update');
         Route::delete('/medical/{medical}', [MedicalController::class, 'destroy'])->name('medical.destroy');
 

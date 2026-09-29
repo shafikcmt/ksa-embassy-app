@@ -3,93 +3,97 @@
 namespace App\Http\Controllers\Erp;
 
 use App\Http\Controllers\Controller;
-use App\Http\Controllers\Erp\Concerns\RendersPrintableList;
+use App\Http\Requests\MedicalEntryRequest;
 use App\Models\Agent;
+use App\Models\HrProfile;
 use App\Models\Medical;
 use App\Services\CsvImportService;
 use App\Services\PdfGeneratorService;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * ERP Medical tracker (E1). Agency-scoped medical-check log. Workflow status
- * only — no money math.
+ * ERP Medical Entry (E1 tracker, extended into the full Medical Summary).
+ * Agency-scoped medical-check log. Workflow status only — no money math.
  *
- * Mirrors StampingController: CSV export (staff-visible) + import (admin-only,
- * dry-run preview + all-or-nothing commit) via CsvImportService and the shared
- * import view. NOTE: medical_issue_date is nullable, so — unlike Stamping —
- * there are no Y#/M# date serials (they would fatal on a null date).
+ * List + search/filter/sort/paginate, dedicated Add / View / Edit pages, a
+ * per-entry and a full-list "Medical Summary" print (reference column order,
+ * A4 landscape), soft delete + admin restore, and the CSV export (staff) /
+ * import (admin, dry-run preview + all-or-nothing commit) via CsvImportService.
+ * Validation lives in MedicalEntryRequest and is shared with the import.
  */
 class MedicalController extends Controller
 {
-    use RendersPrintableList;
-
+    /** CSV columns in Medical Summary reference order (age is derived, never imported). */
     private const CSV_HEADERS = [
-        'medical_issue_date', 'full_name', 'father_name', 'passport_no',
-        'medical_center_name', 'medical_code', 'medical_expire_date', 'medical_status',
+        'full_name', 'father_name', 'passport_no', 'date_of_birth',
+        'medical_center_name', 'country', 'medical_code',
+        'medical_issue_date', 'medical_expire_date', 'medical_status',
+        'mobile_no', 'reference', 'remarks',
     ];
+
+    private const OPTIONAL_CSV_FIELDS = ['medical_code', 'mobile_no', 'reference', 'remarks'];
 
     private const IMPORT_SESSION_KEY = 'erp_medical_import_path';
 
-    public function index()
+    /** Suggestions for the modal's Country combobox (free text is still allowed). */
+    private const COUNTRIES = ['Saudi Arabia', 'UAE', 'Kuwait', 'Qatar', 'Bahrain', 'Oman'];
+
+    private const SORTS = [
+        'issue_asc'   => 'Issue date (oldest first)',
+        'issue_desc'  => 'Issue date (newest first)',
+        'expiry_asc'  => 'Expiry date (soonest first)',
+        'name_asc'    => 'Name (A–Z)',
+        'status'      => 'Status',
+        'latest'      => 'Recently added',
+    ];
+
+    public function index(Request $request)
     {
         $agencyId = auth()->user()->agency_id;
+        $filters  = $this->filters($request);
+
+        $counts = Medical::forAgency($agencyId)
+            ->selectRaw('medical_status, COUNT(*) AS c')
+            ->groupBy('medical_status')
+            ->pluck('c', 'medical_status');
 
         return view('erp.medical.index', [
-            'entries'  => $this->listing($agencyId),
-            'statuses' => Medical::MEDICAL_STATUSES,
+            'entries'   => $this->filteredQuery($agencyId, $filters)->paginate(20)->withQueryString(),
+            'filters'   => $filters,
+            'statuses'  => Medical::MEDICAL_STATUSES,
+            'sorts'     => self::SORTS,
+            'countries' => self::COUNTRIES,
             'agentOptions' => Agent::referenceOptions($agencyId),
+            'stats'     => [
+                'total'   => (int) $counts->sum(),
+                'pending' => (int) ($counts['pending'] ?? 0),
+                'fit'     => (int) ($counts['fit'] ?? 0),
+                'expired' => (int) ($counts['expired'] ?? 0),
+            ],
         ]);
     }
 
-    /** Print the full module list (E7a) — reuses the EXACT index() query. */
-    public function printPdf(PdfGeneratorService $pdf)
+    /** The Add form lives in a modal on the list page — /medical/add opens it. */
+    public function create()
     {
-        $entries = $this->listing(auth()->user()->agency_id);
-
-        $columns = [
-            ['label' => 'Issue Date'], ['label' => 'Name'], ['label' => 'Father'], ['label' => 'Passport'],
-            ['label' => 'Medical Center'], ['label' => 'Code'], ['label' => 'Expire Date'], ['label' => 'Status'],
-        ];
-        $rows = $entries->map(fn (Medical $e) => [
-            optional($e->medical_issue_date)->format('d M Y') ?: '—',
-            $e->full_name, $e->father_name, $e->passport_no,
-            $e->medical_center_name ?: '—', $e->medical_code ?: '—',
-            optional($e->medical_expire_date)->format('d M Y') ?: '—', $e->statusLabel(),
-        ])->all();
-
-        return $this->respondPrintableList($pdf, [
-            'title'    => 'Medical',
-            'agency'   => auth()->user()->agency,
-            'generated'=> now(),
-            'subtitle' => $entries->count() . ' entr' . ($entries->count() === 1 ? 'y' : 'ies'),
-            'columns'  => $columns,
-            'rows'     => $rows,
-        ], 'medical-' . now()->format('Y-m-d'), 'erp.medical');
+        return redirect()->route('erp.medical', ['add' => 1]);
     }
 
-    /** Shared listing used by both index() and printPdf() (oldest-first, null dates last). */
-    private function listing(int $agencyId): Collection
+    public function store(MedicalEntryRequest $request)
     {
-        return Medical::forAgency($agencyId)
-            ->with('createdBy:id,name')
-            ->orderByRaw('medical_issue_date IS NULL')->orderBy('medical_issue_date')->orderBy('id')
-            ->get();
-    }
-
-    public function store(Request $request)
-    {
-        $data = $this->validated($request);
+        $data     = $request->validated();
         $agencyId = auth()->user()->agency_id;
 
-        // Warn-and-confirm on a duplicate passport. Same forAgency + passport_no
-        // predicate as the CSV-import notice; .first() replaces .exists() only so the
-        // message can show the prior entry's issue/expiry (a renewal). Ordered by
-        // latest expiry so staff see the most recent medical. Skipped once confirmed.
+        // Warn-and-confirm on a duplicate passport (medical renewals are legit).
+        // Same forAgency + passport_no predicate as the CSV-import notice; the
+        // latest expiry is shown so staff see the most recent medical.
         if (! $request->boolean('confirm_duplicate')) {
             $existing = Medical::forAgency($agencyId)
                 ->where('passport_no', $data['passport_no'])
@@ -97,76 +101,320 @@ class MedicalController extends Controller
                 ->first();
 
             if ($existing) {
-                $issue  = $existing->medical_issue_date?->format('d M Y') ?? 'not set';
-                $expire = $existing->medical_expire_date?->format('d M Y') ?? 'not set';
-                return back()->withInput()->with(
-                    'duplicate_warning',
-                    "A Medical entry already exists for this passport (issued {$issue}, expires {$expire})."
-                );
+                $issue   = $existing->medical_issue_date?->format('d M Y') ?? 'not set';
+                $expire  = $existing->medical_expire_date?->format('d M Y') ?? 'not set';
+                $message = "A Medical entry already exists for this passport (issued {$issue}, expires {$expire}).";
+
+                if ($request->expectsJson()) {
+                    return response()->json(['duplicate' => true, 'message' => $message], 409);
+                }
+
+                return back()->withInput()->with('duplicate_warning', $message);
             }
         }
 
-        Medical::create($data + [
-            'agency_id'  => $agencyId,
-            'created_by' => auth()->id(),
-            'updated_by' => auth()->id(),
+        $medical = Medical::create($data + [
+            'agency_id'     => $agencyId,
+            'hr_profile_id' => $this->hrProfileIdFor($agencyId, $data['passport_no']),
+            'created_by'    => auth()->id(),
+            'updated_by'    => auth()->id(),
         ]);
 
-        return redirect()->route('erp.medical')->with('success', 'Medical entry added.');
+        return $this->saved($request, $medical, 'Medical entry saved successfully.');
     }
 
-    public function update(Request $request, Medical $medical)
+    /** Detail page; JSON (for the Edit modal) when the client asks for it. */
+    public function show(Request $request, Medical $medical)
     {
         $this->authorizeAgency($medical);
 
-        $medical->update($this->validated($request) + ['updated_by' => auth()->id()]);
+        if ($request->expectsJson()) {
+            return response()->json($this->formData($medical));
+        }
 
-        return redirect()->route('erp.medical')->with('success', 'Medical entry updated.');
+        $medical->load(['createdBy:id,name', 'updatedBy:id,name', 'hrProfile:id,full_name_en,file_number']);
+
+        return view('erp.medical.show', ['entry' => $medical]);
     }
 
+    /** The Edit form lives in a modal on the list page — this deep link opens it. */
+    public function edit(Medical $medical)
+    {
+        $this->authorizeAgency($medical);
+
+        return redirect()->route('erp.medical', ['edit' => $medical->id]);
+    }
+
+    public function update(MedicalEntryRequest $request, Medical $medical)
+    {
+        $this->authorizeAgency($medical);
+        $data = $request->validated();
+
+        $medical->update($data + [
+            'hr_profile_id' => $this->hrProfileIdFor($medical->agency_id, $data['passport_no']),
+            'updated_by'    => auth()->id(),
+        ]);
+
+        return $this->saved($request, $medical, 'Medical entry updated successfully.');
+    }
+
+    /**
+     * Modal saves arrive as JSON: flash the toast + row highlight for the list
+     * reload the modal triggers, and answer with JSON. Plain form posts redirect.
+     */
+    private function saved(Request $request, Medical $medical, string $message)
+    {
+        if ($request->expectsJson()) {
+            session()->flash('medical_toast', $message);
+            session()->flash('medical_highlight', $medical->id);
+
+            return response()->json(['ok' => true, 'id' => $medical->id, 'message' => $message]);
+        }
+
+        return redirect()->route('erp.medical.show', $medical)->with('success', $message);
+    }
+
+    /** Soft delete — the row stays in the table with deleted_at and can be restored. */
     public function destroy(Medical $medical)
     {
         $this->authorizeAgency($medical);
 
         $medical->delete();
 
-        return redirect()->route('erp.medical')->with('success', 'Medical entry deleted.');
+        return redirect()->route('erp.medical')->with('medical_toast', 'Medical entry deleted. An admin can restore it from “Deleted entries”.');
     }
 
-    private function validated(Request $request): array
+    public function restore(int $id)
     {
-        return $request->validate($this->rules());
+        abort_unless(auth()->user()->isAgencyAdmin(), 403);
+
+        $medical = Medical::onlyTrashed()->forAgency(auth()->user()->agency_id)->findOrFail($id);
+        $medical->restore();
+
+        return redirect()->route('erp.medical')
+            ->with('medical_toast', 'Medical entry restored.')
+            ->with('medical_highlight', $medical->id);
     }
 
-    /** Single source of truth for validation — shared by manual Add and CSV import. */
-    private function rules(): array
+    /**
+     * Passport dropdown for the modal: up to 8 of the agency's HR profiles whose
+     * passport starts with — or whose name contains — the typed text.
+     */
+    public function hrSearch(Request $request): JsonResponse
+    {
+        $q = trim((string) $request->validate(['q' => ['required', 'string', 'min:2', 'max:100']])['q']);
+        $like = str_replace(['\\', '%', '_'], ['\\\\', '\%', '\_'], $q);
+
+        $profiles = HrProfile::forAgency((int) auth()->user()->agency_id)
+            ->with('passport:id,hr_profile_id,passport_number')
+            ->where(function (Builder $w) use ($like) {
+                $w->whereHas('passport', fn ($p) => $p->where('passport_number', 'like', $like . '%'))
+                  ->orWhere('full_name_en', 'like', '%' . $like . '%');
+            })
+            ->latest('updated_at')
+            ->limit(8)
+            ->get();
+
+        return response()->json($profiles->map(fn (HrProfile $hr) => [
+            'id'            => $hr->id,
+            'file_number'   => $hr->file_number,
+            'passport_no'   => $hr->passport?->passport_number,
+            'full_name'     => $hr->full_name_en,
+            'father_name'   => $hr->father_name,
+            'date_of_birth' => $hr->date_of_birth?->format('Y-m-d'),
+            'mobile_no'     => $hr->phone,
+        ])->values());
+    }
+
+    /** Field values the modal form is filled with (dates as Y-m-d). */
+    private function formData(Medical $m): array
     {
         return [
-            'medical_issue_date'  => ['nullable', 'date'],
-            'full_name'           => ['required', 'string', 'max:255'],
-            'father_name'         => ['required', 'string', 'max:255'],
-            'passport_no'         => ['required', 'string', 'max:100'],
-            'medical_center_name' => ['nullable', 'string', 'max:255'],
-            'medical_code'        => ['nullable', 'string', 'max:100'],
-            'medical_expire_date' => ['nullable', 'date'],
-            'medical_status'      => ['required', Rule::in(array_keys(Medical::MEDICAL_STATUSES))],
+            'id'                  => $m->id,
+            'full_name'           => $m->full_name,
+            'father_name'         => $m->father_name,
+            'passport_no'         => $m->passport_no,
+            'date_of_birth'       => $m->date_of_birth?->format('Y-m-d'),
+            'medical_center_name' => $m->medical_center_name,
+            'country'             => $m->country,
+            'medical_code'        => $m->medical_code,
+            'mobile_no'           => $m->mobile_no,
+            'medical_issue_date'  => $m->medical_issue_date?->format('Y-m-d'),
+            'medical_expire_date' => $m->medical_expire_date?->format('Y-m-d'),
+            'medical_status'      => $m->medical_status,
+            'reference'           => $m->reference,
+            'remarks'             => $m->remarks,
         ];
     }
 
-    /** CSV data export — staff-visible; header matches the import template. */
-    public function exportCsv(): StreamedResponse
+    /**
+     * Passport → identity suggestion for the Add/Edit form. HR Profile first
+     * (the agency's master candidate record), then the latest earlier Medical
+     * entry for the same passport (renewals). Read-only, agency-scoped.
+     */
+    public function lookup(Request $request): JsonResponse
     {
-        $entries = $this->listing(auth()->user()->agency_id);
+        $data     = $request->validate(['passport_no' => ['required', 'string', 'max:100']]);
+        $agencyId = (int) auth()->user()->agency_id;
+        $passport = trim($data['passport_no']);
+
+        $hr = HrProfile::forAgency($agencyId)
+            ->whereHas('passport', fn ($q) => $q->where('passport_number', $passport))
+            ->latest('updated_at')
+            ->first();
+
+        if ($hr) {
+            return response()->json([
+                'found'         => true,
+                'source'        => 'HR Profile' . ($hr->file_number ? ' #' . $hr->file_number : ''),
+                'full_name'     => $hr->full_name_en,
+                'father_name'   => $hr->father_name,
+                'date_of_birth' => $hr->date_of_birth?->format('Y-m-d'),
+                'mobile_no'     => $hr->phone,
+            ]);
+        }
+
+        $prev = Medical::forAgency($agencyId)->where('passport_no', $passport)->latest('updated_at')->first();
+
+        if ($prev) {
+            return response()->json([
+                'found'         => true,
+                'source'        => 'Previous medical entry',
+                'full_name'     => $prev->full_name,
+                'father_name'   => $prev->father_name,
+                'date_of_birth' => $prev->date_of_birth?->format('Y-m-d'),
+                'mobile_no'     => $prev->mobile_no,
+            ]);
+        }
+
+        return response()->json(['found' => false]);
+    }
+
+    /** Medical Summary for ONE entry (reference format). */
+    public function printEntry(Medical $medical, PdfGeneratorService $pdf): Response
+    {
+        $this->authorizeAgency($medical);
+
+        return $this->renderSummary($pdf, collect([$medical]), 'medical-' . $medical->passport_no, route('erp.medical.show', $medical));
+    }
+
+    /** Medical Summary for the whole (filtered) list — same filters as the screen. */
+    public function printPdf(Request $request, PdfGeneratorService $pdf): Response
+    {
+        $entries = $this->filteredQuery(auth()->user()->agency_id, $this->filters($request))->get();
+
+        return $this->renderSummary($pdf, $entries, 'medical-summary-' . now()->format('Y-m-d'), route('erp.medical', $request->query()));
+    }
+
+    /**
+     * Browser preview by default (auto-opens the print dialog); ?download=1
+     * pipes the SAME view through mPDF — so preview, print and PDF match.
+     */
+    private function renderSummary(PdfGeneratorService $pdf, Collection $entries, string $filename, string $backUrl): Response
+    {
+        $data = [
+            'agency'    => auth()->user()->agency,
+            'entries'   => $entries,
+            'generated' => now(),
+        ];
+
+        if (request()->boolean('download')) {
+            return $pdf->generateFromView('prints.medical-summary', $data, $filename, false, \App\Support\ErpPrintTheme::mpdfOptions());
+        }
+
+        return response()->view('prints.medical-summary', $data + [
+            '_downloadUrl' => request()->fullUrlWithQuery(['download' => 1]),
+            '_backUrl'     => $backUrl,
+        ]);
+    }
+
+    /** Normalised list filters from the query string. */
+    private function filters(Request $request): array
+    {
+        $status = (string) $request->query('status', '');
+        $sort   = (string) $request->query('sort', 'issue_asc');
+
+        $date = function (string $key) use ($request): string {
+            $v = (string) $request->query($key, '');
+            return preg_match('/^\d{4}-\d{2}-\d{2}$/', $v) && strtotime($v) ? $v : '';
+        };
+
+        return [
+            'q'       => trim((string) $request->query('q', '')),
+            'from'    => $date('from'),
+            'to'      => $date('to'),
+            'status'  => array_key_exists($status, Medical::MEDICAL_STATUSES) ? $status : '',
+            'sort'    => array_key_exists($sort, self::SORTS) ? $sort : 'issue_asc',
+            'trashed' => $request->boolean('trashed') && auth()->user()->isAgencyAdmin(),
+        ];
+    }
+
+    /** One query for the list, print and CSV export (always agency-scoped). */
+    private function filteredQuery(int $agencyId, array $filters): Builder
+    {
+        $query = Medical::forAgency($agencyId)->with('createdBy:id,name');
+
+        if ($filters['trashed']) {
+            $query->onlyTrashed();
+        }
+
+        if ($filters['q'] !== '') {
+            $like = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\%', '\_'], $filters['q']) . '%';
+            $query->where(function (Builder $w) use ($like) {
+                foreach (['full_name', 'father_name', 'passport_no', 'medical_center_name', 'medical_code', 'mobile_no'] as $col) {
+                    $w->orWhere($col, 'like', $like);
+                }
+            });
+        }
+
+        if ($filters['status'] !== '') {
+            $query->where('medical_status', $filters['status']);
+        }
+
+        // Date range applies to the medical issue date.
+        if ($filters['from'] !== '') {
+            $query->whereDate('medical_issue_date', '>=', $filters['from']);
+        }
+        if ($filters['to'] !== '') {
+            $query->whereDate('medical_issue_date', '<=', $filters['to']);
+        }
+
+        return match ($filters['sort']) {
+            'issue_desc' => $query->orderByRaw('medical_issue_date IS NULL')->orderByDesc('medical_issue_date')->orderByDesc('id'),
+            'expiry_asc' => $query->orderByRaw('medical_expire_date IS NULL')->orderBy('medical_expire_date')->orderBy('id'),
+            'name_asc'   => $query->orderBy('full_name')->orderBy('id'),
+            'status'     => $query->orderBy('medical_status')->orderBy('full_name')->orderBy('id'),
+            'latest'     => $query->orderByDesc('id'),
+            default      => $query->orderByRaw('medical_issue_date IS NULL')->orderBy('medical_issue_date')->orderBy('id'),
+        };
+    }
+
+    /** Link to the agency's HR profile holding this passport, if any. */
+    private function hrProfileIdFor(int $agencyId, string $passportNo): ?int
+    {
+        return HrProfile::forAgency($agencyId)
+            ->whereHas('passport', fn ($q) => $q->where('passport_number', $passportNo))
+            ->latest('updated_at')
+            ->value('id');
+    }
+
+    /** CSV data export — staff-visible; header matches the import template. */
+    public function exportCsv(Request $request): StreamedResponse
+    {
+        $entries = $this->filteredQuery(auth()->user()->agency_id, $this->filters($request))->get();
 
         return response()->streamDownload(function () use ($entries) {
             $out = fopen('php://output', 'w');
             fputcsv($out, self::CSV_HEADERS);
             foreach ($entries as $e) {
                 fputcsv($out, [
-                    optional($e->medical_issue_date)->format('Y-m-d'),
                     $e->full_name, $e->father_name, $e->passport_no,
-                    $e->medical_center_name, $e->medical_code,
-                    optional($e->medical_expire_date)->format('Y-m-d'), $e->statusLabel(),
+                    optional($e->date_of_birth)->format('Y-m-d'),
+                    $e->medical_center_name, $e->country, $e->medical_code,
+                    optional($e->medical_issue_date)->format('Y-m-d'),
+                    optional($e->medical_expire_date)->format('Y-m-d'),
+                    $e->statusLabel(),
+                    $e->mobile_no, $e->reference, $e->remarks,
                 ]);
             }
             fclose($out);
@@ -231,9 +479,10 @@ class MedicalController extends Controller
         DB::transaction(function () use ($result, $agencyId) {
             foreach ($result['rows'] as $row) {
                 Medical::create($row['attrs'] + [
-                    'agency_id'  => $agencyId,
-                    'created_by' => auth()->id(),
-                    'updated_by' => auth()->id(),
+                    'agency_id'     => $agencyId,
+                    'hr_profile_id' => $this->hrProfileIdFor($agencyId, $row['attrs']['passport_no']),
+                    'created_by'    => auth()->id(),
+                    'updated_by'    => auth()->id(),
                 ]);
             }
         });
@@ -259,12 +508,16 @@ class MedicalController extends Controller
             'templateRoute' => 'erp.medical.import.template',
             'previewRoute'  => 'erp.medical.import.preview',
             'commitRoute'   => 'erp.medical.import',
-            'columnsHint'   => 'medical_issue_date, full_name*, father_name*, passport_no*, medical_center_name, medical_code, medical_expire_date, medical_status*',
-            'legend'        => ["medical_status: accepts the key or its label — {$statusValues}."],
+            'columnsHint'   => 'full_name*, father_name*, passport_no*, date_of_birth*, medical_center_name*, country*, medical_code, medical_issue_date*, medical_expire_date*, medical_status*, mobile_no, reference, remarks',
+            'legend'        => [
+                "medical_status: accepts the key or its label — {$statusValues}.",
+                'Age is calculated automatically from date_of_birth.',
+            ],
             'previewCols'   => [
-                ['label' => 'Issue Date', 'key' => 'medical_issue_date'],
                 ['label' => 'Name', 'key' => 'full_name'],
                 ['label' => 'Passport', 'key' => 'passport_no'],
+                ['label' => 'D.O.B', 'key' => 'date_of_birth'],
+                ['label' => 'Issue Date', 'key' => 'medical_issue_date'],
                 ['label' => 'Status', 'key' => 'medical_status'],
             ],
         ];
@@ -279,13 +532,15 @@ class MedicalController extends Controller
         }
 
         return [
-            'headers' => self::CSV_HEADERS,
-            'rules'   => $this->rules(),
+            'headers'  => self::CSV_HEADERS,
+            'rules'    => MedicalEntryRequest::baseRules(),
+            'messages' => MedicalEntryRequest::baseMessages(),
             'normalize' => function (array $r) use ($labelToKey) {
                 $a = array_map(fn ($v) => trim((string) $v), $r);
 
-                $a['medical_issue_date']  = CsvImportService::toYmd($a['medical_issue_date'] ?? '');
-                $a['medical_expire_date'] = CsvImportService::toYmd($a['medical_expire_date'] ?? '');
+                foreach (['date_of_birth', 'medical_issue_date', 'medical_expire_date'] as $f) {
+                    $a[$f] = CsvImportService::toYmd($a[$f] ?? '');
+                }
 
                 $st = $a['medical_status'] ?? '';
                 if ($st !== '') {
@@ -297,7 +552,7 @@ class MedicalController extends Controller
                     }
                 }
 
-                foreach (['medical_issue_date', 'medical_expire_date', 'medical_center_name', 'medical_code'] as $f) {
+                foreach (self::OPTIONAL_CSV_FIELDS as $f) {
                     if (($a[$f] ?? '') === '') {
                         $a[$f] = null;
                     }
