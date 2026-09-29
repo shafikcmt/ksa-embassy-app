@@ -72,6 +72,7 @@ class DoubleMofaController extends Controller
             'totalCollected' => $totalCollected,
             'totalDue'       => $totalBilled - $totalCollected,
             'referenceOptions' => $referenceOptions,
+            'agentOptions'     => Agent::referenceOptions($agencyId),
         ]);
     }
 

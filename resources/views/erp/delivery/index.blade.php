@@ -54,34 +54,50 @@
     </div>
 
     {{-- Add entry --}}
-    <form method="POST" action="{{ route('erp.delivery.store') }}" class="mb-6 rounded-2xl border border-slate-200 bg-white p-5">
+    @php
+        // Add + Edit share the default error bag; a failed Edit comes back with _method=PUT,
+        // so only show inline errors here when the Add form was the one submitted.
+        $addErr = $errors->any() && old('_method') === null;
+        $fi = \App\Support\ErpForm::INPUT;
+        $bd = fn (string $k) => $addErr && $errors->has($k) ? \App\Support\ErpForm::BORDER_ERROR : \App\Support\ErpForm::BORDER_OK;
+    @endphp
+    <form method="POST" action="{{ route('erp.delivery.store') }}" class="mb-6" x-data="{ busy: false }" x-on:submit="busy = true">
         @csrf
-        <h2 class="mb-4 flex items-center gap-2 text-sm font-bold text-slate-900"><i class="bi bi-plus-circle text-emerald-600"></i> Add Delivery</h2>
-        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <div><label class="{{ $lbl }}">Full Name <span class="text-rose-500">*</span></label><input type="text" name="full_name" value="{{ old('full_name') }}" required class="{{ $inp }}"></div>
-            <div><label class="{{ $lbl }}">Passport Number <span class="text-rose-500">*</span></label><input type="text" id="deliveryPassport" name="passport_no" value="{{ old('passport_no') }}" required placeholder="Auto-fills from existing records" class="{{ $inp }}"></div>
-            <div><label class="{{ $lbl }}">Date <span class="text-rose-500">*</span></label><input type="date" name="delivery_date" value="{{ old('delivery_date', now()->format('Y-m-d')) }}" required class="{{ $inp }}"></div>
-            <div><label class="{{ $lbl }}">Total Amount (৳) <span class="text-rose-500">*</span></label><input type="number" step="0.01" min="0" name="total_amount" value="{{ old('total_amount', '0.00') }}" required class="{{ $inp }}"></div>
-            <div>
-                <label class="{{ $lbl }}">Status <span class="text-rose-500">*</span></label>
-                <select name="status" class="{{ $inp }}">
+        <x-erp.section icon="bi-plus-circle" title="Add Delivery">
+            <x-erp.field label="Full Name" for="dl_full_name" required :name="$addErr ? 'full_name' : null">
+                <input id="dl_full_name" type="text" name="full_name" value="{{ old('full_name') }}" required class="{{ $fi }} {{ $bd('full_name') }}">
+            </x-erp.field>
+            <x-erp.field label="Passport Number" for="deliveryPassport" required :name="$addErr ? 'passport_no' : null">
+                <input type="text" id="deliveryPassport" name="passport_no" value="{{ old('passport_no') }}" required class="{{ $fi }} {{ $bd('passport_no') }}">
+            </x-erp.field>
+            <x-erp.field label="Date" for="dl_delivery_date" required :name="$addErr ? 'delivery_date' : null">
+                <input id="dl_delivery_date" type="date" name="delivery_date" value="{{ old('delivery_date', now()->format('Y-m-d')) }}" required class="{{ $fi }} {{ $bd('delivery_date') }}">
+            </x-erp.field>
+            <x-erp.field label="Total Amount (৳)" for="dl_total_amount" required :name="$addErr ? 'total_amount' : null">
+                <input id="dl_total_amount" type="number" step="0.01" min="0" name="total_amount" value="{{ old('total_amount', '0.00') }}" required class="{{ $fi }} {{ $bd('total_amount') }}">
+            </x-erp.field>
+            <x-erp.field label="Status" for="dl_status" required :name="$addErr ? 'status' : null">
+                <select id="dl_status" name="status" class="{{ $fi }} {{ $bd('status') }}">
                     @foreach($statuses as $key => $label)<option value="{{ $key }}" @selected(old('status', 'pending') === $key)>{{ $label }}</option>@endforeach
                 </select>
-            </div>
-            <div>
-                <label class="{{ $lbl }}">Payment Method</label>
-                <select name="payment_method" class="{{ $inp }}">
+            </x-erp.field>
+            <x-erp.field label="Payment Method" for="dl_payment_method" :name="$addErr ? 'payment_method' : null">
+                <select id="dl_payment_method" name="payment_method" class="{{ $fi }} {{ $bd('payment_method') }}">
                     <option value="">—</option>
                     @foreach($paymentMethods as $key => $label)<option value="{{ $key }}" @selected(old('payment_method') === $key)>{{ $label }}</option>@endforeach
                 </select>
+            </x-erp.field>
+            <x-erp.field label="Reference" for="dl_reference" :name="$addErr ? 'reference' : null">
+                <x-erp.select-search id="dl_reference" name="reference" :value="old('reference')" :agents="$agentOptions ?? []" />
+            </x-erp.field>
+            <div class="col-span-full flex justify-end">
+                <button type="submit" x-bind:disabled="busy"
+                        class="inline-flex min-w-[6.5rem] items-center justify-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60">
+                    <i class="bi bi-arrow-repeat animate-spin" x-show="busy" x-cloak aria-hidden="true"></i>
+                    <span x-text="busy ? 'Saving…' : 'Save'">Save</span>
+                </button>
             </div>
-            {{-- Reference suggestions (Agents + past references); free text still allowed. Shared by Add + Edit. --}}
-            <datalist id="deliveryReferenceList">@foreach($referenceOptions as $opt)<option value="{{ $opt }}">@endforeach</datalist>
-            <div><label class="{{ $lbl }}">Reference</label><input type="text" name="reference" list="deliveryReferenceList" autocomplete="off" value="{{ old('reference') }}" class="{{ $inp }}"></div>
-        </div>
-        <div class="mt-4 flex justify-start">
-            <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md"><i class="bi bi-plus-lg"></i> Save</button>
-        </div>
+        </x-erp.section>
 
         {{-- Duplicate-passport confirm modal — auto-opens when the controller flashes
              'duplicate_warning'. Lives INSIDE the form so "Yes, Add Anyway" submits it
@@ -284,39 +300,43 @@
         </div>
     </div>
 
-    {{-- Edit modal --}}
-    <div x-show="editing" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-slate-900/50" x-on:click="editing = false"></div>
-        <form method="POST" x-bind:action="updateBase + '/' + form.id" class="relative w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl">
-            @csrf @method('PUT')
-            <h3 class="mb-4 text-base font-bold text-slate-900">Edit Delivery</h3>
-            <div class="grid gap-3 sm:grid-cols-2">
-                <div><label class="{{ $lbl }}">Full Name <span class="text-rose-500">*</span></label><input type="text" name="full_name" x-model="form.full_name" required class="{{ $inp }}"></div>
-                <div><label class="{{ $lbl }}">Passport Number <span class="text-rose-500">*</span></label><input type="text" name="passport_no" x-model="form.passport_no" required class="{{ $inp }}"></div>
-                <div><label class="{{ $lbl }}">Date <span class="text-rose-500">*</span></label><input type="date" name="delivery_date" x-model="form.delivery_date" required class="{{ $inp }}"></div>
-                <div><label class="{{ $lbl }}">Total Amount (৳) <span class="text-rose-500">*</span></label><input type="number" step="0.01" min="0" name="total_amount" x-model="form.total_amount" required class="{{ $inp }}"></div>
-                <div>
-                    <label class="{{ $lbl }}">Status <span class="text-rose-500">*</span></label>
-                    <select name="status" x-model="form.status" class="{{ $inp }}">
-                        @foreach($statuses as $key => $label)<option value="{{ $key }}">{{ $label }}</option>@endforeach
-                    </select>
-                </div>
-                <div>
-                    <label class="{{ $lbl }}">Payment Method</label>
-                    <select name="payment_method" x-model="form.payment_method" class="{{ $inp }}">
-                        <option value="">—</option>
-                        @foreach($paymentMethods as $key => $label)<option value="{{ $key }}">{{ $label }}</option>@endforeach
-                    </select>
-                </div>
-                <div><label class="{{ $lbl }}">Reference</label><input type="text" name="reference" list="deliveryReferenceList" autocomplete="off" x-model="form.reference" class="{{ $inp }}"></div>
-            </div>
-            <p class="mt-3 text-xs text-slate-400"><i class="bi bi-info-circle"></i> Paid amount is managed through payments and cannot be edited here.</p>
-            <div class="mt-5 flex justify-end gap-3">
-                <button type="button" x-on:click="editing = false" class="rounded-lg px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900">Cancel</button>
-                <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-semibold text-white"><i class="bi bi-check-lg"></i> Save</button>
-            </div>
-        </form>
-    </div>
+    {{-- Edit modal (classic POST → PUT erp.delivery.update) --}}
+    @php $eb = \App\Support\ErpForm::INPUT . ' ' . \App\Support\ErpForm::BORDER_OK; @endphp
+    <x-erp.modal show="editing" close="editing = false" icon="bi-truck" title-id="delivery-edit-title"
+                 title="'Edit Delivery'" edit="true" action="updateBase + '/' + form.id" method="PUT">
+        <x-erp.section icon="bi-person-vcard" title="Candidate Information">
+            <x-erp.field label="Full Name" for="dle_full_name" required>
+                <input id="dle_full_name" type="text" name="full_name" x-model="form.full_name" required class="{{ $eb }}">
+            </x-erp.field>
+            <x-erp.field label="Passport Number" for="dle_passport_no" required>
+                <input id="dle_passport_no" type="text" name="passport_no" x-model="form.passport_no" required class="{{ $eb }}">
+            </x-erp.field>
+        </x-erp.section>
+        <x-erp.section icon="bi-truck" title="Delivery Details">
+            <x-erp.field label="Date" for="dle_delivery_date" required>
+                <input id="dle_delivery_date" type="date" name="delivery_date" x-model="form.delivery_date" required class="{{ $eb }}">
+            </x-erp.field>
+            <x-erp.field label="Total Amount (৳)" for="dle_total_amount" required>
+                <input id="dle_total_amount" type="number" step="0.01" min="0" name="total_amount" x-model="form.total_amount" required class="{{ $eb }}">
+            </x-erp.field>
+            <x-erp.field label="Status" for="dle_status" required>
+                <select id="dle_status" name="status" x-model="form.status" class="{{ $eb }}">
+                    @foreach($statuses as $key => $label)<option value="{{ $key }}">{{ $label }}</option>@endforeach
+                </select>
+            </x-erp.field>
+            <x-erp.field label="Payment Method" for="dle_payment_method">
+                <select id="dle_payment_method" name="payment_method" x-model="form.payment_method" class="{{ $eb }}">
+                    <option value="">—</option>
+                    @foreach($paymentMethods as $key => $label)<option value="{{ $key }}">{{ $label }}</option>@endforeach
+                </select>
+            </x-erp.field>
+        </x-erp.section>
+        <x-erp.section icon="bi-journal-text" title="Additional Info" cols="2">
+            <x-erp.field label="Reference" for="dle_reference">
+                <x-erp.select-search id="dle_reference" name="reference" x-model="form.reference" :agents="$agentOptions ?? []" />
+            </x-erp.field>
+        </x-erp.section>
+    </x-erp.modal>
 </div>
 
 @include('erp.partials._passport-autofill', [

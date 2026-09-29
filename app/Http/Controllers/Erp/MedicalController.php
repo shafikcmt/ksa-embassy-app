@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Erp;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Erp\Concerns\RendersPrintableList;
+use App\Models\Agent;
 use App\Models\Medical;
 use App\Services\CsvImportService;
 use App\Services\PdfGeneratorService;
@@ -41,6 +42,7 @@ class MedicalController extends Controller
         return view('erp.medical.index', [
             'entries'  => $this->listing($agencyId),
             'statuses' => Medical::MEDICAL_STATUSES,
+            'agentOptions' => Agent::referenceOptions($agencyId),
         ]);
     }
 

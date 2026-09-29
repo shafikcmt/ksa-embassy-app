@@ -49,6 +49,23 @@ class Agent extends Model
         return $query->where('agency_id', $agencyId);
     }
 
+    /**
+     * ERP "Reference" dropdown source: this agency's agents as [name, active].
+     * The dropdown lists active ones; inactive names only label saved values.
+     * No agency → empty list (never queries with a null agency_id).
+     */
+    public static function referenceOptions(?int $agencyId): array
+    {
+        if (! $agencyId) {
+            return [];
+        }
+
+        return static::forAgency($agencyId)->orderBy('name')->get(['name', 'status'])
+            ->map(fn (self $a) => ['name' => $a->name, 'active' => $a->isActive()])
+            ->values()
+            ->all();
+    }
+
     public function hrProfiles(): HasMany
     {
         return $this->hasMany(HrProfile::class);
