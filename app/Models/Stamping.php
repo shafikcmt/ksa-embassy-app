@@ -4,13 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * ERP visa stamping log entry (E1 operational tracker). Workflow status only —
- * no money math.
+ * no money math. The Visa Stamping screens use App\Models\VisaStamping over the
+ * same table; SoftDeletes lives here so every Stamping query skips deleted rows.
  */
 class Stamping extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'agency_id', 'stamp_date', 'visa_serial',
         'full_name', 'passport_no', 'visa_number', 'id_number',
@@ -25,7 +29,10 @@ class Stamping extends Model
     public const STATUSES = [
         'pending'    => 'Pending',
         'processing' => 'Processing',
+        'completed'  => 'Completed',
         'stamped'    => 'Stamped',
+        'expired'    => 'Expired',
+        'rejected'   => 'Rejected',
     ];
 
     public function agency(): BelongsTo

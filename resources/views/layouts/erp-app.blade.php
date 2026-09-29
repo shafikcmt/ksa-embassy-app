@@ -34,7 +34,7 @@
         ['route' => 'erp.medical',     'active' => request()->routeIs('erp.medical*'),     'icon' => 'bi-heart-pulse',       'label' => 'Medical'],
         ['route' => 'erp.mofa',        'active' => request()->routeIs('erp.mofa*'),        'icon' => 'bi-file-earmark-text', 'label' => 'MOFA Entry'],
         ['route' => 'erp.double-mofa', 'active' => request()->routeIs('erp.double-mofa*'), 'icon' => 'bi-files',             'label' => 'Double MOFA'],
-        ['route' => 'erp.stamping',    'active' => request()->routeIs('erp.stamping*'),    'icon' => 'bi-postage',           'label' => 'Stamping'],
+        ['route' => 'erp.visa-stamping.index', 'active' => request()->routeIs('erp.visa-stamping*', 'erp.stamping*'), 'icon' => 'bi-postage', 'label' => 'Visa Stamping'],
         ['route' => 'erp.bmet.index',  'active' => request()->routeIs('erp.bmet*', 'erp.manpower*'), 'icon' => 'bi-person-check', 'label' => 'BMET Clearance'],
         ['route' => 'erp.delivery',    'active' => request()->routeIs('erp.delivery*'),    'icon' => 'bi-truck',             'label' => 'Delivery'],
         ['route' => 'erp.agent-khata', 'active' => request()->routeIs('erp.agent-khata*'), 'icon' => 'bi-journal-bookmark',  'label' => 'Agent Khata'],

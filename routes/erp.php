@@ -19,6 +19,7 @@ use App\Http\Controllers\Erp\ProfitLossController;
 use App\Http\Controllers\Erp\ReportController;
 use App\Http\Controllers\Erp\SettingsController;
 use App\Http\Controllers\Erp\StampingController;
+use App\Http\Controllers\Erp\VisaStampingController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -65,8 +66,13 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
         // ── E1 operational trackers (non-money logs) ──────────────────────────
         // Reads are open within the module; adding entries (store) requires an
         // active subscription, matching the HR/Embassy/Agents modules.
-        Route::get('/stamping', [StampingController::class, 'index'])->name('stamping');
         Route::get('/mofa', [MofaController::class, 'index'])->name('mofa');
+        // The old Stamping list now lives at Visa Stamping (same `stampings` data).
+        // GET-only on purpose: Route::redirect() registers ANY verb, which — once
+        // routes are cached — shadows POST /stamping (erp.stamping.store).
+        Route::get('/stamping', \Illuminate\Routing\RedirectController::class)
+            ->defaults('destination', '/erp/visa-stamping')->defaults('status', 302)
+            ->name('stamping');
         Route::get('/manpower', [BmetController::class, 'index'])->name('manpower');
         Route::get('/medical', [MedicalController::class, 'index'])->name('medical');
 
@@ -149,6 +155,27 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
         Route::get('/bmet/{bmetEntry}', [BmetController::class, 'show'])->whereNumber('bmetEntry')->name('bmet.show');
         Route::put('/bmet/{bmetEntry}', [BmetController::class, 'update'])->whereNumber('bmetEntry')->name('bmet.update');
         Route::delete('/bmet/{bmetEntry}', [BmetController::class, 'destroy'])->whereNumber('bmetEntry')->name('bmet.destroy');
+
+        // ── Visa Stamping (modal UI over the `stampings` log) ─────────────────
+        // Static endpoints precede model binding; {visaStamping} is numeric-only.
+        // Creating requires an active subscription (like every ERP "store").
+        Route::prefix('visa-stamping')->name('visa-stamping.')->group(function () {
+            Route::get('/', [VisaStampingController::class, 'index'])->name('index');
+            Route::middleware('active-subscription')->group(function () {
+                Route::get('/add', [VisaStampingController::class, 'create'])->name('create');
+                Route::post('/', [VisaStampingController::class, 'store'])->name('store');
+            });
+            Route::get('/hr-search', [VisaStampingController::class, 'hrSearch'])->name('hr-search');
+            Route::get('/mofa-lookup', [VisaStampingController::class, 'mofaLookup'])->name('mofa-lookup');
+            Route::get('/export', [VisaStampingController::class, 'exportCsv'])->name('export');
+            Route::get('/print', [VisaStampingController::class, 'printPdf'])->name('print');
+            Route::get('/{visaStamping}', [VisaStampingController::class, 'show'])->whereNumber('visaStamping')->name('show');
+            Route::get('/{visaStamping}/edit', [VisaStampingController::class, 'edit'])->whereNumber('visaStamping')->name('edit');
+            Route::get('/{visaStamping}/print-pdf', [VisaStampingController::class, 'printPdf'])->whereNumber('visaStamping')->name('print-pdf');
+            Route::put('/{visaStamping}', [VisaStampingController::class, 'update'])->whereNumber('visaStamping')->name('update');
+            Route::delete('/{visaStamping}', [VisaStampingController::class, 'destroy'])->whereNumber('visaStamping')->name('destroy');
+            Route::patch('/{id}/restore', [VisaStampingController::class, 'restore'])->whereNumber('id')->name('restore');
+        });
 
         Route::get('/mofa/add', [MofaController::class, 'create'])->name('mofa.create');
         Route::get('/mofa/hr-search', [MofaController::class, 'hrSearch'])->name('mofa.hr-search');
