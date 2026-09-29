@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * ERP MOFA application log entry (E1 operational tracker).
@@ -12,7 +13,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class MofaEntry extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
+        'hr_profile_id', 'father_name', 'mother_name', 'date_of_birth', 'issue_date', 'expiry_date', 'mofa_issue_date', 'mofa_expiry_date', 'remarks', 'passport_number', 'visa_number', 'reference',
         'agency_id', 'mofa_date', 'mofa_number', 'visa_serial', 'id_number',
         'full_name', 'passport_no', 'reference_name',
         'payment_method', 'whatsapp_number', 'payment_note',
@@ -21,13 +25,15 @@ class MofaEntry extends Model
 
     protected $casts = [
         'mofa_date' => 'date',
+        'date_of_birth' => 'date', 'issue_date' => 'date', 'expiry_date' => 'date',
+        'mofa_issue_date' => 'date', 'mofa_expiry_date' => 'date',
     ];
 
     /** Categorical payment tags (value => label). No monetary meaning. */
     public const PAYMENT_METHODS = [
         'company_account' => 'Company Account',
-        'card_payment'    => 'Card Payment',
-        'no_payment'      => 'No Payment',
+        'card_payment' => 'Card Payment',
+        'no_payment' => 'No Payment',
     ];
 
     public function agency(): BelongsTo
@@ -56,4 +62,69 @@ class MofaEntry extends Model
             ? (self::PAYMENT_METHODS[$this->payment_method] ?? $this->payment_method)
             : null;
     }
+
+    public function hrProfile(): BelongsTo
+    {
+        return $this->belongsTo(HrProfile::class);
+    }
+
+    public function getPassportNumberAttribute()
+    {
+        return $this->passport_no;
+    }
+
+    public function setPassportNumberAttribute($value): void
+    {
+        $this->attributes['passport_no'] = strtoupper(trim($value));
+    }
+
+    public function getVisaNumberAttribute()
+    {
+        return $this->visa_serial;
+    }
+
+    public function setVisaNumberAttribute($value): void
+    {
+        $this->attributes['visa_serial'] = $value;
+    }
+
+    public function getReferenceAttribute()
+    {
+        return $this->reference_name;
+    }
+
+    public function setReferenceAttribute($value): void
+    {
+        $this->attributes['reference_name'] = $value;
+    }
+
+    // Virtual values stay current without stale persisted age/status columns.
+    public function getAgeAttribute(): ?int
+    {
+        return $this->date_of_birth ? today()->year - $this->date_of_birth->year : null;
+    }
+
+    public function getLeftDayAttribute(): ?int
+    {
+        return $this->mofa_issue_date && $this->mofa_expiry_date ? (int) $this->mofa_issue_date->diffInDays($this->mofa_expiry_date, false) : null;
+    }
+
+    public function getStatusAttribute(): string
+    {
+        if (! $this->mofa_expiry_date) {
+            return 'processing';
+        }
+        if ($this->mofa_expiry_date->lt(today())) {
+            return 'expired';
+        }
+
+        return $this->mofa_expiry_date->lt(today()->addDays(30)) ? 'expiring' : 'active';
+    }
+
+    public function statusLabel(): string
+    {
+        return self::STATUSES[$this->status];
+    }
+
+    public const STATUSES = ['active' => 'Active', 'expiring' => 'Expiring Soon', 'expired' => 'Expired', 'processing' => 'Processing'];
 }

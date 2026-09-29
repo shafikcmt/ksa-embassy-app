@@ -11,6 +11,7 @@ use App\Http\Controllers\Erp\InvoiceController;
 use App\Http\Controllers\Erp\ManpowerController;
 use App\Http\Controllers\Erp\MedicalController;
 use App\Http\Controllers\Erp\MofaEntryController;
+use App\Http\Controllers\Erp\MofaController;
 use App\Http\Controllers\Erp\PassportLookupController;
 use App\Http\Controllers\Erp\PaymentVoucherController;
 use App\Http\Controllers\Erp\ProfitLossController;
@@ -63,21 +64,21 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
         // ── E1 operational trackers (non-money logs) ──────────────────────────
         // Reads are open within the module; adding entries (store) requires an
         // active subscription, matching the HR/Embassy/Agents modules.
-        Route::get('/mofa', [MofaEntryController::class, 'index'])->name('mofa');
         Route::get('/stamping', [StampingController::class, 'index'])->name('stamping');
         Route::get('/manpower', [ManpowerController::class, 'index'])->name('manpower');
+        Route::get('/mofa', [MofaController::class, 'index'])->name('mofa');
         Route::get('/medical', [MedicalController::class, 'index'])->name('medical');
 
         // ── E7a: per-module Print (full list PDF, read-only, staff-visible) ───
         // No admin guard and no active-subscription: printing shows only what the
         // staff member already sees on the module screen. Reuses PdfGeneratorService.
-        Route::get('/mofa/print', [MofaEntryController::class, 'printPdf'])->name('mofa.print');
+        Route::get('/mofa/print', [MofaController::class, 'printPdf'])->name('mofa.print');
 
         // ── E7b: MOFA CSV export (staff-visible) + import (admin-only) ─────────
         // Export is read-only (matches Print). Import is admin-only (enforced in
         // the controller); the commit additionally requires an active subscription
         // (it creates records, like store). Preview is a dry run that writes nothing.
-        Route::get('/mofa/export', [MofaEntryController::class, 'exportCsv'])->name('mofa.export');
+        Route::get('/mofa/export', [MofaController::class, 'exportCsv'])->name('mofa.export');
         Route::get('/mofa/import', [MofaEntryController::class, 'importForm'])->name('mofa.import.form');
         Route::get('/mofa/import/template', [MofaEntryController::class, 'importTemplate'])->name('mofa.import.template');
         Route::post('/mofa/import/preview', [MofaEntryController::class, 'importPreview'])->name('mofa.import.preview');
@@ -124,7 +125,7 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
         Route::get('/agent-khata/print', [AgentKhataController::class, 'printPdf'])->name('agent-khata.print');
 
         Route::middleware(['active-subscription'])->group(function () {
-            Route::post('/mofa', [MofaEntryController::class, 'store'])->name('mofa.store');
+            Route::post('/mofa', [MofaController::class, 'store'])->name('mofa.store');
             Route::post('/mofa/import', [MofaEntryController::class, 'import'])->name('mofa.import'); // E7b commit
             Route::post('/stamping', [StampingController::class, 'store'])->name('stamping.store');
             Route::post('/stamping/import', [StampingController::class, 'import'])->name('stamping.import'); // E7c commit
@@ -135,8 +136,13 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
             Route::post('/medical/import', [MedicalController::class, 'import'])->name('medical.import'); // Medical commit
         });
 
-        Route::put('/mofa/{mofa}', [MofaEntryController::class, 'update'])->name('mofa.update');
-        Route::delete('/mofa/{mofa}', [MofaEntryController::class, 'destroy'])->name('mofa.destroy');
+        Route::get('/mofa/add', [MofaController::class, 'create'])->name('mofa.create');
+        Route::get('/mofa/hr-search', [MofaController::class, 'hrSearch'])->name('mofa.hr-search');
+        Route::get('/mofa/{mofa}/edit', [MofaController::class, 'edit'])->name('mofa.edit');
+        Route::get('/mofa/{mofa}/print-pdf', [MofaController::class, 'printPdf'])->name('mofa.print-pdf');
+        Route::get('/mofa/{mofa}', [MofaController::class, 'show'])->name('mofa.show');
+        Route::put('/mofa/{mofa}', [MofaController::class, 'update'])->name('mofa.update');
+        Route::delete('/mofa/{mofa}', [MofaController::class, 'destroy'])->name('mofa.destroy');
 
         Route::put('/stamping/{stamping}', [StampingController::class, 'update'])->name('stamping.update');
         Route::delete('/stamping/{stamping}', [StampingController::class, 'destroy'])->name('stamping.destroy');

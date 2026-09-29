@@ -205,7 +205,11 @@ class MofaEntryController extends Controller
         }
 
         DB::transaction(function () use ($result, $agencyId) {
+            \App\Models\Agency::whereKey($agencyId)->lockForUpdate()->firstOrFail();
             foreach ($result['rows'] as $row) {
+                if (MofaEntry::forAgency($agencyId)->where('passport_no', $row['attrs']['passport_no'])->exists()) {
+                    throw \Illuminate\Validation\ValidationException::withMessages(['file' => 'Passport number already exists. Nothing was imported.']);
+                }
                 MofaEntry::create($row['attrs'] + [
                     'agency_id'  => $agencyId,
                     'created_by' => auth()->id(),
@@ -224,8 +228,8 @@ class MofaEntryController extends Controller
 
     /**
      * Import config for CsvImportService: shared rules() + a normaliser (trim,
-     * lenient enum key/label mapping, date → Y-m-d) + a duplicate-passport notice
-     * (non-blocking — MOFA legitimately repeats, so a repeat is imported, not skipped).
+     * lenient enum key/label mapping, date → Y-m-d). Duplicate passports are
+     * rejected; commit also checks the batch under the agency lock.
      */
     private function importConfig(int $agencyId): array
     {
@@ -239,6 +243,7 @@ class MofaEntryController extends Controller
             'rules'   => $this->rules(),
             'normalize' => function (array $r) use ($labelToKey) {
                 $a = array_map(fn ($v) => trim((string) $v), $r);
+                $a['passport_no'] = strtoupper($a['passport_no'] ?? '');
 
                 // payment_method: accept key OR human label (case-insensitive) → key.
                 $pm = $a['payment_method'] ?? '';
@@ -264,13 +269,6 @@ class MofaEntryController extends Controller
                 }
 
                 return $a;
-            },
-            'notices' => function (array $a) use ($agencyId) {
-                $p = $a['passport_no'] ?? '';
-                if ($p !== '' && MofaEntry::forAgency($agencyId)->where('passport_no', $p)->exists()) {
-                    return ["Passport {$p} already exists — added as a repeat MOFA."];
-                }
-                return [];
             },
         ];
     }
@@ -361,7 +359,7 @@ class MofaEntryController extends Controller
             'visa_serial'     => ['nullable', 'string', 'max:100'],
             'id_number'       => ['nullable', 'string', 'max:100'],
             'full_name'       => ['required', 'string', 'max:255'],
-            'passport_no'     => ['required', 'string', 'max:100'],
+            'passport_no'     => ['required', 'string', 'max:100', Rule::unique('mofa_entries', 'passport_no')->where('agency_id', auth()->user()->agency_id)->whereNull('deleted_at')],
             'reference_name'  => ['nullable', 'string', 'max:255'],
             'payment_method'  => ['nullable', Rule::in(array_keys(MofaEntry::PAYMENT_METHODS))],
             'whatsapp_number' => ['nullable', 'string', 'max:40'],
