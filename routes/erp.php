@@ -51,6 +51,9 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
         // active-subscription gate; tenancy comes from the group middleware +
         // agency_id scoping in the controller.
         Route::get('/passport-lookup', [PassportLookupController::class, 'lookup'])->name('passport-lookup');
+        // Same read-only endpoint family: returns ALL matches across the 6 modules
+        // (used by Double MOFA's "passport already exists" confirm modal).
+        Route::get('/passport-records', [PassportLookupController::class, 'records'])->name('passport-records');
 
         // ── E1 operational trackers (non-money logs) ──────────────────────────
         // Reads are open within the module; adding entries (store) requires an

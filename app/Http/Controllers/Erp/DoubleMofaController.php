@@ -10,6 +10,7 @@ use App\Models\ErpSetting;
 use App\Models\PaymentReceipt;
 use App\Services\CsvImportService;
 use App\Services\ErpPaymentService;
+use App\Services\PassportRecordFinder;
 use App\Services\PdfGeneratorService;
 use App\Support\NumberToWords;
 use Illuminate\Http\Request;
@@ -117,10 +118,22 @@ class DoubleMofaController extends Controller
             ->get();
     }
 
-    public function store(Request $request)
+    public function store(Request $request, PassportRecordFinder $finder)
     {
         $data = $this->validated($request);
         $agencyId = auth()->user()->agency_id;
+
+        // Warn-and-confirm when the passport already exists ANYWHERE in the ERP
+        // (Medical / MOFA / Double MOFA / Stamping / BMET / Delivery). Never a hard
+        // block: "Continue Anyway" re-submits with confirm_duplicate=1. This is the
+        // server-side guard; the form's pre-submit AJAX modal is only a convenience.
+        if (! $request->boolean('confirm_duplicate')) {
+            $matches = $finder->find((int) $agencyId, $data['passport_no']);
+
+            if ($matches) {
+                return back()->withInput()->with('passport_matches', $matches);
+            }
+        }
 
         // Snapshot: whatever billing_amount is submitted is frozen on the row.
         DoubleMofa::create($data + [

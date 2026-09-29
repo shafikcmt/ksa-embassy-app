@@ -9,6 +9,7 @@ use App\Models\ManpowerCompletion;
 use App\Models\Medical;
 use App\Models\MofaEntry;
 use App\Models\Stamping;
+use App\Services\PassportRecordFinder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -78,6 +79,30 @@ class PassportLookupController extends Controller
 
             return response()->json(['found' => false]);
         }
+    }
+
+    /**
+     * Every existing record for a passport across the 6 ERP modules (agency-scoped,
+     * trim + case-insensitive). Powers the Double MOFA duplicate-confirm modal.
+     */
+    public function records(Request $request, PassportRecordFinder $finder): JsonResponse
+    {
+        $data = $request->validate([
+            'passport_no' => 'required|string|max:100',
+        ]);
+
+        try {
+            $matches = $finder->find((int) auth()->user()->agency_id, $data['passport_no']);
+        } catch (\Throwable $e) {
+            // Degrade to "no matches" — the server-side store() check still guards.
+            Log::warning('ERP passport records lookup failed', ['error' => $e->getMessage()]);
+            $matches = [];
+        }
+
+        return response()->json([
+            'found'   => ! empty($matches),
+            'matches' => $matches,
+        ]);
     }
 
     private function fromMofa(int $agencyId, string $passportNo): ?array
