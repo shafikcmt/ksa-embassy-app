@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\ErpAutoFillController;
 use App\Http\Controllers\Erp\AgentKhataController;
 use App\Http\Controllers\Erp\DashboardController;
 use App\Http\Controllers\Erp\DeliveryController;
@@ -51,6 +52,11 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
         // active-subscription gate; tenancy comes from the group middleware +
         // agency_id scoping in the controller.
         Route::get('/passport-lookup', [PassportLookupController::class, 'lookup'])->name('passport-lookup');
+
+        // Cross-module ERP auto-fill (Medical → MOFA → Stamping → BMET, HR fallback)
+        // used by the module modals. Read-only; tenancy from the group middleware.
+        Route::get('/autofill/{passport}', [ErpAutoFillController::class, 'getErpDataByPassport'])
+            ->where('passport', '[A-Za-z0-9]{1,30}')->name('autofill');
 
         // ── E1 operational trackers (non-money logs) ──────────────────────────
         // Reads are open within the module; adding entries (store) requires an
