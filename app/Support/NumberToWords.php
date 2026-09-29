@@ -84,6 +84,61 @@ class NumberToWords
         return implode(' ', $parts);
     }
 
+    /**
+     * "{Unit} {words} [and {SubUnit} {words}] Only" for an invoice currency.
+     * BDT keeps the existing Taka/Paisa + Crore/Lakh wording (taka()); SAR and
+     * USD use international Million/Thousand grouping. Takes a decimal string
+     * so no float rounding is involved.
+     */
+    public static function currency(string $amount, string $currency): string
+    {
+        [$whole, $frac] = array_pad(explode('.', $amount, 2), 2, '0');
+        $major = (int) $whole;
+        $minor = (int) str_pad(substr($frac, 0, 2), 2, '0');
+
+        if ($currency === 'BDT') {
+            $words = 'Taka ' . self::words($major);
+
+            return $words . ($minor > 0 ? ' and Paisa ' . self::words($minor) : '') . ' Only';
+        }
+
+        [$unit, $sub] = match ($currency) {
+            'SAR'   => ['Saudi Riyal', 'Halala'],
+            'USD'   => ['US Dollar', 'Cent'],
+            default => [$currency, 'Cent'],
+        };
+
+        return $unit . ' ' . self::international($major)
+            . ($minor > 0 ? ' and ' . $sub . ' ' . self::twoDigits($minor) : '') . ' Only';
+    }
+
+    /** Non-negative integer → international words (Billion/Million/Thousand/Hundred). */
+    public static function international(int $number): string
+    {
+        if ($number === 0) {
+            return 'Zero';
+        }
+
+        $parts = [];
+        foreach ([1_000_000_000 => 'Billion', 1_000_000 => 'Million', 1_000 => 'Thousand'] as $size => $name) {
+            if ($number >= $size) {
+                $parts[] = self::international(intdiv($number, $size)) . ' ' . $name;
+                $number %= $size;
+            }
+        }
+
+        $hundred = intdiv($number, 100);
+        $number %= 100;
+        if ($hundred > 0) {
+            $parts[] = self::ones($hundred) . ' Hundred';
+        }
+        if ($number > 0) {
+            $parts[] = self::twoDigits($number);
+        }
+
+        return implode(' ', $parts);
+    }
+
     /** 1-99 -> words. */
     private static function twoDigits(int $n): string
     {

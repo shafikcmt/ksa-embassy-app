@@ -7,6 +7,7 @@ use App\Http\Controllers\Erp\DeliveryController;
 use App\Http\Controllers\Erp\DoubleMofaController;
 use App\Http\Controllers\Erp\DueListController;
 use App\Http\Controllers\Erp\ExpenseController;
+use App\Http\Controllers\Erp\InvoiceController;
 use App\Http\Controllers\Erp\ManpowerController;
 use App\Http\Controllers\Erp\MedicalController;
 use App\Http\Controllers\Erp\MofaEntryController;
@@ -202,6 +203,25 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
         Route::post('/agent-khata/transactions/{transaction}/reverse', [AgentKhataController::class, 'reverse'])->name('agent-khata.reverse');
         // Credit Voucher (Payment Received) — read-only PDF for one credit txn (admin-only in controller, opens inline).
         Route::get('/agent-khata/voucher/{transaction}', [AgentKhataController::class, 'voucher'])->name('agent-khata.voucher');
+
+        // ── Invoices (multi-line, replaces the Credit Voucher prints) ─────────
+        // Tenancy + per-action permissions are enforced in InvoiceController;
+        // money/numbering writes only via InvoiceService. Creating needs an
+        // active subscription (same as every other ERP "store"); edits, payment,
+        // cancel and prints stay available so a lapsed agency can settle bills.
+        Route::middleware(['active-subscription'])->group(function () {
+            Route::get('/invoices/create', [InvoiceController::class, 'create'])->name('invoices.create');
+            Route::post('/invoices', [InvoiceController::class, 'store'])->name('invoices.store');
+        });
+        // JSON lookup for the payment-voucher form's "Link invoice" auto-fill.
+        // Must precede the resource so "search" isn't bound as {invoice}.
+        Route::get('/invoices/search', [InvoiceController::class, 'search'])->name('invoices.search');
+        Route::resource('invoices', InvoiceController::class)->except(['create', 'store']);
+        Route::patch('/invoices/{invoice}/mark-paid', [InvoiceController::class, 'markAsPaid'])->name('invoices.mark-paid');
+        Route::patch('/invoices/{invoice}/cancel', [InvoiceController::class, 'cancel'])->name('invoices.cancel');
+        Route::get('/invoices/{invoice}/download-pdf', [InvoiceController::class, 'downloadPdf'])->name('invoices.download-pdf');
+        Route::get('/invoices/{invoice}/preview-pdf', [InvoiceController::class, 'previewPdf'])->name('invoices.preview-pdf');
+
 
         // ── E4: Dashboard + Reports (read-only aggregation) ───────────────────
         // Viewing the report is open to any access_erp staff (same visibility as
