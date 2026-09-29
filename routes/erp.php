@@ -12,6 +12,7 @@ use App\Http\Controllers\Erp\ManpowerController;
 use App\Http\Controllers\Erp\MedicalController;
 use App\Http\Controllers\Erp\MofaEntryController;
 use App\Http\Controllers\Erp\PassportLookupController;
+use App\Http\Controllers\Erp\PaymentVoucherController;
 use App\Http\Controllers\Erp\ProfitLossController;
 use App\Http\Controllers\Erp\ReportController;
 use App\Http\Controllers\Erp\SettingsController;
@@ -222,6 +223,29 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
         Route::get('/invoices/{invoice}/download-pdf', [InvoiceController::class, 'downloadPdf'])->name('invoices.download-pdf');
         Route::get('/invoices/{invoice}/preview-pdf', [InvoiceController::class, 'previewPdf'])->name('invoices.preview-pdf');
 
+        // ── Payment Vouchers (money OUT: parties, manpower providers, vendors) ─
+        // Tenancy + roles via PaymentVoucherPolicy; money/numbering/lifecycle via
+        // PaymentVoucherService. Creating needs an active subscription (same as
+        // every ERP "store"); approve/pay/cancel/prints stay available so a
+        // lapsed agency can still settle what it already raised.
+        Route::prefix('payment-vouchers')->name('payment-vouchers.')->group(function () {
+            Route::middleware(['active-subscription'])->group(function () {
+                Route::get('/create', [PaymentVoucherController::class, 'create'])->name('create');
+                Route::post('/', [PaymentVoucherController::class, 'store'])->name('store');
+            });
+            Route::get('/', [PaymentVoucherController::class, 'index'])->name('index');
+            Route::get('/{paymentVoucher}', [PaymentVoucherController::class, 'show'])->name('show');
+            Route::get('/{paymentVoucher}/edit', [PaymentVoucherController::class, 'edit'])->name('edit');
+            Route::put('/{paymentVoucher}', [PaymentVoucherController::class, 'update'])->name('update');
+            Route::delete('/{paymentVoucher}', [PaymentVoucherController::class, 'destroy'])->name('destroy');
+
+            Route::patch('/{paymentVoucher}/approve', [PaymentVoucherController::class, 'approve'])->name('approve');
+            Route::patch('/{paymentVoucher}/mark-paid', [PaymentVoucherController::class, 'markPaid'])->name('mark-paid');
+            Route::patch('/{paymentVoucher}/cancel', [PaymentVoucherController::class, 'cancel'])->name('cancel');
+
+            Route::get('/{paymentVoucher}/preview-pdf', [PaymentVoucherController::class, 'previewPdf'])->name('preview-pdf');
+            Route::get('/{paymentVoucher}/download-pdf', [PaymentVoucherController::class, 'downloadPdf'])->name('download-pdf');
+        });
 
         // ── E4: Dashboard + Reports (read-only aggregation) ───────────────────
         // Viewing the report is open to any access_erp staff (same visibility as

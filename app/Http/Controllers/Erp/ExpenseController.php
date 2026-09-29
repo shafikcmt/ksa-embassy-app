@@ -97,7 +97,7 @@ class ExpenseController extends Controller
     private function listing(int $agencyId): Collection
     {
         return Expense::forAgency($agencyId)
-            ->with('createdBy:id,name')
+            ->with(['createdBy:id,name', 'paymentVoucher:id,voucher_number'])
             ->orderBy('expense_date')->orderBy('id')
             ->get();
     }
@@ -121,6 +121,9 @@ class ExpenseController extends Controller
     {
         $this->authorizeAgency($expense);
         abort_unless(auth()->user()->isAgencyAdmin(), 403); // money-moving action: admin-only
+        if ($blocked = $this->guardSystemGenerated($expense)) {
+            return $blocked;
+        }
 
         $expense->update($this->validated($request) + ['updated_by' => auth()->id()]);
 
@@ -131,10 +134,29 @@ class ExpenseController extends Controller
     {
         $this->authorizeAgency($expense);
         abort_unless(auth()->user()->isAgencyAdmin(), 403); // money-moving action: admin-only
+        if ($blocked = $this->guardSystemGenerated($expense)) {
+            return $blocked;
+        }
 
         $expense->delete();
 
         return redirect()->route('erp.expenses')->with('success', 'Expense deleted.');
+    }
+
+    /**
+     * Expenses booked from a paid Payment Voucher mirror that voucher exactly —
+     * editing/deleting them here would make Expenses/P&L disagree with it.
+     */
+    private function guardSystemGenerated(Expense $expense)
+    {
+        if (! $expense->isSystemGenerated()) {
+            return null;
+        }
+
+        return redirect()->route('erp.expenses')->with('error',
+            'This expense was created automatically from payment voucher '
+            . ($expense->paymentVoucher?->voucher_number ?? '#' . $expense->payment_voucher_id)
+            . ' and cannot be edited or deleted here.');
     }
 
     private function validated(Request $request): array

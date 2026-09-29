@@ -11,6 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * `category` stores a key from CATEGORIES; `paid_via` a key from PAID_VIA.
  * There is intentionally no "Agent Commission" category (agent payouts belong
  * to Agent Khata) so the same outflow is never counted twice in P&L.
+ *
+ * SYSTEM_CATEGORIES are written only by code, never by the manual Add form or
+ * CSV import (both validate against CATEGORIES). "payment_voucher" rows are
+ * created by PaymentVoucherService when a voucher is marked paid; they carry
+ * payment_voucher_id (UNIQUE → one expense per voucher) and are read-only on
+ * the Expenses screen so they always match their voucher.
  */
 class Expense extends Model
 {
@@ -39,6 +45,11 @@ class Expense extends Model
         'other'           => 'Other',
     ];
 
+    /** Code-only categories — deliberately NOT in CATEGORIES (not selectable/importable). */
+    public const SYSTEM_CATEGORIES = [
+        'payment_voucher' => 'Payment Voucher',
+    ];
+
     public const PAID_VIA = [
         'cash'  => 'Cash',
         'bank'  => 'Bank',
@@ -50,6 +61,17 @@ class Expense extends Model
     public function agency(): BelongsTo
     {
         return $this->belongsTo(Agency::class);
+    }
+
+    public function paymentVoucher(): BelongsTo
+    {
+        return $this->belongsTo(PaymentVoucher::class)->withTrashed();
+    }
+
+    /** Auto-created from a paid Payment Voucher → read-only on the Expenses screen. */
+    public function isSystemGenerated(): bool
+    {
+        return $this->payment_voucher_id !== null;
     }
 
     public function createdBy(): BelongsTo
@@ -69,7 +91,9 @@ class Expense extends Model
 
     public function categoryLabel(): string
     {
-        return self::CATEGORIES[$this->category] ?? ucfirst((string) $this->category);
+        return self::CATEGORIES[$this->category]
+            ?? self::SYSTEM_CATEGORIES[$this->category]
+            ?? ucfirst((string) $this->category);
     }
 
     public function paidViaLabel(): ?string

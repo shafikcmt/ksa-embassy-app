@@ -38,6 +38,13 @@
         ['route' => 'erp.manpower',    'active' => request()->routeIs('erp.manpower*'),    'icon' => 'bi-person-check',      'label' => 'Manpower Complete'],
         ['route' => 'erp.delivery',    'active' => request()->routeIs('erp.delivery*'),    'icon' => 'bi-truck',             'label' => 'Delivery'],
         ['route' => 'erp.agent-khata', 'active' => request()->routeIs('erp.agent-khata*'), 'icon' => 'bi-journal-bookmark',  'label' => 'Agent Khata'],
+        // "Billing & Payments" dropdown (Invoices + Payment Vouchers) in the slot those two
+        // links used to occupy. An entry with 'children' renders as a dropdown that
+        // starts OPEN when one of its pages is the current page.
+        ['group' => 'Billing & Payments', 'icon' => 'bi-receipt-cutoff', 'children' => [
+            ['route' => 'erp.invoices.index',         'active' => request()->routeIs('erp.invoices*'),         'icon' => 'bi-receipt', 'label' => 'Invoices'],
+            ['route' => 'erp.payment-vouchers.index', 'active' => request()->routeIs('erp.payment-vouchers*'), 'icon' => 'bi-wallet2', 'label' => 'Payment Vouchers'],
+        ]],
         ['route' => 'erp.expenses',    'active' => request()->routeIs('erp.expenses*'),    'icon' => 'bi-cash-coin',         'label' => 'Expenses'],
         ['route' => 'erp.due-list',    'active' => request()->routeIs('erp.due-list*'),    'icon' => 'bi-hourglass-split',   'label' => 'Due List'],
         $isAdmin
@@ -81,7 +88,27 @@
 
             <nav class="flex-1 overflow-y-auto px-3 py-3">
                 @foreach($erpNav as $link)
-                    @if(($link['soon'] ?? false) || empty($link['route']))
+                    @if(isset($link['children']))
+                        @php $groupActive = collect($link['children'])->contains(fn ($c) => $c['active'] ?? false); @endphp
+                        <div x-data="{ open: @js($groupActive) }" class="my-1"
+                             x-on:click.outside="open = @js($groupActive)" x-on:keydown.escape="open = @js($groupActive)">
+                            <button type="button" x-on:click="open = !open" x-bind:aria-expanded="open.toString()"
+                                    @class([$erpItem, 'w-full', $groupActive ? 'text-emerald-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'])>
+                                <i class="bi {{ $link['icon'] }} w-5 text-center text-base {{ $groupActive ? 'text-emerald-600' : 'text-slate-400' }}"></i>
+                                <span class="flex-1 text-left">{{ $link['group'] }}</span>
+                                <i class="bi bi-chevron-down text-xs text-slate-400 transition-transform duration-200" x-bind:class="open && 'rotate-180'"></i>
+                            </button>
+                            <div x-show="open" x-transition.opacity x-cloak class="ml-4 mt-0.5 space-y-0.5 border-l border-slate-200 pl-2">
+                                @foreach($link['children'] as $child)
+                                    <a href="{{ route($child['route']) }}" @click="erpNav = false"
+                                       @class([$erpItem, 'py-1.5', $erpOn => ($child['active'] ?? false), $erpOff => ! ($child['active'] ?? false)])>
+                                        <i class="bi {{ $child['icon'] }} w-5 text-center text-sm {{ ($child['active'] ?? false) ? 'text-emerald-600' : 'text-slate-400' }}"></i>
+                                        <span>{{ $child['label'] }}</span>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @elseif(($link['soon'] ?? false) || empty($link['route']))
                         <span @class([$erpItem, 'cursor-not-allowed text-slate-400']) aria-disabled="true">
                             <i class="bi {{ $link['icon'] }} w-5 text-center text-base text-slate-300"></i>
                             <span class="flex-1">{{ $link['label'] }}</span>

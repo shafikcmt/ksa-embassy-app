@@ -53,31 +53,45 @@
     </div>
 
     {{-- Add entry --}}
-    <form method="POST" action="{{ route('erp.expenses.store') }}" class="mb-6 rounded-2xl border border-slate-200 bg-white p-5">
+    @php
+        // Add + Edit share the default error bag; a failed Edit comes back with _method=PUT,
+        // so only show inline errors here when the Add form was the one submitted.
+        $addErr = $errors->any() && old('_method') === null;
+        $fi = \App\Support\ErpForm::INPUT;
+        $bd = fn (string $k) => $addErr && $errors->has($k) ? \App\Support\ErpForm::BORDER_ERROR : \App\Support\ErpForm::BORDER_OK;
+    @endphp
+    <form method="POST" action="{{ route('erp.expenses.store') }}" class="mb-6" x-data="{ busy: false }" x-on:submit="busy = true">
         @csrf
-        <h2 class="mb-4 flex items-center gap-2 text-sm font-bold text-slate-900"><i class="bi bi-plus-circle text-emerald-600"></i> Add Expense</h2>
-        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-            <div><label class="{{ $lbl }}">Date <span class="text-rose-500">*</span></label><input type="date" name="expense_date" value="{{ old('expense_date', now()->format('Y-m-d')) }}" required class="{{ $inp }}"></div>
-            <div>
-                <label class="{{ $lbl }}">Category <span class="text-rose-500">*</span></label>
-                <select name="category" required class="{{ $inp }}">
+        <x-erp.section icon="bi-plus-circle" title="Add Expense">
+            <x-erp.field label="Date" for="ex_expense_date" required :name="$addErr ? 'expense_date' : null">
+                <input id="ex_expense_date" type="date" name="expense_date" value="{{ old('expense_date', now()->format('Y-m-d')) }}" required class="{{ $fi }} {{ $bd('expense_date') }}">
+            </x-erp.field>
+            <x-erp.field label="Category" for="ex_category" required :name="$addErr ? 'category' : null">
+                <select id="ex_category" name="category" required class="{{ $fi }} {{ $bd('category') }}">
                     <option value="">—</option>
                     @foreach($categories as $key => $label)<option value="{{ $key }}" @selected(old('category') === $key)>{{ $label }}</option>@endforeach
                 </select>
-            </div>
-            <div><label class="{{ $lbl }}">Amount (৳) <span class="text-rose-500">*</span></label><input type="number" step="0.01" min="0.01" name="amount" value="{{ old('amount') }}" required class="{{ $inp }}"></div>
-            <div>
-                <label class="{{ $lbl }}">Paid via</label>
-                <select name="paid_via" class="{{ $inp }}">
+            </x-erp.field>
+            <x-erp.field label="Amount (৳)" for="ex_amount" required :name="$addErr ? 'amount' : null">
+                <input id="ex_amount" type="number" step="0.01" min="0.01" name="amount" value="{{ old('amount') }}" required class="{{ $fi }} {{ $bd('amount') }}">
+            </x-erp.field>
+            <x-erp.field label="Paid via" for="ex_paid_via" :name="$addErr ? 'paid_via' : null">
+                <select id="ex_paid_via" name="paid_via" class="{{ $fi }} {{ $bd('paid_via') }}">
                     <option value="">—</option>
                     @foreach($paidVia as $key => $label)<option value="{{ $key }}" @selected(old('paid_via') === $key)>{{ $label }}</option>@endforeach
                 </select>
+            </x-erp.field>
+            <x-erp.field label="Note" for="ex_note" :name="$addErr ? 'note' : null" class="sm:col-span-2 lg:col-span-2">
+                <input id="ex_note" type="text" name="note" value="{{ old('note') }}" maxlength="255" class="{{ $fi }} {{ $bd('note') }}">
+            </x-erp.field>
+            <div class="col-span-full flex justify-end">
+                <button type="submit" x-bind:disabled="busy"
+                        class="inline-flex min-w-[6.5rem] items-center justify-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60">
+                    <i class="bi bi-arrow-repeat animate-spin" x-show="busy" x-cloak aria-hidden="true"></i>
+                    <span x-text="busy ? 'Saving…' : 'Save'">Save</span>
+                </button>
             </div>
-            <div><label class="{{ $lbl }}">Note</label><input type="text" name="note" value="{{ old('note') }}" maxlength="255" class="{{ $inp }}"></div>
-        </div>
-        <div class="mt-4 flex justify-start">
-            <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md"><i class="bi bi-plus-lg"></i> Save</button>
-        </div>
+        </x-erp.section>
     </form>
 
     {{-- Live search (client-side; filters only the already-loaded, agency-scoped rows) --}}
@@ -119,6 +133,11 @@
                             <td class="px-4 py-3">
                                 @php $pill = 'inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold ring-1 ring-inset transition'; @endphp
                                 <div class="flex flex-nowrap items-center justify-end gap-1.5">
+                                    @if($e->isSystemGenerated())
+                                    {{-- Booked from a paid Payment Voucher: read-only here, managed on the voucher. --}}
+                                    <a href="{{ route('erp.payment-vouchers.show', $e->payment_voucher_id) }}" title="Created automatically when this voucher was paid"
+                                       class="{{ $pill }} bg-brand-50 text-brand-700 ring-brand-200 hover:bg-brand-100"><i class="bi bi-wallet2"></i> {{ $e->paymentVoucher?->voucher_number ?? 'Voucher' }}</a>
+                                    @else
                                     <button type="button" class="{{ $pill }} bg-amber-50 text-amber-700 ring-amber-200 hover:bg-amber-100"
                                             x-on:click="openEdit(@js([
                                                 'id' => $e->id,
@@ -132,6 +151,7 @@
                                         @csrf @method('DELETE')
                                         <button type="submit" class="{{ $pill }} bg-rose-50 text-rose-700 ring-rose-200 hover:bg-rose-100"><i class="bi bi-trash"></i> Delete</button>
                                     </form>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -146,36 +166,35 @@
         </div>
     </div>
 
-    {{-- Edit modal --}}
-    <div x-show="editing" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-slate-900/50" x-on:click="editing = false"></div>
-        <form method="POST" x-bind:action="updateBase + '/' + form.id" class="relative w-full max-w-2xl rounded-2xl bg-white p-6 shadow-xl">
-            @csrf @method('PUT')
-            <h3 class="mb-4 text-base font-bold text-slate-900">Edit Expense</h3>
-            <div class="grid gap-3 sm:grid-cols-2">
-                <div><label class="{{ $lbl }}">Date <span class="text-rose-500">*</span></label><input type="date" name="expense_date" x-model="form.expense_date" required class="{{ $inp }}"></div>
-                <div>
-                    <label class="{{ $lbl }}">Category <span class="text-rose-500">*</span></label>
-                    <select name="category" x-model="form.category" required class="{{ $inp }}">
-                        @foreach($categories as $key => $label)<option value="{{ $key }}">{{ $label }}</option>@endforeach
-                    </select>
-                </div>
-                <div><label class="{{ $lbl }}">Amount (৳) <span class="text-rose-500">*</span></label><input type="number" step="0.01" min="0.01" name="amount" x-model="form.amount" required class="{{ $inp }}"></div>
-                <div>
-                    <label class="{{ $lbl }}">Paid via</label>
-                    <select name="paid_via" x-model="form.paid_via" class="{{ $inp }}">
-                        <option value="">—</option>
-                        @foreach($paidVia as $key => $label)<option value="{{ $key }}">{{ $label }}</option>@endforeach
-                    </select>
-                </div>
-                <div class="sm:col-span-2"><label class="{{ $lbl }}">Note</label><input type="text" name="note" x-model="form.note" maxlength="255" class="{{ $inp }}"></div>
-            </div>
-            <div class="mt-5 flex justify-end gap-3">
-                <button type="button" x-on:click="editing = false" class="rounded-lg px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900">Cancel</button>
-                <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-semibold text-white"><i class="bi bi-check-lg"></i> Save</button>
-            </div>
-        </form>
-    </div>
+    {{-- Edit modal (classic POST → PUT erp.expenses.update) --}}
+    @php $eb = \App\Support\ErpForm::INPUT . ' ' . \App\Support\ErpForm::BORDER_OK; @endphp
+    <x-erp.modal show="editing" close="editing = false" icon="bi-cash-coin" title-id="expense-edit-title"
+                 title="'Edit Expense'" edit="true" action="updateBase + '/' + form.id" method="PUT">
+        <x-erp.section icon="bi-cash-coin" title="Expense Details">
+            <x-erp.field label="Date" for="exe_expense_date" required>
+                <input id="exe_expense_date" type="date" name="expense_date" x-model="form.expense_date" required class="{{ $eb }}">
+            </x-erp.field>
+            <x-erp.field label="Category" for="exe_category" required>
+                <select id="exe_category" name="category" x-model="form.category" required class="{{ $eb }}">
+                    @foreach($categories as $key => $label)<option value="{{ $key }}">{{ $label }}</option>@endforeach
+                </select>
+            </x-erp.field>
+            <x-erp.field label="Amount (৳)" for="exe_amount" required>
+                <input id="exe_amount" type="number" step="0.01" min="0.01" name="amount" x-model="form.amount" required class="{{ $eb }}">
+            </x-erp.field>
+            <x-erp.field label="Paid via" for="exe_paid_via">
+                <select id="exe_paid_via" name="paid_via" x-model="form.paid_via" class="{{ $eb }}">
+                    <option value="">—</option>
+                    @foreach($paidVia as $key => $label)<option value="{{ $key }}">{{ $label }}</option>@endforeach
+                </select>
+            </x-erp.field>
+        </x-erp.section>
+        <x-erp.section icon="bi-journal-text" title="Additional Info" cols="2">
+            <x-erp.field label="Note" for="exe_note" class="col-span-full">
+                <input id="exe_note" type="text" name="note" x-model="form.note" maxlength="255" class="{{ $eb }}">
+            </x-erp.field>
+        </x-erp.section>
+    </x-erp.modal>
 </div>
 
 @push('scripts')
