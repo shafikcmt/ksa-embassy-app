@@ -57,8 +57,11 @@ class PdfGeneratorService
      * "attachment" (download) behaviour untouched. Passing true sends
      * Content-Disposition: inline so the PDF opens in a new browser tab instead
      * (used by the Credit Voucher print action).
+     *
+     * $options (optional) are merged over the mPDF defaults — e.g. the Medical
+     * Summary passes format A4-L + a footer margin. Existing callers pass none.
      */
-    public function generateFromView(string $view, array $data, string $filename, bool $inline = false): Response
+    public function generateFromView(string $view, array $data, string $filename, bool $inline = false, array $options = []): Response
     {
         // _pdf=true lets templates hide screen-only elements (toolbars, flex wrappers)
         $html = view($view, array_merge($data, ['_pdf' => true]))->render();
@@ -67,7 +70,7 @@ class PdfGeneratorService
             file_put_contents(storage_path('logs/last-pdf-debug.html'), $html);
         }
 
-        $mpdf = $this->makeMpdf();
+        $mpdf = $this->makeMpdf($options);
         $mpdf->SetTitle($filename);
         $mpdf->WriteHTML($html);
 
