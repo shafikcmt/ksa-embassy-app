@@ -11,7 +11,9 @@
 --}}
 
 @section('content')
-<div x-data="hrContract(@js($contract))" class="mx-auto max-w-5xl">
+{{-- translate="no" + notranslate: the browser's auto-translate must never rewrite
+     the Arabic contract text (it turned the Arabic column into English). --}}
+<div x-data="hrContract(@js($contract))" class="notranslate mx-auto max-w-5xl" translate="no">
 
     {{-- Top bar --}}
     <div class="no-print mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3">
@@ -66,7 +68,7 @@
     </div>
 
     {{-- ── A4 contract sheet ─────────────────────────────────────────── --}}
-    <div class="contract-sheet">
+    <div class="contract-sheet notranslate" translate="no">
         <div class="cs-frame">
             <table class="cs-head">
                 <tr>
@@ -76,27 +78,27 @@
                 <tr>
                     <td class="cs-lbl">1<sup>st</sup> party:</td>
                     <td class="cs-val" dir="auto" x-text="f.firstParty"></td>
-                    <td class="cs-ar">الطرف الأول</td>
+                    <td class="cs-ar" lang="ar">الطرف الأول</td>
                 </tr>
                 <tr>
                     <td class="cs-lbl">2<sup>nd</sup> party:</td>
                     <td class="cs-val" x-text="f.secondParty"></td>
-                    <td class="cs-ar">الطرف الثاني</td>
+                    <td class="cs-ar" lang="ar">الطرف الثاني</td>
                 </tr>
                 <tr>
                     <td class="cs-lbl">Nationality:</td>
                     <td class="cs-val" x-text="f.nationality"></td>
-                    <td class="cs-ar">الجنسية</td>
+                    <td class="cs-ar" lang="ar">الجنسية</td>
                 </tr>
                 <tr>
                     <td class="cs-lbl">Passport No.</td>
                     <td class="cs-val" x-text="f.passport"></td>
-                    <td class="cs-ar">جواز سفر رقم</td>
+                    <td class="cs-ar" lang="ar">جواز سفر رقم</td>
                 </tr>
                 <tr>
                     <td class="cs-lbl">Profession:</td>
                     <td class="cs-val" x-text="f.profession"></td>
-                    <td class="cs-ar">المهنة</td>
+                    <td class="cs-ar" lang="ar">المهنة</td>
                 </tr>
             </table>
 
@@ -105,8 +107,8 @@
                     <tr>
                         <td class="cs-n" x-text="(i + 1) + '.'"></td>
                         <td class="cs-en" x-html="t.en"></td>
-                        <td class="cs-ar-txt" x-text="t.ar"></td>
-                        <td class="cs-n-ar" x-text="arNum(i + 1) + '.'"></td>
+                        <td class="cs-ar-txt" lang="ar" x-text="t.ar"></td>
+                        <td class="cs-n-ar" lang="ar" x-text="arNum(i + 1) + '.'"></td>
                     </tr>
                 </template>
             </table>
@@ -119,23 +121,25 @@
                              signature, as on the reference contract. Inline SVG so it
                              prints sharp without an image file. --}}
                         <div class="cs-emblem">
-                            <svg viewBox="0 0 64 44" width="60" height="41" aria-hidden="true">
-                                <g fill="#1f2937">
+                            <svg viewBox="0 0 120 72" width="116" height="70" aria-hidden="true">
+                                <g fill="#1a1a1a">
                                     {{-- trunk --}}
-                                    <path d="M30.6 17 L33.4 17 L34.2 40 L29.8 40 Z"/>
-                                    {{-- fronds: drooping leaves fanning out from the crown --}}
-                                    <path d="M32 15 C24 8 13 7 2 15 C12 13.5 22 15 32 19.5 Z"/>
-                                    <path d="M32 15 C40 8 51 7 62 15 C52 13.5 42 15 32 19.5 Z"/>
-                                    <path d="M32 15.5 C23 11 12 14 6 25 C14 19 23 18 32 19.5 Z"/>
-                                    <path d="M32 15.5 C41 11 52 14 58 25 C50 19 41 18 32 19.5 Z"/>
-                                    <path d="M32 16 C27 6 19 2 10 2.5 C19 6.5 25 11 30.5 18 Z"/>
-                                    <path d="M32 16 C37 6 45 2 54 2.5 C45 6.5 39 11 33.5 18 Z"/>
-                                    <path d="M30.5 17 C29.5 10 30 5 32 0.5 C34 5 34.5 10 33.5 17 Z"/>
+                                    <path d="M57.6 30 C58 42 57.2 54 55.8 66 L64.2 66 C62.8 54 62 42 62.4 30 Z"/>
+                                    {{-- crown: fronds fanning out and drooping at the tips --}}
+                                    <path d="M60 29 C57 20 57.5 11 60 3 C62.5 11 63 20 60 29 Z"/>
+                                    <path d="M60 28 C54 17 44 10 32 9 C43 14 51 21 57.5 30 Z"/>
+                                    <path d="M60 28 C66 17 76 10 88 9 C77 14 69 21 62.5 30 Z"/>
+                                    <path d="M60 28 C48 18 33 16 18 22 C33 21 46 24 57 31 Z"/>
+                                    <path d="M60 28 C72 18 87 16 102 22 C87 21 74 24 63 31 Z"/>
+                                    <path d="M59 29 C45 23 29 26 16 38 C30 31 44 29 57.5 31.5 Z"/>
+                                    <path d="M61 29 C75 23 91 26 104 38 C90 31 76 29 62.5 31.5 Z"/>
+                                    <path d="M58.5 30 C48 29 36 35 30 47 C39 38 48 34 58 32.5 Z"/>
+                                    <path d="M61.5 30 C72 29 84 35 90 47 C81 38 72 34 62 32.5 Z"/>
                                     {{-- base line --}}
-                                    <rect x="12" y="41" width="40" height="1.6" rx=".8"/>
+                                    <rect x="30" y="67" width="60" height="2.4" rx="1.2"/>
                                 </g>
                             </svg>
-                            <div class="cs-emblem-text">المملكة العربية السعودية</div>
+                            <div class="cs-emblem-text" lang="ar">المملكة العربية السعودية</div>
                         </div>
                     </td>
                     <td style="text-align:right">Signature of the Employee</td>
@@ -147,6 +151,7 @@
 @endsection
 
 @push('styles')
+<meta name="google" content="notranslate">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;600&display=swap" rel="stylesheet">
 <style>
     .contract-sheet { width: 210mm; min-height: 297mm; margin: 0 auto 2rem; background: #fff; padding: 12mm 14mm;
@@ -168,9 +173,9 @@
     .cs-n-ar { width: 7mm; text-align: right; font-family: "Traditional Arabic", "Noto Naskh Arabic", serif; font-size: 12pt !important; }
     .cs-sign { margin-top: auto; padding-top: 8mm; font-size: 12pt; }
     .cs-sign td { vertical-align: top; }
-    .cs-emblem { width: 44mm; margin-top: 4mm; text-align: center; }
+    .cs-emblem { width: 46mm; margin-top: 3mm; text-align: center; }
     .cs-emblem svg { display: block; margin: 0 auto; }
-    .cs-emblem-text { margin-top: 1mm; font-family: "Traditional Arabic", "Noto Naskh Arabic", serif; font-size: 11pt; font-weight: 600; color: #6b7280; direction: rtl; letter-spacing: .02em; }
+    .cs-emblem-text { margin-top: .5mm; font-family: "Noto Naskh Arabic", "Traditional Arabic", serif; font-size: 12pt; font-weight: 600; color: #555; direction: rtl; letter-spacing: .04em; }
 
     @media screen and (max-width: 860px) {
         .contract-sheet { width: 100%; min-height: 0; padding: 4mm; }

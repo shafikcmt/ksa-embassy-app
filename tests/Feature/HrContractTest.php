@@ -55,7 +55,10 @@ class HrContractTest extends TestCase
             ->assertSee('A19101335')
             ->assertSee('MD SAYDUL KHAN')
             ->assertSee('BANGLADESHI')
-            ->assertSee('Driver');
+            ->assertSee('Driver')
+            // Browser auto-translate must not rewrite the Arabic contract text.
+            ->assertSee('translate="no"', false)
+            ->assertSee('<meta name="google" content="notranslate">', false);
     }
 
     public function test_contract_of_another_agency_is_forbidden(): void
