@@ -113,12 +113,34 @@
 
             <table class="cs-sign">
                 <tr>
-                    <td>Signature of the Employer</td>
+                    <td>
+                        Signature of the Employer
+                        {{-- Palm emblem + "Kingdom of Saudi Arabia" under the employer
+                             signature, as on the reference contract. Inline SVG so it
+                             prints sharp without an image file. --}}
+                        <div class="cs-emblem">
+                            <svg viewBox="0 0 64 44" width="60" height="41" aria-hidden="true">
+                                <g fill="#1f2937">
+                                    {{-- trunk --}}
+                                    <path d="M30.6 17 L33.4 17 L34.2 40 L29.8 40 Z"/>
+                                    {{-- fronds: drooping leaves fanning out from the crown --}}
+                                    <path d="M32 15 C24 8 13 7 2 15 C12 13.5 22 15 32 19.5 Z"/>
+                                    <path d="M32 15 C40 8 51 7 62 15 C52 13.5 42 15 32 19.5 Z"/>
+                                    <path d="M32 15.5 C23 11 12 14 6 25 C14 19 23 18 32 19.5 Z"/>
+                                    <path d="M32 15.5 C41 11 52 14 58 25 C50 19 41 18 32 19.5 Z"/>
+                                    <path d="M32 16 C27 6 19 2 10 2.5 C19 6.5 25 11 30.5 18 Z"/>
+                                    <path d="M32 16 C37 6 45 2 54 2.5 C45 6.5 39 11 33.5 18 Z"/>
+                                    <path d="M30.5 17 C29.5 10 30 5 32 0.5 C34 5 34.5 10 33.5 17 Z"/>
+                                    {{-- base line --}}
+                                    <rect x="12" y="41" width="40" height="1.6" rx=".8"/>
+                                </g>
+                            </svg>
+                            <div class="cs-emblem-text">المملكة العربية السعودية</div>
+                        </div>
+                    </td>
                     <td style="text-align:right">Signature of the Employee</td>
                 </tr>
             </table>
-            {{-- Space for the company stamp / emblem --}}
-            <div class="cs-stamp"></div>
         </div>
     </div>
 </div>
@@ -145,7 +167,10 @@
     .cs-ar-txt { font-size: 12pt !important; line-height: 1.45 !important; }
     .cs-n-ar { width: 7mm; text-align: right; font-family: "Traditional Arabic", "Noto Naskh Arabic", serif; font-size: 12pt !important; }
     .cs-sign { margin-top: auto; padding-top: 8mm; font-size: 12pt; }
-    .cs-stamp { height: 22mm; }
+    .cs-sign td { vertical-align: top; }
+    .cs-emblem { width: 44mm; margin-top: 4mm; text-align: center; }
+    .cs-emblem svg { display: block; margin: 0 auto; }
+    .cs-emblem-text { margin-top: 1mm; font-family: "Traditional Arabic", "Noto Naskh Arabic", serif; font-size: 11pt; font-weight: 600; color: #6b7280; direction: rtl; letter-spacing: .02em; }
 
     @media screen and (max-width: 860px) {
         .contract-sheet { width: 100%; min-height: 0; padding: 4mm; }
