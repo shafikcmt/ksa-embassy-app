@@ -299,6 +299,7 @@
                 </x-ui.field>
                 <x-ui.field label="Visa Date" name="visa_issue_date" :required="true" hint="Enter exactly as printed on the visa.">
                     <input type="text" id="visa_issue_date" name="visa_issue_date" required autocomplete="off" value="{{ old('visa_issue_date', $visa?->issue_date) }}" class="{{ $inp }} @error('visa_issue_date') !border-rose-400 @enderror">
+                    <p id="visaDatePreview" class="mt-1 text-xs text-slate-500" aria-live="polite"></p>
                 </x-ui.field>
                 <x-ui.field label="Sponsor Name" name="sponsor_name" :required="true" hint="Arabic auto-fills · editable">
                     <div class="grid grid-cols-2 gap-2">
@@ -490,11 +491,11 @@
                 @endif
 
                 @if($showArrival)
-                    <x-ui.field label="Date of Arrival" name="arrival_date" hint="Arabic auto-fills · editable">
+                    <x-ui.field label="Date of Arrival" name="arrival_date" hint="Type English or Arabic/Hijri — the other side fills">
                         <div class="grid grid-cols-2 gap-2">
                             <input type="date" name="arrival_date" value="{{ $dt($other, 'arrival_date') }}" data-ar-source="arrival_date_ar" data-ar-dict="date" class="{{ $inp }}">
                             <div class="flex gap-1">
-                                <input type="text" id="arrival_date_ar" name="arrival_date_ar" dir="rtl" lang="ar" placeholder="عربي" value="{{ $rel($other, 'arrival_date_ar') }}" class="{{ $inp }} ar-target ar-input">
+                                <input type="text" id="arrival_date_ar" name="arrival_date_ar" dir="rtl" lang="ar" placeholder="١٥/٠٣/٢٠٢٦ أو هجري" title="Arabic or Hijri date, e.g. ١٥/٠٣/٢٠٢٦ or ١٤٤٧/٠٩/٢٦ — fills the English date" value="{{ $rel($other, 'arrival_date_ar') }}" class="{{ $inp }} ar-target ar-input">
                                 <button type="button" class="{{ $arBtn }}" data-target="arrival_date_ar" data-dict="date" tabindex="-1" title="Generate Arabic">ع</button>
                             </div>
                         </div>
@@ -505,11 +506,11 @@
                 @endif
 
                 @if($showDeparture)
-                    <x-ui.field label="Date of Departure" name="departure_date" hint="Arabic auto-fills · editable">
+                    <x-ui.field label="Date of Departure" name="departure_date" hint="Type English or Arabic/Hijri — the other side fills">
                         <div class="grid grid-cols-2 gap-2">
                             <input type="date" name="departure_date" value="{{ $dt($other, 'departure_date') }}" data-ar-source="departure_date_ar" data-ar-dict="date" class="{{ $inp }}">
                             <div class="flex gap-1">
-                                <input type="text" id="departure_date_ar" name="departure_date_ar" dir="rtl" lang="ar" placeholder="عربي" value="{{ $rel($other, 'departure_date_ar') }}" class="{{ $inp }} ar-target ar-input">
+                                <input type="text" id="departure_date_ar" name="departure_date_ar" dir="rtl" lang="ar" placeholder="١٥/٠٣/٢٠٢٦ أو هجري" title="Arabic or Hijri date, e.g. ١٥/٠٣/٢٠٢٦ or ١٤٤٧/٠٩/٢٦ — fills the English date" value="{{ $rel($other, 'departure_date_ar') }}" class="{{ $inp }} ar-target ar-input">
                                 <button type="button" class="{{ $arBtn }}" data-target="departure_date_ar" data-dict="date" tabindex="-1" title="Generate Arabic">ع</button>
                             </div>
                         </div>
@@ -571,6 +572,8 @@
 @endpush
 
 @push('scripts')
+{{-- Arabic → English dictionary + Arabic/Hijri date parser (window.HrArEn). --}}
+@include('agency.hr._arabic-to-english')
 <script>
 (function () {
     // Auto-calculate passport validity date from issue date + selected validity (editable)
@@ -811,11 +814,36 @@
 
     function translateReverse(dict, value, allowTranslit) {
         var v = (value || '').trim();
-        if (!v || dict === 'date') return '';
+        var H = window.HrArEn;
+        if (!v) return '';
+        // Arabic / Hijri date typed in the Arabic box → Gregorian yyyy-mm-dd.
+        if (dict === 'date') { var d = H && H.date(v); return d ? d.iso : ''; }
+        // Known Saudi visa profession phrase wins over the short DICT reverse map.
+        if (H && dict === 'profession') { var ex = H.professionExact(v); if (ex) return ex; }
         var hit = DICT_REV[dict] && DICT_REV[dict][v];
         if (hit) return hit;
-        if (allowTranslit && FREE[dict]) return revTranslit(v);
-        return '';
+        if (!(allowTranslit && FREE[dict])) return '';
+        // Real translation (glossary + known names), not letter-by-letter mapping.
+        if (H) {
+            if (dict === 'profession' || dict === 'qualification') return H.profession(v);
+            if (dict === 'generic') return H.name(v);
+            return H.phrase(v);
+        }
+        return revTranslit(v);
+    }
+
+    // Show a small "converted from Hijri — please verify" note under a date pair.
+    function dateNote(arField, text) {
+        var box = arField.closest('.grid');
+        if (!box) return;
+        var note = box.parentNode.querySelector('.hr-date-note');
+        if (!text) { if (note) note.remove(); return; }
+        if (!note) {
+            note = document.createElement('p');
+            note.className = 'hr-date-note mt-1 text-xs text-amber-700';
+            box.parentNode.insertBefore(note, box.nextSibling);
+        }
+        note.textContent = text;
     }
 
     // Mark English (source) fields as "touched" once they have a value, so a
@@ -847,6 +875,12 @@
         var dict = src.dataset.arDict || 'generic';
         var en = translateReverse(dict, arField.value, force || (opts && opts.translit));
         if (en) { src.value = en; delete src.dataset.touched; }
+        if (dict === 'date') {
+            var parsed = window.HrArEn && window.HrArEn.date(arField.value);
+            dateNote(arField, parsed && parsed.hijri
+                ? 'Hijri date converted to ' + en.split('-').reverse().join('-') + ' (Umm al-Qura). Please verify.'
+                : '');
+        }
     }
 
     // English → Arabic (forward)
@@ -1063,6 +1097,26 @@
             .finally(function () { medBtn.disabled = false; });
         });
     }
+})();
+</script>
+<script>
+(function () {
+    // Visa Date is stored exactly as typed (Arabic digits / Hijri allowed). This
+    // only shows the other calendar as a read-only check; it never edits the value.
+    var el = document.getElementById('visa_issue_date');
+    var out = document.getElementById('visaDatePreview');
+    var H = window.HrArEn;
+    if (!el || !out || !H) return;
+    function show() {
+        var d = H.date(el.value);
+        if (!d) { out.textContent = ''; return; }
+        var dmy = d.iso.split('-').reverse().join('-');
+        if (d.hijri) { out.textContent = 'Hijri → Gregorian: ' + dmy + ' (Umm al-Qura)'; return; }
+        var h = H.toHijri(d.iso);
+        out.textContent = h ? 'Gregorian ' + dmy + ' → Hijri: ' + h : '';
+    }
+    el.addEventListener('input', show);
+    show();
 })();
 </script>
 @endpush
