@@ -17,6 +17,12 @@
 .ksa-checklist, .ksa-checklist table, .ksa-checklist td, .ksa-checklist th,
 .ksa-checklist div, .ksa-checklist span, .ksa-checklist p, .ksa-checklist strong { font-family: ksaroboto, xbriyaz, freesans, sans-serif; }
 .ksa-checklist .ar { font-family: xbriyaz, 'DejaVu Sans', sans-serif; }
+{{-- Uniform type scale (page 4): 10.5pt in every cell and one weight for labels
+     + values. The size is set INLINE on each th/td because the wrapper views'
+     global "td, th { font-size: 9pt }" beats a size inherited from the table.
+     autosize="1" stops mPDF shrinking the table. --}}
+.ksa-checklist .ck-table { font-size: 10.5pt; }
+.ksa-checklist .ck-ar { font-family: xbriyaz, 'DejaVu Sans', sans-serif; }
 @if(empty($_pdf))
   @font-face { font-family: ksaroboto; font-weight: normal; font-style: normal; src: url('/fonts/Roboto-Medium.ttf') format('truetype'); }
   @font-face { font-family: ksaroboto; font-weight: bold;   font-style: normal; src: url('/fonts/Roboto-Bold.ttf') format('truetype'); }
@@ -37,27 +43,27 @@
 
 {{-- Centred, underlined Arabic title --}}
 <div style="text-align:center;margin:4pt 0 18pt;direction:rtl;">
-  <span style="font-size:13pt;font-weight:bold;text-decoration:underline;">إرفاق الجدول التالي في كل معاملة</span>
+  <span style="font-size:15pt;font-weight:bold;text-decoration:underline;">إرفاق الجدول التالي في كل معاملة</span>
 </div>
 
-{{-- RTL table: visual columns L→R are Notes | Port | Agency | Step --}}
-<table style="width:100%;margin:0 auto;border-collapse:collapse;direction:rtl;font-size:10pt;">
-  <colgroup>
-    <col style="width:36%"><col style="width:30%"><col style="width:16%"><col style="width:18%">
-  </colgroup>
+{{-- RTL table: visual columns L→R are Notes | Port | Agency | Step. Widths sit on
+     each <th> (mPDF ignored the old RTL <colgroup> and made Step ~49%). Step 45% ·
+     Agency 31% so the longest label and the Age value stay on one line at 10.5pt;
+     Port/Notes (always empty) take 12% each. --}}
+<table class="ck-table" autosize="1" style="width:100%;margin:0 auto;border-collapse:collapse;direction:rtl;font-size:10.5pt;">
   <thead>
     <tr>
-      <th style="border:1px solid #202428;padding:8pt 6pt;text-align:center;font-weight:bold;background:#fff;">
-        الاجراء<br>Step
+      <th style="font-size:10.5pt;width:45%;border:1px solid #202428;padding:7pt 6pt;text-align:center;font-weight:normal;background:#fff;">
+        <span class="ck-ar">الاجراء</span><br>Step
       </th>
-      <th style="border:1px solid #202428;padding:8pt 6pt;text-align:center;font-weight:bold;background:#fff;">
-        المكتب<br>Agency
+      <th style="font-size:10.5pt;width:31%;border:1px solid #202428;padding:7pt 6pt;text-align:center;font-weight:normal;background:#fff;">
+        <span class="ck-ar">المكتب</span><br>Agency
       </th>
-      <th style="border:1px solid #202428;padding:8pt 6pt;text-align:center;font-weight:bold;background:#fff;">
-        المنفذ<br>Port
+      <th style="font-size:10.5pt;width:12%;border:1px solid #202428;padding:7pt 6pt;text-align:center;font-weight:normal;background:#fff;">
+        <span class="ck-ar">المنفذ</span><br>Port
       </th>
-      <th style="border:1px solid #202428;padding:8pt 6pt;text-align:center;font-weight:bold;background:#fff;">
-        الملاحظات<br>Notes
+      <th style="font-size:10.5pt;width:12%;border:1px solid #202428;padding:7pt 6pt;text-align:center;font-weight:normal;background:#fff;">
+        <span class="ck-ar">الملاحظات</span><br>Notes
       </th>
     </tr>
   </thead>
@@ -86,30 +92,29 @@
     @endphp
     @foreach($rows as $row)
     @php
-      // $bold (4th tuple element, default false) bolds only the candidate name row.
-      [$step, $value, $arabicValue, $bold] = array_pad($row, 4, false);
-      // Step is stored "Arabic / English"; the reference renders the English
-      // label bold and the Arabic label in regular weight, so split and bold
-      // only the English half (order preserved by the RTL cell direction).
+      // 4th tuple element is legacy (unused): every value uses ONE weight.
+      [$step, $value, $arabicValue] = array_pad($row, 3, false);
+      // Step is stored "Arabic / English"; both halves use the same weight and
+      // optical size (order preserved by the RTL cell direction).
       [$stepAr, $stepEn] = array_pad(array_map('trim', explode('/', $step, 2)), 2, '');
     @endphp
     <tr>
-      <td style="border:1px solid #202428;padding:7pt 6pt;text-align:right;direction:rtl;">{{ $stepAr }} / <strong dir="ltr" style="unicode-bidi:isolate;">{{ $stepEn }}</strong></td>
-      <td style="border:1px solid #202428;padding:7pt 6pt;text-align:center;{{ $arabicValue ? 'direction:rtl;' : 'direction:ltr;' }}">{!! nl2br(e($value)) !!}</td>
-      <td style="border:1px solid #202428;padding:7pt 6pt;"></td>
-      <td style="border:1px solid #202428;padding:7pt 6pt;"></td>
+      <td style="font-size:10.5pt;border:1px solid #202428;padding:6pt 6pt;text-align:right;direction:rtl;"><span class="ck-ar">{{ $stepAr }}</span> / <span dir="ltr" style="unicode-bidi:isolate;">{{ $stepEn }}</span></td>
+      <td style="font-size:10.5pt;border:1px solid #202428;padding:6pt 6pt;text-align:center;{{ $arabicValue ? 'direction:rtl;' : 'direction:ltr;' }}">@if($arabicValue)<span class="ck-ar">{{ $value }}</span>@else{!! nl2br(e($value)) !!}@endif</td>
+      <td style="font-size:10.5pt;border:1px solid #202428;padding:6pt 6pt;"></td>
+      <td style="font-size:10.5pt;border:1px solid #202428;padding:6pt 6pt;"></td>
     </tr>
     @endforeach
   </tbody>
 </table>
 
 {{-- Footer — right-aligned, NOT boxed (office name / licence / signature / stamp) --}}
-<div style="margin-top:26pt;direction:rtl;text-align:right;font-size:11pt;">
+<div style="margin-top:24pt;direction:rtl;text-align:right;font-size:14pt;font-weight:bold;">
   {{-- dir="ltr" isolates the Latin name/number so RTL bidi doesn't flip the "( )" --}}
-  <div style="margin-bottom:6pt;">إسم المكتب - <strong dir="ltr" style="unicode-bidi:isolate;">{{ $agency_name }}</strong></div>
-  <div>رقم الرخصة - <strong dir="ltr" style="unicode-bidi:isolate;">{{ $agency_rl ?: $agency_license ?: '—' }}</strong></div>
-  <div style="margin-top:34pt;">التوقيع -</div>
-  <div style="margin-top:34pt;">الختم -</div>
+  <div style="margin-bottom:6pt;"><span class="ck-ar" style="font-size:15pt;font-weight:bold;">إسم المكتب -</span> <strong dir="ltr" style="unicode-bidi:isolate;font-size:16pt;">{{ $agency_name }}</strong></div>
+  <div><span class="ck-ar" style="font-size:15pt;font-weight:bold;">رقم الرخصة -</span> <strong dir="ltr" style="unicode-bidi:isolate;font-size:14pt;">{{ $agency_rl ?: $agency_license ?: '—' }}</strong></div>
+  <div class="ck-ar" style="margin-top:32pt;font-size:15pt;font-weight:bold;">التوقيع -</div>
+  <div class="ck-ar" style="margin-top:32pt;font-size:15pt;font-weight:bold;">الختم -</div>
 </div>
 
 </div>{{-- /.ksa-checklist --}}
