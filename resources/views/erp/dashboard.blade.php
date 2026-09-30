@@ -6,16 +6,15 @@
 @section('content')
     @php
         $money = fn ($v) => '৳ ' . number_format((float) $v, 2);
-        $openingBalance = $settings?->opening_balance ?? 0;
         $categoryLabels = \App\Models\Expense::CATEGORIES;
 
         // Primary KPI cards — every value is a read-only aggregate from
         // ErpReportService (verified E1–E3 sources). No math in the view.
         $cards = [
-            ['label' => 'Total Collected', 'value' => $summary['collected'],       'icon' => 'bi-cash-stack',      'tone' => 'text-emerald-600 bg-emerald-50', 'sub' => 'All-time money in'],
-            ['label' => 'Outstanding Due',  'value' => $summary['outstandingDue'],  'icon' => 'bi-hourglass-split', 'tone' => 'text-rose-600 bg-rose-50',       'sub' => 'Delivery + Double MOFA'],
-            ['label' => 'Total Billed',     'value' => $summary['totalBilled'],     'icon' => 'bi-receipt',         'tone' => 'text-indigo-600 bg-indigo-50',   'sub' => 'Billed across modules'],
-            ['label' => 'Expenses (Month)', 'value' => $summary['expenseMonth'],    'icon' => 'bi-cash-coin',       'tone' => 'text-amber-600 bg-amber-50',     'sub' => 'This calendar month'],
+            ['label' => 'Total Collected',  'value' => $money($summary['collected']),               'icon' => 'bi-cash-stack',      'tone' => 'text-emerald-600 bg-emerald-50', 'sub' => 'All-time money in',        'href' => route('erp.reports')],
+            ['label' => 'Outstanding Due',  'value' => $money($summary['outstandingDue']),          'icon' => 'bi-hourglass-split', 'tone' => 'text-rose-600 bg-rose-50',       'sub' => 'Delivery + Double MOFA',   'href' => route('erp.due-list')],
+            ['label' => 'Expenses (Month)', 'value' => $money($summary['expenseMonth']),            'icon' => 'bi-cash-coin',       'tone' => 'text-amber-600 bg-amber-50',     'sub' => 'This calendar month',      'href' => route('erp.expenses')],
+            ['label' => 'Pending Delivery', 'value' => number_format($summary['pendingDelivery']), 'icon' => 'bi-truck',           'tone' => 'text-sky-600 bg-sky-50',         'sub' => 'Passports not yet delivered', 'href' => route('erp.delivery')],
         ];
     @endphp
 
@@ -35,11 +34,25 @@
         </x-slot:actions>
     </x-ui.page-header>
 
+    {{-- KPI row — the four numbers checked every day; each opens its module. --}}
+    <div class="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        @foreach($cards as $card)
+            <a href="{{ $card['href'] }}" class="group flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-emerald-300 hover:shadow-sm">
+                <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-lg {{ $card['tone'] }}"><i class="bi {{ $card['icon'] }}"></i></span>
+                <div class="min-w-0">
+                    <div class="text-xs font-semibold uppercase tracking-wide text-slate-400">{{ $card['label'] }}</div>
+                    <div class="truncate text-xl font-bold text-slate-900">{{ $card['value'] }}</div>
+                    <div class="text-xs text-slate-400">{{ $card['sub'] }}</div>
+                </div>
+            </a>
+        @endforeach
+    </div>
+
     {{-- E6b — Summary export toolbar (admin-only). Daily PDF carries no profit so
          it needs only admin; Monthly PDF + Backup CSV carry owner-only figures and
          appear only when P/L is unlocked (else a link to the unlock screen). --}}
     @if(auth()->user()->isAgencyAdmin())
-        <div class="mb-6 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="mb-4 flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div class="flex items-center gap-2 text-sm font-semibold text-slate-700">
                 <i class="bi bi-download text-slate-400"></i> Summary Exports
             </div>
@@ -72,87 +85,6 @@
         </div>
     @endif
 
-    {{-- Passenger status — links to the EXISTING search on the main dashboard --}}
-    <a href="{{ route('dashboard') }}#passenger-status"
-       class="mb-6 flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-emerald-300 hover:shadow-sm">
-        <div class="flex items-center gap-3">
-            <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-50 text-emerald-600"><i class="bi bi-person-vcard"></i></span>
-            <div>
-                <div class="text-sm font-semibold text-slate-800">Passenger Status</div>
-                <div class="text-xs text-slate-500">Search a candidate by name, passport, visa or MOFA on the main dashboard.</div>
-            </div>
-        </div>
-        <span class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700"><i class="bi bi-search"></i> Open Search</span>
-    </a>
-
-    {{-- Quick-view cards (operational snapshot) --}}
-    @php
-        $quick = [
-            ['label' => 'Pending Delivery', 'value' => number_format($summary['pendingDelivery']), 'icon' => 'bi-truck',          'tone' => 'text-sky-600 bg-sky-50',        'money' => false],
-            ['label' => 'Expense (all-time)','value' => $money($summary['expenseAllTime']),         'icon' => 'bi-arrow-up-circle',  'tone' => 'text-amber-600 bg-amber-50',    'money' => true],
-        ];
-    @endphp
-    <div class="mb-6 grid gap-4 sm:grid-cols-2">
-        @foreach($quick as $c)
-            <div class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4">
-                <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl {{ $c['tone'] }} text-lg"><i class="bi {{ $c['icon'] }}"></i></span>
-                <div class="min-w-0">
-                    <div class="text-xs font-semibold uppercase tracking-wide text-slate-400">{{ $c['label'] }}</div>
-                    <div class="mt-0.5 truncate text-lg font-bold text-slate-900">{{ $c['value'] }}</div>
-                </div>
-            </div>
-        @endforeach
-    </div>
-
-    {{-- Primary KPI cards --}}
-    <div class="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        @foreach($cards as $card)
-            <div class="rounded-2xl border border-slate-200 bg-white p-5">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-semibold uppercase tracking-wide text-slate-400">{{ $card['label'] }}</span>
-                    <span class="grid h-9 w-9 place-items-center rounded-lg {{ $card['tone'] }}"><i class="bi {{ $card['icon'] }}"></i></span>
-                </div>
-                <div class="mt-3 text-2xl font-bold text-slate-900">{{ $money($card['value']) }}</div>
-                <div class="mt-1 text-xs text-slate-400">{{ $card['sub'] }}</div>
-            </div>
-        @endforeach
-    </div>
-
-    {{-- Yearly summary strip (operational counts + expense) with year selector --}}
-    @php
-        $yearTiles = [
-            ['label' => 'Total MOFA',     'value' => number_format($yearly['mofa']),     'icon' => 'bi-file-earmark-text', 'tone' => 'text-indigo-600'],
-            ['label' => 'Total Delivery', 'value' => number_format($yearly['delivery']), 'icon' => 'bi-truck',             'tone' => 'text-sky-600'],
-            ['label' => 'Total Stamping', 'value' => number_format($yearly['stamping']), 'icon' => 'bi-stamp',             'tone' => 'text-amber-600'],
-            ['label' => 'Total Expense',  'value' => $money($yearly['expense']),         'icon' => 'bi-cash-coin',         'tone' => 'text-rose-600'],
-        ];
-    @endphp
-    <div class="mb-6 rounded-2xl border border-slate-200 bg-white p-5">
-        <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <h3 class="text-sm font-bold text-slate-900"><i class="bi bi-calendar3 mr-1 text-slate-400"></i>Yearly Summary — {{ $yearly['year'] }}</h3>
-            <form method="GET" action="{{ route('erp.dashboard') }}" class="flex items-center gap-2">
-                <label class="text-xs font-semibold text-slate-500">Year</label>
-                <select name="year" onchange="this.form.submit()" class="rounded-lg border-slate-300 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
-                    @foreach($yearOptions as $y)
-                        <option value="{{ $y }}" @selected($y === $yearly['year'])>{{ $y }}</option>
-                    @endforeach
-                </select>
-                <noscript><button type="submit" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm">Go</button></noscript>
-            </form>
-        </div>
-        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            @foreach($yearTiles as $t)
-                <div class="rounded-xl border border-slate-100 bg-slate-50 p-4">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold uppercase tracking-wide text-slate-400">{{ $t['label'] }}</span>
-                        <i class="bi {{ $t['icon'] }} {{ $t['tone'] }}"></i>
-                    </div>
-                    <div class="mt-2 text-xl font-bold text-slate-900">{{ $t['value'] }}</div>
-                </div>
-            @endforeach
-        </div>
-    </div>
-
     {{-- E6b — This-month / Previous-month summary cards.
          Operational + income/expense/due are shown to everyone; Profit/Loss and
          Starting/Ending Balance render only when $canSeeProfit (admin + P/L
@@ -164,10 +96,10 @@
             ['card' => $prevMonthCard, 'tag' => 'Previous Month', 'accent' => 'slate'],
         ];
     @endphp
-    <div class="mb-6 grid gap-4 lg:grid-cols-2">
+    <div class="mb-4 grid gap-4 lg:grid-cols-2">
         @foreach($monthCards as $mc)
             @php $card = $mc['card']; $ops = $card['ops']; @endphp
-            <div class="rounded-2xl border border-slate-200 bg-white p-5">
+            <div class="rounded-2xl border border-slate-200 bg-white p-4">
                 <div class="mb-4 flex items-center justify-between">
                     <div>
                         <div class="text-[0.7rem] font-bold uppercase tracking-wide text-{{ $mc['accent'] }}-600">{{ $mc['tag'] }}</div>
@@ -249,89 +181,81 @@
             ['id' => 'chartDueCollection','title' => 'Due Collection',    'icon' => 'bi-cash-coin',       'tone' => 'text-rose-500'],
         ];
     @endphp
-    <div class="mb-6 grid gap-4 lg:grid-cols-2">
+    <div class="mb-4 grid gap-4 lg:grid-cols-2">
         @foreach($chartCards as $cc)
-            <div class="rounded-2xl border border-slate-200 bg-white p-5">
+            <div class="rounded-2xl border border-slate-200 bg-white p-4">
                 <div class="mb-3 flex items-center justify-between">
                     <h3 class="text-sm font-bold text-slate-900"><i class="bi {{ $cc['icon'] }} mr-1 {{ $cc['tone'] }}"></i>{{ $cc['title'] }}</h3>
                     <span class="text-[0.7rem] font-semibold uppercase tracking-wide text-slate-400">Last 12 months</span>
                 </div>
-                <div class="relative h-56">
+                <div class="relative" style="height: 13rem">
                     <canvas id="{{ $cc['id'] }}"></canvas>
                 </div>
             </div>
         @endforeach
     </div>
 
-    {{-- Secondary strip: agent balances + opening balance --}}
-    <div class="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-            <div class="text-xs font-semibold uppercase tracking-wide text-emerald-600">Agent Receivable</div>
-            <div class="mt-1 text-xl font-bold text-emerald-700">{{ $money($summary['agentReceivable']) }}</div>
-        </div>
-        <div class="rounded-2xl border border-rose-200 bg-rose-50 p-4">
-            <div class="text-xs font-semibold uppercase tracking-wide text-rose-600">Agent Payable</div>
-            <div class="mt-1 text-xl font-bold text-rose-700">{{ $money($summary['agentPayable']) }}</div>
-        </div>
-        <div class="rounded-2xl border border-slate-200 bg-white p-4">
-            <div class="text-xs font-semibold uppercase tracking-wide text-slate-400">Agent Net</div>
-            <div class="mt-1 text-xl font-bold text-slate-900">{{ $money($summary['agentNet']) }}</div>
-        </div>
-        <div class="rounded-2xl border border-teal-200 bg-teal-50 p-4">
-            <div class="flex items-center justify-between">
-                <span class="text-xs font-semibold uppercase tracking-wide text-teal-600">Opening Balance</span>
-                <i class="bi bi-wallet2 text-teal-500"></i>
-            </div>
-            <div class="mt-1 text-xl font-bold text-teal-700">{{ $money($openingBalance) }}</div>
-            <div class="mt-0.5 text-[0.7rem] text-teal-600/70">{{ $settings?->opening_balance_note ?: 'Set in ERP Settings' }}</div>
-        </div>
-    </div>
-
-    {{-- Smart Notes widget (Today / Pinned / Reminders) — reuses SmartNote, honours is_private --}}
+    {{-- Yearly summary strip (operational counts + expense) with year selector --}}
     @php
-        $noteCols = [
-            ['key' => 'today',     'label' => 'Today',     'icon' => 'bi-calendar-day', 'tone' => 'text-sky-500',     'empty' => 'No notes today.'],
-            ['key' => 'pinned',    'label' => 'Pinned',    'icon' => 'bi-pin-angle',    'tone' => 'text-amber-500',   'empty' => 'No pinned notes.'],
-            ['key' => 'reminders', 'label' => 'Reminders', 'icon' => 'bi-alarm',        'tone' => 'text-rose-500',    'empty' => 'No upcoming reminders.'],
+        $yearTiles = [
+            ['label' => 'Total MOFA',     'value' => number_format($yearly['mofa']),     'icon' => 'bi-file-earmark-text', 'tone' => 'text-indigo-600'],
+            ['label' => 'Total Delivery', 'value' => number_format($yearly['delivery']), 'icon' => 'bi-truck',             'tone' => 'text-sky-600'],
+            ['label' => 'Total Stamping', 'value' => number_format($yearly['stamping']), 'icon' => 'bi-stamp',             'tone' => 'text-amber-600'],
+            ['label' => 'Total Expense',  'value' => $money($yearly['expense']),         'icon' => 'bi-cash-coin',         'tone' => 'text-rose-600'],
         ];
     @endphp
-    <div class="mb-4 rounded-2xl border border-slate-200 bg-white p-5">
-        <div class="mb-3 flex items-center justify-between">
-            <h3 class="text-sm font-bold text-slate-900"><i class="bi bi-journal-text mr-1 text-slate-400"></i>Smart Notes</h3>
-            <a href="{{ route('notes.index') }}" class="text-xs font-semibold text-emerald-600 hover:text-emerald-700">Open Notes →</a>
+    <div class="mb-4 rounded-2xl border border-slate-200 bg-white p-4">
+        <div class="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <h3 class="text-sm font-bold text-slate-900"><i class="bi bi-calendar3 mr-1 text-slate-400"></i>Yearly Summary — {{ $yearly['year'] }}</h3>
+            <form method="GET" action="{{ route('erp.dashboard') }}" class="flex items-center gap-2">
+                <label class="text-xs font-semibold text-slate-500">Year</label>
+                <select name="year" onchange="this.form.submit()" class="rounded-lg border-slate-300 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500">
+                    @foreach($yearOptions as $y)
+                        <option value="{{ $y }}" @selected($y === $yearly['year'])>{{ $y }}</option>
+                    @endforeach
+                </select>
+                <noscript><button type="submit" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm">Go</button></noscript>
+            </form>
         </div>
-        <div class="grid gap-4 sm:grid-cols-3">
-            @foreach($noteCols as $col)
-                <div class="rounded-xl border border-slate-100 bg-slate-50 p-4">
-                    <div class="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                        <i class="bi {{ $col['icon'] }} {{ $col['tone'] }}"></i> {{ $col['label'] }}
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            @foreach($yearTiles as $t)
+                <div class="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold uppercase tracking-wide text-slate-400">{{ $t['label'] }}</span>
+                        <i class="bi {{ $t['icon'] }} {{ $t['tone'] }}"></i>
                     </div>
-                    <ul class="space-y-2 text-sm">
-                        @forelse($notesWidget[$col['key']] as $note)
-                            <li class="flex items-start gap-2">
-                                <i class="bi bi-dot text-slate-300"></i>
-                                <div class="min-w-0">
-                                    <div class="truncate font-medium text-slate-800">{{ $note->title ?: \Illuminate\Support\Str::limit(strip_tags($note->body), 40) ?: 'Untitled' }}</div>
-                                    @if($col['key'] === 'reminders' && $note->reminder_at)
-                                        <div class="text-[0.7rem] text-rose-500">{{ $note->reminder_at->format('d M, h:i A') }}</div>
-                                    @else
-                                        <div class="text-[0.7rem] text-slate-400">{{ $note->categoryLabel() }}</div>
-                                    @endif
-                                </div>
-                            </li>
-                        @empty
-                            <li class="py-3 text-center text-xs text-slate-400">{{ $col['empty'] }}</li>
-                        @endforelse
-                    </ul>
+                    <div class="mt-1 text-xl font-bold text-slate-900">{{ $t['value'] }}</div>
                 </div>
             @endforeach
         </div>
     </div>
 
-    {{-- Recent activity + expense breakdown --}}
-    <div class="grid gap-4 lg:grid-cols-3">
+    {{-- Activity: agent balances + recent money in / out --}}
+    <div class="mb-4 grid gap-4 lg:grid-cols-3">
+        {{-- Agent Khata balances in one card (Receivable / Payable / Net) --}}
+        <div class="rounded-2xl border border-slate-200 bg-white p-4">
+            <div class="mb-3 flex items-center justify-between">
+                <h3 class="text-sm font-bold text-slate-900">Agent Balances</h3>
+                <a href="{{ route('erp.agent-khata') }}" class="text-xs font-semibold text-emerald-600 hover:text-emerald-700">Agent Khata →</a>
+            </div>
+            <div class="space-y-2 text-sm">
+                <div class="flex items-center justify-between rounded-lg bg-emerald-50 px-3 py-2.5">
+                    <span class="font-medium text-emerald-700">Receivable</span>
+                    <span class="font-bold text-emerald-700">{{ $money($summary['agentReceivable']) }}</span>
+                </div>
+                <div class="flex items-center justify-between rounded-lg bg-rose-50 px-3 py-2.5">
+                    <span class="font-medium text-rose-700">Payable</span>
+                    <span class="font-bold text-rose-700">{{ $money($summary['agentPayable']) }}</span>
+                </div>
+                <div class="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2.5">
+                    <span class="font-medium text-slate-600">Net</span>
+                    <span class="font-bold text-slate-900">{{ $money($summary['agentNet']) }}</span>
+                </div>
+            </div>
+        </div>
+
         {{-- Recent payments --}}
-        <div class="rounded-2xl border border-slate-200 bg-white p-5">
+        <div class="rounded-2xl border border-slate-200 bg-white p-4">
             <div class="mb-3 flex items-center justify-between">
                 <h3 class="text-sm font-bold text-slate-900">Recent Payments</h3>
                 <i class="bi bi-cash-coin text-emerald-500"></i>
@@ -354,7 +278,7 @@
         </div>
 
         {{-- Recent expenses --}}
-        <div class="rounded-2xl border border-slate-200 bg-white p-5">
+        <div class="rounded-2xl border border-slate-200 bg-white p-4">
             <div class="mb-3 flex items-center justify-between">
                 <h3 class="text-sm font-bold text-slate-900">Recent Expenses</h3>
                 <i class="bi bi-receipt-cutoff text-amber-500"></i>
@@ -374,10 +298,14 @@
             </ul>
         </div>
 
+    </div>
+
+    {{-- Expense breakdown + agent khata activity --}}
+    <div class="mb-4 grid gap-4 lg:grid-cols-3">
         {{-- Expense by category (all-time) --}}
-        <div class="rounded-2xl border border-slate-200 bg-white p-5">
+        <div class="rounded-2xl border border-slate-200 bg-white p-4">
             <div class="mb-3 flex items-center justify-between">
-                <h3 class="text-sm font-bold text-slate-900">Expenses by Category</h3>
+                <h3 class="text-sm font-bold text-slate-900">Expenses by Category <span class="font-normal text-slate-400">· all-time ৳{{ number_format((float) $byCategory->sum(), 2) }}</span></h3>
                 <i class="bi bi-pie-chart text-indigo-500"></i>
             </div>
             @php $catTotal = (float) $byCategory->sum(); @endphp
@@ -398,10 +326,8 @@
                 @endforelse
             </ul>
         </div>
-    </div>
-
-    {{-- Recent agent transactions --}}
-    <div class="mt-4 rounded-2xl border border-slate-200 bg-white p-5">
+        {{-- Recent agent transactions --}}
+        <div class="rounded-2xl border border-slate-200 bg-white p-4 lg:col-span-2">
         <div class="mb-3 flex items-center justify-between">
             <h3 class="text-sm font-bold text-slate-900">Recent Agent Khata Activity</h3>
             <a href="{{ route('erp.agent-khata') }}" class="text-xs font-semibold text-emerald-600 hover:text-emerald-700">View all →</a>
@@ -437,6 +363,49 @@
             </table>
         </div>
     </div>
+    </div>
+
+    {{-- Smart Notes widget (Today / Pinned / Reminders) — reuses SmartNote, honours is_private --}}
+    @php
+        $noteCols = [
+            ['key' => 'today',     'label' => 'Today',     'icon' => 'bi-calendar-day', 'tone' => 'text-sky-500',     'empty' => 'No notes today.'],
+            ['key' => 'pinned',    'label' => 'Pinned',    'icon' => 'bi-pin-angle',    'tone' => 'text-amber-500',   'empty' => 'No pinned notes.'],
+            ['key' => 'reminders', 'label' => 'Reminders', 'icon' => 'bi-alarm',        'tone' => 'text-rose-500',    'empty' => 'No upcoming reminders.'],
+        ];
+    @endphp
+    <div class="rounded-2xl border border-slate-200 bg-white p-4">
+        <div class="mb-3 flex items-center justify-between">
+            <h3 class="text-sm font-bold text-slate-900"><i class="bi bi-journal-text mr-1 text-slate-400"></i>Smart Notes</h3>
+            <a href="{{ route('notes.index') }}" class="text-xs font-semibold text-emerald-600 hover:text-emerald-700">Open Notes →</a>
+        </div>
+        <div class="grid gap-4 sm:grid-cols-3">
+            @foreach($noteCols as $col)
+                <div class="rounded-xl border border-slate-100 bg-slate-50 p-4">
+                    <div class="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        <i class="bi {{ $col['icon'] }} {{ $col['tone'] }}"></i> {{ $col['label'] }}
+                    </div>
+                    <ul class="space-y-2 text-sm">
+                        @forelse($notesWidget[$col['key']] as $note)
+                            <li class="flex items-start gap-2">
+                                <i class="bi bi-dot text-slate-300"></i>
+                                <div class="min-w-0">
+                                    <div class="truncate font-medium text-slate-800">{{ $note->title ?: \Illuminate\Support\Str::limit(strip_tags($note->body), 40) ?: 'Untitled' }}</div>
+                                    @if($col['key'] === 'reminders' && $note->reminder_at)
+                                        <div class="text-[0.7rem] text-rose-500">{{ $note->reminder_at->format('d M, h:i A') }}</div>
+                                    @else
+                                        <div class="text-[0.7rem] text-slate-400">{{ $note->categoryLabel() }}</div>
+                                    @endif
+                                </div>
+                            </li>
+                        @empty
+                            <li class="py-3 text-center text-xs text-slate-400">{{ $col['empty'] }}</li>
+                        @endforelse
+                    </ul>
+                </div>
+            @endforeach
+        </div>
+    </div>
+
 @endsection
 
 @push('scripts')
