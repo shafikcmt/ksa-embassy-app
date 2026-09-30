@@ -15,8 +15,13 @@ use Illuminate\Support\Facades\DB;
 
 class HrProfileController extends Controller
 {
+    /**
+     * Read-only "Find in ERP" lookup for the HR form (passport / visa / MOFA no,
+     * AND-combined). Agency-scoped; returns identity fields only.
+     */
     public function erpLookup(Request $request, \App\Services\HrErpLookupService $lookup)
     {
+        $this->authorize('viewAny', HrProfile::class);
         $agencyId = (int) $request->user()->agency_id;
         abort_if($agencyId <= 0, 403);
         $criteria = $request->validate([

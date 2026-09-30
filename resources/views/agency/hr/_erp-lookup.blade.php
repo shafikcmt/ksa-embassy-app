@@ -1,7 +1,13 @@
 <section id="hrErpLookup" class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5" aria-labelledby="hrErpTitle">
-    <h2 id="hrErpTitle" class="text-sm font-semibold text-slate-700">Find in ERP</h2>
-    <p class="mt-1 text-xs text-slate-500">Enter at least one value. When you enter more, every value must match the same person.</p>
-    <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin-top:12px">
+    {{-- Header matches the other HR form sections (icon + uppercase title). --}}
+    <div class="mb-4 flex items-center gap-3 border-b border-slate-100 pb-3">
+        <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-600"><i class="bi bi-search text-lg"></i></span>
+        <div>
+            <h2 id="hrErpTitle" class="text-xs font-bold uppercase tracking-wider text-slate-700">Find in ERP</h2>
+            <p class="mt-0.5 text-xs text-slate-400">Enter at least one value. When you enter more, every value must match the same person.</p>
+        </div>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:end">
         @foreach(['passport' => 'Passport No', 'visa' => 'Visa No / Serial', 'mofa' => 'MOFA No'] as $key => $label)
             <div style="flex:1 1 220px;min-width:0">
                 <label for="hrErp-{{ $key }}" class="block text-xs font-medium text-slate-600">{{ $label }}</label>
@@ -11,7 +17,7 @@
         <button id="hrErpSearch" type="button" class="h-10 rounded-lg bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700">Search ERP</button>
     </div>
     <p id="hrErpMessage" class="mt-2 text-sm text-slate-600" role="status" aria-live="polite"></p>
-    <div id="hrErpResults" class="mt-2 space-y-2"></div>
+    <div id="hrErpResults" class="mt-2 space-y-2 text-sm text-slate-700"></div>
     <button id="hrErpApply" type="button" hidden class="mt-2 h-10 rounded-lg bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700">Apply to form</button>
 </section>
 
@@ -89,6 +95,7 @@
                     const radio = document.createElement('input');
                     radio.type = 'radio';
                     radio.name = 'hr_erp_candidate';
+                    radio.setAttribute('form', 'hrErpNoSubmit'); // detach from #hrForm so it is never submitted
                     radio.value = candidate.passport;
                     radio.addEventListener('change', () => { selected = candidate; apply.hidden = false; });
                     heading.append(radio, ' ');

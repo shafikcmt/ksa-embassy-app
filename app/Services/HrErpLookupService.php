@@ -43,7 +43,11 @@ class HrErpLookupService
                     continue;
                 }
                 if (in_array($field, ['date_of_birth', 'passport_issue_date', 'passport_expiry_date'], true)) {
-                    $value = Carbon::parse($value)->format($field === 'date_of_birth' ? 'Y-m-d' : 'd-m-Y');
+                    try {
+                        $value = Carbon::parse($value)->format($field === 'date_of_birth' ? 'Y-m-d' : 'd-m-Y');
+                    } catch (\Throwable) {
+                        continue; // unparseable legacy date: skip the field, never fail the lookup
+                    }
                 }
                 $candidate['fields'][$field] = ['value' => $field === 'passport_number' ? $passport : $value, 'source' => $module];
             }
