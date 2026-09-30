@@ -35,6 +35,10 @@ td, th { padding: 3pt 5pt; vertical-align: top; }
 @media print {
   html, body { background: #fff !important; margin: 0 !important; padding: 0 !important; overflow: visible !important; }
   .no-print { display: none !important; }
+  /* Browser print only: same line-height as the Complete File (full-file.blade.php
+     body 1.3). With this page's 1.6 the rows ran ~2cm taller than in mPDF and
+     pushed the signature onto a 2nd page. mPDF output is unaffected. */
+  .ksa-letter { line-height: 1.3 !important; }
   /* @page provides the 12mm safe margin; the wrapper adds none so the
      signature row never lands in the printer's unprintable bottom zone. */
   .a4-page {

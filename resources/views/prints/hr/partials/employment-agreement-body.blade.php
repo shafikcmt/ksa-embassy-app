@@ -31,40 +31,40 @@
 
 {{-- Title — normal word/letter spacing to match reference (no extra tracking). --}}
 <div style="text-align:center;margin-bottom:16pt;">
-  <span style="font-size:15pt;font-weight:bold;text-decoration:underline;">EMPLOYMENT AGREEMENT</span>
+  <span style="font-size:14pt;font-weight:bold;text-decoration:underline;">EMPLOYMENT AGREEMENT</span>
 </div>
 
 {{-- Party info — bottom border only --}}
-<table style="width:100%;border-collapse:collapse;margin-bottom:14pt;font-size:11pt;">
+<table style="width:100%;border-collapse:collapse;margin-bottom:14pt;font-size:10pt;">
   <tbody>
     <tr>
-      <td style="width:50%;font-size:11pt;border-bottom:1px solid #e0e0e0;padding:5pt 4pt;">NAME OF COMPANY:</td>
-      <td style="width:50%;border-bottom:1px solid #e0e0e0;padding:5pt 4pt;font-weight:bold;font-size:11.5pt;">
+      <td style="width:50%;border-bottom:1px solid #e0e0e0;padding:5pt 4pt;">NAME OF COMPANY:</td>
+      <td style="width:50%;border-bottom:1px solid #e0e0e0;padding:5pt 4pt;font-weight:bold;font-size:10.5pt;">
         @if(!empty($sponsor_name_ar))<span class="ar" style="font-weight:bold;">{{ $sponsor_name_ar }}</span>@else{{ $sponsor_name ?: $agency_name }}@endif
       </td>
     </tr>
     <tr>
-      <td style="font-size:11pt;border-bottom:1px solid #e0e0e0;padding:5pt 4pt;">HEREBY APPOINTED:</td>
-      <td style="border-bottom:1px solid #e0e0e0;padding:5pt 4pt;font-weight:bold;font-size:11.5pt;">{{ $full_name_en_upper }}</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:5pt 4pt;">HEREBY APPOINTED:</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:5pt 4pt;font-weight:bold;font-size:10.5pt;">{{ $full_name_en_upper }}</td>
     </tr>
     <tr>
-      <td style="font-size:11pt;border-bottom:1px solid #e0e0e0;padding:5pt 4pt;">PASSPORT NO WITH ISSUE DATE:</td>
-      <td style="border-bottom:1px solid #e0e0e0;padding:5pt 4pt;font-weight:bold;font-size:11.5pt;">{{ $passport_no ?: '—' }}@if($passport_issue_date) &nbsp; Date: {{ $passport_issue_date }}@endif</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:5pt 4pt;">PASSPORT NO WITH ISSUE DATE:</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:5pt 4pt;font-weight:bold;font-size:10.5pt;">{{ $passport_no ?: '—' }}@if($passport_issue_date) &nbsp; Date: {{ $passport_issue_date }}@endif</td>
     </tr>
     <tr>
-      <td style="font-size:11pt;border-bottom:1px solid #e0e0e0;padding:5pt 4pt;">PASSPORT HOLDER:</td>
-      <td style="border-bottom:1px solid #e0e0e0;padding:5pt 4pt;font-weight:bold;font-size:11.5pt;">{{ $nationality }}</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:5pt 4pt;">PASSPORT HOLDER:</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:5pt 4pt;font-weight:bold;font-size:10.5pt;">{{ $nationality }}</td>
     </tr>
     <tr>
-      <td style="font-size:11pt;border-bottom:1px solid #e0e0e0;padding:5pt 4pt;">PROFESSION:</td>
-      <td style="border-bottom:1px solid #e0e0e0;padding:5pt 4pt;font-weight:bold;font-size:11.5pt;">{{ $profession_en ?: ($occupation ?: '—') }}</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:5pt 4pt;">PROFESSION:</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:5pt 4pt;font-weight:bold;font-size:10.5pt;">{{ $profession_en ?: ($occupation ?: '—') }}</td>
     </tr>
   </tbody>
 </table>
 
 {{-- Terms heading --}}
 <div style="text-align:center;margin-bottom:10pt;">
-  <span style="font-size:13pt;font-weight:bold;text-decoration:underline;">UNDER THE FOLLOWING TERMS AND CONDITIONS:</span>
+  <span style="font-size:12pt;font-weight:bold;text-decoration:underline;">UNDER THE FOLLOWING TERMS AND CONDITIONS:</span>
 </div>
 
 {{-- Terms table --}}
@@ -74,7 +74,7 @@
      and (2) the value column starts at ~60% for EVERY row like the reference.
      Without fixed layout, item-10's long text stretched column 2 (auto layout),
      pushing all values rightward to ~70% and letting "SERVICE" stay on line 1. --}}
-<table style="width:100%;margin-bottom:18pt;font-size:11pt;border-collapse:collapse;table-layout:fixed;">
+<table style="width:100%;margin-bottom:18pt;font-size:10pt;border-collapse:collapse;table-layout:fixed;">
   <colgroup>
     <col style="width:8%">
     <col style="width:55%">
@@ -91,68 +91,69 @@
       <td style="border:0;padding:0;width:37%;"></td>
     </tr>
     <tr>
-      <td style="font-size:11pt;border-bottom:1px solid #e0e0e0;padding:4pt 6pt;text-align:center;">1</td>
-      <td style="font-size:11pt;border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">MONTHLY SALARY:</td>
-      <td style="font-size:11pt;border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">{{ $salary ?: '800/= SR' }}</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;text-align:center;">1</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">MONTHLY SALARY:</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">{{ $salary ?: '800/= SR' }}</td>
     </tr>
     <tr>
-      <td style="font-size:11pt;border-bottom:1px solid #e0e0e0;padding:4pt 6pt;text-align:center;">2</td>
-      <td style="font-size:11pt;border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">FOOD AND ACCOMMODATION:</td>
-      <td style="font-size:11pt;border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">200/= SR</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;text-align:center;">2</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">FOOD AND ACCOMMODATION:</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">200/= SR</td>
     </tr>
     <tr>
-      <td style="font-size:11pt;border-bottom:1px solid #e0e0e0;padding:4pt 6pt;text-align:center;">3</td>
-      <td style="font-size:11pt;border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">AIR PASSAGE:</td>
-      <td style="font-size:11pt;border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">BORNE BY THE EMPLOYER</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;text-align:center;">3</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">AIR PASSAGE:</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">BORNE BY THE EMPLOYER</td>
     </tr>
     <tr>
-      <td style="font-size:11pt;border-bottom:1px solid #e0e0e0;padding:4pt 6pt;text-align:center;">4</td>
-      <td style="font-size:11pt;border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">DUTY HOUR:</td>
-      <td style="font-size:11pt;border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">8 HOURS DAILY</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;text-align:center;">4</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">DUTY HOUR:</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">8 HOURS DAILY</td>
     </tr>
     <tr>
-      <td style="font-size:11pt;border-bottom:1px solid #e0e0e0;padding:4pt 6pt;text-align:center;">5</td>
-      <td style="font-size:11pt;border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">HOLIDAY:</td>
-      <td style="font-size:11pt;border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">AS PER SAUDI LABOUR LAWS</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;text-align:center;">5</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">HOLIDAY:</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">AS PER SAUDI LABOUR LAWS</td>
     </tr>
     <tr>
-      <td style="font-size:11pt;border-bottom:1px solid #e0e0e0;padding:4pt 6pt;text-align:center;">6</td>
-      <td style="font-size:11pt;border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">LEAVE:</td>
-      <td style="font-size:11pt;border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">AS PER SAUDI LABOUR LAWS</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;text-align:center;">6</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">LEAVE:</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">AS PER SAUDI LABOUR LAWS</td>
     </tr>
     <tr>
-      <td style="font-size:11pt;border-bottom:1px solid #e0e0e0;padding:4pt 6pt;text-align:center;">7</td>
-      <td style="font-size:11pt;border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">OVERTIME &amp; OTHER BENEFIT:</td>
-      <td style="font-size:11pt;border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">AS PER SAUDI LABOUR LAWS</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;text-align:center;">7</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">OVERTIME &amp; OTHER BENEFIT:</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">AS PER SAUDI LABOUR LAWS</td>
     </tr>
     <tr>
-      <td style="font-size:11pt;border-bottom:1px solid #e0e0e0;padding:4pt 6pt;text-align:center;">8</td>
-      <td style="font-size:11pt;border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">MEDICAL FACILITIES:</td>
-      <td style="font-size:11pt;border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">FREE</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;text-align:center;">8</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">MEDICAL FACILITIES:</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">FREE</td>
     </tr>
     <tr>
-      <td style="font-size:11pt;border-bottom:1px solid #e0e0e0;padding:4pt 6pt;text-align:center;">9</td>
-      <td style="font-size:11pt;border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">PERIOD OF CONTRACT:</td>
-      <td style="font-size:11pt;border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">{{ $contract_period ?: ($duration_stay_en ?: 'TWO/ONE YEARS') }}</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;text-align:center;">9</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">PERIOD OF CONTRACT:</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;">{{ $contract_period ?: ($duration_stay_en ?: 'TWO/ONE YEARS') }}</td>
     </tr>
     {{-- vertical-align:top on this row only: it is the sole 2-line row, and the
          reference top-aligns its value ("AS PER SAUDI LABOUR LAWS") to line 1 of the
          label. Rows 1-9 are single-line, so their (default) alignment is visually
          identical either way — no change needed there. --}}
     <tr>
-      <td style="font-size:11pt;border-bottom:1px solid #e0e0e0;padding:4pt 6pt;text-align:center;vertical-align:top;">10</td>
-      {{-- Same 11pt as rows 1-9 (set per cell, see party table note). --}}
-      <td style="font-size:11pt;border-bottom:1px solid #e0e0e0;padding:4pt 6pt;vertical-align:top;">REPATRIATION ARRANGEMENT INCLUDING RETURN OF DEAD BODY &amp; SERVICE BENEFIT TO THE LEGAL HEIR OF THE EMPLOYEE:</td>
-      <td style="font-size:11pt;border-bottom:1px solid #e0e0e0;padding:4pt 6pt;vertical-align:top;">AS PER SAUDI LABOUR LAWS</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;text-align:center;vertical-align:top;">10</td>
+      {{-- No font-size override: inherit the table's 10pt (same size as rows 1-9,
+           matching the reference). At 10pt in the fixed 55% column the line breaks
+           after "…DEAD BODY &" with "SERVICE BENEFIT…" on line 2, exactly like
+           docs/images/ksa-application-reference-0003.jpg. --}}
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;vertical-align:top;">REPATRIATION ARRANGEMENT INCLUDING RETURN OF DEAD BODY &amp; SERVICE BENEFIT TO THE LEGAL HEIR OF THE EMPLOYEE:</td>
+      <td style="border-bottom:1px solid #e0e0e0;padding:4pt 6pt;vertical-align:top;">AS PER SAUDI LABOUR LAWS</td>
     </tr>
   </tbody>
 </table>
 
-{{-- Pre-signature spacer: places the signature line at ≈260mm from the page top
-     (moved ½ inch up from ≈273mm on request). Text is 11pt/11.5pt set on each
-     cell, so the standalone PDF and the Complete File (whose wrapper forces
-     "td, th { font-size: 8pt }") lay out identically. If the text sizes change,
-     re-tune this height so the signature stays at ≈260mm.
+{{-- Pre-signature spacer (80mm → 67mm): lifts the signature row ½ inch (≈13mm)
+     higher than before, on request. Font sizes are unchanged. Sized to absorb the
+     smaller 24mm top spacer so the title still sits near the top.
      KEPT OUTSIDE the break-inside:avoid wrapper below: bundling this tall spacer
      INSIDE the avoid block made the browser-print engine jump the whole 90mm+
      block (spacer included) onto its own page — a stray 5th page with only the
@@ -160,19 +161,19 @@
      print keeps the spacer butted against the page bottom and only the short
      signature row stays "together". mPDF is single-page here, so its output is
      unchanged. --}}
-<div style="height:59mm;"></div>
+<div style="height:67mm;"></div>
 {{-- Signatures — kept together so the row is never split across pages --}}
 <div class="ksa-signature" style="page-break-inside:avoid;break-inside:avoid;">
   {{-- Reference (page 3): First Party rule/label anchored to the LEFT column edge,
        Second Party anchored to the RIGHT. inline-block makes the top rule exactly
        the label width (not the full cell), matching the reference. Regular weight
        (ksaroboto Medium) — reference labels are not heavy-bold. --}}
-  <table style="width:100%;border-collapse:collapse;font-size:11.5pt;">
+  <table style="width:100%;border-collapse:collapse;font-size:11pt;">
     <tr>
-      <td style="font-size:11.5pt;width:50%;text-align:left;padding:0;vertical-align:bottom;">
+      <td style="width:50%;text-align:left;padding:0;vertical-align:bottom;">
         <span style="display:inline-block;border-top:1px solid #000;padding-top:4pt;">SIGNATURE OF FIRST PARTY</span>
       </td>
-      <td style="font-size:11.5pt;width:50%;text-align:right;padding:0;vertical-align:bottom;">
+      <td style="width:50%;text-align:right;padding:0;vertical-align:bottom;">
         <span style="display:inline-block;border-top:1px solid #000;padding-top:4pt;">SIGNATURE OF SECOND PARTY</span>
       </td>
     </tr>
