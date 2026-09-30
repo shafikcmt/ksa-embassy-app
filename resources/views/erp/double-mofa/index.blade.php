@@ -61,14 +61,17 @@
         $fi = \App\Support\ErpForm::INPUT;
         $bd = fn (string $k) => $addErr && $errors->has($k) ? \App\Support\ErpForm::BORDER_ERROR : \App\Support\ErpForm::BORDER_OK;
     @endphp
-    <form method="POST" action="{{ route('erp.double-mofa.store') }}" class="mb-6" x-data="{ busy: false }" x-on:submit="busy = true">
+    <form method="POST" action="{{ route('erp.double-mofa.store') }}" class="mb-6"
+          x-data="doubleMofaPassportCheck(@js(session('passport_matches', [])), @js(old('passport_no', '')))"
+          x-on:submit="onSubmit($event)">
         @csrf
+        <input type="hidden" name="confirm_duplicate" value="0" x-ref="confirm">
         <x-erp.section icon="bi-plus-circle" title="Add Double MOFA">
             <x-erp.field label="Full Name" for="dm_full_name" required :name="$addErr ? 'full_name' : null">
                 <input id="dm_full_name" type="text" name="full_name" value="{{ old('full_name') }}" required class="{{ $fi }} {{ $bd('full_name') }}">
             </x-erp.field>
             <x-erp.field label="Passport Number" for="doubleMofaPassport" required :name="$addErr ? 'passport_no' : null">
-                <input type="text" id="doubleMofaPassport" name="passport_no" value="{{ old('passport_no') }}" required class="{{ $fi }} {{ $bd('passport_no') }}">
+                <input type="text" id="doubleMofaPassport" name="passport_no" value="{{ old('passport_no') }}" required class="{{ $fi }} {{ $bd('passport_no') }}" x-ref="passport" x-on:blur="onBlur()">
             </x-erp.field>
             <x-erp.field label="Old MOFA Number" for="dm_old_mofa_number" :name="$addErr ? 'old_mofa_number' : null">
                 <input id="dm_old_mofa_number" type="text" name="old_mofa_number" value="{{ old('old_mofa_number') }}" class="{{ $fi }} {{ $bd('old_mofa_number') }}">
@@ -83,13 +86,60 @@
                 <x-erp.select-search id="dm_reference" name="reference" :value="old('reference')" :agents="$agentOptions ?? []" />
             </x-erp.field>
             <div class="col-span-full flex justify-end">
-                <button type="submit" x-bind:disabled="busy"
+                <button type="submit" x-bind:disabled="busy || checking" x-bind:class="checking && 'opacity-60'"
                         class="inline-flex min-w-[6.5rem] items-center justify-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60">
                     <i class="bi bi-arrow-repeat animate-spin" x-show="busy" x-cloak aria-hidden="true"></i>
                     <span x-text="busy ? 'Saving…' : 'Save'">Save</span>
                 </button>
             </div>
         </x-erp.section>
+
+        {{-- Passport-already-exists confirm modal. Opens (a) on passport blur / Save via the
+             read-only erp.passport-records AJAX check, or (b) server-side when store()
+             flashes 'passport_matches' (the backend guard, works without JS fetch).
+             Lists EVERY match across Medical / MOFA / Double MOFA / Stamping / BMET /
+             Delivery. "Continue Anyway" submits with confirm_duplicate=1. Same modal
+             shell as the other ERP duplicate dialogs. --}}
+        <div x-show="open" x-cloak class="fixed inset-0 z-[60] flex items-center justify-center p-4" style="display:none"
+             x-on:keydown.escape.window="open && cancel()">
+            <div x-show="open" x-transition.opacity class="absolute inset-0 bg-slate-900/50" x-on:click="cancel()"></div>
+            <div x-show="open"
+                 x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                 class="relative flex w-full max-w-lg flex-col rounded-2xl bg-white p-6 shadow-xl" style="max-height: 90vh">
+                <div class="flex items-start gap-3">
+                    <span class="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-amber-50 text-amber-600"><i class="bi bi-exclamation-triangle text-lg"></i></span>
+                    <div class="min-w-0">
+                        <h3 class="text-base font-semibold text-slate-900">Passport Already Exists</h3>
+                        <p class="mt-1 text-sm text-slate-500">This passport number already exists in the ERP.</p>
+                        <p class="mt-1 text-sm text-slate-700">Passport Number: <span class="font-semibold" x-text="matchedPassport"></span></p>
+                    </div>
+                </div>
+
+                <div class="mt-4 flex-1 overflow-y-auto rounded-xl border border-slate-100 bg-slate-50" style="min-height: 0">
+                    <div class="px-4 pt-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Existing records (<span x-text="matches.length"></span>)</div>
+                    <ul class="divide-y divide-slate-100 text-sm">
+                        <template x-for="(m, i) in matches" :key="i">
+                            <li class="px-4 py-2.5">
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <span class="font-semibold text-slate-800" x-text="m.module"></span>
+                                    <span class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700" x-show="m.status" x-text="m.status"></span>
+                                </div>
+                                <div class="mt-0.5 text-xs text-slate-500">
+                                    <span x-text="m.name || '—'"></span>
+                                    <template x-if="m.reference"><span> · <span x-text="m.reference"></span></span></template>
+                                    <template x-if="m.date"><span> · <span x-text="m.date"></span></span></template>
+                                </div>
+                            </li>
+                        </template>
+                    </ul>
+                </div>
+
+                <div class="mt-5 flex justify-end gap-2">
+                    <button type="button" x-on:click="cancel()" class="rounded-lg px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900">Cancel / Edit Passport</button>
+                    <button type="button" x-on:click="continueAnyway()" class="inline-flex items-center gap-1.5 rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-600 hover:shadow-md"><i class="bi bi-check-lg"></i> Continue Anyway</button>
+                </div>
+            </div>
+        </div>
     </form>
 
     {{-- Live search (client-side; filters only the already-loaded, agency-scoped rows) --}}
@@ -294,6 +344,87 @@
 
 @push('scripts')
 <script>
+    /**
+     * Double MOFA Add form: cross-module "passport already exists" warning.
+     * Never blocks — the user can always Continue Anyway. If the AJAX check fails
+     * the form just submits and DoubleMofaController::store() re-checks server-side.
+     */
+    function doubleMofaPassportCheck(initialMatches, initialPassport) {
+        const norm = v => String(v || '').trim().toUpperCase();
+        const hasInitial = Array.isArray(initialMatches) && initialMatches.length > 0;
+        return {
+            endpoint: @js(route('erp.passport-records')),
+            matches: hasInitial ? initialMatches : [],
+            matchedPassport: hasInitial ? norm(initialPassport) : '',
+            open: hasInitial,
+            submitAfter: hasInitial,   // Continue from a Save-triggered modal → submit
+            confirmedPassport: '',
+            checking: false,
+            busy: false,
+            cache: {},                 // normalised passport → Promise<matches|null>
+
+            lookup(p) {
+                if (!this.cache[p]) {
+                    this.cache[p] = fetch(this.endpoint + '?passport_no=' + encodeURIComponent(p), {
+                        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    })
+                    .then(r => r.ok ? r.json() : null)
+                    .then(d => (d && Array.isArray(d.matches)) ? d.matches : null)
+                    .catch(() => null)
+                    .then(m => { if (m === null) delete this.cache[p]; return m; });
+                }
+                return this.cache[p];
+            },
+            show(p, matches, submitAfter) {
+                this.matchedPassport = p;
+                this.matches = matches;
+                this.submitAfter = submitAfter;
+                this.open = true;
+            },
+            async onBlur() {
+                const p = norm(this.$refs.passport.value);
+                // Blur warns once per passport (so Cancel → focus → click-away doesn't
+                // re-open it); Save always re-checks until the user confirms.
+                if (!p || p === this.confirmedPassport || p === this.matchedPassport || this.open) return;
+                const m = await this.lookup(p);
+                // Ignore stale results if the field changed meanwhile.
+                if (m && m.length && norm(this.$refs.passport.value) === p && !this.open) this.show(p, m, false);
+            },
+            async onSubmit(e) {
+                const p = norm(this.$refs.passport.value);
+                if (p && p === this.confirmedPassport) {
+                    this.$refs.confirm.value = '1';
+                    this.busy = true;
+                    return; // already confirmed for this exact passport → native submit
+                }
+                this.$refs.confirm.value = '0';
+                e.preventDefault();
+                if (this.checking) return;
+                this.checking = true;
+                const m = p ? await this.lookup(p) : null;
+                this.checking = false;
+                if (m && m.length) { this.show(p, m, true); return; }
+                this.busy = true;
+                this.$root.submit(); // no match (or check unavailable → server re-checks)
+            },
+            cancel() {
+                this.open = false;
+                this.submitAfter = false;
+                this.confirmedPassport = '';
+                this.$nextTick(() => { this.$refs.passport.focus(); this.$refs.passport.select(); });
+            },
+            continueAnyway() {
+                this.confirmedPassport = this.matchedPassport;
+                this.open = false;
+                if (this.submitAfter && norm(this.$refs.passport.value) === this.confirmedPassport) {
+                    this.$refs.confirm.value = '1';
+                    this.busy = true;
+                    this.$root.submit();
+                }
+            },
+        };
+    }
+
     function doubleMofaPage() {
         return {
             q: '',
