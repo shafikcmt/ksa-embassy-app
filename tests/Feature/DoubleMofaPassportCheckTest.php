@@ -180,6 +180,11 @@ class DoubleMofaPassportCheckTest extends TestCase
 
         $this->actingAs($this->user)->post(route('erp.medical.store'), [
             'full_name' => 'Rahim Uddin', 'father_name' => 'X', 'passport_no' => 'A1234567', 'medical_status' => 'fit',
+            'date_of_birth' => '1990-01-15',
+            'medical_center_name' => 'Test Medical Center',
+            'country' => 'Saudi Arabia',
+            'medical_issue_date' => '2026-09-01',
+            'medical_expire_date' => '2026-12-01',
         ])->assertSessionHas('duplicate_warning');
 
         $this->assertSame(1, Medical::count());
