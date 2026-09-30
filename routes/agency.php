@@ -116,6 +116,7 @@ Route::middleware(['auth', 'agency-access'])->group(function () {
 
     // ── HR / Candidates + HR Documents ──────────────────────────────────────
     Route::middleware('page-access:hr')->group(function () {
+        Route::get('/hr/erp-lookup', [HrProfileController::class, 'erpLookup'])->name('hr.erp-lookup');
         // create/store require active subscription (must be BEFORE /{hr} wildcard)
         Route::middleware(['active-subscription'])->group(function () {
             Route::get('/hr/create', [HrProfileController::class, 'create'])->name('hr.create');

@@ -34,6 +34,65 @@ class PassportRecordFinder
         return mb_strtoupper(trim((string) $passportNo));
     }
 
+    /** Identity-only HR search. Existing ERP warning queries below stay unchanged. */
+    public function hrRecords(int $agencyId, array $criteria): array
+    {
+        $modules = [
+            [Medical::class, 'Medical', [], [], ['full_name', 'father_name', 'date_of_birth']],
+            [MofaEntry::class, 'MOFA Entry', ['visa_serial'], ['mofa_number'], ['full_name', 'father_name', 'mother_name', 'date_of_birth', 'issue_date', 'expiry_date']],
+            [DoubleMofa::class, 'Double MOFA', ['visa_serial'], ['old_mofa_number'], ['full_name']],
+            [Stamping::class, 'Visa Stamping', ['visa_number', 'visa_serial'], ['mofa_number'], ['full_name', 'father_name', 'mother_name', 'date_of_birth']],
+            [ManpowerCompletion::class, 'BMET Clearance', ['visa_number'], [], ['customer_name', 'father_name', 'id_number']],
+            [Delivery::class, 'Delivery', ['visa_serial'], [], ['full_name']],
+        ];
+        $passports = null;
+        foreach ($criteria as $key => $value) {
+            $needle = self::normalize($value);
+            if ($needle === '') {
+                continue;
+            }
+            $matches = [];
+            foreach ($modules as [$model, $label, $visa, $mofa]) {
+                $columns = match ($key) {
+                    'passport' => ['passport_no'], 'visa' => $visa, 'mofa' => $mofa, default => [],
+                };
+                if (!$columns) {
+                    continue;
+                }
+                $rows = $model::query()->where('agency_id', $agencyId)
+                    ->where(function (Builder $query) use ($columns, $needle) {
+                        foreach ($columns as $column) {
+                            $query->orWhereRaw("UPPER(TRIM({$column})) = ?", [$needle]);
+                        }
+                    })->pluck('passport_no');
+                foreach ($rows as $passport) {
+                    $normalized = self::normalize($passport);
+                    if ($normalized !== '') {
+                        $matches[$normalized] = true;
+                    }
+                }
+            }
+            // AND applies to a person's records, not necessarily a single row/module.
+            $passports = $passports === null ? $matches : array_intersect_key($passports, $matches);
+            if (!$passports) {
+                return [];
+            }
+        }
+        if (!$passports) {
+            return [];
+        }
+        $records = [];
+        foreach ($modules as [$model, $label, $visa, $mofa, $identity]) {
+            $columns = array_unique(array_merge(['id', 'passport_no', 'updated_at'], $visa, $mofa, $identity));
+            foreach ($model::query()->where('agency_id', $agencyId)
+                ->whereIn(\Illuminate\Support\Facades\DB::raw('UPPER(TRIM(passport_no))'), array_map('strval', array_keys($passports)))
+                ->get($columns) as $row) {
+                $records[] = ['module' => $label, 'data' => $row->getAttributes()];
+            }
+        }
+        return $records;
+    }
+
     /**
      * @return array<int, array{module:string, name:?string, reference:?string, status:?string, date:?string}>
      */

@@ -23,17 +23,7 @@
 
     <form method="POST" action="{{ route('hr.update', $hr) }}" id="hrForm" novalidate>
         @csrf @method('PUT')
-        {{-- Two-column: main form (left, wider) + Passport Auto-Fill sidebar (right,
-             sticky). On mobile it collapses to one column with the sidebar on top
-             (order-first) so the auto-fill affordance is seen first. --}}
-        <div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
-            <div class="lg:col-start-1 lg:row-start-1">
-                @include('agency.hr._form', ['hr' => $hr, 'mode' => 'edit'])
-            </div>
-            <aside class="order-first lg:order-none lg:col-start-2 lg:row-start-1 lg:sticky lg:top-24">
-                @include('agency.hr._passport-autofill')
-            </aside>
-        </div>
+        @include('agency.hr._form', ['hr' => $hr, 'mode' => 'edit'])
     </form>
 </div>
 @endsection

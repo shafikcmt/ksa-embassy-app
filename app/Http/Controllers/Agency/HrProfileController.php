@@ -15,6 +15,19 @@ use Illuminate\Support\Facades\DB;
 
 class HrProfileController extends Controller
 {
+    public function erpLookup(Request $request, \App\Services\HrErpLookupService $lookup)
+    {
+        $agencyId = (int) $request->user()->agency_id;
+        abort_if($agencyId <= 0, 403);
+        $criteria = $request->validate([
+            'passport' => ['nullable', 'string', 'max:100', 'required_without_all:visa,mofa'],
+            'visa' => ['nullable', 'string', 'max:100', 'required_without_all:passport,mofa'],
+            'mofa' => ['nullable', 'string', 'max:100', 'required_without_all:passport,visa'],
+        ]);
+
+        return response()->json(['candidates' => $lookup->search($agencyId, $criteria)]);
+    }
+
     public function index(Request $request)
     {
         $this->authorize('viewAny', HrProfile::class);

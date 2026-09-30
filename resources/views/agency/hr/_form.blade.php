@@ -89,6 +89,7 @@
     </datalist>
 
     <div class="space-y-5">
+        @include('agency.hr._erp-lookup')
 
         {{-- ════════ 1 · PERSONAL INFO ════════ --}}
         <fieldset class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
@@ -291,26 +292,6 @@
                 </div>
             </div>
 
-            {{-- ── Enjaz Visa Auto-Fill (paste result / upload PDF) ─────────────
-                 The public Enjaz portal has a CAPTCHA and cannot be automated, so
-                 the agency pastes the "Visa Details" result text (or uploads the
-                 saved PDF/HTML) and we parse it into the fields below. --}}
-            <details class="mb-4 rounded-xl border border-brand-100 bg-brand-50/50" id="enjazAutofill">
-                <summary class="flex cursor-pointer select-none items-center gap-2 px-4 py-2.5 text-sm font-semibold text-brand-700">
-                    <i class="bi bi-magic"></i> Enjaz Visa Auto-Fill
-                    <span class="ml-auto text-xs font-normal text-slate-500">Paste result / upload PDF</span>
-                </summary>
-                <div class="space-y-2.5 border-t border-brand-100 px-4 py-3">
-                    <textarea id="enjazPasteText" rows="4" placeholder="Paste the full Enjaz 'Visa Details' result page text here…" class="{{ $ta }}"></textarea>
-                    <div class="flex flex-wrap items-center gap-2">
-                        <input type="file" id="enjazPasteFile" accept=".pdf,.html,.htm,.txt" class="block w-full max-w-xs text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-600 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white hover:file:bg-brand-700">
-                        <button type="button" id="enjazParseBtn" class="inline-flex h-9 items-center gap-1.5 rounded-lg bg-brand-600 px-4 text-sm font-semibold text-white shadow-sm hover:bg-brand-700">
-                            <i class="bi bi-lightning-charge"></i> Parse &amp; Auto-Fill
-                        </button>
-                        <span id="enjazParseMsg" class="text-xs font-medium" role="status" aria-live="polite"></span>
-                    </div>
-                </div>
-            </details>
 
             <div class="grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-2">
                 <x-ui.field label="Visa No" name="visa_number" :required="true">
@@ -1012,7 +993,7 @@
 </script>
 <script>
 (function () {
-    // ── Visa & Medical Auto-Fill (Wafid medical + Enjaz visa paste/parse) ──
+    // ── Medical Auto-Fill (Wafid medical) ──
     function token() {
         var el = document.querySelector('input[name="_token"]');
         return el ? el.value : '';
@@ -1080,58 +1061,6 @@
             })
             .catch(function () { msg(medMsg, 'Lookup failed. Enter the medical result manually.', 'err'); })
             .finally(function () { medBtn.disabled = false; });
-        });
-    }
-
-    // ── 2) Enjaz visa paste / upload → parse ─────────────────────────────
-    var enjBtn  = document.getElementById('enjazParseBtn');
-    var enjText = document.getElementById('enjazPasteText');
-    var enjFile = document.getElementById('enjazPasteFile');
-    var enjMsg  = document.getElementById('enjazParseMsg');
-    if (enjBtn) {
-        enjBtn.addEventListener('click', function () {
-            var hasFile = enjFile && enjFile.files && enjFile.files.length > 0;
-            var text    = enjText ? enjText.value.trim() : '';
-            if (!hasFile && !text) {
-                msg(enjMsg, 'Paste the Enjaz result text or choose a file first.', 'warn');
-                return;
-            }
-            enjBtn.disabled = true;
-            msg(enjMsg, 'Parsing…', 'muted');
-
-            var body = new FormData();
-            body.append('_token', token());
-            if (text) body.append('pasted_text', text);
-            if (hasFile) body.append('file', enjFile.files[0]);
-            var visaNo = (byName('visa_number') || {}).value || '';
-            if (visaNo.trim()) body.append('visa_number', visaNo.trim());
-
-            fetch('{{ route('hr.parse-visa-paste') }}', {
-                method: 'POST',
-                headers: { 'X-CSRF-TOKEN': token(), 'Accept': 'application/json' },
-                body: body
-            })
-            .then(function (r) { return r.json(); })
-            .then(function (d) {
-                if (!d || !d.found || !d.fields) {
-                    msg(enjMsg, (d && d.message) || 'Could not read the visa fields.', 'warn');
-                    return;
-                }
-                var map = {
-                    visa_number: 'visa_number', visa_issue_date: 'visa_issue_date',
-                    full_name_ar: 'full_name_ar', sponsor_id: 'sponsor_id',
-                    sponsor_name: 'sponsor_name', profession_en: 'profession_en',
-                    nationality: 'nationality', visa_issue_place: 'visa_issue_place',
-                    mofa_new: 'mofa_new'
-                };
-                var filled = 0;
-                Object.keys(map).forEach(function (k) {
-                    if (d.fields[k] && setField(map[k], d.fields[k])) filled++;
-                });
-                msg(enjMsg, filled ? ('Auto-filled ' + filled + ' field(s). Please review.') : 'No matching fields found.', filled ? 'ok' : 'warn');
-            })
-            .catch(function () { msg(enjMsg, 'Parse failed. Check the pasted text / file.', 'err'); })
-            .finally(function () { enjBtn.disabled = false; });
         });
     }
 })();
