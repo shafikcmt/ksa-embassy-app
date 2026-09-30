@@ -18,6 +18,36 @@
             *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
         }
     </style>
+    {{-- ERP design layer: one consistent look for every ERP page (page titles,
+         cards, tables, sidebar). Scoped to .erp-main / the ERP sidebar and kept
+         here as plain CSS because the prebuilt Tailwind bundle is not rebuilt on
+         deploy. Visual only — no markup, route or behaviour changes. --}}
+    <style>
+        .erp-nav-heading { margin: .9rem .75rem .3rem; font-size: .62rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #94a3b8; }
+        .erp-nav-heading:first-child { margin-top: .4rem; }
+
+        /* Page header (x-ui.page-header) — same weight as the Medical/MOFA summaries */
+        .erp-main .ui-page-title { font-size: 1.6rem; font-weight: 800; letter-spacing: -.02em; color: #0f172a; }
+        .erp-main .ui-page-subtitle { color: #64748b; }
+        .erp-main .ui-page-icon { background: linear-gradient(135deg, #10b981, #0d9488); color: #fff; box-shadow: 0 6px 16px -6px rgba(13, 148, 136, .55); }
+
+        /* Cards: soft elevation + gentle hover on clickable ones */
+        .erp-main .rounded-2xl.border.bg-white,
+        .erp-main .rounded-xl.border.bg-white { box-shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 2px 8px -4px rgba(15, 23, 42, .06); }
+        .erp-main a.rounded-2xl.border:hover { box-shadow: 0 8px 22px -12px rgba(15, 23, 42, .25); transform: translateY(-1px); }
+        .erp-main a.rounded-2xl.border { transition: box-shadow .15s ease, transform .15s ease, border-color .15s ease; }
+
+        /* Tables: one header style, calm borders, clear row hover */
+        .erp-main table thead th { background: #f8fafc; color: #64748b; font-size: .68rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+        .erp-main table tbody td { border-color: #f1f5f9; }
+        .erp-main table tbody td > span.rounded-full, .erp-main table tbody td > span.rounded-md { white-space: nowrap; }
+        .erp-main table tbody tr { transition: background-color .12s ease; }
+        .erp-main table tbody tr:hover > td { background-color: rgba(236, 253, 245, .7); }
+
+        /* Inputs / selects: one focus style */
+        .erp-main input:not([type=checkbox]):not([type=radio]):focus,
+        .erp-main select:focus, .erp-main textarea:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, .15); outline: none; }
+    </style>
     @stack('styles')
 </head>
 <body class="h-full bg-slate-50 font-sans text-slate-800 antialiased">
@@ -31,12 +61,14 @@
     // the EXISTING agency notes module (no duplicate ERP notes screen).
     $erpNav = [
         ['route' => 'erp.dashboard',   'active' => request()->routeIs('erp.dashboard'),   'icon' => 'bi-speedometer2',      'label' => 'ERP Dashboard'],
+        ['heading' => 'Processing'],
         ['route' => 'erp.medical',     'active' => request()->routeIs('erp.medical*'),     'icon' => 'bi-heart-pulse',       'label' => 'Medical'],
         ['route' => 'erp.mofa',        'active' => request()->routeIs('erp.mofa*'),        'icon' => 'bi-file-earmark-text', 'label' => 'MOFA Entry'],
         ['route' => 'erp.double-mofa', 'active' => request()->routeIs('erp.double-mofa*'), 'icon' => 'bi-files',             'label' => 'Double MOFA'],
         ['route' => 'erp.visa-stamping.index', 'active' => request()->routeIs('erp.visa-stamping*', 'erp.stamping*'), 'icon' => 'bi-postage', 'label' => 'Visa Stamping'],
         ['route' => 'erp.bmet.index',  'active' => request()->routeIs('erp.bmet*', 'erp.manpower*'), 'icon' => 'bi-person-check', 'label' => 'BMET Clearance'],
         ['route' => 'erp.delivery',    'active' => request()->routeIs('erp.delivery*'),    'icon' => 'bi-truck',             'label' => 'Delivery'],
+        ['heading' => 'Accounts'],
         ['route' => 'erp.agent-khata', 'active' => request()->routeIs('erp.agent-khata*'), 'icon' => 'bi-journal-bookmark',  'label' => 'Agent Khata'],
         // "Billing & Payments" dropdown (Invoices + Payment Vouchers) in the slot those two
         // links used to occupy. An entry with 'children' renders as a dropdown that
@@ -50,6 +82,7 @@
         $isAdmin
             ? ['route' => 'erp.profit-loss', 'active' => request()->routeIs('erp.profit-loss*'), 'icon' => 'bi-graph-up-arrow', 'label' => 'Profit / Loss']
             : ['route' => null, 'soon' => true, 'icon' => 'bi-graph-up-arrow', 'label' => 'Profit / Loss'],
+        ['heading' => 'Insights'],
         ['route' => 'erp.reports',     'active' => request()->routeIs('erp.reports*'),     'icon' => 'bi-bar-chart',         'label' => 'Reports'],
         ['route' => 'erp.settings',    'active' => request()->routeIs('erp.settings*'),    'icon' => 'bi-sliders',           'label' => 'ERP Settings'],
         ['route' => 'notes.index',     'active' => false,                                  'icon' => 'bi-journal-text',      'label' => 'Smart Notes'],
@@ -88,7 +121,9 @@
 
             <nav class="flex-1 overflow-y-auto px-3 py-3">
                 @foreach($erpNav as $link)
-                    @if(isset($link['children']))
+                    @if(isset($link['heading']))
+                        <div class="erp-nav-heading">{{ $link['heading'] }}</div>
+                    @elseif(isset($link['children']))
                         @php $groupActive = collect($link['children'])->contains(fn ($c) => $c['active'] ?? false); @endphp
                         <div x-data="{ open: @js($groupActive) }" class="my-1"
                              x-on:click.outside="open = @js($groupActive)" x-on:keydown.escape="open = @js($groupActive)">
@@ -127,7 +162,7 @@
 
         {{-- Content column --}}
         <div class="lg:pl-64">
-            <main class="p-4 sm:p-6">
+            <main class="erp-main p-4 sm:p-6">
                 @if(session('success'))
                     <div x-data="{ show: true }" x-show="show" class="mb-4 flex items-start gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
                         <i class="bi bi-check-circle-fill mt-0.5 text-emerald-500"></i>

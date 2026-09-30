@@ -34,8 +34,20 @@
         </div>
     </div>
 
+    {{-- Collapsible Add form: opened by the "Add …" button; starts OPEN after a
+         validation error, a duplicate warning or old input so nothing is lost. --}}
+    @php
+        $addOpen = ($errors->any() && old('_method') === null)
+            || session('duplicate_warning') || session('passport_matches')
+            || (session()->hasOldInput() && old('_method') === null);
+    @endphp
+    <div x-data="{ addOpen: @js((bool) $addOpen) }">
     {{-- E7a Print · E7d Export/Import --}}
     <div class="mb-4 flex flex-wrap justify-end gap-2">
+        <button type="button" x-on:click="addOpen = !addOpen; if (addOpen) $nextTick(() => document.getElementById('erpAddForm')?.querySelector('input:not([type=hidden]), select')?.focus())"
+                class="mr-auto inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md">
+            <i class="bi" x-bind:class="addOpen ? 'bi-dash-lg' : 'bi-plus-lg'"></i> <span x-text="addOpen ? 'Close form' : 'Add Expense'">Add Expense</span>
+        </button>
         <a href="{{ route('erp.expenses.export') }}"
            class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3.5 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
             <i class="bi bi-filetype-csv text-emerald-600"></i> Export CSV
@@ -60,7 +72,7 @@
         $fi = \App\Support\ErpForm::INPUT;
         $bd = fn (string $k) => $addErr && $errors->has($k) ? \App\Support\ErpForm::BORDER_ERROR : \App\Support\ErpForm::BORDER_OK;
     @endphp
-    <form method="POST" action="{{ route('erp.expenses.store') }}" class="mb-6" x-data="{ busy: false }" x-on:submit="busy = true">
+    <form method="POST" action="{{ route('erp.expenses.store') }}" class="mb-6" id="erpAddForm" x-show="addOpen" x-cloak x-data="{ busy: false }" x-on:submit="busy = true">
         @csrf
         <x-erp.section icon="bi-plus-circle" title="Add Expense">
             <x-erp.field label="Date" for="ex_expense_date" required :name="$addErr ? 'expense_date' : null">
@@ -93,6 +105,7 @@
             </div>
         </x-erp.section>
     </form>
+    </div>
 
     {{-- Live search (client-side; filters only the already-loaded, agency-scoped rows) --}}
     <div class="mb-4 max-w-md">

@@ -35,8 +35,20 @@
         </div>
     </div>
 
+    {{-- Collapsible Add form: opened by the "Add …" button; starts OPEN after a
+         validation error, a duplicate warning or old input so nothing is lost. --}}
+    @php
+        $addOpen = ($errors->any() && old('_method') === null)
+            || session('duplicate_warning') || session('passport_matches')
+            || (session()->hasOldInput() && old('_method') === null);
+    @endphp
+    <div x-data="{ addOpen: @js((bool) $addOpen) }">
     {{-- E7a Print · E7e Export/Import --}}
     <div class="mb-4 flex flex-wrap justify-end gap-2">
+        <button type="button" x-on:click="addOpen = !addOpen; if (addOpen) $nextTick(() => document.getElementById('erpAddForm')?.querySelector('input:not([type=hidden]), select')?.focus())"
+                class="mr-auto inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md">
+            <i class="bi" x-bind:class="addOpen ? 'bi-dash-lg' : 'bi-plus-lg'"></i> <span x-text="addOpen ? 'Close form' : 'Add Delivery'">Add Delivery</span>
+        </button>
         <a href="{{ route('erp.delivery.export') }}"
            class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3.5 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
             <i class="bi bi-filetype-csv text-emerald-600"></i> Export CSV
@@ -61,7 +73,7 @@
         $fi = \App\Support\ErpForm::INPUT;
         $bd = fn (string $k) => $addErr && $errors->has($k) ? \App\Support\ErpForm::BORDER_ERROR : \App\Support\ErpForm::BORDER_OK;
     @endphp
-    <form method="POST" action="{{ route('erp.delivery.store') }}" class="mb-6" x-data="{ busy: false }" x-on:submit="busy = true">
+    <form method="POST" action="{{ route('erp.delivery.store') }}" class="mb-6" id="erpAddForm" x-show="addOpen" x-cloak x-data="{ busy: false }" x-on:submit="busy = true">
         @csrf
         <x-erp.section icon="bi-plus-circle" title="Add Delivery">
             <x-erp.field label="Full Name" for="dl_full_name" required :name="$addErr ? 'full_name' : null">
@@ -133,6 +145,7 @@
             </div>
         @endif
     </form>
+    </div>
 
     {{-- Live search (client-side; filters only the already-loaded, agency-scoped rows) --}}
     <div class="mb-4 max-w-md">
@@ -191,8 +204,9 @@
                             <td class="px-4 py-3"><span class="rounded-full px-2 py-0.5 text-xs font-semibold {{ $statusChip[$d->status] ?? 'bg-slate-100 text-slate-600' }}">{{ $d->statusLabel() }}</span></td>
                             <td class="px-4 py-3">{{ $d->paymentMethodLabel() ?: '—' }}</td>
                             <td class="px-4 py-3">
-                                @php $pill = 'inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold ring-1 ring-inset transition'; @endphp
-                                <div class="flex flex-nowrap items-center justify-end gap-1.5">
+                                @php $pill = 'inline-flex items-center gap-1 whitespace-nowrap rounded-lg px-2 py-1 text-xs font-semibold ring-1 ring-inset transition'; @endphp
+                                {{-- Buttons wrap inside a fixed width so every action stays visible (no sideways scroll). --}}
+                                <div class="ml-auto flex flex-wrap items-center justify-end gap-1" style="min-width: 10rem; max-width: 13.5rem">
                                     @if($canReceive && $due > 0)
                                     <button type="button" class="{{ $pill }} bg-emerald-50 text-emerald-700 ring-emerald-200 hover:bg-emerald-100"
                                             x-on:click="openPay(@js(['id' => $d->id, 'name' => $d->full_name, 'due' => number_format($due, 2, '.', '')]))"><i class="bi bi-cash-coin"></i> Receive</button>
