@@ -169,12 +169,6 @@
                         @php
                             $reversedIds = $d->receipts->where('type', 'reversal')->pluck('reverses_id')->filter()->all();
                             $due = (float) $d->total_amount - (float) $d->paid_amount;
-                            // Latest non-reversed payment — powers the row-level Voucher shortcut.
-                            $latestPaidReceipt = $d->receipts
-                                ->where('type', 'payment')
-                                ->whereNotIn('id', $reversedIds)
-                                ->sortByDesc('received_at')
-                                ->first();
                             $receiptRows = $d->receipts->sortByDesc('received_at')->map(fn ($r) => [
                                 'id'          => $r->id,
                                 'type'        => $r->type,
@@ -205,10 +199,6 @@
                                     @endif
                                     <button type="button" class="{{ $pill }} bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100"
                                             x-on:click="openReceipts(@js($d->full_name), @js($receiptRows))"><i class="bi bi-clock-history"></i> History</button>
-                                    @if($latestPaidReceipt)
-                                    <a href="{{ route('erp.delivery.voucher', $latestPaidReceipt->id) }}" target="_blank"
-                                       class="{{ $pill }} bg-brand-50 text-brand-700 ring-brand-200 hover:bg-brand-100"><i class="bi bi-receipt"></i> Voucher</a>
-                                    @endif
                                     <button type="button" class="{{ $pill }} bg-amber-50 text-amber-700 ring-amber-200 hover:bg-amber-100"
                                             x-on:click="openEdit(@js([
                                                 'id' => $d->id,
@@ -274,10 +264,6 @@
                                 <span x-show="r.reversed" class="rounded-full bg-slate-200 px-2 py-0.5 text-[0.6rem] font-bold uppercase text-slate-500">Reversed</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <template x-if="!r.is_reversal && !r.reversed">
-                                    <a x-bind:href="voucherBase + '/' + r.id" target="_blank" title="Print Credit Voucher"
-                                       class="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold ring-1 ring-inset transition bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100"><i class="bi bi-receipt"></i> Voucher</a>
-                                </template>
                                 <span class="text-xs text-slate-400" x-text="r.at"></span>
                             </div>
                         </div>
@@ -353,7 +339,6 @@
             updateBase: '{{ url('erp/delivery') }}',
             payBase: '{{ url('erp/delivery') }}',
             reverseBase: '{{ url('erp/delivery/receipt') }}',
-            voucherBase: '{{ url('erp/delivery/voucher') }}',
             form: {}, payForm: {}, receipts: [], receiptName: '',
             openEdit(row) {
                 this.form = Object.assign({}, row);

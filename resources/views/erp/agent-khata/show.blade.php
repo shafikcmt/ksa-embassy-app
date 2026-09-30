@@ -106,10 +106,6 @@
                             @if($isAdmin)
                                 <td class="px-4 py-3">
                                     <div class="flex items-center justify-end gap-1.5">
-                                        @if($t->type === 'credit' && ! $t->isReversal() && ! $isReversed)
-                                            <a href="{{ route('erp.agent-khata.voucher', $t) }}" target="_blank" title="Print Credit Voucher"
-                                               class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold ring-1 ring-inset transition bg-slate-50 text-slate-600 ring-slate-200 hover:bg-slate-100"><i class="bi bi-receipt"></i> Voucher</a>
-                                        @endif
                                         @if(! $t->isReversal() && ! $isReversed)
                                             <button type="button" class="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold ring-1 ring-inset transition bg-rose-50 text-rose-700 ring-rose-200 hover:bg-rose-100"
                                                     x-on:click="openReverse(@js(['id' => $t->id, 'type' => $t->typeLabel(), 'amount' => number_format((float) $t->amount, 2)]))"><i class="bi bi-arrow-counterclockwise"></i> Reverse</button>
