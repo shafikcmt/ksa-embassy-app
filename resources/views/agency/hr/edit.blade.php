@@ -3,22 +3,14 @@
 @section('page-title', 'Edit HR Profile')
 
 @section('content')
-<div class="hr-page mx-auto max-w-7xl">
-    {{-- Slim header — consistent with the HR index / dashboard aesthetic. --}}
-    <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <div class="flex min-w-0 items-center gap-3">
-            <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-600">
-                <i class="bi bi-pencil-square text-xl"></i>
-            </span>
-            <div class="min-w-0">
-                <h1 class="text-lg font-bold text-slate-900">Edit Profile</h1>
-                <p class="truncate text-xs text-slate-500">{{ $hr->full_name_en }}</p>
-            </div>
+<div class="mx-auto max-w-6xl">
+    {{-- Header: back link + title (matches the HR form reference design) --}}
+    <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
+        <div class="min-w-0">
+            <a href="{{ route('hr.index') }}" class="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-brand-600"><i class="bi bi-arrow-left"></i> Back to All HR</a>
+            <h1 class="mt-1 text-xl font-bold text-slate-900">Edit HR <span class="text-base font-semibold text-slate-500">· {{ $hr->full_name_en }}</span></h1>
         </div>
-        <div class="flex items-center gap-2">
-            <x-ui.button :href="route('hr.show', $hr)" variant="secondary"><i class="bi bi-arrow-left"></i> Cancel</x-ui.button>
-            <x-ui.button :href="route('hr.index')" variant="secondary"><i class="bi bi-people"></i> All HR</x-ui.button>
-        </div>
+        <x-ui.button :href="route('hr.show', $hr)" variant="secondary"><i class="bi bi-x-lg"></i> Cancel</x-ui.button>
     </div>
 
     <form method="POST" action="{{ route('hr.update', $hr) }}" id="hrForm" novalidate>

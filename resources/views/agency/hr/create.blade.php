@@ -3,19 +3,11 @@
 @section('page-title', 'Add HR Profile')
 
 @section('content')
-<div class="hr-page mx-auto max-w-7xl">
-    {{-- Slim header — consistent with the HR index / dashboard aesthetic. --}}
-    <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <div class="flex items-center gap-3">
-            <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-600">
-                <i class="bi bi-person-plus text-xl"></i>
-            </span>
-            <div>
-                <h1 class="text-lg font-bold text-slate-900">Add HR Profile</h1>
-                <p class="text-xs text-slate-500">Create a new candidate file</p>
-            </div>
-        </div>
-        <x-ui.button :href="route('hr.index')" variant="secondary"><i class="bi bi-arrow-left"></i> All HR</x-ui.button>
+<div class="mx-auto max-w-6xl">
+    {{-- Header: back link + title (matches the HR form reference design) --}}
+    <div class="mb-4">
+        <a href="{{ route('hr.index') }}" class="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-brand-600"><i class="bi bi-arrow-left"></i> Back to All HR</a>
+        <h1 class="mt-1 text-xl font-bold text-slate-900">Add New HR</h1>
     </div>
 
     <form method="POST" action="{{ route('hr.store') }}" id="hrForm" novalidate>

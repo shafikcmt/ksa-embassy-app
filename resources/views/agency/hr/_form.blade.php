@@ -90,20 +90,56 @@
         @foreach($nationalityOptions as $optNat)<option value="{{ $optNat }}"></option>@endforeach
     </datalist>
 
-    <div class="hr-compact space-y-3">
+    <div class="hr-form space-y-4">
         @include('agency.hr._erp-lookup')
 
-        {{-- ════════ 1 · PERSONAL INFO ════════ --}}
-        <fieldset class="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
-            <div class="mb-3 flex items-center gap-3 border-b border-slate-100 pb-2">
-                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-600"><i class="bi bi-person-vcard text-base"></i></span>
-                <div>
-                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-700">Personal Info</h2>
-                    <p class="mt-0.5 text-xs text-slate-400">Identity as printed in the passport</p>
-                </div>
+        {{-- ════════ 2 · PASSPORT INFO ════════ --}}
+        <fieldset class="hr-sec">
+            <legend class="hr-legend">Passport Info</legend>
+
+            <div class="hr-grid hr-grid-5">
+                @if($on('passport_issue_place'))
+                    <x-ui.field label="Passport Issue Place" name="passport_issue_place">
+                        <input type="text" name="passport_issue_place" value="{{ $rel($passport, 'issue_place', 'DHAKA') }}" class="{{ $inp }}">
+                    </x-ui.field>
+                @elseif($isEdit)
+                    <input type="hidden" name="passport_issue_place" value="{{ $rel($passport, 'issue_place') }}">
+                @endif
+
+                <x-ui.field label="Passport No" name="passport_number" :required="true">
+                    <input type="text" name="passport_number" required value="{{ $rel($passport, 'passport_number') }}" class="{{ $inp }} @error('passport_number') !border-rose-400 @enderror">
+                </x-ui.field>
+                <x-ui.field label="Passport Issue Date" name="passport_issue_date" :required="true">
+                    <input type="text" id="passport_issue_date" name="passport_issue_date" required inputmode="numeric" placeholder="dd-mm-yyyy" autocomplete="off" value="{{ old('passport_issue_date', optional($passport?->issue_date)?->format('d-m-Y')) }}" class="{{ $inp }} js-date-text @error('passport_issue_date') !border-rose-400 @enderror">
+                </x-ui.field>
+
+                @if($on('passport_validity_years'))
+                    <x-ui.field label="Passport Validity" name="passport_validity_years">
+                        @php $validity = (int) $rel($passport, 'validity_years', 5); @endphp
+                        <div class="hr-radios flex flex-wrap items-center gap-x-5 gap-y-1">
+                            @foreach([5 => '5 Years', 10 => '10 Years'] as $val => $lbl)
+                                <label class="inline-flex cursor-pointer items-center gap-1.5">
+                                    <input type="radio" name="passport_validity_years" value="{{ $val }}" class="h-4 w-4 border-slate-300 text-brand-600 focus:ring-brand-500" {{ $validity === $val ? 'checked' : '' }}>
+                                    <span class="text-sm text-slate-700">{{ $lbl }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </x-ui.field>
+                @elseif($isEdit)
+                    <input type="hidden" name="passport_validity_years" value="{{ $rel($passport, 'validity_years') }}">
+                @endif
+
+                <x-ui.field label="Passport Validity Date" name="passport_expiry_date" :required="true">
+                    <input type="text" id="passport_expiry_date" name="passport_expiry_date" required inputmode="numeric" placeholder="dd-mm-yyyy · auto" title="Auto-filled from issue date + validity; you can edit it." autocomplete="off" value="{{ old('passport_expiry_date', optional($passport?->expiry_date)?->format('d-m-Y')) }}" class="{{ $inp }} js-date-text @error('passport_expiry_date') !border-rose-400 @enderror">
+                </x-ui.field>
             </div>
+        </fieldset>
+
+        {{-- ════════ 1 · PERSONAL INFO ════════ --}}
+        <fieldset class="hr-sec">
+            <legend class="hr-legend">Personal Info</legend>
             <div class="hr-grid">
-                <x-ui.field label="Name" name="full_name_en" :required="true" class="sm:col-span-2">
+                <x-ui.field label="Name" name="full_name_en" :required="true">
                     <input type="text" id="full_name_en" name="full_name_en" required value="{{ $v('full_name_en') }}" placeholder="e.g. MOHAMMED RAHMAN" autocomplete="off" class="{{ $inp }} js-trim uppercase placeholder:normal-case @error('full_name_en') !border-rose-400 @enderror">
                 </x-ui.field>
 
@@ -130,7 +166,7 @@
                     <input type="text" name="place_of_birth" required value="{{ $v('place_of_birth') }}" placeholder="e.g. DHAKA" class="{{ $inp }} js-trim @error('place_of_birth') !border-rose-400 @enderror">
                 </x-ui.field>
 
-                <x-ui.field label="MOFA Application ID" name="mofa_new" :required="true" class="sm:col-span-2">
+                <x-ui.field label="MOFA Application ID" name="mofa_new" :required="true">
                     <div class="grid {{ $on('mofa_old') ? 'grid-cols-2' : 'grid-cols-1' }} gap-2">
                         <input type="text" name="mofa_new" required placeholder="New Mofa" value="{{ $v('mofa_new') }}" class="{{ $inp }} @error('mofa_new') !border-rose-400 @enderror">
                         @if($on('mofa_old'))
@@ -148,7 +184,7 @@
                         $previousNat = $v('previous_nationality', 'BANGLADESH');
                         $natSynced   = $previousNat !== '' && $previousNat === $presentNat;
                     @endphp
-                    <div class="sm:col-span-2 hr-w3-xl">
+                    <div class="sm:col-span-2 hr-nat">
                         <div class="grid grid-cols-1 gap-x-3 gap-y-2 sm:grid-cols-2">
                             {{-- Present Nationality (required) --}}
                             <div>
@@ -182,24 +218,24 @@
                     </x-ui.field>
                 @endif
                 <x-ui.field label="Sex" name="gender" :required="true">
-                    <div class="flex gap-2">
+                    <div class="hr-radios flex flex-wrap items-center gap-x-5 gap-y-1">
                         @foreach(['male' => ['Male','bi-gender-male'], 'female' => ['Female','bi-gender-female']] as $val => $meta)
-                            <label class="flex-1 cursor-pointer">
-                                <input type="radio" name="gender" value="{{ $val }}" class="peer sr-only" {{ $gender === $val ? 'checked' : '' }} {{ $loop->first ? 'required' : '' }}>
-                                <span class="{{ $seg }}"><i class="bi {{ $meta[1] }}"></i>{{ $meta[0] }}</span>
+                            <label class="inline-flex cursor-pointer items-center gap-1.5">
+                                <input type="radio" name="gender" value="{{ $val }}" class="h-4 w-4 border-slate-300 text-brand-600 focus:ring-brand-500" {{ $gender === $val ? 'checked' : '' }} {{ $loop->first ? 'required' : '' }}>
+                                <span class="text-sm text-slate-700">{{ $meta[0] }}</span>
                             </label>
                         @endforeach
                     </div>
                 </x-ui.field>
                 <x-ui.field label="Marital Status" name="marital_status" :required="true">
-                    <div class="flex gap-2">
-                        <label class="flex-1 cursor-pointer">
-                            <input type="radio" name="marital_status" value="married" class="peer sr-only" {{ $marital === 'married' ? 'checked' : '' }} required>
-                            <span class="{{ $seg }}"><i class="bi bi-heart"></i>Married</span>
+                    <div class="hr-radios flex flex-wrap items-center gap-x-5 gap-y-1">
+                        <label class="inline-flex cursor-pointer items-center gap-1.5">
+                            <input type="radio" name="marital_status" value="married" class="h-4 w-4 border-slate-300 text-brand-600 focus:ring-brand-500" {{ $marital === 'married' ? 'checked' : '' }} required>
+                            <span class="text-sm text-slate-700">Married</span>
                         </label>
-                        <label class="flex-1 cursor-pointer">
-                            <input type="radio" name="marital_status" value="single" class="peer sr-only" {{ in_array($marital, ['single','divorced','widowed'], true) ? 'checked' : '' }}>
-                            <span class="{{ $seg }}"><i class="bi bi-person"></i>Unmarried</span>
+                        <label class="inline-flex cursor-pointer items-center gap-1.5">
+                            <input type="radio" name="marital_status" value="single" class="h-4 w-4 border-slate-300 text-brand-600 focus:ring-brand-500" {{ in_array($marital, ['single','divorced','widowed'], true) ? 'checked' : '' }}>
+                            <span class="text-sm text-slate-700">Unmarried</span>
                         </label>
                     </div>
                 </x-ui.field>
@@ -213,18 +249,18 @@
                 @endif
 
                 <x-ui.field label="Religion" name="religion" :required="true">
-                    <div class="flex gap-2">
+                    <div class="hr-radios flex flex-wrap items-center gap-x-5 gap-y-1">
                         @foreach(['Muslim' => ['Muslim','bi-moon-stars'], 'Non-muslim' => ['Non-muslim','bi-person']] as $val => $meta)
-                            <label class="flex-1 cursor-pointer">
-                                <input type="radio" name="religion" value="{{ $val }}" class="peer sr-only" {{ $religion === $val ? 'checked' : '' }} {{ $loop->first ? 'required' : '' }}>
-                                <span class="{{ $seg }}"><i class="bi {{ $meta[1] }}"></i>{{ $meta[0] }}</span>
+                            <label class="inline-flex cursor-pointer items-center gap-1.5">
+                                <input type="radio" name="religion" value="{{ $val }}" class="h-4 w-4 border-slate-300 text-brand-600 focus:ring-brand-500" {{ $religion === $val ? 'checked' : '' }} {{ $loop->first ? 'required' : '' }}>
+                                <span class="text-sm text-slate-700">{{ $meta[0] }}</span>
                             </label>
                         @endforeach
                     </div>
                 </x-ui.field>
 
                 @if($on('home_address'))
-                    <x-ui.field label="Home Address & Phone" name="home_address" class="sm:col-span-2">
+                    <x-ui.field label="Home Address & Phone" name="home_address" class="sm:col-span-2 hr-wide">
                         <textarea name="home_address" rows="2" placeholder="Village / city, district — and a contact phone number" class="{{ $ta }}">{{ $v('home_address') }}</textarea>
                     </x-ui.field>
                 @elseif($isEdit)
@@ -233,63 +269,10 @@
             </div>
         </fieldset>
 
-        {{-- ════════ 2 · PASSPORT INFO ════════ --}}
-        <fieldset class="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
-            <div class="mb-3 flex items-center gap-3 border-b border-slate-100 pb-2">
-                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-600"><i class="bi bi-passport text-base"></i></span>
-                <div>
-                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-700">Passport Info</h2>
-                    <p class="mt-0.5 text-xs text-slate-400">Passport document details</p>
-                </div>
-            </div>
-
-            <div class="hr-grid hr-grid-5">
-                @if($on('passport_issue_place'))
-                    <x-ui.field label="Passport Issue Place" name="passport_issue_place">
-                        <input type="text" name="passport_issue_place" value="{{ $rel($passport, 'issue_place', 'DHAKA') }}" class="{{ $inp }}">
-                    </x-ui.field>
-                @elseif($isEdit)
-                    <input type="hidden" name="passport_issue_place" value="{{ $rel($passport, 'issue_place') }}">
-                @endif
-
-                <x-ui.field label="Passport No" name="passport_number" :required="true">
-                    <input type="text" name="passport_number" required value="{{ $rel($passport, 'passport_number') }}" class="{{ $inp }} @error('passport_number') !border-rose-400 @enderror">
-                </x-ui.field>
-                <x-ui.field label="Passport Issue Date" name="passport_issue_date" :required="true">
-                    <input type="text" id="passport_issue_date" name="passport_issue_date" required inputmode="numeric" placeholder="dd-mm-yyyy" autocomplete="off" value="{{ old('passport_issue_date', optional($passport?->issue_date)?->format('d-m-Y')) }}" class="{{ $inp }} js-date-text @error('passport_issue_date') !border-rose-400 @enderror">
-                </x-ui.field>
-
-                @if($on('passport_validity_years'))
-                    <x-ui.field label="Passport Validity" name="passport_validity_years">
-                        @php $validity = (int) $rel($passport, 'validity_years', 5); @endphp
-                        <div class="flex gap-2">
-                            @foreach([5 => '5 Years', 10 => '10 Years'] as $val => $lbl)
-                                <label class="flex-1 cursor-pointer">
-                                    <input type="radio" name="passport_validity_years" value="{{ $val }}" class="peer sr-only" {{ $validity === $val ? 'checked' : '' }}>
-                                    <span class="block rounded-lg border border-slate-300 py-1.5 text-center text-sm font-medium text-slate-600 transition peer-checked:border-brand-600 peer-checked:bg-brand-600 peer-checked:text-white">{{ $lbl }}</span>
-                                </label>
-                            @endforeach
-                        </div>
-                    </x-ui.field>
-                @elseif($isEdit)
-                    <input type="hidden" name="passport_validity_years" value="{{ $rel($passport, 'validity_years') }}">
-                @endif
-
-                <x-ui.field label="Passport Validity Date" name="passport_expiry_date" :required="true">
-                    <input type="text" id="passport_expiry_date" name="passport_expiry_date" required inputmode="numeric" placeholder="dd-mm-yyyy · auto" title="Auto-filled from issue date + validity; you can edit it." autocomplete="off" value="{{ old('passport_expiry_date', optional($passport?->expiry_date)?->format('d-m-Y')) }}" class="{{ $inp }} js-date-text @error('passport_expiry_date') !border-rose-400 @enderror">
-                </x-ui.field>
-            </div>
-        </fieldset>
-
         {{-- ════════ 3 · VISA INFO ════════ --}}
-        <fieldset class="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
-            <div class="mb-3 flex items-center gap-3 border-b border-slate-100 pb-2">
-                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-600"><i class="bi bi-globe2 text-base"></i></span>
-                <div>
-                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-700">Visa Info</h2>
-                    <p class="mt-0.5 text-xs text-slate-400">Visa, sponsor &amp; profession · English ⇄ Arabic boxes fill each other (ع / En to regenerate)</p>
-                </div>
-            </div>
+        <fieldset class="hr-sec">
+            <legend class="hr-legend">Visa Info</legend>
+            <p class="hr-note">English ⇄ Arabic boxes fill each other · ع / En to regenerate</p>
 
 
             <div class="hr-grid hr-dense">
@@ -384,17 +367,11 @@
         </fieldset>
 
         {{-- ════════ 4 · POLICE CLEARANCE & DRIVING LICENSE INFO ════════ --}}
-        <fieldset class="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
-            <div class="mb-3 flex items-center gap-3 border-b border-slate-100 pb-2">
-                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-600"><i class="bi bi-shield-check text-base"></i></span>
-                <div>
-                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-700">Police Clearance &amp; Driving License Info</h2>
-                    <p class="mt-0.5 text-xs text-slate-400">Clearance reference &amp; license type</p>
-                </div>
-            </div>
+        <fieldset class="hr-sec">
+            <legend class="hr-legend">Police Clearance &amp; Driving License Info</legend>
             <div class="hr-grid">
                 @if($on('pc_qr_code'))
-                    <x-ui.field label="P.C QRCode" name="pc_qr_code" class="sm:col-span-2">
+                    <x-ui.field label="P.C QRCode" name="pc_qr_code">
                         <input type="text" name="pc_qr_code" value="{{ $rel($clearance, 'pc_qr_code') }}" class="{{ $inp }}">
                     </x-ui.field>
                 @elseif($isEdit)
@@ -445,7 +422,7 @@
                     <input type="date" id="medical_date" name="medical_date" value="{{ $dt($clearance, 'medical_date') }}" class="{{ $inp }}">
                 </x-ui.field>
 
-                <x-ui.field label="Medical Center" name="medical_center" class="sm:col-span-2">
+                <x-ui.field label="Medical Center" name="medical_center">
                     <input type="text" id="medical_center" name="medical_center" value="{{ $rel($clearance, 'medical_center') }}" placeholder="Auto-filled from Wafid, or enter manually" class="{{ $inp }}">
                 </x-ui.field>
             </div>
@@ -461,14 +438,9 @@
             $anyOther      = $showDuration || $showFinger || $showArrival || $showDeparture || $showAgent;
         @endphp
         @if($anyOther)
-        <fieldset class="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
-            <div class="mb-3 flex items-center gap-3 border-b border-slate-100 pb-2">
-                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-600"><i class="bi bi-info-circle text-base"></i></span>
-                <div>
-                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-700">Others Info</h2>
-                    <p class="mt-0.5 text-xs text-slate-400">Stay duration, dates &amp; agent · Arabic box accepts Arabic or Hijri dates</p>
-                </div>
-            </div>
+        <fieldset class="hr-sec">
+            <legend class="hr-legend">Others Info</legend>
+            <p class="hr-note">Arabic box accepts Arabic or Hijri dates</p>
             <div class="hr-grid hr-dense">
                 @if($showDuration)
                     <x-ui.field label="Duration of Stay" name="duration_stay_en" class="hr-w2">
@@ -552,10 +524,10 @@
 
         {{-- ── Action bar (Reset / Save) ─────────────────────────── --}}
         <div class="hr-actions flex items-center justify-end gap-3">
-            <button type="reset" class="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-600 hover:bg-slate-50">
+            <button type="reset" class="inline-flex h-9 items-center gap-2 rounded-lg bg-rose-500 px-5 text-sm font-bold uppercase text-white shadow-sm hover:bg-rose-600">
                 <i class="bi bi-arrow-counterclockwise"></i> Reset
             </button>
-            <button type="submit" name="after_save" value="view" class="inline-flex h-9 items-center gap-2 rounded-lg bg-brand-600 px-6 text-sm font-semibold text-white shadow-sm hover:bg-brand-700">
+            <button type="submit" name="after_save" value="view" class="inline-flex h-9 items-center gap-2 rounded-lg bg-brand-600 px-6 text-sm font-bold uppercase text-white shadow-sm hover:bg-brand-700">
                 <i class="bi bi-check-lg"></i> {{ $mode === 'create' ? 'Save' : 'Save Changes' }}
             </button>
         </div>
@@ -564,21 +536,30 @@
 
 @push('styles')
 <style>
-    /* Compact HR form: 1 col mobile -> 2 cols tablet -> 4 cols desktop.
-       English/Arabic pairs span 2 desktop columns; dense flow fills gaps. */
-    .hr-grid { display: grid; grid-template-columns: minmax(0, 1fr); column-gap: .75rem; row-gap: .6rem; }
-    @media (min-width: 640px)  { .hr-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-    @media (min-width: 1024px) {
-        .hr-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-        .hr-grid.hr-dense { grid-auto-flow: row dense; }
-        .hr-grid > .hr-w2 { grid-column: span 2 / span 2; }
-        .hr-grid > .hr-wfull { grid-column: 1 / -1; }
-        .hr-grid.hr-grid-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-    }
-    @media (min-width: 1536px) {
-        .hr-page { max-width: 1520px; }
-        .hr-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
-        .hr-grid > .hr-w3-xl { grid-column: span 3 / span 3; }
+    /* HR form — bordered sections with the title in the border, label on the
+       left ("Name * :") and two fields per row from 768px. Scoped CSS (the
+       prebuilt Tailwind bundle is not rebuilt on deploy). */
+    .hr-form .hr-sec { border: 1px solid #c7d2fe; border-radius: .75rem; background: #fff; padding: .35rem 1rem 1rem; margin: 0; min-width: 0; }
+    .hr-form .hr-legend { padding: 0 .45rem; font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #2563eb; }
+    .hr-form .hr-note { margin: -.1rem 0 .6rem; font-size: .72rem; color: #94a3b8; }
+    .hr-grid { display: grid; grid-template-columns: minmax(0, 1fr); column-gap: 1.5rem; row-gap: .65rem; }
+    @media (min-width: 768px) { .hr-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .hr-grid > .hr-wfull { grid-column: 1 / -1; }
+    .hr-form .hr-radios { min-height: 2.25rem; }
+    @media (min-width: 640px) {
+        /* label-left rows */
+        .hr-grid > div:not(.hr-nat):not(.hr-wfull) { display: grid; grid-template-columns: 10.5rem minmax(0, 1fr); column-gap: .75rem; align-items: center; }
+        .hr-grid > div:not(.hr-nat):not(.hr-wfull) > label:first-child { grid-column: 1; grid-row: 1 / span 4; margin: 0; align-self: center; }
+        .hr-grid > div:not(.hr-nat):not(.hr-wfull) > :not(label:first-child) { grid-column: 2; }
+        .hr-grid > div:not(.hr-nat):not(.hr-wfull) > label:first-child::after { content: " :"; color: #64748b; }
+        .hr-grid > .hr-wide { grid-column: 1 / -1; grid-template-columns: 10.5rem minmax(0, 1fr); }
+        /* nationality pair (custom label row with the "Same as present" chip) */
+        .hr-nat > .grid { column-gap: 1.5rem; }
+        .hr-grid label:first-child { white-space: nowrap; }
+        .hr-nat > .grid > div { display: grid; grid-template-columns: 10.5rem minmax(0, 1fr); column-gap: .75rem; align-items: center; }
+        .hr-nat > .grid > div > :first-child { grid-column: 1; grid-row: 1 / span 3; height: auto; margin: 0; flex-direction: column; align-items: flex-start; gap: .2rem; }
+        .hr-nat > .grid > div > :first-child > label:first-child::after { content: " :"; color: #64748b; }
+        .hr-nat > .grid > div > :not(:first-child) { grid-column: 2; }
     }
     /* Save bar stays reachable without scrolling to the end. */
     .hr-actions { position: sticky; bottom: 0; z-index: 20; padding: .6rem 0;

@@ -49,7 +49,15 @@ class HrProfileController extends Controller
                   ->orWhere('full_name_ar', 'like', "%{$search}%")
                   ->orWhere('file_number', 'like', "%{$search}%")
                   ->orWhere('nationality', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%");
+                  ->orWhere('phone', 'like', "%{$search}%")
+                  // Also match the identifiers shown in the list columns.
+                  ->orWhere('mofa_new', 'like', "%{$search}%")
+                  ->orWhere('mofa_old', 'like', "%{$search}%")
+                  ->orWhereHas('passport', fn ($p) => $p->where('passport_number', 'like', "%{$search}%"))
+                  ->orWhereHas('visa', fn ($v) => $v->where('visa_number', 'like', "%{$search}%")
+                      ->orWhere('sponsor_id', 'like', "%{$search}%")
+                      ->orWhere('sponsor_name', 'like', "%{$search}%")
+                      ->orWhere('sponsor_name_ar', 'like', "%{$search}%"));
             });
         }
 
@@ -72,7 +80,12 @@ class HrProfileController extends Controller
             );
         }
 
-        $hrProfiles = $query->paginate(15)->withQueryString();
+        // "Show N entries" selector — whitelisted sizes only.
+        $perPage = (int) $request->input('per_page', 10);
+        if (! in_array($perPage, [10, 25, 50, 100], true)) {
+            $perPage = 10;
+        }
+        $hrProfiles = $query->paginate($perPage)->withQueryString();
 
         $agents = Agent::forAgency($agencyId)->active()->orderBy('name')->get();
 
@@ -87,7 +100,7 @@ class HrProfileController extends Controller
             ->selectRaw('status, COUNT(*) as c')->groupBy('status')->pluck('c', 'status');
 
         return view('agency.hr.index', compact(
-            'hrProfiles', 'agents', 'nationalities', 'planLimit', 'totalHr', 'statusCounts'
+            'hrProfiles', 'agents', 'nationalities', 'planLimit', 'totalHr', 'statusCounts', 'perPage'
         ));
     }
 
@@ -242,6 +255,40 @@ class HrProfileController extends Controller
             'documents'   => redirect()->route('hr.documents', $hr)->with('success', $message),
             default       => redirect()->route('hr.show', $hr)->with('success', $message),
         };
+    }
+
+    /**
+     * Employment Contract page: editable header fields (prefilled from the HR
+     * record) + a bilingual A4 contract printed from the browser. Read-only —
+     * nothing entered on this page is saved.
+     */
+    public function contract(HrProfile $hr)
+    {
+        $this->authorize('view', $hr);
+        $hr->load(['passport', 'visa']);
+
+        $demonyms = [
+            'BANGLADESH' => 'BANGLADESHI', 'INDIA' => 'INDIAN', 'PAKISTAN' => 'PAKISTANI',
+            'NEPAL' => 'NEPALI', 'SRI LANKA' => 'SRI LANKAN', 'PHILIPPINES' => 'FILIPINO',
+            'INDONESIA' => 'INDONESIAN', 'MYANMAR' => 'MYANMAR', 'KENYA' => 'KENYAN',
+            'UGANDA' => 'UGANDAN', 'ETHIOPIA' => 'ETHIOPIAN', 'NIGERIA' => 'NIGERIAN',
+        ];
+        $nationality = strtoupper(trim((string) $hr->nationality));
+
+        return view('agency.hr.contract', [
+            'hr'       => $hr,
+            'contract' => [
+                'passport'     => $hr->passport?->passport_number ?? '',
+                'firstParty'   => $hr->visa?->sponsor_name_ar ?: ($hr->visa?->sponsor_name ?? ''),
+                'firstPartyEn' => $hr->visa?->sponsor_name ?? '',
+                'secondParty'  => mb_strtoupper((string) $hr->full_name_en),
+                'nationality'  => $demonyms[$nationality] ?? $nationality,
+                'profession'   => $hr->visa?->profession_en ?: ($hr->occupation ?? ''),
+                'salary'       => '1000',
+                'years'        => '2',
+                'city'         => 'Dhaka',
+            ],
+        ]);
     }
 
     public function show(HrProfile $hr)

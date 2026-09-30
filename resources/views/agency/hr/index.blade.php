@@ -67,114 +67,129 @@
         <x-ui.stat class="js-fade-card" accentLeft icon="bi-person-x" :tone="$blacklisted > 0 ? 'red' : 'slate'" label="Blacklisted" :value="$blacklisted" />
     </div>
 
-    {{-- Filter bar --}}
-    <x-ui.card class="mb-5">
-        <form method="GET" action="{{ route('hr.index') }}" class="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-12">
-            <div class="lg:col-span-4" x-data="{ q: @js(request('search') ?? '') }">
-                <div class="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 transition focus-within:border-brand-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-brand-100">
-                    <i class="bi bi-search text-sm text-slate-400"></i>
-                    <input type="text" name="search" x-model="q" placeholder="Name, file #, passport, phone…"
-                           class="h-11 w-full border-0 bg-transparent p-0 text-sm focus:ring-0">
-                    <button type="button" x-show="q" x-cloak @click="q = ''" title="Clear search"
-                            class="grid h-6 w-6 shrink-0 place-items-center rounded-md text-slate-400 transition hover:bg-slate-200 hover:text-slate-600">
-                        <i class="bi bi-x-lg text-xs"></i>
-                    </button>
-                </div>
-            </div>
-            @php $selCls = 'h-11 rounded-xl border-slate-200 bg-slate-50 text-sm transition focus:border-brand-400 focus:bg-white focus:ring-brand-400'; @endphp
-            <select name="status" class="{{ $selCls }} lg:col-span-2">
+    {{-- Filter bar (status / agent / nationality). Search + page size live in the
+         table toolbar below; each form carries the other's values as hidden inputs. --}}
+    @php $selCls = 'h-10 rounded-xl border-slate-200 bg-slate-50 text-sm transition focus:border-brand-400 focus:bg-white focus:ring-brand-400'; @endphp
+    <x-ui.card class="mb-4">
+        <form method="GET" action="{{ route('hr.index') }}" class="grid grid-cols-1 gap-3 p-3 sm:grid-cols-2 lg:grid-cols-4">
+            <input type="hidden" name="search" value="{{ request('search') }}">
+            <input type="hidden" name="per_page" value="{{ $perPage }}">
+            <select name="status" class="{{ $selCls }}" onchange="this.form.submit()">
                 <option value="">All status</option>
                 @foreach(['active' => 'Active', 'inactive' => 'Inactive', 'blacklisted' => 'Blacklisted'] as $val => $lbl)
                     <option value="{{ $val }}" @selected(request('status') === $val)>{{ $lbl }}</option>
                 @endforeach
             </select>
-            <select name="agent_id" class="{{ $selCls }} lg:col-span-2">
+            <select name="agent_id" class="{{ $selCls }}" onchange="this.form.submit()">
                 <option value="">All agents</option>
                 @foreach($agents as $agent)
                     <option value="{{ $agent->id }}" @selected(request('agent_id') == $agent->id)>{{ $agent->name }}</option>
                 @endforeach
             </select>
-            <select name="nationality" class="{{ $selCls }} lg:col-span-2">
+            <select name="nationality" class="{{ $selCls }}" onchange="this.form.submit()">
                 <option value="">All nationalities</option>
                 @foreach($nationalities as $nat)
                     <option value="{{ $nat }}" @selected(request('nationality') === $nat)>{{ $nat }}</option>
                 @endforeach
             </select>
-            <div class="flex gap-2 lg:col-span-2">
-                <x-ui.button type="submit" variant="gradient" class="h-11 flex-1"><i class="bi bi-funnel-fill"></i> Filter</x-ui.button>
+            <div class="flex gap-2">
+                <x-ui.button type="submit" variant="gradient" class="h-10 flex-1"><i class="bi bi-funnel-fill"></i> Filter</x-ui.button>
                 <x-ui.button :href="route('hr.index')" variant="secondary" size="icon" title="Clear all filters"
-                             class="h-11 w-11 shrink-0 hover:border-brand-200 hover:text-brand-600"><i class="bi bi-arrow-counterclockwise"></i></x-ui.button>
+                             class="h-10 w-10 shrink-0 hover:border-brand-200 hover:text-brand-600"><i class="bi bi-arrow-counterclockwise"></i></x-ui.button>
             </div>
         </form>
     </x-ui.card>
 
-    {{-- ── Desktop table ─────────────────────────────────────── --}}
-    <x-ui.card class="hidden overflow-hidden lg:block">
-        <div class="overflow-x-auto">
+    {{-- Table toolbar: "Show N entries" + search (DataTables-style) --}}
+    <x-ui.card class="overflow-hidden">
+        <form method="GET" action="{{ route('hr.index') }}" class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-3">
+            @foreach(['status', 'agent_id', 'nationality'] as $keep)
+                @if(request($keep) !== null && request($keep) !== '')<input type="hidden" name="{{ $keep }}" value="{{ request($keep) }}">@endif
+            @endforeach
+            <label class="flex items-center gap-2 text-sm text-slate-600">
+                Show
+                <select name="per_page" onchange="this.form.submit()" class="h-9 rounded-lg border-slate-200 py-0 text-sm focus:border-brand-400 focus:ring-brand-400">
+                    @foreach([10, 25, 50, 100] as $n)<option value="{{ $n }}" @selected($perPage === $n)>{{ $n }}</option>@endforeach
+                </select>
+                entries
+            </label>
+            <div class="flex w-full items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 sm:w-72" x-data="{ q: @js(request('search') ?? '') }">
+                <i class="bi bi-search text-sm text-slate-400"></i>
+                <input type="text" name="search" x-model="q" placeholder="Search name, passport, visa, MOFA…"
+                       class="h-9 w-full border-0 bg-transparent p-0 text-sm focus:ring-0">
+                <button type="button" x-show="q" x-cloak @click="q = ''; $nextTick(() => $el.closest('form').submit())" title="Clear search"
+                        class="grid h-6 w-6 shrink-0 place-items-center rounded-md text-slate-400 transition hover:bg-slate-100 hover:text-slate-600">
+                    <i class="bi bi-x-lg text-xs"></i>
+                </button>
+            </div>
+        </form>
+
+        {{-- ── Desktop table ───────────────────────────────────── --}}
+        @php
+            $pill = 'inline-flex items-center gap-1 whitespace-nowrap rounded-md px-2 py-1 text-[0.7rem] font-bold uppercase tracking-wide text-white shadow-sm transition';
+            $mono = 'font-mono text-xs';
+        @endphp
+        <div class="hidden overflow-x-auto lg:block">
             <table class="w-full text-sm">
                 <thead>
-                    <tr class="sticky top-0 z-10 border-b border-slate-200 bg-slate-100/95 text-left text-xs font-semibold uppercase tracking-wide text-slate-600 backdrop-blur">
-                        <th class="w-[4%]  px-3 py-3">#</th>
-                        <th class="w-[20%] px-3 py-3">Name</th>
-                        <th class="w-[10%] px-3 py-3">MOFA ID</th>
-                        <th class="w-[12%] px-3 py-3">Passport No</th>
-                        <th class="w-[12%] px-3 py-3">Agent</th>
-                        <th class="w-[11%] px-3 py-3">Visa No</th>
-                        <th class="w-[14%] px-3 py-3">Sponsor</th>
-                        <th class="w-[17%] px-3 py-3 text-right">Action</th>
+                    <tr class="border-b border-slate-200 bg-slate-50 text-left text-[0.7rem] font-bold uppercase tracking-wider text-slate-500">
+                        <th class="px-3 py-3">#</th>
+                        <th class="px-3 py-3">Name</th>
+                        <th class="px-3 py-3">MOFA ID</th>
+                        <th class="px-3 py-3">Passport No</th>
+                        <th class="px-3 py-3">Visa No</th>
+                        <th class="px-3 py-3">Sponsor ID</th>
+                        <th class="px-3 py-3">Action</th>
+                        <th class="px-3 py-3">Sponsor Name</th>
+                        <th class="px-3 py-3">Profession</th>
+                        <th class="px-3 py-3">Agent</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($hrProfiles as $hr)
-                        <tr class="odd:bg-white even:bg-slate-50/60 transition-colors hover:bg-brand-50/50">
-                            <td class="px-3 py-3 text-slate-400">{{ $hrProfiles->firstItem() + $loop->index }}</td>
+                        <tr class="align-middle transition-colors hover:bg-brand-50/40">
                             <td class="px-3 py-3">
-                                <div class="flex items-center gap-3">
-                                    <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-indigo-600 text-xs font-bold text-white shadow-sm">
-                                        {{ strtoupper(mb_substr($hr->full_name_en, 0, 1)) }}
-                                    </span>
-                                    <div class="min-w-0">
-                                        <a href="{{ route('hr.show', $hr) }}" @click.prevent="openPreview(@js($previewData($hr)))" class="block break-words text-left font-semibold text-slate-800 hover:text-brand-600">{{ $hr->full_name_en }}</a>
-                                        @if($hr->full_name_ar)
-                                            <div class="break-words text-xs text-slate-400" dir="rtl">{{ $hr->full_name_ar }}</div>
-                                        @endif
-                                    </div>
-                                </div>
+                                <span class="grid h-6 w-6 place-items-center rounded-full bg-slate-100 text-xs font-semibold text-slate-500">{{ $hrProfiles->firstItem() + $loop->index }}</span>
                             </td>
                             <td class="px-3 py-3">
-                                @if($hr->mofa_new ?: $hr->mofa_old)
-                                    <span class="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 font-mono text-xs text-slate-600 ring-1 ring-inset ring-slate-200">{{ $hr->mofa_new ?: $hr->mofa_old }}</span>
-                                @else <span class="text-slate-300">—</span> @endif
+                                <a href="{{ route('hr.show', $hr) }}" @click.prevent="openPreview(@js($previewData($hr)))" class="block max-w-[14rem] break-words text-left font-bold uppercase text-slate-800 hover:text-brand-600">{{ $hr->full_name_en }}</a>
                             </td>
-                            <td class="px-3 py-3 font-mono text-xs text-slate-600">{{ $hr->passport?->passport_number ?: '—' }}</td>
-                            <td class="px-3 py-3 break-words text-slate-600">{{ $hr->agent?->name ?? '—' }}</td>
-                            <td class="px-3 py-3 font-mono text-xs text-slate-600">{{ $hr->visa?->visa_number ?: '—' }}</td>
+                            <td class="px-3 py-3 {{ $mono }} text-rose-600">{{ $hr->mofa_new ?: ($hr->mofa_old ?: '—') }}</td>
+                            <td class="px-3 py-3 {{ $mono }} text-rose-600">{{ $hr->passport?->passport_number ?: '—' }}</td>
+                            <td class="px-3 py-3 {{ $mono }} text-slate-700">{{ $hr->visa?->visa_number ?: '—' }}</td>
+                            <td class="px-3 py-3 {{ $mono }} text-slate-700">{{ $hr->visa?->sponsor_id ?: '—' }}</td>
                             <td class="px-3 py-3">
-                                @if($hr->visa?->sponsor_name_ar || $hr->visa?->sponsor_name || $hr->visa?->sponsor_id)
-                                    <div class="break-words font-medium text-slate-700">{{ $hr->visa?->sponsor_name_ar ?: ($hr->visa?->sponsor_name ?: '—') }}</div>
-                                    @if($hr->visa?->sponsor_id)
-                                        <div class="font-mono text-xs text-slate-400">{{ $hr->visa->sponsor_id }}</div>
-                                    @endif
-                                @else <span class="text-slate-300">—</span> @endif
-                            </td>
-                            <td class="px-3 py-3">
-                                @php $pill = 'inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold ring-1 ring-inset transition'; @endphp
-                                <div class="flex flex-nowrap justify-end gap-1.5">
-                                    <a href="{{ route('hr.print.full-file', $hr) }}" target="_blank" class="{{ $pill }} bg-blue-50 text-blue-700 ring-blue-200 hover:bg-blue-100"><i class="bi bi-printer"></i> Print</a>
+                                <div class="flex flex-nowrap gap-1">
+                                    <a href="{{ route('hr.print.full-file', $hr) }}" target="_blank" class="{{ $pill }} bg-blue-600 hover:bg-blue-700"><i class="bi bi-printer"></i> Print</a>
+                                    <a href="{{ route('hr.contract', $hr) }}" class="{{ $pill }} bg-emerald-600 hover:bg-emerald-700"><i class="bi bi-file-earmark-text"></i> Contract</a>
                                     @can('update', $hr)
-                                        <a href="{{ route('hr.edit', $hr) }}" class="{{ $pill }} bg-amber-50 text-amber-700 ring-amber-200 hover:bg-amber-100"><i class="bi bi-pencil"></i> Edit</a>
+                                        <a href="{{ route('hr.edit', $hr) }}" class="{{ $pill }} bg-amber-500 hover:bg-amber-600"><i class="bi bi-pencil"></i> Edit</a>
                                     @endcan
                                     @can('delete', $hr)
-                                        <button type="button" class="{{ $pill }} bg-rose-50 text-rose-700 ring-rose-200 hover:bg-rose-100"
+                                        <button type="button" class="{{ $pill }} bg-rose-600 hover:bg-rose-700"
                                             x-on:click="del.open = true; del.name = @js($hr->full_name_en); del.action = '{{ route('hr.destroy', $hr) }}'"><i class="bi bi-trash"></i> Delete</button>
                                     @endcan
                                 </div>
                             </td>
+                            <td class="px-3 py-3">
+                                @if($hr->visa?->sponsor_name_ar)
+                                    <div class="max-w-[12rem] text-sm font-medium text-rose-700" dir="rtl" lang="ar">{{ $hr->visa->sponsor_name_ar }}</div>
+                                @endif
+                                @if($hr->visa?->sponsor_name && $hr->visa?->sponsor_name !== $hr->visa?->sponsor_name_ar)
+                                    <div class="max-w-[12rem] text-xs text-slate-500">{{ $hr->visa->sponsor_name }}</div>
+                                @endif
+                                @if(! $hr->visa?->sponsor_name_ar && ! $hr->visa?->sponsor_name)<span class="text-slate-300">—</span>@endif
+                            </td>
+                            <td class="px-3 py-3">
+                                <div class="max-w-[10rem] text-sm text-slate-700">{{ $hr->visa?->profession_en ?: '—' }}</div>
+                                @if($hr->visa?->profession_ar)<div class="max-w-[10rem] text-xs text-amber-700" dir="rtl" lang="ar">{{ $hr->visa->profession_ar }}</div>@endif
+                            </td>
+                            <td class="px-3 py-3 text-slate-600">{{ $hr->agent?->name ?? 'N/A' }}</td>
                         </tr>
                     @empty
-                        <tr><td colspan="8" class="p-0">
+                        <tr><td colspan="10" class="p-0">
                             <x-ui.empty icon="bi-person-vcard" title="No HR profiles found"
-                                message="Try adjusting your filters, or add your first candidate profile."
+                                message="Try adjusting your search or filters, or add your first candidate profile."
                                 :actionUrl="auth()->user()->can('create', \App\Models\HrProfile::class) ? route('hr.create') : null"
                                 actionLabel="Add HR Profile" />
                         </td></tr>
@@ -182,13 +197,16 @@
                 </tbody>
             </table>
         </div>
-        @if($hrProfiles->hasPages())
-            <div class="border-t border-slate-100 px-4 py-3">{{ $hrProfiles->withQueryString()->links() }}</div>
-        @endif
+
+        {{-- Footer: "Showing X to Y of Z entries" + pagination (desktop + mobile) --}}
+        <div class="hidden flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-4 py-3 text-sm text-slate-500 lg:flex">
+            <div>Showing <strong>{{ $hrProfiles->firstItem() ?? 0 }}</strong> to <strong>{{ $hrProfiles->lastItem() ?? 0 }}</strong> of <strong>{{ $hrProfiles->total() }}</strong> entries</div>
+            @if($hrProfiles->hasPages())<div>{{ $hrProfiles->withQueryString()->links() }}</div>@endif
+        </div>
     </x-ui.card>
 
     {{-- ── Mobile cards ──────────────────────────────────────── --}}
-    <div class="space-y-3 lg:hidden">
+    <div class="mt-3 space-y-3 lg:hidden">
         @forelse($hrProfiles as $hr)
             <x-ui.card class="p-4">
                 <div class="flex items-start justify-between gap-3">
@@ -209,10 +227,12 @@
                     <div><dt class="text-slate-400">Visa No</dt><dd class="font-mono text-slate-700">{{ $hr->visa?->visa_number ?: '—' }}</dd></div>
                     <div><dt class="text-slate-400">Sponsor ID</dt><dd class="font-mono text-slate-700">{{ $hr->visa?->sponsor_id ?: '—' }}</dd></div>
                     <div><dt class="text-slate-400">Sponsor Name</dt><dd class="font-medium text-slate-700">{{ $hr->visa?->sponsor_name_ar ?: ($hr->visa?->sponsor_name ?: '—') }}</dd></div>
+                    <div class="col-span-2"><dt class="text-slate-400">Profession</dt><dd class="font-medium text-slate-700">{{ $hr->visa?->profession_en ?: '—' }}@if($hr->visa?->profession_ar) <span class="text-amber-700" dir="rtl" lang="ar">· {{ $hr->visa->profession_ar }}</span>@endif</dd></div>
                 </dl>
                 @php $mBtn = 'flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold ring-1 ring-inset transition'; @endphp
                 <div class="mt-3 flex gap-2 border-t border-slate-100 pt-3">
                     <a href="{{ route('hr.print.full-file', $hr) }}" target="_blank" class="{{ $mBtn }} bg-blue-50 text-blue-700 ring-blue-200 hover:bg-blue-100"><i class="bi bi-printer"></i> Print</a>
+                    <a href="{{ route('hr.contract', $hr) }}" class="{{ $mBtn }} bg-emerald-50 text-emerald-700 ring-emerald-200 hover:bg-emerald-100"><i class="bi bi-file-earmark-text"></i> Contract</a>
                     @can('update', $hr)
                         <a href="{{ route('hr.edit', $hr) }}" class="{{ $mBtn }} bg-amber-50 text-amber-700 ring-amber-200 hover:bg-amber-100"><i class="bi bi-pencil"></i> Edit</a>
                     @endcan

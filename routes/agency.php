@@ -133,6 +133,8 @@ Route::middleware(['auth', 'agency-access'])->group(function () {
         Route::get('/hr', [HrProfileController::class, 'index'])->name('hr.index');
         Route::get('/hr/{hr}', [HrProfileController::class, 'show'])->name('hr.show');
         Route::get('/hr/{hr}/edit', [HrProfileController::class, 'edit'])->name('hr.edit');
+        // Employment Contract (bilingual, browser print / save as PDF)
+        Route::get('/hr/{hr}/contract', [HrProfileController::class, 'contract'])->name('hr.contract');
         Route::put('/hr/{hr}', [HrProfileController::class, 'update'])->name('hr.update');
         Route::delete('/hr/{hr}', [HrProfileController::class, 'destroy'])->name('hr.destroy');
 

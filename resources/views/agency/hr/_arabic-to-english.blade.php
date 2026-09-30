@@ -109,6 +109,9 @@
         'مختبر': 'Laboratory', 'اسنان': 'Dental', 'اشعة': 'Radiology', 'كمبيوتر': 'Computer', 'حاسب': 'Computer',
         'شبكات': 'Network', 'الكترونيات': 'Electronics', 'مدني': 'Civil', 'معماري': 'Architectural', 'ميكانيكي': 'Mechanical',
         'اطفال': 'Children', 'قهوة': 'Coffee', 'شاي': 'Tea', 'حلويات': 'Sweets', 'خضار': 'Vegetables', 'فواكه': 'Fruits',
+        'المنيوم': 'Aluminium', 'الالمنيوم': 'Aluminium', 'الومنيوم': 'Aluminium', 'المونيوم': 'Aluminium',
+        'زجاج': 'Glass', 'الزجاج': 'Glass', 'حديد': 'Steel', 'الحديد': 'Steel', 'اثاث': 'Furniture', 'الاثاث': 'Furniture',
+        'زاويه': 'Zawiya', 'زاوية': 'Zawiya', 'تحفه': 'Tuhfa', 'تحفة': 'Tuhfa', 'نجمة': 'Najma', 'الصحراء': 'Al Sahra',
         'مكيفات': 'AC', 'مكيف': 'AC', 'تكييف': 'Air Conditioning', 'ثلاجات': 'Refrigerator', 'غسالات': 'Washing Machine',
         'اول': 'First', 'ثاني': 'Second', 'رئيس': 'Head', 'كبير': 'Senior',
         // qualification
@@ -191,6 +194,7 @@
                 else vowel('ee');
                 continue;
             }
+            if (ch === 'ه' && last && i > 0 && out && !/[aeiou']$/.test(out)) { vowel('a'); continue; }
             if (CONS[ch]) { cons(CONS[ch]); continue; }
             if (/[0-9A-Za-z]/.test(ch)) out += ch;
         }
