@@ -77,10 +77,12 @@ class PrintDataMapper
             // ── Visa ────────────────────────────────────────────────────
             'visa_no'              => $visa?->visa_number ?? '',
             'visa_type'            => $visa?->visa_type ?? '',
-            // Visa Date is a freeform string (stored/printed exactly as entered).
-            // Both spots show the raw value; hijriString() is kept for future use.
-            'visa_date'            => $visa?->issue_date ?? '',
-            'visa_date_hijri'      => $visa?->issue_date ?? '',
+            // Visa Date is a freeform string stored exactly as entered (English or
+            // Arabic digits, Hijri or Gregorian). The printed forms always use
+            // English digits (the date itself is not converted); hijriString() is
+            // kept for future use.
+            'visa_date'            => self::latinDigits($visa?->issue_date ?? ''),
+            'visa_date_hijri'      => self::latinDigits($visa?->issue_date ?? ''),
             'visa_expiry_date'     => $visa?->expiry_date?->format('d/m/Y') ?? '',
             'visa_issue_place_en'  => $visa?->issue_place ?? '',
             'visa_issue_place_ar'  => $visa?->issue_place_ar ?? '',
@@ -214,6 +216,17 @@ class PrintDataMapper
     private static function gregorianToHijriYear(int $gy, int $gm, int $gd): int
     {
         return self::gregorianToHijri($gy, $gm, $gd)[0];
+    }
+
+    /** Arabic-Indic (٠-٩) / Persian (۰-۹) digits → English digits; everything else unchanged. */
+    public static function latinDigits(?string $value): string
+    {
+        return strtr((string) $value, [
+            '٠' => '0', '١' => '1', '٢' => '2', '٣' => '3', '٤' => '4',
+            '٥' => '5', '٦' => '6', '٧' => '7', '٨' => '8', '٩' => '9',
+            '۰' => '0', '۱' => '1', '۲' => '2', '۳' => '3', '۴' => '4',
+            '۵' => '5', '۶' => '6', '۷' => '7', '۸' => '8', '۹' => '9',
+        ]);
     }
 
     /** Format a Gregorian Carbon date as a Hijri string "YYYY/MM/DD" (e.g. 1447/11/25). */

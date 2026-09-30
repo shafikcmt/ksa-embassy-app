@@ -30,7 +30,9 @@
     $inp = 'h-10 w-full rounded-lg border-slate-300 text-sm shadow-sm transition focus:border-brand-400 focus:ring-brand-400';
     $ta  = 'w-full rounded-lg border-slate-300 text-sm shadow-sm transition focus:border-brand-400 focus:ring-brand-400';
     $seg = 'flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 py-2 text-center text-sm font-medium text-slate-600 transition peer-checked:border-brand-600 peer-checked:bg-brand-600 peer-checked:text-white peer-hover:border-brand-300';
-    $arBtn = 'ar-gen h-10 shrink-0 rounded-lg border border-slate-300 px-2.5 text-sm font-semibold text-slate-500 hover:bg-slate-50';
+    $arBtn = 'ar-gen h-10 w-9 shrink-0 rounded-lg border border-slate-300 text-sm font-semibold text-slate-500 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700';
+    $enBtn = 'en-gen h-10 w-9 shrink-0 rounded-lg border border-slate-300 text-xs font-semibold text-slate-500 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700';
+    $pairHint = 'Type either side — the other fills automatically';
 
     // Common nationalities for the searchable <datalist> (free text still allowed).
     $nationalityOptions = ['BANGLADESH','INDIA','PAKISTAN','NEPAL','SRI LANKA','PHILIPPINES','INDONESIA','MYANMAR','KENYA','UGANDA','ETHIOPIA','NIGERIA'];
@@ -298,15 +300,16 @@
                     <input type="text" name="visa_number" required value="{{ $rel($visa, 'visa_number') }}" class="{{ $inp }} @error('visa_number') !border-rose-400 @enderror">
                 </x-ui.field>
                 <x-ui.field label="Visa Date" name="visa_issue_date" :required="true" hint="Enter exactly as printed on the visa.">
-                    <input type="text" id="visa_issue_date" name="visa_issue_date" required autocomplete="off" value="{{ old('visa_issue_date', $visa?->issue_date) }}" class="{{ $inp }} @error('visa_issue_date') !border-rose-400 @enderror">
-                    <p id="visaDatePreview" class="mt-1 text-xs text-slate-500" aria-live="polite"></p>
+                    <input type="text" id="visa_issue_date" name="visa_issue_date" required autocomplete="off" dir="ltr" placeholder="e.g. 1447/03/15" value="{{ old('visa_issue_date', $visa?->issue_date) }}" class="{{ $inp }} @error('visa_issue_date') !border-rose-400 @enderror">
+                    <span id="visaDatePreview" class="mt-1 hidden items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600" aria-live="polite"></span>
                 </x-ui.field>
-                <x-ui.field label="Sponsor Name" name="sponsor_name" :required="true" hint="Arabic auto-fills · editable">
-                    <div class="grid grid-cols-2 gap-2">
+                <x-ui.field label="Sponsor Name" name="sponsor_name" :required="true" :hint="$pairHint">
+                    <div class="grid grid-cols-1 gap-2 lg:grid-cols-2">
                         <input type="text" name="sponsor_name" required placeholder="English" value="{{ $rel($visa, 'sponsor_name') }}" data-ar-source="sponsor_name_ar" data-ar-dict="generic" class="{{ $inp }} @error('sponsor_name') !border-rose-400 @enderror">
                         <div class="flex gap-1">
                             <input type="text" id="sponsor_name_ar" name="sponsor_name_ar" dir="rtl" lang="ar" placeholder="عربي" value="{{ $rel($visa, 'sponsor_name_ar') }}" class="{{ $inp }} ar-target ar-input">
-                            <button type="button" class="{{ $arBtn }}" data-target="sponsor_name_ar" data-dict="generic" tabindex="-1" title="Generate Arabic">ع</button>
+                            <button type="button" class="{{ $arBtn }}" data-target="sponsor_name_ar" data-dict="generic" tabindex="-1" title="English → Arabic">ع</button>
+                            <button type="button" class="{{ $enBtn }}" data-target="sponsor_name_ar" tabindex="-1" title="Arabic → English">En</button>
                         </div>
                     </div>
                 </x-ui.field>
@@ -315,12 +318,13 @@
                 </x-ui.field>
 
                 @if($on('visa_issue_place'))
-                    <x-ui.field label="Place of Issue" name="visa_issue_place" hint="English / Arabic">
-                        <div class="grid grid-cols-2 gap-2">
+                    <x-ui.field label="Place of Issue" name="visa_issue_place" :hint="$pairHint">
+                        <div class="grid grid-cols-1 gap-2 lg:grid-cols-2">
                             <input type="text" name="visa_issue_place" placeholder="English" value="{{ $rel($visa, 'issue_place') }}" data-ar-source="visa_issue_place_ar" data-ar-dict="city" class="{{ $inp }}">
                             <div class="flex gap-1">
                                 <input type="text" id="visa_issue_place_ar" name="visa_issue_place_ar" dir="rtl" lang="ar" placeholder="عربي" value="{{ $rel($visa, 'issue_place_ar') }}" class="{{ $inp }} ar-target ar-input">
-                                <button type="button" class="{{ $arBtn }}" data-target="visa_issue_place_ar" data-dict="city" tabindex="-1" title="Generate Arabic">ع</button>
+                                <button type="button" class="{{ $arBtn }}" data-target="visa_issue_place_ar" data-dict="city" tabindex="-1" title="English → Arabic">ع</button>
+                            <button type="button" class="{{ $enBtn }}" data-target="visa_issue_place_ar" tabindex="-1" title="Arabic → English">En</button>
                             </div>
                         </div>
                     </x-ui.field>
@@ -330,12 +334,13 @@
                 @endif
 
                 @if($on('qualification'))
-                    <x-ui.field label="Qualification" name="qualification_en" hint="English / Arabic">
-                        <div class="grid grid-cols-2 gap-2">
+                    <x-ui.field label="Qualification" name="qualification_en" :hint="$pairHint">
+                        <div class="grid grid-cols-1 gap-2 lg:grid-cols-2">
                             <input type="text" name="qualification_en" placeholder="English" value="{{ $rel($visa, 'qualification_en') }}" data-ar-source="qualification_ar" data-ar-dict="qualification" class="{{ $inp }}">
                             <div class="flex gap-1">
                                 <input type="text" id="qualification_ar" name="qualification_ar" dir="rtl" lang="ar" placeholder="عربي" value="{{ $rel($visa, 'qualification_ar') }}" class="{{ $inp }} ar-target ar-input">
-                                <button type="button" class="{{ $arBtn }}" data-target="qualification_ar" data-dict="qualification" tabindex="-1" title="Generate Arabic">ع</button>
+                                <button type="button" class="{{ $arBtn }}" data-target="qualification_ar" data-dict="qualification" tabindex="-1" title="English → Arabic">ع</button>
+                            <button type="button" class="{{ $enBtn }}" data-target="qualification_ar" tabindex="-1" title="Arabic → English">En</button>
                             </div>
                         </div>
                     </x-ui.field>
@@ -344,12 +349,13 @@
                     <input type="hidden" name="qualification_ar" value="{{ $rel($visa, 'qualification_ar') }}">
                 @endif
 
-                <x-ui.field label="Profession" name="profession_en" :required="true" hint="English / Arabic">
-                    <div class="grid grid-cols-2 gap-2">
+                <x-ui.field label="Profession" name="profession_en" :required="true" :hint="$pairHint">
+                    <div class="grid grid-cols-1 gap-2 lg:grid-cols-2">
                         <input type="text" name="profession_en" required placeholder="English" value="{{ $rel($visa, 'profession_en') }}" data-ar-source="profession_ar" data-ar-dict="profession" class="{{ $inp }} @error('profession_en') !border-rose-400 @enderror">
                         <div class="flex gap-1">
                             <input type="text" id="profession_ar" name="profession_ar" dir="rtl" lang="ar" placeholder="عربي" value="{{ $rel($visa, 'profession_ar') }}" class="{{ $inp }} ar-target ar-input">
-                            <button type="button" class="{{ $arBtn }}" data-target="profession_ar" data-dict="profession" tabindex="-1" title="Generate Arabic">ع</button>
+                            <button type="button" class="{{ $arBtn }}" data-target="profession_ar" data-dict="profession" tabindex="-1" title="English → Arabic">ع</button>
+                            <button type="button" class="{{ $enBtn }}" data-target="profession_ar" tabindex="-1" title="Arabic → English">En</button>
                         </div>
                     </div>
                 </x-ui.field>
@@ -469,11 +475,12 @@
             <div class="grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-2">
                 @if($showDuration)
                     <x-ui.field label="Duration of Stay" name="duration_stay_en" hint="English / Arabic">
-                        <div class="grid grid-cols-2 gap-2">
+                        <div class="grid grid-cols-1 gap-2 lg:grid-cols-2">
                             <input type="text" name="duration_stay_en" placeholder="English" value="{{ $rel($other, 'duration_stay_en', '02 Years') }}" data-ar-source="duration_stay_ar" data-ar-dict="duration" class="{{ $inp }}">
                             <div class="flex gap-1">
                                 <input type="text" id="duration_stay_ar" name="duration_stay_ar" dir="rtl" lang="ar" placeholder="عربي" value="{{ $rel($other, 'duration_stay_ar') }}" class="{{ $inp }} ar-target ar-input">
-                                <button type="button" class="{{ $arBtn }}" data-target="duration_stay_ar" data-dict="duration" tabindex="-1" title="Generate Arabic">ع</button>
+                                <button type="button" class="{{ $arBtn }}" data-target="duration_stay_ar" data-dict="duration" tabindex="-1" title="English → Arabic">ع</button>
+                            <button type="button" class="{{ $enBtn }}" data-target="duration_stay_ar" tabindex="-1" title="Arabic → English">En</button>
                             </div>
                         </div>
                     </x-ui.field>
@@ -492,11 +499,12 @@
 
                 @if($showArrival)
                     <x-ui.field label="Date of Arrival" name="arrival_date" hint="Type English or Arabic/Hijri — the other side fills">
-                        <div class="grid grid-cols-2 gap-2">
+                        <div class="grid grid-cols-1 gap-2 lg:grid-cols-2">
                             <input type="date" name="arrival_date" value="{{ $dt($other, 'arrival_date') }}" data-ar-source="arrival_date_ar" data-ar-dict="date" class="{{ $inp }}">
                             <div class="flex gap-1">
                                 <input type="text" id="arrival_date_ar" name="arrival_date_ar" dir="rtl" lang="ar" placeholder="١٥/٠٣/٢٠٢٦ أو هجري" title="Arabic or Hijri date, e.g. ١٥/٠٣/٢٠٢٦ or ١٤٤٧/٠٩/٢٦ — fills the English date" value="{{ $rel($other, 'arrival_date_ar') }}" class="{{ $inp }} ar-target ar-input">
-                                <button type="button" class="{{ $arBtn }}" data-target="arrival_date_ar" data-dict="date" tabindex="-1" title="Generate Arabic">ع</button>
+                                <button type="button" class="{{ $arBtn }}" data-target="arrival_date_ar" data-dict="date" tabindex="-1" title="English → Arabic">ع</button>
+                            <button type="button" class="{{ $enBtn }}" data-target="arrival_date_ar" tabindex="-1" title="Arabic → English">En</button>
                             </div>
                         </div>
                     </x-ui.field>
@@ -507,11 +515,12 @@
 
                 @if($showDeparture)
                     <x-ui.field label="Date of Departure" name="departure_date" hint="Type English or Arabic/Hijri — the other side fills">
-                        <div class="grid grid-cols-2 gap-2">
+                        <div class="grid grid-cols-1 gap-2 lg:grid-cols-2">
                             <input type="date" name="departure_date" value="{{ $dt($other, 'departure_date') }}" data-ar-source="departure_date_ar" data-ar-dict="date" class="{{ $inp }}">
                             <div class="flex gap-1">
                                 <input type="text" id="departure_date_ar" name="departure_date_ar" dir="rtl" lang="ar" placeholder="١٥/٠٣/٢٠٢٦ أو هجري" title="Arabic or Hijri date, e.g. ١٥/٠٣/٢٠٢٦ or ١٤٤٧/٠٩/٢٦ — fills the English date" value="{{ $rel($other, 'departure_date_ar') }}" class="{{ $inp }} ar-target ar-input">
-                                <button type="button" class="{{ $arBtn }}" data-target="departure_date_ar" data-dict="date" tabindex="-1" title="Generate Arabic">ع</button>
+                                <button type="button" class="{{ $arBtn }}" data-target="departure_date_ar" data-dict="date" tabindex="-1" title="English → Arabic">ع</button>
+                            <button type="button" class="{{ $enBtn }}" data-target="departure_date_ar" tabindex="-1" title="Arabic → English">En</button>
                             </div>
                         </div>
                     </x-ui.field>
@@ -906,6 +915,14 @@
         el.addEventListener('change', function () { fillReverse(el, { translit: true }); });
     });
 
+    // Manual "En" button — always (re)generates English from the Arabic value.
+    document.querySelectorAll('.en-gen').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var ar = document.getElementById(btn.dataset.target);
+            if (ar && ar.value.trim()) fillReverse(ar, { force: true });
+        });
+    });
+
     // Manual regenerate button (ع) — always (re)generates Arabic from the English value.
     document.querySelectorAll('.ar-gen').forEach(function (btn) {
         btn.addEventListener('click', function () {
@@ -1108,12 +1125,15 @@
     var H = window.HrArEn;
     if (!el || !out || !H) return;
     function show() {
-        var d = H.date(el.value);
-        if (!d) { out.textContent = ''; return; }
-        var dmy = d.iso.split('-').reverse().join('-');
-        if (d.hijri) { out.textContent = 'Hijri → Gregorian: ' + dmy + ' (Umm al-Qura)'; return; }
-        var h = H.toHijri(d.iso);
-        out.textContent = h ? 'Gregorian ' + dmy + ' → Hijri: ' + h : '';
+        var d = H.date(el.value), text = '';
+        if (d) {
+            var dmy = d.iso.split('-').reverse().join('-');
+            var h = d.hijri ? '' : H.toHijri(d.iso);
+            text = d.hijri ? '≈ Gregorian ' + dmy : (h ? '≈ Hijri ' + h : '');
+        }
+        out.textContent = text;
+        out.classList.toggle('hidden', !text);
+        out.classList.toggle('inline-flex', !!text);
     }
     el.addEventListener('input', show);
     show();
