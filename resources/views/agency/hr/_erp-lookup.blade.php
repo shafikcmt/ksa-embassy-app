@@ -1,7 +1,7 @@
-<section id="hrErpLookup" class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5" aria-labelledby="hrErpTitle">
+<section id="hrErpLookup" class="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4" aria-labelledby="hrErpTitle">
     {{-- Header matches the other HR form sections (icon + uppercase title). --}}
-    <div class="mb-4 flex items-center gap-3 border-b border-slate-100 pb-3">
-        <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-600"><i class="bi bi-search text-lg"></i></span>
+    <div class="mb-3 flex items-center gap-3 border-b border-slate-100 pb-2">
+        <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-600"><i class="bi bi-search text-base"></i></span>
         <div>
             <h2 id="hrErpTitle" class="text-xs font-bold uppercase tracking-wider text-slate-700">Find in ERP</h2>
             <p class="mt-0.5 text-xs text-slate-400">Enter at least one value. When you enter more, every value must match the same person.</p>
@@ -14,11 +14,11 @@
                 <input id="hrErp-{{ $key }}" data-erp-key="{{ $key }}" type="text" maxlength="100" autocomplete="off" class="{{ $inp }}">
             </div>
         @endforeach
-        <button id="hrErpSearch" type="button" class="h-10 rounded-lg bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700">Search ERP</button>
+        <button id="hrErpSearch" type="button" class="h-9 rounded-lg bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700">Search ERP</button>
     </div>
     <p id="hrErpMessage" class="mt-2 text-sm text-slate-600" role="status" aria-live="polite"></p>
     <div id="hrErpResults" class="mt-2 space-y-2 text-sm text-slate-700"></div>
-    <button id="hrErpApply" type="button" hidden class="mt-2 h-10 rounded-lg bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700">Apply to form</button>
+    <button id="hrErpApply" type="button" hidden class="mt-2 h-9 rounded-lg bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700">Apply to form</button>
 </section>
 
 @push('scripts')

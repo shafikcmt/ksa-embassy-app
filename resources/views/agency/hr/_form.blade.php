@@ -27,11 +27,11 @@
     $isEdit = $mode === 'edit';
 
     // Compact, premium input styles (slightly shorter + lighter than before).
-    $inp = 'h-10 w-full rounded-lg border-slate-300 text-sm shadow-sm transition focus:border-brand-400 focus:ring-brand-400';
+    $inp = 'h-9 w-full rounded-lg border-slate-300 text-sm shadow-sm transition focus:border-brand-400 focus:ring-brand-400';
     $ta  = 'w-full rounded-lg border-slate-300 text-sm shadow-sm transition focus:border-brand-400 focus:ring-brand-400';
-    $seg = 'flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 py-2 text-center text-sm font-medium text-slate-600 transition peer-checked:border-brand-600 peer-checked:bg-brand-600 peer-checked:text-white peer-hover:border-brand-300';
-    $arBtn = 'ar-gen h-10 w-9 shrink-0 rounded-lg border border-slate-300 text-sm font-semibold text-slate-500 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700';
-    $enBtn = 'en-gen h-10 w-9 shrink-0 rounded-lg border border-slate-300 text-xs font-semibold text-slate-500 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700';
+    $seg = 'flex items-center justify-center gap-1.5 rounded-lg border border-slate-300 py-1.5 text-center text-sm font-medium text-slate-600 transition peer-checked:border-brand-600 peer-checked:bg-brand-600 peer-checked:text-white peer-hover:border-brand-300';
+    $arBtn = 'ar-gen h-9 w-9 shrink-0 rounded-lg border border-slate-300 text-sm font-semibold text-slate-500 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700';
+    $enBtn = 'en-gen h-9 w-9 shrink-0 rounded-lg border border-slate-300 text-xs font-semibold text-slate-500 hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700';
     $pairHint = 'Type either side — the other fills automatically';
 
     // Common nationalities for the searchable <datalist> (free text still allowed).
@@ -90,20 +90,20 @@
         @foreach($nationalityOptions as $optNat)<option value="{{ $optNat }}"></option>@endforeach
     </datalist>
 
-    <div class="space-y-5">
+    <div class="hr-compact space-y-3">
         @include('agency.hr._erp-lookup')
 
         {{-- ════════ 1 · PERSONAL INFO ════════ --}}
-        <fieldset class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-            <div class="mb-4 flex items-center gap-3 border-b border-slate-100 pb-3">
-                <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-600"><i class="bi bi-person-vcard text-lg"></i></span>
+        <fieldset class="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
+            <div class="mb-3 flex items-center gap-3 border-b border-slate-100 pb-2">
+                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-600"><i class="bi bi-person-vcard text-base"></i></span>
                 <div>
                     <h2 class="text-xs font-bold uppercase tracking-wider text-slate-700">Personal Info</h2>
                     <p class="mt-0.5 text-xs text-slate-400">Identity as printed in the passport</p>
                 </div>
             </div>
-            <div class="grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-2">
-                <x-ui.field label="Name" name="full_name_en" :required="true" hint="As printed in the passport" class="sm:col-span-2">
+            <div class="hr-grid">
+                <x-ui.field label="Name" name="full_name_en" :required="true" class="sm:col-span-2">
                     <input type="text" id="full_name_en" name="full_name_en" required value="{{ $v('full_name_en') }}" placeholder="e.g. MOHAMMED RAHMAN" autocomplete="off" class="{{ $inp }} js-trim uppercase placeholder:normal-case @error('full_name_en') !border-rose-400 @enderror">
                 </x-ui.field>
 
@@ -130,7 +130,7 @@
                     <input type="text" name="place_of_birth" required value="{{ $v('place_of_birth') }}" placeholder="e.g. DHAKA" class="{{ $inp }} js-trim @error('place_of_birth') !border-rose-400 @enderror">
                 </x-ui.field>
 
-                <x-ui.field label="MOFA Application ID" name="mofa_new" :required="true" :hint="$on('mofa_old') ? 'New Mofa is required · Old Mofa optional' : 'New Mofa is required'" class="sm:col-span-2">
+                <x-ui.field label="MOFA Application ID" name="mofa_new" :required="true" class="sm:col-span-2">
                     <div class="grid {{ $on('mofa_old') ? 'grid-cols-2' : 'grid-cols-1' }} gap-2">
                         <input type="text" name="mofa_new" required placeholder="New Mofa" value="{{ $v('mofa_new') }}" class="{{ $inp }} @error('mofa_new') !border-rose-400 @enderror">
                         @if($on('mofa_old'))
@@ -148,8 +148,8 @@
                         $previousNat = $v('previous_nationality', 'BANGLADESH');
                         $natSynced   = $previousNat !== '' && $previousNat === $presentNat;
                     @endphp
-                    <div class="sm:col-span-2">
-                        <div class="grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-2">
+                    <div class="sm:col-span-2 hr-w3-xl">
+                        <div class="grid grid-cols-1 gap-x-3 gap-y-2 sm:grid-cols-2">
                             {{-- Present Nationality (required) --}}
                             <div>
                                 <div class="mb-1 flex h-6 items-center">
@@ -158,8 +158,6 @@
                                 <input type="text" id="nationality" name="nationality" list="nationalityList" required value="{{ $presentNat }}" autocomplete="off" class="{{ $inp }} uppercase @error('nationality') !border-rose-400 @enderror">
                                 @error('nationality')
                                     <p class="mt-1 text-xs font-medium text-rose-600">{{ $message }}</p>
-                                @else
-                                    <p class="mt-1 text-xs text-slate-400">Type to search or enter manually</p>
                                 @enderror
                             </div>
                             {{-- Previous Nationality (optional) with sync toggle --}}
@@ -174,13 +172,12 @@
                                     </label>
                                 </div>
                                 <input type="text" id="previous_nationality" name="previous_nationality" list="nationalityList" value="{{ $previousNat }}" autocomplete="off" class="{{ $inp }} uppercase">
-                                <p class="mt-1 text-xs text-slate-400">Auto-fills from present when synced</p>
                             </div>
                         </div>
                     </div>
                 @else
                     @if($isEdit)<input type="hidden" name="previous_nationality" value="{{ $v('previous_nationality') }}">@endif
-                    <x-ui.field label="Present Nationality" name="nationality" :required="true" hint="Type to search or enter manually">
+                    <x-ui.field label="Present Nationality" name="nationality" :required="true">
                         <input type="text" id="nationality" name="nationality" list="nationalityList" required value="{{ $v('nationality', 'BANGLADESH') }}" autocomplete="off" class="{{ $inp }} uppercase @error('nationality') !border-rose-400 @enderror">
                     </x-ui.field>
                 @endif
@@ -208,8 +205,8 @@
                 </x-ui.field>
 
                 @if($on('sect'))
-                    <x-ui.field label="Sect" name="sect" hint="Optional">
-                        <input type="text" name="sect" value="{{ $v('sect') }}" placeholder="e.g. Sunni" class="{{ $inp }} js-trim">
+                    <x-ui.field label="Sect" name="sect">
+                        <input type="text" name="sect" value="{{ $v('sect') }}" placeholder="Optional · e.g. Sunni" class="{{ $inp }} js-trim">
                     </x-ui.field>
                 @elseif($isEdit)
                     <input type="hidden" name="sect" value="{{ $v('sect') }}">
@@ -237,16 +234,16 @@
         </fieldset>
 
         {{-- ════════ 2 · PASSPORT INFO ════════ --}}
-        <fieldset class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-            <div class="mb-4 flex items-center gap-3 border-b border-slate-100 pb-3">
-                <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-600"><i class="bi bi-passport text-lg"></i></span>
+        <fieldset class="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
+            <div class="mb-3 flex items-center gap-3 border-b border-slate-100 pb-2">
+                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-600"><i class="bi bi-passport text-base"></i></span>
                 <div>
                     <h2 class="text-xs font-bold uppercase tracking-wider text-slate-700">Passport Info</h2>
                     <p class="mt-0.5 text-xs text-slate-400">Passport document details</p>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-2">
+            <div class="hr-grid hr-grid-5">
                 @if($on('passport_issue_place'))
                     <x-ui.field label="Passport Issue Place" name="passport_issue_place">
                         <input type="text" name="passport_issue_place" value="{{ $rel($passport, 'issue_place', 'DHAKA') }}" class="{{ $inp }}">
@@ -269,7 +266,7 @@
                             @foreach([5 => '5 Years', 10 => '10 Years'] as $val => $lbl)
                                 <label class="flex-1 cursor-pointer">
                                     <input type="radio" name="passport_validity_years" value="{{ $val }}" class="peer sr-only" {{ $validity === $val ? 'checked' : '' }}>
-                                    <span class="block rounded-lg border border-slate-300 py-2 text-center text-sm font-medium text-slate-600 transition peer-checked:border-brand-600 peer-checked:bg-brand-600 peer-checked:text-white">{{ $lbl }}</span>
+                                    <span class="block rounded-lg border border-slate-300 py-1.5 text-center text-sm font-medium text-slate-600 transition peer-checked:border-brand-600 peer-checked:bg-brand-600 peer-checked:text-white">{{ $lbl }}</span>
                                 </label>
                             @endforeach
                         </div>
@@ -278,32 +275,32 @@
                     <input type="hidden" name="passport_validity_years" value="{{ $rel($passport, 'validity_years') }}">
                 @endif
 
-                <x-ui.field label="Passport Validity Date" name="passport_expiry_date" :required="true" hint="Auto-filled from issue date + validity; you can edit it." class="sm:col-span-2 sm:max-w-[50%]">
-                    <input type="text" id="passport_expiry_date" name="passport_expiry_date" required inputmode="numeric" placeholder="dd-mm-yyyy" autocomplete="off" value="{{ old('passport_expiry_date', optional($passport?->expiry_date)?->format('d-m-Y')) }}" class="{{ $inp }} js-date-text @error('passport_expiry_date') !border-rose-400 @enderror">
+                <x-ui.field label="Passport Validity Date" name="passport_expiry_date" :required="true">
+                    <input type="text" id="passport_expiry_date" name="passport_expiry_date" required inputmode="numeric" placeholder="dd-mm-yyyy · auto" title="Auto-filled from issue date + validity; you can edit it." autocomplete="off" value="{{ old('passport_expiry_date', optional($passport?->expiry_date)?->format('d-m-Y')) }}" class="{{ $inp }} js-date-text @error('passport_expiry_date') !border-rose-400 @enderror">
                 </x-ui.field>
             </div>
         </fieldset>
 
         {{-- ════════ 3 · VISA INFO ════════ --}}
-        <fieldset class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-            <div class="mb-4 flex items-center gap-3 border-b border-slate-100 pb-3">
-                <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-600"><i class="bi bi-globe2 text-lg"></i></span>
+        <fieldset class="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
+            <div class="mb-3 flex items-center gap-3 border-b border-slate-100 pb-2">
+                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-600"><i class="bi bi-globe2 text-base"></i></span>
                 <div>
                     <h2 class="text-xs font-bold uppercase tracking-wider text-slate-700">Visa Info</h2>
-                    <p class="mt-0.5 text-xs text-slate-400">Visa, sponsor &amp; profession details</p>
+                    <p class="mt-0.5 text-xs text-slate-400">Visa, sponsor &amp; profession · English ⇄ Arabic boxes fill each other (ع / En to regenerate)</p>
                 </div>
             </div>
 
 
-            <div class="grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-2">
+            <div class="hr-grid hr-dense">
                 <x-ui.field label="Visa No" name="visa_number" :required="true">
                     <input type="text" name="visa_number" required value="{{ $rel($visa, 'visa_number') }}" class="{{ $inp }} @error('visa_number') !border-rose-400 @enderror">
                 </x-ui.field>
-                <x-ui.field label="Visa Date" name="visa_issue_date" :required="true" hint="Enter exactly as printed on the visa.">
-                    <input type="text" id="visa_issue_date" name="visa_issue_date" required autocomplete="off" dir="ltr" placeholder="e.g. 1447/03/15" value="{{ old('visa_issue_date', $visa?->issue_date) }}" class="{{ $inp }} @error('visa_issue_date') !border-rose-400 @enderror">
+                <x-ui.field label="Visa Date" name="visa_issue_date" :required="true">
+                    <input type="text" id="visa_issue_date" name="visa_issue_date" required autocomplete="off" dir="ltr" placeholder="As printed · e.g. 1447/03/15" value="{{ old('visa_issue_date', $visa?->issue_date) }}" class="{{ $inp }} @error('visa_issue_date') !border-rose-400 @enderror">
                     <span id="visaDatePreview" class="mt-1 hidden items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600" aria-live="polite"></span>
                 </x-ui.field>
-                <x-ui.field label="Sponsor Name" name="sponsor_name" :required="true" :hint="$pairHint">
+                <x-ui.field label="Sponsor Name" name="sponsor_name" :required="true" class="hr-w2">
                     <div class="grid grid-cols-1 gap-2 lg:grid-cols-2">
                         <input type="text" name="sponsor_name" required placeholder="English" value="{{ $rel($visa, 'sponsor_name') }}" data-ar-source="sponsor_name_ar" data-ar-dict="generic" class="{{ $inp }} @error('sponsor_name') !border-rose-400 @enderror">
                         <div class="flex gap-1">
@@ -318,7 +315,7 @@
                 </x-ui.field>
 
                 @if($on('visa_issue_place'))
-                    <x-ui.field label="Place of Issue" name="visa_issue_place" :hint="$pairHint">
+                    <x-ui.field label="Place of Issue" name="visa_issue_place" class="hr-w2">
                         <div class="grid grid-cols-1 gap-2 lg:grid-cols-2">
                             <input type="text" name="visa_issue_place" placeholder="English" value="{{ $rel($visa, 'issue_place') }}" data-ar-source="visa_issue_place_ar" data-ar-dict="city" class="{{ $inp }}">
                             <div class="flex gap-1">
@@ -334,7 +331,7 @@
                 @endif
 
                 @if($on('qualification'))
-                    <x-ui.field label="Qualification" name="qualification_en" :hint="$pairHint">
+                    <x-ui.field label="Qualification" name="qualification_en" class="hr-w2">
                         <div class="grid grid-cols-1 gap-2 lg:grid-cols-2">
                             <input type="text" name="qualification_en" placeholder="English" value="{{ $rel($visa, 'qualification_en') }}" data-ar-source="qualification_ar" data-ar-dict="qualification" class="{{ $inp }}">
                             <div class="flex gap-1">
@@ -349,7 +346,7 @@
                     <input type="hidden" name="qualification_ar" value="{{ $rel($visa, 'qualification_ar') }}">
                 @endif
 
-                <x-ui.field label="Profession" name="profession_en" :required="true" :hint="$pairHint">
+                <x-ui.field label="Profession" name="profession_en" :required="true" class="hr-w2">
                     <div class="grid grid-cols-1 gap-2 lg:grid-cols-2">
                         <input type="text" name="profession_en" required placeholder="English" value="{{ $rel($visa, 'profession_en') }}" data-ar-source="profession_ar" data-ar-dict="profession" class="{{ $inp }} @error('profession_en') !border-rose-400 @enderror">
                         <div class="flex gap-1">
@@ -387,15 +384,15 @@
         </fieldset>
 
         {{-- ════════ 4 · POLICE CLEARANCE & DRIVING LICENSE INFO ════════ --}}
-        <fieldset class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-            <div class="mb-4 flex items-center gap-3 border-b border-slate-100 pb-3">
-                <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-600"><i class="bi bi-shield-check text-lg"></i></span>
+        <fieldset class="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
+            <div class="mb-3 flex items-center gap-3 border-b border-slate-100 pb-2">
+                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-600"><i class="bi bi-shield-check text-base"></i></span>
                 <div>
                     <h2 class="text-xs font-bold uppercase tracking-wider text-slate-700">Police Clearance &amp; Driving License Info</h2>
                     <p class="mt-0.5 text-xs text-slate-400">Clearance reference &amp; license type</p>
                 </div>
             </div>
-            <div class="grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-2">
+            <div class="hr-grid">
                 @if($on('pc_qr_code'))
                     <x-ui.field label="P.C QRCode" name="pc_qr_code" class="sm:col-span-2">
                         <input type="text" name="pc_qr_code" value="{{ $rel($clearance, 'pc_qr_code') }}" class="{{ $inp }}">
@@ -425,7 +422,7 @@
                      "Check Medical Status" queries Wafid using Passport No +
                      Present Nationality and fills the fields below on success.
                      GCC slip number is shown for reference only (no column). --}}
-                <div class="sm:col-span-2">
+                <div class="sm:col-span-2 hr-wfull">
                     <div class="mb-2 flex items-center justify-between gap-2">
                         <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Medical Status</span>
                         <button type="button" id="medicalCheckBtn" class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-3 text-sm font-semibold text-brand-700 hover:bg-brand-100">
@@ -464,17 +461,17 @@
             $anyOther      = $showDuration || $showFinger || $showArrival || $showDeparture || $showAgent;
         @endphp
         @if($anyOther)
-        <fieldset class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-            <div class="mb-4 flex items-center gap-3 border-b border-slate-100 pb-3">
-                <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-600"><i class="bi bi-info-circle text-lg"></i></span>
+        <fieldset class="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
+            <div class="mb-3 flex items-center gap-3 border-b border-slate-100 pb-2">
+                <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand-600"><i class="bi bi-info-circle text-base"></i></span>
                 <div>
                     <h2 class="text-xs font-bold uppercase tracking-wider text-slate-700">Others Info</h2>
-                    <p class="mt-0.5 text-xs text-slate-400">Stay duration, dates &amp; assigned agent</p>
+                    <p class="mt-0.5 text-xs text-slate-400">Stay duration, dates &amp; agent · Arabic box accepts Arabic or Hijri dates</p>
                 </div>
             </div>
-            <div class="grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-2">
+            <div class="hr-grid hr-dense">
                 @if($showDuration)
-                    <x-ui.field label="Duration of Stay" name="duration_stay_en" hint="English / Arabic">
+                    <x-ui.field label="Duration of Stay" name="duration_stay_en" class="hr-w2">
                         <div class="grid grid-cols-1 gap-2 lg:grid-cols-2">
                             <input type="text" name="duration_stay_en" placeholder="English" value="{{ $rel($other, 'duration_stay_en', '02 Years') }}" data-ar-source="duration_stay_ar" data-ar-dict="duration" class="{{ $inp }}">
                             <div class="flex gap-1">
@@ -498,7 +495,7 @@
                 @endif
 
                 @if($showArrival)
-                    <x-ui.field label="Date of Arrival" name="arrival_date" hint="Type English or Arabic/Hijri — the other side fills">
+                    <x-ui.field label="Date of Arrival" name="arrival_date" class="hr-w2">
                         <div class="grid grid-cols-1 gap-2 lg:grid-cols-2">
                             <input type="date" name="arrival_date" value="{{ $dt($other, 'arrival_date') }}" data-ar-source="arrival_date_ar" data-ar-dict="date" class="{{ $inp }}">
                             <div class="flex gap-1">
@@ -514,7 +511,7 @@
                 @endif
 
                 @if($showDeparture)
-                    <x-ui.field label="Date of Departure" name="departure_date" hint="Type English or Arabic/Hijri — the other side fills">
+                    <x-ui.field label="Date of Departure" name="departure_date" class="hr-w2">
                         <div class="grid grid-cols-1 gap-2 lg:grid-cols-2">
                             <input type="date" name="departure_date" value="{{ $dt($other, 'departure_date') }}" data-ar-source="departure_date_ar" data-ar-dict="date" class="{{ $inp }}">
                             <div class="flex gap-1">
@@ -530,8 +527,8 @@
                 @endif
 
                 @if($showAgent)
-                    <x-ui.field label="Agent" name="agent_id" class="sm:col-span-2">
-                        <select name="agent_id" class="{{ $inp }} sm:max-w-[50%]">
+                    <x-ui.field label="Agent" name="agent_id">
+                        <select name="agent_id" class="{{ $inp }}">
                             <option value="">Select an agent</option>
                             @foreach($agents as $agent)<option value="{{ $agent->id }}" {{ (string) $v('agent_id') === (string) $agent->id ? 'selected' : '' }}>{{ $agent->name }}</option>@endforeach
                         </select>
@@ -554,11 +551,11 @@
         @endif
 
         {{-- ── Action bar (Reset / Save) ─────────────────────────── --}}
-        <div class="flex items-center justify-end gap-3 pb-2">
-            <button type="reset" class="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-600 hover:bg-slate-50">
+        <div class="hr-actions flex items-center justify-end gap-3">
+            <button type="reset" class="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-300 bg-white px-5 text-sm font-semibold text-slate-600 hover:bg-slate-50">
                 <i class="bi bi-arrow-counterclockwise"></i> Reset
             </button>
-            <button type="submit" name="after_save" value="view" class="inline-flex h-10 items-center gap-2 rounded-lg bg-brand-600 px-6 text-sm font-semibold text-white shadow-sm hover:bg-brand-700">
+            <button type="submit" name="after_save" value="view" class="inline-flex h-9 items-center gap-2 rounded-lg bg-brand-600 px-6 text-sm font-semibold text-white shadow-sm hover:bg-brand-700">
                 <i class="bi bi-check-lg"></i> {{ $mode === 'create' ? 'Save' : 'Save Changes' }}
             </button>
         </div>
@@ -566,6 +563,27 @@
 </div>
 
 @push('styles')
+<style>
+    /* Compact HR form: 1 col mobile -> 2 cols tablet -> 4 cols desktop.
+       English/Arabic pairs span 2 desktop columns; dense flow fills gaps. */
+    .hr-grid { display: grid; grid-template-columns: minmax(0, 1fr); column-gap: .75rem; row-gap: .6rem; }
+    @media (min-width: 640px)  { .hr-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (min-width: 1024px) {
+        .hr-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        .hr-grid.hr-dense { grid-auto-flow: row dense; }
+        .hr-grid > .hr-w2 { grid-column: span 2 / span 2; }
+        .hr-grid > .hr-wfull { grid-column: 1 / -1; }
+        .hr-grid.hr-grid-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    }
+    @media (min-width: 1536px) {
+        .hr-page { max-width: 1520px; }
+        .hr-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+        .hr-grid > .hr-w3-xl { grid-column: span 3 / span 3; }
+    }
+    /* Save bar stays reachable without scrolling to the end. */
+    .hr-actions { position: sticky; bottom: 0; z-index: 20; padding: .6rem 0;
+        background: rgba(248, 250, 252, .92); backdrop-filter: blur(4px); border-top: 1px solid #e2e8f0; }
+</style>
 {{-- Standard, premium Arabic typography for every RTL field on the HR form --}}
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700&family=Noto+Naskh+Arabic:wght@500;600;700&display=swap" rel="stylesheet">
 <style>

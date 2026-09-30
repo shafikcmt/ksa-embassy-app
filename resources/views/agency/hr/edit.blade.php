@@ -3,9 +3,9 @@
 @section('page-title', 'Edit HR Profile')
 
 @section('content')
-<div class="mx-auto max-w-6xl">
+<div class="hr-page mx-auto max-w-7xl">
     {{-- Slim header — consistent with the HR index / dashboard aesthetic. --}}
-    <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+    <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div class="flex min-w-0 items-center gap-3">
             <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-brand-50 text-brand-600">
                 <i class="bi bi-pencil-square text-xl"></i>
