@@ -47,3 +47,6 @@ _browser*
 docs/images/_*.png
 # Playwright MCP browser artifacts (screenshots/snapshots)
 .playwright-mcp/
+# One-off dev/agent scratch scripts and reports (never commit); keep new ones in /scratch/
+/.bmet-*
+/scratch/
