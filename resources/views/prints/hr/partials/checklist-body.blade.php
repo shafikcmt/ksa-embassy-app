@@ -17,12 +17,16 @@
 .ksa-checklist, .ksa-checklist table, .ksa-checklist td, .ksa-checklist th,
 .ksa-checklist div, .ksa-checklist span, .ksa-checklist p, .ksa-checklist strong { font-family: ksaroboto, xbriyaz, freesans, sans-serif; }
 .ksa-checklist .ar { font-family: xbriyaz, 'DejaVu Sans', sans-serif; }
-{{-- Uniform type scale (page 4): 10.5pt in every cell and one weight for labels
-     + values. The size is set INLINE on each th/td because the wrapper views'
-     global "td, th { font-size: 9pt }" beats a size inherited from the table.
-     autosize="1" stops mPDF shrinking the table. --}}
-.ksa-checklist .ck-table { font-size: 10.5pt; }
+{{-- Uniform type scale (page 4, matched to docs/references/CHECK.pdf): 9.7pt
+     Medium in every cell, one weight for labels + values, 1.5 line pitch. The
+     size is set INLINE on each th/td because the wrapper views' global
+     "td, th { font-size: 9pt }" beats a size inherited from the table.
+     autosize="1" stops mPDF shrinking the table. XB Riyaz runs wider than the
+     reference's Naskh, so in-table Arabic is set at 8.6pt and Step cells
+     never wrap. --}}
+.ksa-checklist .ck-table { font-size: 9.7pt; }
 .ksa-checklist .ck-ar { font-family: xbriyaz, 'DejaVu Sans', sans-serif; }
+.ksa-checklist .ck-table td .ck-ar, .ksa-checklist .ck-table th .ck-ar { font-size: 8.6pt; }
 @if(empty($_pdf))
   @font-face { font-family: ksaroboto; font-weight: normal; font-style: normal; src: url('/fonts/Roboto-Medium.ttf') format('truetype'); }
   @font-face { font-family: ksaroboto; font-weight: bold;   font-style: normal; src: url('/fonts/Roboto-Bold.ttf') format('truetype'); }
@@ -30,39 +34,36 @@
   @font-face { font-family: xbriyaz;   font-weight: bold;   font-style: normal; src: url('/fonts/XBRiyaz-Bold.ttf') format('truetype'); }
 @endif
 </style>
-{{-- width:92% + margin:0 auto matches PAGE 1's .ksa-app column so all four
-     Complete-File pages share the SAME left/right margin (≈17.6mm) in the PDF.
-     The inner table is width:100% below so it fills this column (was 94%, which
-     nested-inset it narrower than the other pages). --}}
-<div class="ksa-checklist" style="width:92%;margin:0 auto;color:#000;">
+{{-- Reference (CHECK.pdf page 4): the table and footer run 7.6pt inside the
+     10mm print margin (x ≈35.5 → 560pt); text #212529. --}}
+<div class="ksa-checklist" style="margin:0 7.1pt;color:#212529;">
 
-{{-- Top spacer: page 4's reference (ksa-application-reference-0004.jpg) places
-     the title ~35mm from the physical page top. mPDF reserves a 10mm margin, so
-     22mm here puts the title at ~35mm to match. --}}
-<div style="height:22mm;"></div>
+{{-- Top spacer: places the title at the reference's y≈98.5pt (≈34.7mm from the
+     physical page top, with the 10mm print margin). --}}
+<div style="height:24.8mm;"></div>
 
 {{-- Centred, underlined Arabic title --}}
-<div style="text-align:center;margin:4pt 0 18pt;direction:rtl;">
-  <span style="font-size:15pt;font-weight:bold;text-decoration:underline;">إرفاق الجدول التالي في كل معاملة</span>
+<div style="text-align:center;margin:0 0 25pt;direction:rtl;line-height:1.2;">
+  <span style="font-size:16.7pt;font-weight:bold;text-decoration:underline;">إرفاق الجدول التالي في كل معاملة</span>
 </div>
 
 {{-- RTL table: visual columns L→R are Notes | Port | Agency | Step. Widths sit on
-     each <th> (mPDF ignored the old RTL <colgroup> and made Step ~49%). Step 45% ·
-     Agency 31% so the longest label and the Age value stay on one line at 10.5pt;
-     Port/Notes (always empty) take 12% each. --}}
-<table class="ck-table" autosize="1" style="width:100%;margin:0 auto;border-collapse:collapse;direction:rtl;font-size:10.5pt;">
+     each <th> (mPDF ignored the old RTL <colgroup>). Reference split: Step 35.1% ·
+     Agency 30% · Port 18.1% · Notes 16.8%. Cells are top-aligned so the 2-line
+     Age row reads like the reference. --}}
+<table class="ck-table" autosize="1" style="width:100%;margin:0 auto;border-collapse:collapse;direction:rtl;font-size:9.7pt;line-height:1.5;">
   <thead>
     <tr>
-      <th style="font-size:10.5pt;width:45%;border:1px solid #202428;padding:7pt 6pt;text-align:center;font-weight:normal;background:#fff;">
+      <th style="font-size:9.7pt;width:35.1%;border:0.7pt solid #212529;padding:4.9pt 4pt;text-align:center;font-weight:normal;background:#fff;">
         <span class="ck-ar">الاجراء</span><br>Step
       </th>
-      <th style="font-size:10.5pt;width:31%;border:1px solid #202428;padding:7pt 6pt;text-align:center;font-weight:normal;background:#fff;">
+      <th style="font-size:9.7pt;width:30%;border:0.7pt solid #212529;padding:4.9pt 4pt;text-align:center;font-weight:normal;background:#fff;">
         <span class="ck-ar">المكتب</span><br>Agency
       </th>
-      <th style="font-size:10.5pt;width:12%;border:1px solid #202428;padding:7pt 6pt;text-align:center;font-weight:normal;background:#fff;">
+      <th style="font-size:9.7pt;width:18.1%;border:0.7pt solid #212529;padding:4.9pt 4pt;text-align:center;font-weight:normal;background:#fff;">
         <span class="ck-ar">المنفذ</span><br>Port
       </th>
-      <th style="font-size:10.5pt;width:12%;border:1px solid #202428;padding:7pt 6pt;text-align:center;font-weight:normal;background:#fff;">
+      <th style="font-size:9.7pt;width:16.8%;border:0.7pt solid #212529;padding:4.9pt 4pt;text-align:center;font-weight:normal;background:#fff;">
         <span class="ck-ar">الملاحظات</span><br>Notes
       </th>
     </tr>
@@ -99,22 +100,24 @@
       [$stepAr, $stepEn] = array_pad(array_map('trim', explode('/', $step, 2)), 2, '');
     @endphp
     <tr>
-      <td style="font-size:10.5pt;border:1px solid #202428;padding:6pt 6pt;text-align:right;direction:rtl;"><span class="ck-ar">{{ $stepAr }}</span> / <span dir="ltr" style="unicode-bidi:isolate;">{{ $stepEn }}</span></td>
-      <td style="font-size:10.5pt;border:1px solid #202428;padding:6pt 6pt;text-align:center;{{ $arabicValue ? 'direction:rtl;' : 'direction:ltr;' }}">@if($arabicValue)<span class="ck-ar">{{ $value }}</span>@else{!! nl2br(e($value)) !!}@endif</td>
-      <td style="font-size:10.5pt;border:1px solid #202428;padding:6pt 6pt;"></td>
-      <td style="font-size:10.5pt;border:1px solid #202428;padding:6pt 6pt;"></td>
+      <td style="font-size:9.7pt;border:0.7pt solid #212529;padding:4.4pt 4pt;vertical-align:top;text-align:right;direction:rtl;white-space:nowrap;"><span class="ck-ar">{{ $stepAr }}</span> / <span dir="ltr" style="unicode-bidi:isolate;">{{ $stepEn }}</span></td>
+      <td style="font-size:9.7pt;border:0.7pt solid #212529;padding:4.4pt 4pt;vertical-align:top;text-align:center;{{ $arabicValue ? 'direction:rtl;' : 'direction:ltr;' }}">@if($arabicValue)<span class="ck-ar">{{ $value }}</span>@else{!! nl2br(e($value)) !!}@endif</td>
+      <td style="font-size:9.7pt;border:0.7pt solid #212529;padding:4.4pt 4pt;vertical-align:top;"></td>
+      <td style="font-size:9.7pt;border:0.7pt solid #212529;padding:4.4pt 4pt;vertical-align:top;"></td>
     </tr>
     @endforeach
   </tbody>
 </table>
 
-{{-- Footer — right-aligned, NOT boxed (office name / licence / signature / stamp) --}}
-<div style="margin-top:24pt;direction:rtl;text-align:right;font-size:14pt;font-weight:bold;">
+{{-- Footer — right-aligned, NOT boxed (office name / licence / signature / stamp).
+     Reference: Bold 12.4pt on an 18.6pt pitch, starting ~34pt below the table;
+     signature and stamp captions ~56pt and ~75pt further down. --}}
+<div style="margin-top:35.9pt;direction:rtl;text-align:right;font-size:12.4pt;font-weight:bold;line-height:1.5;">
   {{-- dir="ltr" isolates the Latin name/number so RTL bidi doesn't flip the "( )" --}}
-  <div style="margin-bottom:6pt;"><span class="ck-ar" style="font-size:15pt;font-weight:bold;">إسم المكتب -</span> <strong dir="ltr" style="unicode-bidi:isolate;font-size:16pt;">{{ $agency_name }}</strong></div>
-  <div><span class="ck-ar" style="font-size:15pt;font-weight:bold;">رقم الرخصة -</span> <strong dir="ltr" style="unicode-bidi:isolate;font-size:14pt;">{{ $agency_rl ?: $agency_license ?: '—' }}</strong></div>
-  <div class="ck-ar" style="margin-top:32pt;font-size:15pt;font-weight:bold;">التوقيع -</div>
-  <div class="ck-ar" style="margin-top:32pt;font-size:15pt;font-weight:bold;">الختم -</div>
+  <div><span class="ck-ar" style="font-size:12.4pt;font-weight:bold;">إسم المكتب -</span> <strong dir="ltr" style="unicode-bidi:isolate;font-size:12.4pt;">{{ $agency_name }}</strong></div>
+  <div><span class="ck-ar" style="font-size:12.4pt;font-weight:bold;">رقم الرخصة -</span> <strong dir="ltr" style="unicode-bidi:isolate;font-size:12.4pt;">{{ $agency_rl ?: $agency_license ?: '—' }}</strong></div>
+  <div class="ck-ar" style="margin-top:37.3pt;font-size:12.4pt;font-weight:bold;">التوقيع -</div>
+  <div class="ck-ar" style="margin-top:55.9pt;font-size:12.4pt;font-weight:bold;">الختم -</div>
 </div>
 
 </div>{{-- /.ksa-checklist --}}

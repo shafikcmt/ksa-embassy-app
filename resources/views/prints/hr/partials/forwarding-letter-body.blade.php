@@ -37,79 +37,85 @@
      mPDF's autoLangToFont substitutes the Arabic font for RTL text anyway. */
   .ksa-letter .ar { font-family: xbriyaz, 'DejaVu Sans', sans-serif; }
 </style>
-{{-- width:92% + margin:0 auto matches PAGE 1's .ksa-app column so all four
-     Complete-File pages share the SAME left/right margin (≈17.6mm) in the PDF. --}}
-<div class="ksa-letter" style="width:92%;margin:0 auto;font-size:11.5pt;line-height:1.6;font-weight:normal;">
+{{-- Geometry matched to docs/references/CHECK.pdf page 2: text column runs from
+     41.5pt to 7pt inside the 10mm print margin (x 69.9 → 560.5pt), Roboto Medium
+     11.2pt body on a 16.6pt line pitch, #212529 text. --}}
+<div class="ksa-letter" style="margin:0 7pt 0 41.5pt;font-size:11.2pt;line-height:1.48;font-weight:normal;color:#212529;">
 
-{{-- Top spacer: 62mm — measured to match reference page 2, where "To," sits
-     ~74mm from the physical page top (mPDF's ~12mm top offset + 62mm = ~74mm).
-     This blank band is the reference's pre-printed-letterhead / optional
-     agency-logo space. --}}
+{{-- Top spacer: 62.9mm puts "To," at the reference's y≈208pt (≈73.5mm from the
+     physical page top, with the 10mm print margin). The SAME height is used with
+     or without a logo — previously the no-logo branch was only 30mm, which
+     started the letter ~90pt too high. The band is the reference's
+     pre-printed-letterhead / optional agency-logo space. --}}
 @if(!empty($agency_show_logo) && !empty($agency_logo))
-  <div style="height:62mm;text-align:center;">
+  <div style="height:62.9mm;text-align:center;">
     <img src="{{ empty($_pdf) ? asset('storage/'.$agency_logo) : public_path('storage/'.$agency_logo) }}"
          style="max-height:34mm;max-width:80mm;" alt="">
   </div>
 @else
-  <div style="height:30mm;"></div>
+  <div style="height:62.9mm;"></div>
 @endif
 
 {{-- To address --}}
-<p style="margin:0;font-size:11.5pt;">To,</p>
-<p style="margin:0;font-size:11.5pt;">The Chief Of Consular Section,</p>
-<p style="margin:0;font-size:11.5pt;">The Royal Embassy Kingdom Of Saudi Arabia,</p>
-<p style="margin:0 0 18pt 0;font-size:11.5pt;">Gulshan, Dhaka, Bangladesh.</p>
+<p style="margin:0;">To,</p>
+<p style="margin:0;">The Chief Of Consular Section,</p>
+<p style="margin:0;">The Royal Embassy Kingdom Of Saudi Arabia,</p>
+<p style="margin:0 0 27.5pt 0;">Gulshan, Dhaka, Bangladesh.</p>
 
-<p style="margin:0;font-size:11.5pt;"><strong>Excellency,</strong></p>
+{{-- Reference prints "Excellency," in the same Medium weight as the body. --}}
+<p style="margin:0;">Excellency,</p>
 
-<p style="margin:0 0 14pt 0;font-size:11.5pt;">
+<p style="margin:0 0 26.6pt 0;">
 With Due Respect we are Submitting One Passport for work Visa with all Necessary Documents and Particulars mentioned as below, knowing all instruction and regulation of the consulate section.
 </p>
 
-{{-- Details table — bottom border only --}}
-<table style="width:100%;border-collapse:collapse;margin-bottom:14pt;font-size:10pt;">
+{{-- Details table — bottom rules only (#dee2e6), 23.3pt rows; labels Medium
+     9pt, values Bold 9pt ("Date:" captions inside values stay Medium). --}}
+<table style="width:100%;border-collapse:collapse;margin-bottom:23.6pt;font-size:9pt;line-height:1.47;table-layout:fixed;">
+  <colgroup><col style="width:50.9%"><col style="width:49.1%"></colgroup>
   <tbody>
     <tr>
-      <td style="width:50%;border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;"><strong>NAME OF COMPANY:</strong></td>
-      <td style="width:50%;border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;font-weight:bold;font-size:10.5pt;">
+      <td style="width:50.9%;border-bottom:0.7pt solid #dee2e6;padding:5pt 4.5pt;font-size:9pt;">NAME OF COMPANY:</td>
+      <td style="width:49.1%;border-bottom:0.7pt solid #dee2e6;padding:5pt 4.5pt;font-weight:bold;font-size:9pt;">
         @if(!empty($sponsor_name_ar))<span class="ar" style="font-weight:bold;">{{ $sponsor_name_ar }}</span>@else{{ $sponsor_name ?: $agency_name }}@endif
       </td>
     </tr>
     <tr>
-      <td style="border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;"><strong>VISA NUMBER &amp; DATE:</strong></td>
-      <td style="border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;font-weight:bold;font-size:10.5pt;">{{ $visa_no ?: '—' }}@if($visa_date) &nbsp; Date: {{ $visa_date_hijri }}@endif</td>
+      <td style="border-bottom:0.7pt solid #dee2e6;padding:5pt 4.5pt;font-size:9pt;">VISA NUMBER &amp; DATE:</td>
+      <td style="border-bottom:0.7pt solid #dee2e6;padding:5pt 4.5pt;font-weight:bold;font-size:9pt;">{{ $visa_no ?: '—' }}@if($visa_date) &nbsp;&nbsp; <span style="font-weight:normal;">Date:</span> {{ $visa_date_hijri }}@endif</td>
     </tr>
     <tr>
-      <td style="border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;"><strong>FULL NAME OF THE EMPLOYEE:</strong></td>
-      <td style="border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;font-weight:bold;font-size:10.5pt;">{{ $full_name_en_upper }}</td>
+      <td style="border-bottom:0.7pt solid #dee2e6;padding:5pt 4.5pt;font-size:9pt;">FULL NAME OF THE EMPLOYEE:</td>
+      <td style="border-bottom:0.7pt solid #dee2e6;padding:5pt 4.5pt;font-weight:bold;font-size:9pt;">{{ $full_name_en_upper }}</td>
     </tr>
     <tr>
-      <td style="border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;"><strong>PASSPORT NO. WITH ISSUE DATE:</strong></td>
-      <td style="border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;font-weight:bold;font-size:10.5pt;">{{ $passport_no ?: '—' }}@if($passport_issue_date) &nbsp; Date: {{ $passport_issue_date }}@endif</td>
+      <td style="border-bottom:0.7pt solid #dee2e6;padding:5pt 4.5pt;font-size:9pt;">PASSPORT NO. WITH ISSUE DATE:</td>
+      <td style="border-bottom:0.7pt solid #dee2e6;padding:5pt 4.5pt;font-weight:bold;font-size:9pt;">{{ $passport_no ?: '—' }}@if($passport_issue_date) &nbsp;&nbsp; <span style="font-weight:normal;">Date:</span> {{ $passport_issue_date }}@endif</td>
     </tr>
     <tr>
-      <td style="border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;"><strong>PROFESSION:</strong></td>
-      <td style="border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;font-weight:bold;font-size:10.5pt;">{{ $profession_en ?: ($occupation ?: '—') }}</td>
+      <td style="border-bottom:0.7pt solid #dee2e6;padding:5pt 4.5pt;font-size:9pt;">PROFESSION:</td>
+      <td style="border-bottom:0.7pt solid #dee2e6;padding:5pt 4.5pt;font-weight:bold;font-size:9pt;">{{ $profession_en ?: ($occupation ?: '—') }}</td>
     </tr>
     <tr>
-      <td style="border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;"><strong>RELIGION:</strong></td>
-      <td style="border-bottom:0.5pt solid #e0e0e0;padding:5pt 4pt;font-weight:bold;font-size:10.5pt;">{{ $religion ?: '—' }}</td>
+      <td style="border-bottom:0.7pt solid #dee2e6;padding:5pt 4.5pt;font-size:9pt;">RELIGION:</td>
+      <td style="border-bottom:0.7pt solid #dee2e6;padding:5pt 4.5pt;font-weight:bold;font-size:9pt;">{{ $religion ?: '—' }}</td>
     </tr>
   </tbody>
 </table>
 
-<p style="margin:0 0 12pt 0;font-size:11.5pt;">
+<p style="margin:0 0 17.2pt 0;">
 I do hereby confirm and declare that the region stated in the Visa form and forwarding letter is fully correct. I also undertake with my own responsibility to cancel the Visa and to stop functioning with my office, If the statement is found incorrect.
 </p>
 
-<p style="margin:0 0 24pt 0;font-size:11.5pt;">
+<p style="margin:0;">
 We therefore, Request your Excellency to kindly issue work Visa out of - 01 - Visas and oblige thereby.
 </p>
 
-{{-- Signature — kept together so it is never split across pages. Reference shows
-     "Your Faithfully" in REGULAR weight (~11pt) under a short rule, not bold. --}}
-<div class="ksa-signature" style="margin-top:90pt;page-break-inside:avoid;break-inside:avoid;">
-  <div style="border-top:1px solid #000;width:80pt;padding-top:4pt;font-size:10pt;font-weight:normal;padding-left:14pt;">
+{{-- Signature — kept together so it is never split across pages. Reference:
+     a 111.8pt rule with "Your Faithfully" (Medium 9pt) centred directly under
+     it, ~57pt below the last paragraph. --}}
+<div class="ksa-signature" style="margin-top:53.6pt;page-break-inside:avoid;break-inside:avoid;">
+  <div style="border-top:0.7pt solid #212529;width:111.8pt;padding-top:0;font-size:9pt;line-height:1.2;font-weight:normal;text-align:center;">
     Your Faithfully
   </div>
 </div>

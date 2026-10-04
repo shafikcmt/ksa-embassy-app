@@ -39,6 +39,12 @@ class PdfGeneratorService
                     'R' => 'Roboto-Medium.ttf',
                     'B' => 'Roboto-Bold.ttf',
                 ],
+                // Roboto Black — the heavy headline values on the page-1
+                // application form (names, dates, passport/visa numbers).
+                'ksarobotoblack' => [
+                    'R' => 'Roboto-Black.ttf',
+                    'B' => 'Roboto-Black.ttf',
+                ],
             ],
         ];
 

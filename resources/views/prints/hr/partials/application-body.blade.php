@@ -30,287 +30,196 @@
   ];
 @endphp
 
-{{-- ── Page-1 scoped typography/layout — bold compact embassy-form style ─────
+{{-- ── Page-1 scoped typography/layout — matched to docs/references/CHECK.pdf ──
      Defined here (inside the shared partial) so single preview, single PDF,
      complete-file preview and complete-file PDF all render identically. Every
      selector is under .ksa-app, so pages 2–4 are unaffected. Placed after the
-     host <head> CSS, so these rules win on equal specificity. --}}
+     host <head> CSS, so these rules win on equal specificity.
+     Reference type scale: labels Roboto Medium 9pt, values Roboto Bold 9pt,
+     headline values (names, dates, passport/visa numbers) Roboto Black 9.7pt,
+     all in #212529; grid lines 0.7pt #212529. All coordinates quoted below are
+     CHECK.pdf points (A4 = 595 × 842pt, 10mm = 28.35pt print margin). --}}
 <style>
 @if(empty($_pdf))
   /* BROWSER-ONLY: embed the exact TTFs mPDF renders with, so the on-screen
-     preview and Ctrl+P print match the downloaded PDF glyph-for-glyph. The
-     surrounding blade if-guard emits this block only when NOT rendering to PDF
-     — mPDF already ships these fonts internally, so it must not see url()-based
-     font-face rules (it would try to re-load/embed them and can error).
-     Files live in public/fonts (copied from vendor/mpdf/mpdf/ttfonts). */
-  @font-face { font-family: ksaroboto;      font-weight: normal; font-style: normal; src: url('/fonts/FreeSans.ttf') format('truetype'); }
-  @font-face { font-family: ksaroboto;      font-weight: bold;   font-style: normal; src: url('/fonts/FreeSansBold.ttf') format('truetype'); }
-  @font-face { font-family: dejavusans;    font-weight: normal; font-style: normal; src: url('/fonts/DejaVuSans.ttf') format('truetype'); }
-  @font-face { font-family: dejavusans;    font-weight: bold;   font-style: normal; src: url('/fonts/DejaVuSans-Bold.ttf') format('truetype'); }
-  /* .ar / body reference the spaced name "DejaVu Sans" — alias it to the same files. */
+     preview and Ctrl+P print match the downloaded PDF glyph-for-glyph. mPDF
+     loads these from public/fonts via PdfGeneratorService's fontdata, so it must
+     not see url()-based font-face rules. */
+  @font-face { font-family: ksaroboto;      font-weight: normal; font-style: normal; src: url('/fonts/Roboto-Medium.ttf') format('truetype'); }
+  @font-face { font-family: ksaroboto;      font-weight: bold;   font-style: normal; src: url('/fonts/Roboto-Bold.ttf') format('truetype'); }
+  @font-face { font-family: ksarobotoblack; font-weight: normal; font-style: normal; src: url('/fonts/Roboto-Black.ttf') format('truetype'); }
+  @font-face { font-family: ksarobotoblack; font-weight: bold;   font-style: normal; src: url('/fonts/Roboto-Black.ttf') format('truetype'); }
   @font-face { font-family: 'DejaVu Sans'; font-weight: normal; font-style: normal; src: url('/fonts/DejaVuSans.ttf') format('truetype'); }
   @font-face { font-family: 'DejaVu Sans'; font-weight: bold;   font-style: normal; src: url('/fonts/DejaVuSans-Bold.ttf') format('truetype'); }
-  /* Arabic Naskh: browser preview must use the SAME font mPDF renders Arabic with
-     (XB Riyaz — mPDF's built-in Arabic font, matches the reference form's Naskh).
-     Without this the on-screen preview fell back to plain DejaVu Sans Arabic and
-     looked unlike the downloaded PDF. Files copied from vendor/mpdf/mpdf/ttfonts. */
+  /* Arabic Naskh: XB Riyaz — the font mPDF renders Arabic with. */
   @font-face { font-family: xbriyaz; font-weight: normal; font-style: normal; src: url('/fonts/XBRiyaz.ttf') format('truetype'); }
   @font-face { font-family: xbriyaz; font-weight: bold;   font-style: normal; src: url('/fonts/XBRiyaz-Bold.ttf') format('truetype'); }
+  /* Browser print only: page 1 is a fixed-height flex column whose ONLY
+     shrinkable item is the .pg1-gap spacer, so a long name/address eats that gap
+     first instead of pushing the footer barcode onto a 2nd sheet. mPDF never
+     sees this block (it fits those cases on its own). */
+  @media print {
+    .ksa-app { display: flex; flex-direction: column; height: 276.5mm; }
+    .ksa-app > * { flex: none; }
+    .ksa-app > .pg1-gap { flex: 0 1 29pt; min-height: 0; }
+  }
 @endif
-  /* FreeSans (an Arial/Helvetica clone) has a much heavier Bold than DejaVu
-     Sans, matching the reference form's thick Latin text.
-     CRITICAL mPDF quirk: table cells do NOT inherit font-family from an
-     ancestor (<div class="ksa-app">) — they silently fall back to the host
-     body font (DejaVu Sans), which is why earlier output looked too light.
-     So freesans must be declared DIRECTLY on every element type (table/td/
-     th/div/span), not just on the container. Arabic glyphs auto-substitute
-     to mPDF's Arabic font via autoLangToFont regardless of this. */
+  /* CRITICAL mPDF quirk: table cells do NOT inherit font-family from an
+     ancestor — they fall back to the host body font (DejaVu Sans). So the family
+     is declared DIRECTLY on every element type. Arabic glyphs auto-substitute to
+     mPDF's Arabic font via autoLangToFont regardless of this.
+     ksaroboto = Roboto Medium (normal) + Roboto Bold (bold) in browser AND mPDF.
+     WARNING: keep the `bold`/`normal` keywords — numeric weights (500/700/900)
+     fall back to the regular face in this mPDF. Black is its own family. */
   .ksa-app,
   .ksa-app table, .ksa-app td, .ksa-app th,
-  .ksa-app div, .ksa-app span, .ksa-app p { font-family: freesans, sans-serif; }
-  .ksa-app { line-height: 1.15; color: #000; font-weight: bold; }
+  .ksa-app div, .ksa-app span, .ksa-app p { font-family: ksaroboto, sans-serif; }
+  .ksa-app { line-height: 1.2; color: #212529; font-weight: normal; }
   .ksa-app table { width: 100%; border-collapse: collapse; }
-  /* Bordered grid: 8pt bold Latin + taller rows (more vertical padding) to
-     match the reference form's spacing and heavier, clearer text. */
-  .ksa-app .bdr td, .ksa-app .bdr th { border: 0.75pt solid #202428; padding: 2pt 5pt; font-size: 8.5pt; font-weight: bold; vertical-align: middle; }
-  /* Seam de-duplication: where two SEPARATE stacked tables meet, the upper
-     table's last-row bottom border and the lower table's top border both draw a
-     0.75pt line, so the seam looked ~1.5pt (doubled) — noticeably thicker than the
-     single 0.75pt hairline used within a table. Dropping the upper row's bottom
-     border leaves the lower table's top border as the sole 0.75pt line. Applied
-     to the three flagged seams: Sect/Religion→Profession, Purpose→Passport,
-     Destination→Dependents. (Placed after .bdr td so it wins the equal-specificity tie.) */
+  /* Bordered grid: 9pt Medium, 0.7pt rules; 1.5pt vertical padding gives the
+     reference's ~14.5–15pt row pitch, 7.5pt side padding its label inset. */
+  .ksa-app .bdr td, .ksa-app .bdr th { border: 0.7pt solid #212529; padding: 1.5pt 7.5pt; font-size: 9pt; font-weight: normal; vertical-align: middle; }
+  /* Seam de-duplication: where two SEPARATE stacked tables meet, drop the upper
+     table's bottom border so the seam stays a single 0.7pt line (not doubled). */
   .ksa-app .seam-merge td { border-bottom: 0 !important; }
-  .ksa-app .lbl { font-weight: bold; text-align: left; white-space: nowrap; }
-  /* VALUE cells are BOLD: the reference form prints its values (dates, place of
-     birth, nationalities, Sex/Marital/Religion, duration, etc.) in bold black —
-     see docs/images/ksa-application-reference-0001.jpg. Regular weight rendered
-     thin/faint on physical hard-copy prints (fine on screen only). Bold matches
-     the reference AND survives 300/600dpi printing. FreeSansBold (a genuine bold
-     TTF) is embedded, so this is real bold, not a faked/synthesised weight. */
-  .ksa-app .val { font-weight: bold; text-align: center; }
-  /* Full Name / Father / Mother values — the two headline rows. The
-     reference uses a clean Helvetica/Arial-style Bold (crisp, even strokes,
-     the same weight as the labels), NOT a heavy black weight. FreeSans is
-     the Arial/Helvetica clone, so plain FreeSans Bold matches it. No
-     text-shadow "stroke" here — that smeared the glyph edges and looked
-     ugly; clean Bold reads sharper and closer to the reference. */
-  /* Full Name / Mother's Name VALUES: sized 2px (=1.5pt) larger than the 8pt
-     used by every other value cell — so 9.5pt — to headline them per the
-     reference. Weight stays the `bold` keyword: in this mPDF, numeric weights
-     (700/800/900) make DejaVu/FreeSans fall back to REGULAR (thin), so `bold`
-     is the only correct heavy weight. line-height:1 keeps the taller text from
-     inflating the row more than necessary. */
-  .ksa-app .nmval { font-size: 10pt; font-weight: bold; line-height: 1; color: #000; }
-  /* Passport-info VALUES (Place/Date of issue, Date of expiry, Passport No.)
-     — the reference prints these darker/bolder than ordinary value cells.
-     Bump from the default 8pt to 9.5pt bold black so they read clearly, while
-     keeping the `bold` keyword (numeric 700/800/900 make FreeSans fall back to
-     REGULAR/thin in this mPDF — see .nmval note above). */
-  .ksa-app .ppval { font-size: 9.5pt; font-weight: bold; color: #000; }
-  /* Passport-info grid (.ppt): four tight 25% cells. The longest Arabic label
-     "تاريخ انتهاء الصلاحية :" (Date of expiry) overflowed its cell's right
-     border, so shrink the EN + AR label fonts a little and trim the horizontal
-     cell padding — every label pair now stays fully inside its border. These
-     selectors are .ppt-scoped (higher specificity + later in source) so they
-     win over .bdr td / .lbl / .ar in mPDF's cascade. Values stay large/bold,
-     and Passport No. is bumped the most (the reference's most prominent field). */
-  .ksa-app table.ppt td { padding-left: 3pt; padding-right: 3pt; }
-  .ksa-app .ppt .lbl { font-size: 7.3pt; }
-  .ksa-app .ppt .ar  { font-size: 6.5pt; line-height: 1; }
-  /* font-family:freesans reinforced here (like .pi td below): without it these
-     .ppt value cells fell back to the host DejaVu Sans, so the passport row
-     (Place/Date of issue, Date of expiry, Passport No.) rendered in a different
-     font than the rest of the form's FreeSans values. */
-  .ksa-app .ppt .val { font-size: 9.5pt; font-weight: bold; color: #000; font-family: freesans, sans-serif; }
-  .ksa-app .ppt .val.ppno { font-size: 10.5pt; font-weight: bold; color: #000; font-family: freesans, sans-serif; }
-  /* Personal-Info table (Section 1): use FreeSans — the Arial/Helvetica clone
-     that matches the reference form's narrow, compact Latin glyphs (labels AND
-     values). This is the same family the rest of page 1 uses; keeping it here
-     makes the label column read compact like the reference (an earlier DejaVu
-     Sans experiment was wider/rounder and did not match the reference shape).
-     WARNING: keep the `bold` keyword — numeric weights (700/800/900) make
-     FreeSans fall back to REGULAR (thin) in this mPDF, so `bold` is the only
-     correct heavy weight for .val/.lbl/.nmval. */
-  .ksa-app .pi td, .ksa-app .pi th, .ksa-app .pi span { font-family: freesans, sans-serif; }
-  /* Arabic: reference form's Arabic labels/content are NOT bold (lighter,
-     regular weight) — clearly thinner than the heavy Latin bold. Force
-     normal weight with !important because the grid rule (.bdr td{bold})
-     has higher specificity than .ar and would otherwise win, leaving the
-     Arabic heavy. Arabic VALUES that ARE bold in the reference are wrapped
-     in <strong> and restored to bold below. */
-  .ksa-app .ar  { direction: rtl; text-align: right; font-family: xbriyaz, 'DejaVu Sans', sans-serif; font-weight: normal !important; font-size: 8pt; white-space: nowrap; }
+  .ksa-app .lbl { font-weight: normal; text-align: left; white-space: nowrap; }
+  /* td.val / td.big out-rank (and follow) the grid's `.bdr td` weight rule. */
+  .ksa-app .val, .ksa-app td.val { font-weight: bold; text-align: center; }
+  /* Roboto Black headline values (Full Name, DOB, passport dates/no., official
+     values). Separate family so mPDF (no numeric weights) resolves it too. */
+  .ksa-app .blk { font-family: ksarobotoblack, ksaroboto, sans-serif; font-size: 9.7pt; }
+  /* 9.7pt Bold values (Mother's Name, Profession, business name/email). */
+  .ksa-app .big, .ksa-app td.big { font-size: 9.7pt; font-weight: bold; }
+  /* Arabic labels are regular weight (lighter than the Latin), right-aligned.
+     !important beats the grid rule's weight; Arabic VALUES that ARE bold in the
+     reference are wrapped in <strong> and restored below. */
+  .ksa-app .ar  { direction: rtl; text-align: right; font-family: xbriyaz, 'DejaVu Sans', sans-serif; font-weight: normal !important; font-size: 8.5pt; white-space: nowrap; }
   .ksa-app .ar strong { font-weight: bold !important; }
-  .ksa-app .inner td { border: 0 !important; padding: 0; font-weight: bold; }
-  /* Passport No. column — the reference emphasises this field with a bolder,
-     darker vertical divider on its left edge (Date of expiry | Passport No.).
-     Scoped to .ppno cells only, so no other cell/border is affected. */
-  .ksa-app .bdr td.ppno { border-left: 0.8pt solid #202428; }
-  /* Duration / Payment / Mahram / Destination block: the reference renders these
-     rows as open text lines — outer frame + horizontal row rules only, with NO
-     internal vertical dividers. Remove vertical cell borders, then restore the
-     outer left/right frame on the first/last cell of each row. Scoped to .hrows
-     so the passport grid above and dependents grid below stay untouched. */
+  /* Arabic inside spans (purpose boxes, underlined official heading) must not
+     pick up the Roboto `span` rule above — Roboto has no Arabic glyphs, so the
+     browser would fall back to Arial. */
+  .ksa-app .ar span, .ksa-app .pt .pa { font-family: xbriyaz, 'DejaVu Sans', sans-serif; }
+  .ksa-app .inner td { border: 0 !important; padding: 0; }
+  /* Open-row blocks (Duration / Mahram / Destination): outer frame + horizontal
+     rules only, NO internal vertical dividers. */
   .ksa-app .hrows td { border-left: 0; border-right: 0; }
-  .ksa-app .hrows td:first-child { border-left: 0.75pt solid #202428; }
-  .ksa-app .hrows td:last-child  { border-right: 0.75pt solid #202428; }
-  /* Merged field groups: the reference joins an Arabic-label row with its
-     English-value row into a single field group with NO divider between them —
-     e.g. Duration of stay (مدة الإقامة / تاريخ الوصول / تاريخ المغادرة) and Mahram
-     (صلته / اسم المحرم → Relationship). With border-collapse that seam is drawn by
-     the Arabic row's bottom border AND the English row's top border, so BOTH must
-     be dropped or the surviving side still shows the line. Applied only to rows
-     tagged .mrow-ar / .mrow-en, so every other .hrows separator (the outer frame
-     and the rules BETWEEN field groups) is untouched. !important + placement after
-     .bdr td guarantees these win the cascade. */
-  .ksa-app .hrows tr.mrow-ar td { border-bottom: 0 !important; }
-  .ksa-app .hrows tr.mrow-en td { border-top: 0 !important; }
-  /* Signature row — reference draws NO box around it (clean, borderless). */
-  .ksa-app .sig td { border: 0; padding: 2.4pt 4pt; font-size: 7.6pt; vertical-align: middle; }
-  /* "For official use only" — reference has NO vertical grid: just a dashed
-     separator line on top and thin solid horizontal rules between rows. */
-  .ksa-app .offc { border-top: 1px dashed #202428; }
-  .ksa-app .offc td { border: 0; border-bottom: 1px solid #202428; padding: 2.4pt 4pt; font-size: 7.6pt; vertical-align: middle; }
-  .ksa-app .offc .hdr td { border-bottom: 1px solid #202428; padding-top: 3pt; }
-  /* Reinforce FreeSans (Arial clone) on the official-use + signature LATIN cells
-     (labels/values), exactly like .pi does for the identity table. Without it
-     these cells fell back to the host DejaVu Sans — whose Bold is noticeably
-     lighter — so the Visa No / Id Number / Name labels looked thinner (not bold)
-     than the rest of the form. .ar cells are excluded so Arabic stays XB Riyaz. */
-  /* font-weight:bold added here (not just on .val): .offc td (0,0,2,1) out-ranks
-     .val (0,0,2,0) in mPDF's cascade and carries no weight, so the official-use
-     VALUES (Visa No, Id Number, Date…) rendered regular. This higher-specificity
-     selector (0,0,3,0) forces real FreeSans Bold on them and the labels. */
-  .ksa-app .offc .lbl, .ksa-app .offc .val, .ksa-app .sig .lbl { font-family: freesans, sans-serif; font-weight: bold; }
-  /* Purpose-of-Travel option boxes — bordered table cells, AR over EN.
-     Reference packs 7 options into the 50% middle block with "Residence"/
-     "Diplomacy" on one line; at 7pt they wrapped once the block narrowed to 50%,
-     so match the reference's compact sizing (6pt) + tighter padding. NOTE: in
-     this mPDF the font-size must sit on the CELL — a size on the nested .pe/.pa
-     <span> alone is ignored — so it is set on td.box here. */
-  .ksa-app .pt td.box { border: 1px solid #202428 !important; text-align: center; padding: 3pt 0; line-height: 1.35; font-size: 6pt; }
-  .ksa-app .pt td.box .pa { font-size: 6pt; font-weight: normal; }
-  .ksa-app .pt td.box .pe { font-size: 6pt; font-weight: bold; }
-  /* print-color-adjust:exact forces the browser to PRINT this dark fill even
-     when the print dialog's "Background graphics" option is off (browsers omit
-     background colours from print by default). mPDF ignores these properties,
-     so the downloaded PDF — which already renders the fill — is unaffected. */
-  .ksa-app .pt td.sel { background: #333333 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact; }
-  .ksa-app .pt td.sel .pa, .ksa-app .pt td.sel .pe { color: #fff !important; font-weight: bold; }
+  .ksa-app .hrows td:first-child { border-left: 0.7pt solid #212529; }
+  .ksa-app .hrows td:last-child  { border-right: 0.7pt solid #212529; }
+  /* Merged field groups: an Arabic-label row + its English row form ONE group
+     with no divider between them — drop both sides of that seam. */
+  .ksa-app .hrows tr.mrow-ar td { border-bottom: 0 !important; padding-bottom: 0.6pt; }
+  .ksa-app .hrows tr.mrow-en td { border-top: 0 !important; padding-top: 0.6pt; }
+  /* Purpose-of-Travel option boxes: separate 0.7pt boxes (AR over EN, 6.7pt
+     Medium) with ~3pt gaps, as in the reference. In this mPDF the font-size must
+     sit on the CELL — a size on the nested span alone is ignored. */
+  .ksa-app table.pt { border-collapse: separate; border-spacing: 3pt 0; }
+  .ksa-app .pt td.box { border: 0.7pt solid #212529 !important; text-align: center; padding: 3.2pt 0; line-height: 1.25; font-size: 6.7pt; font-weight: normal; white-space: nowrap; }
+  .ksa-app .pt td.box .pa { font-size: 6.7pt; font-weight: normal; }
+  .ksa-app .pt td.box .pe { font-size: 6.7pt; font-weight: normal; }
+  /* print-color-adjust:exact forces the browser to PRINT the dark fill even when
+     "Background graphics" is off. mPDF ignores these properties. */
+  .ksa-app .pt td.sel { background: #444444 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact; }
+  .ksa-app .pt td.sel .pa, .ksa-app .pt td.sel .pe { color: #fff !important; }
+  /* Signature + "For official use only": borderless rows (no vertical grid), a
+     dashed separator above and full-width 0.7pt rules between official rows.
+     Each official row is its own table so each keeps the reference's own column
+     positions. */
+  .ksa-app .sig td { border: 0; padding: 1.2pt 0; font-size: 9pt; vertical-align: top; }
+  .ksa-app .offc { border-top: 0.75pt dashed #212529; }
+  .ksa-app .offr { border-bottom: 0.7pt solid #212529; }
+  .ksa-app .offr td, .ksa-app .offc td { border: 0; padding: 1.4pt 0; font-size: 9pt; vertical-align: middle; }
+  .ksa-app .offr .ar, .ksa-app .sig .ar { padding-right: 1pt; }
 </style>
 <div class="ksa-app" style="width:100%;margin:0 auto;">
 
-{{-- Reference leaves a little breathing space above the header block. --}}
-<div style="height:1mm;"></div>
-
 {{-- ── HEADER: photo (left) · barcode (center) · embassy (right) ─────────────
-     Photo and MOFA columns are near-equal width so the barcode sits centered
-     on the page, and EMBASSY/CONSULAR are pushed down to line up with the
-     barcode number / New Application, exactly like the reference. --}}
-<table style="width:100%;border-collapse:collapse;margin-bottom:5pt;">
+     Reference: photo box 98.7×115.3pt inset 7.3pt from the margin; barcode bars
+     44mm×9.7mm centred, 14pt below the margin, number directly under it;
+     "New Application" (Black 9.7pt) at y≈112.5; application no. (Black 20.4pt)
+     and EMBASSY/CONSULAR (Bold 11.7pt) right-aligned 6.6pt inside the margin. --}}
+<table style="width:100%;border-collapse:collapse;margin-bottom:5.8pt;">
   <tr>
-    <td style="width:30%;vertical-align:top;padding:0;">
-      {{-- Passport-size photo box (~35mm × 41mm), thin black border, top-left --}}
-      <table style="width:100pt;border-collapse:collapse;"><tr>
-        <td style="width:100pt;height:121pt;border:1px solid #202428;text-align:center;vertical-align:middle;font-size:8pt;color:#555;padding:2pt;">
+    <td style="width:32%;vertical-align:top;padding:7.3pt 0 0 7.2pt;">
+      <table style="width:98.7pt;border-collapse:collapse;"><tr>
+        <td style="width:98.7pt;height:115.3pt;border:0.7pt solid #212529;text-align:center;vertical-align:middle;font-size:9pt;color:#212529;padding:0;">
           Photo
         </td>
       </tr></table>
     </td>
-    <td style="width:36%;text-align:center;vertical-align:top;padding:6pt 4pt 4pt 4pt;">
-      {{-- Nested table: row-1 fixed height reliably pushes "New Application" down
-           (mPDF ignores margin/padding between sibling divs inside a cell).
-           Height tuned to 76pt so "New Application" lands at the reference's
-           vertical position (~13.6% of page height in
-           docs/images/ksa-application-reference-0001.jpg) — at 54pt it floated too
-           high, leaving a lopsided empty band between it and the Full Name row.
-           Still shorter than the 121pt photo box, which governs header height:
-           the photo box was raised 111pt->121pt (Step 1) to lower the Full Name
-           row ~3.5mm to the reference's position (56.4mm) while New Application
-           stays put — closing the reference's taller-header gap. --}}
+    <td style="width:36%;text-align:center;vertical-align:top;padding:13.9pt 0 0 0;">
+      {{-- Nested table: row-1 fixed height reliably places "New Application"
+           (mPDF ignores margin/padding between sibling divs inside a cell). --}}
       <table style="width:100%;border-collapse:collapse;">
-        <tr><td style="height:76pt;text-align:center;vertical-align:top;border:0;padding:0;">
+        <tr><td style="height:70.2pt;text-align:center;vertical-align:top;border:0;padding:0;">
           @if(!empty($topBarcodeSrc))
-            <img src="{{ $topBarcodeSrc }}" style="width:46mm;height:12mm;display:block;margin:0 auto;">
+            <img src="{{ $topBarcodeSrc }}" style="width:44mm;height:9.7mm;display:block;margin:0 auto;">
           @elseif(!empty($topBarcodeText))
-            <div style="width:46mm;height:12mm;border:1px dashed #aaa;margin:0 auto;text-align:center;line-height:12mm;font-size:7pt;">{{ $topBarcodeText }}</div>
+            <div style="width:44mm;height:9.7mm;border:1px dashed #aaa;margin:0 auto;text-align:center;line-height:9.7mm;font-size:7pt;">{{ $topBarcodeText }}</div>
           @endif
-          <div style="text-align:center;font-weight:bold;font-size:10pt;margin-top:1pt;letter-spacing:0.5pt;">{{ $topBarcodeText ?? '' }}</div>
+          <div style="text-align:center;font-weight:bold;font-size:9.7pt;color:#000;">{{ $topBarcodeText ?? '' }}</div>
         </td></tr>
         <tr><td style="text-align:center;vertical-align:top;border:0;padding:0;">
-          <div style="font-size:12pt;font-weight:bold;text-align:center;">New Application</div>
+          <div class="blk" style="text-align:center;">New Application</div>
         </td></tr>
       </table>
     </td>
-    <td style="width:34%;text-align:right;vertical-align:top;padding:2pt 0 2pt 4pt;">
-      @if(!empty($application_no))
-      <div style="font-size:19pt;font-weight:bold;letter-spacing:0.5pt;">{{ $application_no }}</div>
-      @endif
-      <div style="font-size:11.5pt;font-weight:bold;margin-top:36pt;white-space:nowrap;">EMBASSY OF SAUDI ARABIA</div>
-      <div style="font-size:11pt;font-weight:bold;margin-top:4pt;white-space:nowrap;">CONSULAR SECTION</div>
+    <td style="width:32%;text-align:right;vertical-align:top;padding:6.7pt 6.6pt 0 0;">
+      {{-- Nested table (same reason as the barcode column): row heights/padding
+           place EMBASSY / CONSULAR identically in browser print and mPDF. --}}
+      <table style="width:100%;border-collapse:collapse;">
+        <tr><td style="height:43.6pt;text-align:right;vertical-align:top;border:0;padding:0;">
+          <div class="blk" style="font-size:20.4pt;line-height:1.2;text-align:right;">{{ $application_no ?: "\u{00A0}" }}</div>
+        </td></tr>
+        <tr><td style="text-align:right;border:0;padding:0;font-size:11.7pt;font-weight:bold;white-space:nowrap;">EMBASSY OF SAUDI ARABIA</td></tr>
+        <tr><td style="text-align:right;border:0;padding:3.5pt 0 0 0;font-size:11.7pt;font-weight:bold;white-space:nowrap;">CONSULAR SECTION</td></tr>
+      </table>
     </td>
   </tr>
 </table>
 
-{{-- ── MAIN IDENTITY TABLE (6-col grid: label | value | arabic ×2) ─────────── --}}
-{{-- .pi = Personal-Info scope: Section-1 Latin text uses the heavier DejaVu Sans
-     Bold (see .pi rule below); other .bdr tables stay FreeSans. --}}
+{{-- ── MAIN IDENTITY TABLE (6 equal columns: label | value | arabic ×2) ────── --}}
 <table class="bdr pi" style="table-layout:fixed;">
-  {{-- Reference (ksa-complete-file-reference-0001.pdf) measures the identity
-       grid as SIX EQUAL columns — grid lines fall at 0/16.7/33.3/50/66.7/83.3/100%.
-       Label, value and Arabic columns are the same width (16.67% each); the label
-       column is NOT wider. Keep all six equal so every row lines up. --}}
   <colgroup>
     <col style="width:16.66%"><col style="width:16.67%"><col style="width:16.67%">
     <col style="width:16.66%"><col style="width:16.67%"><col style="width:16.67%">
   </colgroup>
   <tbody>
-    {{-- Zero-height sizing row: mPDF 8.x IGNORES <colgroup> widths and, with a
-         colspan cell in the first visible row, cannot derive an even grid — it
-         falls back to content sizing, which is what made the label column bulge
-         wide. This invisible 6-cell row is the real first row, so mPDF pins all
-         six columns to the equal 16.67% grid the reference uses. Borderless /
-         zero-height so it never shows. --}}
+    {{-- Zero-height sizing row: mPDF 8.x IGNORES <colgroup> widths; this
+         invisible 6-cell first row pins the equal 16.67% grid. --}}
     <tr style="font-size:0;line-height:0;">
       <td style="border:0;padding:0;width:16.66%;"></td><td style="border:0;padding:0;width:16.67%;"></td><td style="border:0;padding:0;width:16.67%;"></td>
       <td style="border:0;padding:0;width:16.66%;"></td><td style="border:0;padding:0;width:16.67%;"></td><td style="border:0;padding:0;width:16.67%;"></td>
     </tr>
-    {{-- Full Name (value — incl. "S/O. <father>" — rendered bold) --}}
+    {{-- Full Name (incl. "S/O. <father>") — Roboto Black 9.7pt --}}
     <tr>
       <td class="lbl">Full Name:</td>
-      <td colspan="4" class="val"><span class="nmval">{{ $fullNameDisplay }}</span></td>
+      <td colspan="4" class="val"><span class="blk">{{ $fullNameDisplay }}</span></td>
       <td class="ar">اسم الكامل :</td>
     </tr>
-    {{-- Mother's Name (value rendered bold + uppercase) --}}
+    {{-- Mother's Name — Roboto Bold 9.7pt (not Black, per the reference) --}}
     <tr>
       <td class="lbl">Mother's Name:</td>
-      <td colspan="4" class="val"><span class="nmval">{{ $U($mother_name) }}</span></td>
+      <td colspan="4" class="val"><span class="big">{{ $U($mother_name) }}</span></td>
       <td class="ar">اسم الأم :</td>
     </tr>
-    {{-- Date of Birth | Place of Birth --}}
     <tr>
       <td class="lbl">Date of Birth:</td>
-      <td class="val">{{ $date_of_birth }}</td>
+      <td class="val"><span class="blk">{{ $date_of_birth }}</span></td>
       <td class="ar">تاريخ الولادة :</td>
       <td class="lbl">Place of Birth:</td>
       <td class="val">{{ $U($place_of_birth) }}</td>
       <td class="ar">محل الولادة :</td>
     </tr>
-    {{-- Previous | Present Nationality --}}
-    {{-- These labels are longer than the other identity labels. Set the label
-         AND value cells of both nationality fields to an explicit 7.5pt so the
-         text fits inside the fixed 16.67% column in the browser, print dialog
-         and PDF alike. Only these four cells are affected; the Arabic cells and
-         every other row keep their default size. --}}
+    {{-- The nationality labels are the longest identity labels; the reference
+         shrinks them (8.1 / 8.2pt) so they fit the 16.67% column. --}}
     <tr>
-      <td class="lbl" style="font-size:7.5pt;">Previous Nationality:</td>
-      <td class="val" style="font-size:7.5pt;">{{ $U($previous_nationality) }}</td>
+      <td class="lbl" style="font-size:8.1pt;">Previous Nationality:</td>
+      <td class="val">{{ $U($previous_nationality) }}</td>
       <td class="ar">الجنسية السابقة :</td>
-      <td class="lbl" style="font-size:7.5pt;">Present Nationality:</td>
-      <td class="val" style="font-size:7.5pt;">{{ $U($nationality) }}</td>
+      <td class="lbl" style="font-size:8.2pt;">Present Nationality:</td>
+      <td class="val">{{ $U($nationality) }}</td>
       <td class="ar">الجنسية الحالية :</td>
     </tr>
-    {{-- Sex | Marital Status --}}
     <tr>
       <td class="lbl">Sex:</td>
       <td class="val">{{ $T($gender) }}</td>
@@ -319,9 +228,6 @@
       <td class="val">{{ $T($marital_status) }}</td>
       <td class="ar">الحالة الاجتماعية :</td>
     </tr>
-    {{-- Sect | Religion --}}
-    {{-- seam-merge: drop this row's bottom border so the seam with the profession
-         table below is a single 0.75pt line (not a doubled ~1.5pt one). --}}
     <tr class="seam-merge">
       <td class="lbl">Sect:</td>
       <td class="val">{{ $T($sect) }}</td>
@@ -334,147 +240,93 @@
 </table>
 
 {{-- ── PROFESSION + ADDRESS + PURPOSE (independent grid — its OWN colgroup) ───
-     A SEPARATE table so its wide label column ("Business address & phone No.")
-     and full-width value/arabic cells do NOT distort the fixed 6-col identity
-     grid above (and vice-versa). Column widths here are deliberately kept
-     independent of the identity table — this mirrors the reference, where the
-     address/profession rows use their own column widths, not the identity
-     table's. Auto layout (no table-layout:fixed) lets the long labels size
-     to content without wrapping. --}}
+     Address rows resolve to 25% / 50% / 25% (label · value · Arabic label), as
+     c1 | colspan3 | colspan2. table-layout:fixed + the zero-height sizing row
+     make mPDF honour these widths. --}}
 <table class="bdr pi" style="margin-top:0;table-layout:fixed;">
-  {{-- 6-col grid tuned so the ADDRESS rows resolve to 25% / 50% / 25%
-       (left label · middle value · right Arabic label — left==right, matching
-       the reference). Address rows map as c1 | colspan3(c2+c3+c4) | colspan2(c5+c6),
-       so c1=25, c2+c3+c4=50, c5+c6=25. Purpose row uses c1 | colspan4 | c6, and
-       the profession rows use colspan5|c6 / colspan6 — all still valid on this grid.
-       table-layout:fixed + the zero-height sizing row below make mPDF honour these
-       widths (auto layout ignored the colgroup and let the label column bulge). --}}
   <colgroup>
     <col style="width:25%"><col style="width:17%"><col style="width:16%">
     <col style="width:17%"><col style="width:12.5%"><col style="width:12.5%">
   </colgroup>
   <tbody>
-    {{-- Zero-height sizing row: pins all six columns to the colgroup grid under
-         table-layout:fixed (the first visible row starts with a colspan cell, so
-         without this mPDF cannot derive the grid). Borderless / zero-height. --}}
     <tr style="font-size:0;line-height:0;">
       <td style="border:0;padding:0;width:25%;"></td><td style="border:0;padding:0;width:17%;"></td><td style="border:0;padding:0;width:16%;"></td>
       <td style="border:0;padding:0;width:17%;"></td><td style="border:0;padding:0;width:12.5%;"></td><td style="border:0;padding:0;width:12.5%;"></td>
     </tr>
-    {{-- Profession block — arabic labels + arabic profession value.
-         Reference has NO internal vertical grid across this row: the whole
-         left area is one open cell (borderless inner table for positioning),
-         and only the right arabic-label column (المهنة) keeps its divider. --}}
-    {{-- border-right/left:none on this pair removes ONLY the shared internal
-         divider between the open left area and the المهنة label — the reference
-         renders this Arabic row as one continuous line (no vertical divider
-         before المهنة). Outer table left/top/bottom/right borders are kept. --}}
+    {{-- Profession — Arabic labels + Arabic profession value (bold 11pt). One
+         continuous open row: no vertical divider before المهنة. --}}
     <tr>
-      <td colspan="5" style="padding:2.6pt 5pt;border-right:none;">
+      <td colspan="5" style="padding:2.2pt 7.5pt;border-right:none;line-height:1;">
         <table class="inner" dir="ltr" style="width:100%;">
           <tr>
-            <td style="width:28%;">&nbsp;</td>
-            <td class="ar" style="width:22%;text-align:center;">مصدره :</td>
-            <td class="ar" style="width:20%;text-align:center;">المؤهل العلمي :</td>
-            <td class="ar" style="width:30%;text-align:center;"><strong>{{ $profession_ar ?: '' }}</strong></td>
+            <td class="ar" style="width:26.4%;padding-right:6pt;">مصدره :</td>
+            <td class="ar" style="width:26.4%;padding-right:6pt;">المؤهل العلمي :</td>
+            <td class="ar" style="width:47.2%;text-align:center;font-size:11pt;line-height:1;"><strong>{{ $profession_ar ?: '' }}</strong></td>
           </tr>
         </table>
       </td>
       <td class="ar" style="border-left:none;">المهنة :</td>
     </tr>
-    {{-- Profession block — english labels + english profession value.
-         Reference: full-width open row, no internal vertical dividers, value
-         (profession) extends to the right edge. --}}
+    {{-- Profession — English labels (Medium) + English profession (Bold 9.7pt).
+         Column starts follow the reference: 36 / 175 / 291 / 410pt. --}}
     <tr>
-      <td colspan="6" style="padding:2.6pt 5pt;">
+      <td colspan="6">
         <table class="inner" dir="ltr" style="width:100%;">
           <tr>
-            <td class="lbl" style="width:28%;">Place of Issue:</td>
-            <td class="lbl" style="width:22%;">Qualification:@if($qualification_en) {{ $qualification_en }}@endif</td>
-            <td class="lbl" style="width:20%;">Profession:</td>
-            <td class="val" style="width:30%;text-align:left;font-size:9.5pt;font-weight:bold;">{{ $profession_en ?: ($occupation ?: '') }}</td>
+            <td class="lbl" style="width:26.4%;">Place of Issue:</td>
+            <td class="lbl" style="width:22.1%;">Qualification:@if($qualification_en) {{ $qualification_en }}@endif</td>
+            <td class="lbl" style="width:22.8%;">Profession:</td>
+            <td class="val big" style="width:28.7%;text-align:left;">{{ $profession_en ?: ($occupation ?: '') }}</td>
           </tr>
         </table>
       </td>
     </tr>
-    {{-- Home address --}}
-    {{-- Label+value set to 7.5pt to match the Business address row below (its
-         sibling "address & phone No.:" pair). Keeping both at the same size
-         means both fit on one line and the shared column 1 stays consistent. --}}
     <tr>
-      {{-- font-weight:normal overrides .lbl's global bold: reference renders this
-           label at regular weight, matching its sibling Business-address label. --}}
-      <td class="lbl" style="font-size:7.5pt;font-weight:normal;">Home address &amp; phone No.:</td>
-      <td colspan="3" class="val" style="font-size:7.5pt;">{{ $home_address ?: ($phone ?: '') }}</td>
+      <td class="lbl">Home address &amp; phone No.:</td>
+      <td colspan="3" class="val">{{ $home_address ?: ($phone ?: '') }}</td>
       <td colspan="2" class="ar">عنوان المنزل ورقم التلفون :</td>
     </tr>
-    {{-- Business address --}}
+    {{-- Business address — label shrunk to 8.6pt to fit the 25% column (as in
+         the reference); agency name/RL and email are Bold 9.7pt. --}}
     <tr>
-      {{-- Set the label AND value cells of this row to an explicit 7.5pt so the
-           long "Business address & phone No.:" label fits on one line inside the
-           fixed 25% column in the browser, print dialog and PDF alike. The Home
-           row above keeps its default 8.5pt (its label is short enough to fit),
-           and the Arabic cell is unchanged. --}}
-      {{-- font-weight:normal overrides .lbl's global bold: the reference renders
-           this label at regular weight (verified against docs/references
-           high-DPI crop), unlike the bold field labels elsewhere. --}}
-      <td class="lbl" style="font-size:7.5pt;font-weight:normal;">Business address &amp; phone No.:</td>
-      {{-- line-height:16px pins the gap between the business-name line and the
-           email line to a fixed 16px in the browser preview, Ctrl+P print AND the
-           mPDF download alike. Without an explicit value each renderer used its own
-           default <br> leading, so the on-screen gap looked larger/inconsistent
-           with the PDF. Both the business-name/RL line AND the email line render
-           bold to match the reference (verified against the high-DPI crop: the
-           email is the same heavy weight as the agency name). The cell is .val
-           (bold), so the email inherits bold; kept explicit for clarity. --}}
-      <td colspan="3" class="val" style="font-size:7.5pt;line-height:16px;">
+      <td class="lbl" style="font-size:8.6pt;vertical-align:top;">Business address &amp; phone No.:</td>
+      <td colspan="3" class="val big" style="line-height:1.5;padding-top:0;padding-bottom:0;">
         @if($business_address_en){{-- stored value already includes RL; don't append it again --}}
-          <strong>{{ $business_address_en }}</strong>@if($agency_email)<br><span style="font-weight:bold;">{{ $agency_email }}</span>@endif
+          {{ $business_address_en }}@if($agency_email)<br>{{ $agency_email }}@endif
         @else
-          <strong>{{ $agency_name }}@if($agency_rl) &nbsp; RL: {{ $agency_rl }}@endif</strong>@if($agency_email)<br><span style="font-weight:bold;">{{ $agency_email }}</span>@endif
+          {{ $agency_name }}@if($agency_rl) &nbsp; RL: {{ $agency_rl }}@endif @if($agency_email)<br>{{ $agency_email }}@endif
         @endif
       </td>
-      <td colspan="2" class="ar">عنوان الشركة (المؤسسة) ورقم التلفون :</td>
+      <td colspan="2" class="ar" style="vertical-align:top;font-size:8pt;padding-left:2pt;">عنوان الشركة (المؤسسة) ورقم التلفون :</td>
     </tr>
-    {{-- Full agency address (single centered line) — same 7.5pt + .val bold and
-         the same 16px line-height as the business-name/email lines above, so all
-         three business lines read as one uniform style (matches the reference,
-         where the full-address line is bold like the name line). --}}
+    {{-- Full agency address (single centered line, Bold 9pt) --}}
     @if($agency_address)
     <tr>
-      <td colspan="6" class="val" style="font-size:7.5pt;line-height:16px;">{{ $agency_address }}</td>
+      <td colspan="6" class="val">{{ $agency_address }}</td>
     </tr>
     @endif
-    {{-- Purpose of Travel — ONE row: label · compact boxes (AR+EN) · arabic label.
-         Reference proportions are 25 / 50 / 25 (label · boxes · arabic). On this
-         6-col grid that is c1 | colspan3(c2+c3+c4)=50% | colspan2(c5+c6)=25% — the
-         same colspan pattern the address rows use, so it aligns with them and the
-         arabic heading is no longer squeezed. Selected purpose is grey-filled. --}}
-    {{-- seam-merge: drop bottom border so the seam with the passport table below
-         is a single 0.75pt line (not doubled). --}}
+    {{-- Purpose of Travel — label · compact boxes (AR+EN) · Arabic label, on
+         the same 25 / 50 / 25 split. Labels sit at the TOP of the row as in the
+         reference; the selected purpose is filled dark grey. --}}
     <tr class="seam-merge">
-      <td class="lbl" style="white-space:nowrap;">Purpose of Travel:</td>
-      <td colspan="3" style="padding:2pt 4pt;vertical-align:middle;">
-        <table class="pt" style="width:100%;border-collapse:collapse;"><tr>
+      <td class="lbl" style="vertical-align:top;">Purpose of Travel:</td>
+      <td colspan="3" style="padding:2.2pt 4pt;vertical-align:middle;">
+        <table class="pt" style="width:100%;"><tr>
           @foreach($purposeOpts as $opt)
           @php $isSel = $tp === $opt['val']; @endphp
-          <td class="box{{ $isSel ? ' sel' : '' }}" style="width:{{ number_format(100/count($purposeOpts),2) }}%;{{ $isSel ? 'background:#333333;' : '' }}">
-            <span class="pa" style="{{ $isSel ? 'color:#fff;' : '' }}">{{ $opt['ar'] }}</span><br><span class="pe" style="{{ $isSel ? 'color:#fff;font-weight:bold;' : '' }}">{{ $opt['en'] }}</span>
+          <td class="box{{ $isSel ? ' sel' : '' }}" style="width:{{ number_format(100/count($purposeOpts),2) }}%;{{ $isSel ? 'background:#444444;' : '' }}">
+            <span class="pa" style="{{ $isSel ? 'color:#fff;' : '' }}">{{ $opt['ar'] }}</span><br><span class="pe" style="{{ $isSel ? 'color:#fff;' : '' }}">{{ $opt['en'] }}</span>
           </td>
           @endforeach
         </tr></table>
       </td>
-      <td colspan="2" class="ar" style="white-space:nowrap;">الغاية من السفر :</td>
+      <td colspan="2" class="ar" style="vertical-align:top;">الغاية من السفر :</td>
     </tr>
   </tbody>
 </table>
 
-{{-- ── PASSPORT INFO (own 4-EQUAL-column grid — reference = 25/25/25/25) ───────
-     Split into a dedicated table so the label + value rows sit on an exact
-     4-equal-column grid (table-layout:fixed + zero-height sizing row make mPDF
-     honour the colgroup). The duration/payment/destination rows below keep their
-     own independent 5-column table untouched — those rows genuinely need 5 cells
-     and their Arabic labels would overflow a forced 4-col grid. --}}
+{{-- ── PASSPORT INFO (4 equal columns) — header cells hold the English label
+     and its Arabic label side by side, centred; values centred below. --}}
 <table class="bdr ppt" style="margin-top:0;margin-bottom:0;table-layout:fixed;">
   <colgroup>
     <col style="width:25%"><col style="width:25%"><col style="width:25%"><col style="width:25%">
@@ -483,107 +335,97 @@
     <tr style="font-size:0;line-height:0;">
       <td style="border:0;padding:0;width:25%;"></td><td style="border:0;padding:0;width:25%;"></td><td style="border:0;padding:0;width:25%;"></td><td style="border:0;padding:0;width:25%;"></td>
     </tr>
-    {{-- Passport field headers: english + arabic label in one cell --}}
     <tr>
-      <td><table class="inner" style="width:100%"><tr><td class="lbl" style="text-align:left;">Place of issue:</td><td class="ar">محل الإصدار :</td></tr></table></td>
-      <td><table class="inner" style="width:100%"><tr><td class="lbl" style="text-align:left;">Date of issue:</td><td class="ar">تاريخ الإصدار :</td></tr></table></td>
-      <td><table class="inner" style="width:100%"><tr><td class="lbl" style="text-align:left;">Date of expiry:</td><td class="ar">تاريخ انتهاء الصلاحية :</td></tr></table></td>
-      <td class="ppno"><table class="inner" style="width:100%"><tr><td class="lbl" style="text-align:left;">Passport No.:</td><td class="ar">رقم الجواز :</td></tr></table></td>
+      <td style="text-align:center;white-space:nowrap;padding-left:2pt;padding-right:2pt;">Place of issue: <span class="ar">محل الإصدار</span></td>
+      <td style="text-align:center;white-space:nowrap;padding-left:2pt;padding-right:2pt;">Date of issue: <span class="ar">تاريخ الإصدار</span></td>
+      <td style="text-align:center;white-space:nowrap;padding-left:2pt;padding-right:2pt;font-size:8.6pt;">Date of expiry: <span class="ar" style="font-size:8.1pt;">تاريخ انتهاء الصلاحية</span></td>
+      <td style="text-align:center;white-space:nowrap;padding-left:2pt;padding-right:2pt;">Passport No.: <span class="ar">رقم الجواز</span></td>
     </tr>
-    {{-- Passport field values (centered, emphasised — see .ppval) --}}
     <tr>
-      <td class="val ppval" style="border-bottom:0;">{{ $U($passport_issue_place) }}</td>
-      <td class="val ppval" style="border-bottom:0;">{{ $passport_issue_date ?: '' }}</td>
-      <td class="val ppval" style="border-bottom:0;">{{ $passport_expiry_date ?: '' }}</td>
-      <td class="val ppval ppno" style="border-bottom:0;">{{ $U($passport_no) }}</td>
+      <td class="val" style="border-bottom:0;">{{ $U($passport_issue_place) }}</td>
+      <td class="val" style="border-bottom:0;"><span class="blk">{{ $passport_issue_date ?: '' }}</span></td>
+      <td class="val" style="border-bottom:0;"><span class="blk">{{ $passport_expiry_date ?: '' }}</span></td>
+      <td class="val" style="border-bottom:0;"><span class="blk">{{ $U($passport_no) }}</span></td>
     </tr>
   </tbody>
 </table>
 
-{{-- ── DURATION / ARRIVAL / DEPARTURE (own 4-col table: 33/17/25/25) ────────────
-     Split out of the .hrows table so this merged block matches the reference's
-     ~50/25/25 field split — Duration 0-50% (label 0-33% + value 33-50%),
-     Date of arrival 50-75%, Date of departure 75-100% — WITHOUT disturbing the
-     Mahram/Relationship/Destination rows, which keep their own 5-col grid below.
-     Keeps the .hrows class (open text, no internal vertical dividers, outer frame
-     only) and mrow-ar/mrow-en (drops the border between the Arabic-label row and
-     its English-value row). Its top border is the single seam with the passport
-     table above (whose last row has border-bottom:0); the English row adds
-     seam-merge so the seam with the Mahram table below stays one 0.75pt line. --}}
-<table class="bdr hrows" style="margin-top:0;">
+{{-- ── DURATION / ARRIVAL / DEPARTURE (own 4-col grid: 33/17/25/25) ──────────
+     One merged field group (Arabic-label row over English row, no divider).
+     Arabic labels right-aligned to the reference's x positions. --}}
+<table class="bdr hrows" style="margin-top:0;table-layout:fixed;">
   <colgroup>
     <col style="width:33%"><col style="width:17%"><col style="width:25%"><col style="width:25%">
   </colgroup>
   <tbody>
-    {{-- Arabic labels — each right-aligned within its field (Duration 0-50%,
-         Arrival 50-75%, Departure 75-100%). --}}
-    <tr class="mrow-ar" style="border-top:0;">
-      <td style="padding-right: 133px;" colspan="2" class="ar">مدة الإقامة بالمملكة :</td>
-      <td style="padding-right: 92px;" class="ar">تاريخ الوصول :</td>
-      <td style="padding-right: 35px;" class="ar">تاريخ المغادرة :</td>
+    <tr style="font-size:0;line-height:0;">
+      <td style="border:0;padding:0;width:33%;"></td><td style="border:0;padding:0;width:17%;"></td><td style="border:0;padding:0;width:25%;"></td><td style="border:0;padding:0;width:25%;"></td>
     </tr>
-    {{-- English labels + values — label left in col1, value centered in col2
-         (~42%, matching the reference), Arrival/Departure left-aligned at the
-         50%/75% field starts. --}}
+    <tr class="mrow-ar">
+      <td colspan="2" class="ar" style="padding-right:108pt;">مدة الإقامة بالمملكة :</td>
+      <td class="ar" style="padding-right:80pt;">تاريخ الوصول :</td>
+      <td class="ar" style="padding-right:36pt;">تاريخ المغادرة :</td>
+    </tr>
     <tr class="mrow-en seam-merge">
-      <td class="lbl" style="font-size:7pt;">Duration of stay in the kingdom:</td>
-      <td class="val" style="text-align:left;">{{ $duration_stay_en ?: '' }}@if(!empty($duration_stay_ar)) <span class="ar">({{ $duration_stay_ar }})</span>@endif</td>
-      <td class="lbl" style="font-weight:normal;"><strong>Date of arrival:</strong> {{ $arrival_date ?: ($arrival_date_ar ?: '') }}</td>
-      <td class="lbl" style="font-weight:normal;"><strong>Date of departure:</strong> {{ $departure_date ?: ($departure_date_ar ?: '') }}</td>
+      <td class="lbl">Duration of stay in the kingdom:</td>
+      <td class="val">{{ $duration_stay_en ?: '' }}@if(!empty($duration_stay_ar)) <span class="ar">({{ $duration_stay_ar }})</span>@endif</td>
+      <td class="lbl">Date of arrival: <strong>{{ $arrival_date ?: ($arrival_date_ar ?: '') }}</strong></td>
+      <td class="lbl">Date of departure: <strong>{{ $departure_date ?: ($departure_date_ar ?: '') }}</strong></td>
     </tr>
   </tbody>
 </table>
 
-{{-- ── VISA / MAHRAM / DESTINATION (independent 5-column table) ────────────────
-     .hrows = horizontal-rules-only: reference shows these rows with no internal
-     vertical dividers (open text lines), just the outer frame + row separators.
-     Its first row (Mahram Arabic) keeps its top border — that IS the single seam
-     line with the Duration table above (whose last row dropped its bottom border
-     via seam-merge, so the seam is one 0.75pt line, not doubled). --}}
-<table class="bdr hrows" style="margin-top:0;">
+{{-- ── MAHRAM / DESTINATION (6-col grid 25/12.5/12.5/25/12.5/12.5) ───────────
+     Reference: صلته and the relationship value start at the 25% line; اسم
+     المحرم at the 75% line; Destination | value | جهة الوصول in the left half,
+     Carrier's | اسم الشركة الناقلة in the right half. --}}
+<table class="bdr hrows" style="margin-top:0;table-layout:fixed;">
   <colgroup>
-    <col style="width:22%"><col style="width:16%"><col style="width:22%">
-    <col style="width:22%"><col style="width:18%">
+    <col style="width:25%"><col style="width:12.5%"><col style="width:12.5%">
+    <col style="width:25%"><col style="width:12.5%"><col style="width:12.5%">
   </colgroup>
   <tbody>
-    {{-- Mahram name | Relationship — merged like the Duration block (no divider
-         between the Arabic-label row and its English-value row). --}}
+    <tr style="font-size:0;line-height:0;">
+      <td style="border:0;padding:0;width:25%;"></td><td style="border:0;padding:0;width:12.5%;"></td><td style="border:0;padding:0;width:12.5%;"></td>
+      <td style="border:0;padding:0;width:25%;"></td><td style="border:0;padding:0;width:12.5%;"></td><td style="border:0;padding:0;width:12.5%;"></td>
+    </tr>
     <tr class="mrow-ar">
-      <td colspan="2" class="ar">صلته :</td>
-      <td style="padding-right: 90px;" colspan="3" class="ar">اسم المحرم :</td>
+      <td>&nbsp;</td>
+      <td colspan="3" class="ar" style="text-align:left;padding-left:6.7pt;">صلته :</td>
+      <td colspan="2" class="ar" style="text-align:left;padding-left:6.5pt;">اسم المحرم :</td>
     </tr>
     <tr class="mrow-en">
-      <td class="lbl" style="vertical-align:top;padding:7pt 5pt 2pt 5pt;">Relationship:</td>
-      <td colspan="4" class="val" style="text-align:left;vertical-align:top;padding:7pt 5pt 2pt 53pt;">{{ $relationship ?: 'EMPLOYER AND EMPLOYEE' }}</td>
+      <td class="lbl">Relationship:</td>
+      <td colspan="5" class="val" style="text-align:left;padding-left:6.7pt;">{{ $relationship ?: 'EMPLOYER AND EMPLOYEE' }}</td>
     </tr>
-    {{-- Destination | Carrier --}}
-    {{-- seam-merge: drop bottom border so the seam with the dependents table
-         below is a single 0.75pt line (not doubled). --}}
     <tr class="seam-merge">
       <td class="lbl">Destination:</td>
       <td class="val">{{ $destination_city ?: ($work_city ?: '') }}</td>
       <td class="ar">جهة الوصول :</td>
-      <td class="lbl" style="font-weight:normal;"><strong>Carrier's:</strong> {{ $carrier ?: '' }}</td>
+      <td colspan="2" class="lbl" style="padding-left:6.8pt;">Carrier's: <strong>{{ $carrier ?: '' }}</strong></td>
       <td class="ar">اسم الشركة الناقلة :</td>
     </tr>
   </tbody>
 </table>
 
-{{-- ── DEPENDENTS ──────────────────────────────────────────────────────────── --}}
-<table class="bdr" style="margin-top:0;font-size:7.5pt;">
+{{-- ── DEPENDENTS (4 equal columns, as in the reference) ─────────────────────── --}}
+<table class="bdr" style="margin-top:0;table-layout:fixed;">
   <colgroup>
-    <col style="width:20%"><col style="width:30%"><col style="width:15%"><col style="width:35%">
+    <col style="width:25%"><col style="width:25%"><col style="width:25%"><col style="width:25%">
   </colgroup>
   <tbody>
-    <tr>
-      <td class="lbl" colspan="2" style="font-size:7.5pt; border-right:0; text-align:right;">Dependents traveling in the same passport</td>
-      <td style="font-size:7.5pt; border-left:0; text-align:left;" colspan="2" class="ar">إصاحبات تخص أفراد العائلة المنتقلين في نفس جواز السفر :</td>
+    <tr style="font-size:0;line-height:0;">
+      <td style="border:0;padding:0;width:25%;"></td><td style="border:0;padding:0;width:25%;"></td><td style="border:0;padding:0;width:25%;"></td><td style="border:0;padding:0;width:25%;"></td>
     </tr>
     <tr>
-      <td class="val" style="font-weight:bold;"><span class="ar">نوع الصلة</span><br>Relationship</td>
-      <td class="val" style="font-weight:bold;"><span class="ar">تاريخ الميلاد</span><br>Date of Birth</td>
-      <td class="val" style="font-weight:bold;"><span class="ar">الجنس</span><br>Sex</td>
-      <td class="val" style="font-weight:bold;"><span class="ar">الاسم الكامل</span><br>Full Name</td>
+      <td class="lbl" colspan="2" style="border-right:0;text-align:right;">Dependents traveling in the same passport</td>
+      <td colspan="2" class="ar" style="border-left:0;text-align:left;">إصاحبات تخص أفراد العائلة المنتقلين في نفس جواز السفر :</td>
+    </tr>
+    <tr>
+      <td class="val" style="padding-top:3pt;padding-bottom:3pt;"><span class="ar"><strong>نوع الصلة</strong></span><br>Relationship</td>
+      <td class="val" style="padding-top:3pt;padding-bottom:3pt;"><span class="ar"><strong>تاريخ الميلاد</strong></span><br>Date of Birth</td>
+      <td class="val" style="padding-top:3pt;padding-bottom:3pt;"><span class="ar"><strong>الجنس</strong></span><br>Sex</td>
+      <td class="val" style="padding-top:3pt;padding-bottom:3pt;"><span class="ar"><strong>الاسم الكامل</strong></span><br>Full Name</td>
     </tr>
     <tr>
       <td>&nbsp;</td>
@@ -596,154 +438,136 @@
       <td class="val">TEL:</td>
       <td>&nbsp;</td><td>&nbsp;</td>
     </tr>
-    <tr>
-    <td>&nbsp;</td>
-    <td>&nbsp;</td>
-    <td>&nbsp;</td>
-    <td>&nbsp;</td>
-    </tr>
-    
-    
-    {{-- Trailing empty row — reference shows a taller dependents block. --}}
+    <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
     <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
   </tbody>
 </table>
 
-{{-- ── NAME AND ADDRESS IN KINGDOM ─────────────────────────────────────────── --}}
-{{-- margin-top:12px adds ~3.2mm breathing room above the bottom block (kingdom
-     address → declaration → signature → official-use → footer), shifting it down
-     slightly to match docs/images/ksa-application-reference-0001.jpg. Kept within
-     the ~6.5mm page-1 headroom noted at the bottom-anchor spacer so the footer
-     still lands on one A4 (no overflow to a 2nd sheet). Only vertical spacing —
-     font size, weight, borders and barcode position are unchanged. --}}
-<table class="bdr" style="margin-top:12px;font-size:7.5pt;">
+{{-- ── NAME AND ADDRESS IN KINGDOM ───────────────────────────────────────────
+     The 29pt gap absorbs the height of the reference's "Mode of payment" rows,
+     which this form intentionally omits, so the bottom block (kingdom address →
+     declaration → signature → official use → footer) lands at the reference's
+     vertical positions. It is a .pg1-gap div (not a margin) so browser print can
+     shrink it when long data needs the room — see the @media print rule above. --}}
+<div class="pg1-gap" style="height:29pt;"></div>
+<table class="bdr" style="margin-top:0;table-layout:fixed;">
+  <colgroup><col style="width:50%"><col style="width:50%"></colgroup>
   <tbody>
     <tr>
-      <td style="width:53%; border-top:0; border-right:0; text-align:right;">Name and address of company or individual in the kingdom</td>
-      <td style="width:47%;  border-top:0; border-left:0; text-align:left;" class="ar">اسم وعنوان الشركة أو اسم الشخص وعنوانه بالمملكة :</td>
+      <td style="border-right:0;text-align:right;">Name and address of company or individual in the kingdom</td>
+      <td style="border-left:0;text-align:left;" class="ar">اسم وعنوان الشركة أو اسم الشخص وعنوانه بالمملكة :</td>
     </tr>
     <tr>
-      <td style="padding:10px; border-right:0;" class="val">{{ $kingdom_address_en ?: '' }}</td>
-      <td style="padding:10px; border-left:0;" class="ar"><strong>{{ $kingdom_address_ar ?: '' }}</strong></td>
+      <td style="border-right:0;" class="val">{{ $kingdom_address_en ?: '' }}&nbsp;</td>
+      <td style="border-left:0;" class="ar"><strong>{{ $kingdom_address_ar ?: '' }}</strong></td>
     </tr>
   </tbody>
 </table>
 
-{{-- ── DECLARATION (english left | arabic right) ───────────────────────────── --}}
-{{-- Reference shows this declaration as open text with NO surrounding box, so the
-     two cells override .bdr's border to 0 (border removed on this row only; the
-     bordered tables above/below are untouched). --}}
-<table class="bdr" style="margin-top:0;font-size:7.5pt;">
+{{-- ── DECLARATION (english right-aligned | arabic) — boxed by the side rules,
+     no divider between the two halves. --}}
+<table class="bdr" style="margin-top:0;table-layout:fixed;">
+  <colgroup><col style="width:66.8%"><col style="width:33.2%"></colgroup>
   <tbody>
     <tr>
-      <td style="width:60%;text-align:right;border-bottom:0.75pt solid #202428; border-right:0;border-top:0;">I the undersigned hereby that all the information I have provided are correct. I will abide by laws of the kingdom during the period of my residence in it.</td>
-      <td style="width:33%;border-bottom:0.75pt solid #202428;border-left:0;border-top:0; font-weight:400; text-align:right;">أنا الموقع أدناه أقر بأن كل المعلومات التي زودتها صحيحة وسأكون ملتزماً بقوانين المملكة العربية السعودية خلال فترة وجودي بها.</td>
+      <td style="text-align:right;border-right:0;border-top:0;padding-top:2.6pt;padding-bottom:2.6pt;">I the undersigned hereby that all the information I have provided are correct. I will abide by laws of the kingdom during the period of my residence in it.</td>
+      <td class="ar" style="border-left:0;border-top:0;text-align:left;white-space:normal;padding-left:3pt;font-size:8pt;line-height:1.05;">أنا الموقع أدناه أقر بأن كل المعلومات التي زودتها صحيحة وسأكون ملتزماً بقوانين المملكة العربية السعودية خلال فترة وجودي بها.</td>
     </tr>
   </tbody>
 </table>
 
-{{-- ── SIGNATURE (single horizontal row — borderless, like the reference) ──── --}}
-<table class="sig" style="margin-top:1pt;font-size:7.5pt;">
+{{-- ── SIGNATURE (single borderless row, text at the top of the band) ─────────
+     Reference x: Date 35 · التاريخ ends 162 · Signature 166 · التوقيع ends 300 ·
+     Name 308 · value 351 · الاسم ends 560. --}}
+<table class="sig" style="margin-top:0;table-layout:fixed;">
   <colgroup>
-    <col style="width:14%"><col style="width:8%"><col style="width:18%">
-    <col style="width:8%"><col style="width:44%"><col style="width:8%">
+    <col style="width:17.6%"><col style="width:7.8%"><col style="width:19.1%"><col style="width:6.6%">
+    <col style="width:8.1%"><col style="width:35.0%"><col style="width:5.8%">
   </colgroup>
   <tbody>
     <tr>
-      <td style="padding-bottom: 15px;" class="lbl">Date:</td>
-      <td style="padding-bottom: 15px;" class="ar">التاريخ :</td>
-      <td style="padding-bottom: 15px;" class="lbl">Signature:</td>
-      <td style="padding-bottom: 15px;" class="ar">التوقيع :</td>
-      <td style="padding-bottom: 15px;" class="lbl"><strong>Name:</strong> <span style="font-size:9.5pt;font-weight:bold;font-family:ksaroboto,sans-serif;">{{ $U($full_name_en) }}</span></td>
-      <td style="padding-bottom: 15px;" class="ar">الاسم :</td>
+      <td class="lbl" style="padding-left:7pt;height:19pt;">Date:</td>
+      <td class="ar">التاريخ :</td>
+      <td class="lbl" style="padding-left:4pt;">Signature:</td>
+      <td class="ar">التوقيع :</td>
+      <td class="lbl" style="padding-left:6.5pt;">Name:</td>
+      <td style="padding-left:0;"><span class="blk">{{ $U($full_name_en) }}</span></td>
+      <td class="ar" style="padding-right:7pt;">الاسم :</td>
     </tr>
   </tbody>
 </table>
 
-{{-- ── FOR OFFICIAL USE ONLY (borderless grid: dashed top + horizontal rules) --}}
-<table class="offc" style="margin-top:2pt;font-size:7.5pt;">
-  <colgroup>
-    <col style="width:12%"><col style="width:16%"><col style="width:12%">
-    <col style="width:14%"><col style="width:16%"><col style="width:30%">
-  </colgroup>
+{{-- ── FOR OFFICIAL USE ONLY (dashed separator, rows = full-width rules) ────── --}}
+<table class="offc" style="margin-top:0;">
   <tbody>
-    <tr class="hdr">
-      <td colspan="3" style="font-weight:bold;font-size:8pt;text-decoration:underline; border-bottom:none">For official use only</td>
-      <td colspan="3" class="ar" style="font-weight:bold;font-size:8pt;text-decoration:underline; border-bottom:none">للاستعمال الرسمي فقط</td>
-    </tr>
     <tr>
-      <td class="lbl">Date:</td>
-      <td class="val" style="font-size: 9.5pt; font-family: ksaroboto, sans-serif;">{{ $visa_date_hijri ?: '' }}</td>
-      <td class="ar">التاريخ :</td>
-      <td class="lbl">Visa No:</td>
-      {{-- value uses .val (7.6pt) — NOT .ppval (9.5pt) — so it is proportionate
-           to the other official-use values (e.g. the Date beside it), matching
-           the reference (was oversized). Inline font-weight:bold guarantees real
-           bold: mPDF's cascade let .offc td (higher specificity, no weight) leave
-           the value regular, so a CSS-only bold did not render. --}}
-      <td class="val"><span style="font-weight:bold;font-size: 9.5pt;font-family: ksaroboto, sans-serif;">{{ $visa_no ?: '' }}</span></td>
-      <td class="ar">رقم الأمر المعتمد عليه في إعطاء التأشيرة :</td>
-    </tr>
-    <tr>
-      <td class="lbl">Visit/Work for:</td>
-      <td colspan="4" class="val">@if(!empty($sponsor_name_ar))<span class="ar"><strong>{{ $sponsor_name_ar }}</strong></span>@else{{ $sponsor_name ?: '' }}@endif</td>
-      <td class="ar">لزيارة :</td>
-    </tr>
-    <tr>
-      <td class="lbl">Date:</td>
-      <td>&nbsp;</td>
-      <td class="ar">التاريخ :</td>
-      <td class="lbl">Id Number:</td>
-      {{-- value uses .val (7.6pt) — matches the Visa No value so the two parallel
-           official-use fields are the same proportionate size (not oversized).
-           Inline font-weight:bold guarantees real bold (see Visa No note above). --}}
-      <td class="val"><span style="font-weight:bold;font-family: ksaroboto, sans-serif;font-size: 9.5pt;">{{ $sponsor_id ?: '' }}</span></td>
-      <td class="ar">أشير برقم :</td>
-    </tr>
-    <tr>
-      <td class="lbl">Fee Collected:</td>
-      <td class="ar">المبلغ المحصل :</td>
-      <td class="lbl">Type:</td>
-      <td class="ar">نوعها :</td>
-      <td class="lbl">Duration:</td>
-      <td class="ar">مدتها :</td>
+      <td style="padding-left:7pt;padding-top:2.4pt;padding-bottom:0;"><span style="text-decoration:underline;">For official use only</span></td>
+      <td class="ar" style="padding-right:7pt;padding-top:2.4pt;padding-bottom:0;"><span style="text-decoration:underline;">للاستعمال الرسمي فقط</span></td>
     </tr>
   </tbody>
 </table>
-
-{{-- Bottom-anchor spacer: reference (ksa-application-reference-0001.jpg) places
-     the barcode/"Head of consular section" footer near the page bottom (~94.6%
-     of page height). Our page-1 tables are more compact, so without this the
-     footer floats at ~90.4% with ~18mm of blank beneath it. This lowers the
-     footer to the reference's position. Sized to stay within one A4 — leaves
-     ~6.5mm headroom to the 10mm print margin so a wrapped field can't push the
-     page onto a 2nd sheet. --}}
-
-
-{{-- ── HEAD OF CONSULAR / BOTTOM BARCODE / CHECKED BY (below the box) ─────────
-     margin-top:2pt (Step 2 of the structural fix): the above-barcode gap
-     (Fee-row -> barcode-top) IS this footer margin, so it's reduced 12pt->2pt to
-     close that gap to the reference's ~4.9mm. The ~3.5mm removed here is added back
-     up top (Step 1: photo box 111pt->121pt), so the barcode still lands at ~281.5mm
-     (below-gap stays 15.5mm) and the page height is unchanged. signature->.offc
-     (frozen at .offc margin-top:2pt) is untouched and stays 5.3mm. --}}
-<table style="margin-top:2pt;width:100%;border-collapse:collapse;">
+<table class="offr" style="table-layout:fixed;">
+  <colgroup><col style="width:11.9%"><col style="width:15.8%"><col style="width:6.4%"><col style="width:19.1%"><col style="width:21.3%"><col style="width:25.5%"></colgroup>
   <tr>
-    <td style="width:33%;vertical-align:top;font-size:7.5pt;">
-      _______________<br>
-      <span class="ar">رئيس القسم القنصلي</span><br>
-      Head of consular section
+    <td class="lbl" style="padding-left:7pt;padding-top:3pt;">Date:</td>
+    <td class="val" style="text-align:left;"><span class="blk">{{ $visa_date_hijri ?: '' }}</span></td>
+    <td class="ar">التاريخ :</td>
+    <td class="lbl" style="padding-left:3.3pt;">Visa No:</td>
+    <td class="val" style="text-align:left;"><span class="blk">{{ $visa_no ?: '' }}</span></td>
+    <td class="ar" style="padding-right:7pt;">رقم الأمر المعتمد عليه في إعطاء التأشيرة :</td>
+  </tr>
+</table>
+<table class="offr" style="table-layout:fixed;">
+  <colgroup><col style="width:22.6%"><col style="width:55.7%"><col style="width:21.7%"></colgroup>
+  <tr>
+    <td class="lbl" style="padding-left:7pt;">Visit/Work for:</td>
+    <td class="val" style="line-height:1;">@if(!empty($sponsor_name_ar))<span class="ar" style="font-size:9.7pt;"><strong>{{ $sponsor_name_ar }}</strong></span>@else{{ $sponsor_name ?: '' }}@endif</td>
+    <td class="ar" style="padding-right:7pt;">لزيارة :</td>
+  </tr>
+</table>
+<table class="offr" style="table-layout:fixed;">
+  <colgroup><col style="width:44.0%"><col style="width:6.1%"><col style="width:19.8%"><col style="width:21.3%"><col style="width:8.8%"></colgroup>
+  <tr>
+    <td class="lbl" style="padding-left:7pt;">Date:</td>
+    <td class="ar">التاريخ :</td>
+    <td class="lbl" style="padding-left:7pt;">Id Number:</td>
+    <td class="val" style="text-align:left;"><span class="blk">{{ $sponsor_id ?: '' }}</span></td>
+    <td class="ar" style="padding-right:7pt;">أشير برقم :</td>
+  </tr>
+</table>
+<table class="offr" style="table-layout:fixed;">
+  <colgroup><col style="width:32.7%"><col style="width:10.6%"><col style="width:22.6%"><col style="width:6.0%"><col style="width:22.9%"><col style="width:5.2%"></colgroup>
+  <tr>
+    <td class="lbl" style="padding-left:7pt;">Fee Collected:</td>
+    <td class="ar">المبلغ المحصل :</td>
+    <td class="lbl" style="padding-left:3.8pt;">Type:</td>
+    <td class="ar">نوعها :</td>
+    <td class="lbl" style="padding-left:3.8pt;">Duration:</td>
+    <td class="ar" style="padding-right:7pt;">مدتها :</td>
+  </tr>
+</table>
+
+{{-- ── HEAD OF CONSULAR / BOTTOM BARCODE / CHECKED BY ─────────────────────────
+     Reference: short 0.7pt rules above the two Arabic captions (57pt left,
+     90pt right), 7pt inside the margin; barcode bars 49mm × 9.7mm centred,
+     passport number (Bold 9.7pt) directly under them. --}}
+<table style="margin-top:7.5pt;width:100%;border-collapse:collapse;">
+  <tr>
+    <td style="width:33%;vertical-align:top;font-size:9pt;padding:0 0 0 7pt;">
+      <div style="width:57.3pt;border-top:0.7pt solid #212529;height:0;font-size:0;line-height:0;"></div>
+      <div class="ar" style="text-align:left;font-size:8.5pt;">رئيس القسم القنصلي</div>
+      <div style="padding-top:1pt;">Head of consular section</div>
     </td>
-    <td style="width:34%;text-align:center;vertical-align:bottom;">
+    <td style="width:34%;text-align:center;vertical-align:top;padding:2.5pt 0 0 0;">
       @if(!empty($bottomBarcodeSrc))
-        <img src="{{ $bottomBarcodeSrc }}" style="width:52mm;height:9mm;display:block;margin:8px auto;">
+        <img src="{{ $bottomBarcodeSrc }}" style="width:49.2mm;height:9.7mm;display:block;margin:0 auto;">
       @endif
-      <div style="text-align:center;font-size:8pt;font-weight:bold;letter-spacing:0.5pt;margin-top:2pt;">{{ $bottomBarcodeText ?? '' }}</div>
+      <div style="text-align:center;font-size:9.7pt;font-weight:bold;color:#000;">{{ $bottomBarcodeText ?? '' }}</div>
     </td>
-    <td style="width:33%;text-align:right;vertical-align:top;font-size:7.5pt;">
-      _______________________<br>
-      <span class="ar">مدقق البيانات رقم صاحب العمل</span><br>
-      Checked by
+    <td style="width:33%;text-align:right;vertical-align:top;font-size:9pt;padding:0 7pt 0 0;">
+      <table style="width:89.7pt;border-collapse:collapse;margin-left:auto;"><tr><td style="border-top:0.7pt solid #212529;padding:0;font-size:0;line-height:0;height:0;"></td></tr></table>
+      <div class="ar">مدقق البيانات رقم صاحب العمل</div>
+      <div style="padding-top:1pt;">Checked by</div>
     </td>
   </tr>
 </table>
