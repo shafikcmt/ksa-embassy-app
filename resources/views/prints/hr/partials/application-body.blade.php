@@ -55,13 +55,13 @@
   @font-face { font-family: xbriyaz; font-weight: normal; font-style: normal; src: url('/fonts/XBRiyaz.ttf') format('truetype'); }
   @font-face { font-family: xbriyaz; font-weight: bold;   font-style: normal; src: url('/fonts/XBRiyaz-Bold.ttf') format('truetype'); }
   /* Browser print only: page 1 is a fixed-height flex column whose ONLY
-     shrinkable item is the .pg1-gap spacer, so a long name/address eats that gap
-     first instead of pushing the footer barcode onto a 2nd sheet. mPDF never
-     sees this block (it fits those cases on its own). */
+     shrinkable item is the empty .gap-band, so a long name/address eats that
+     band first instead of pushing the footer barcode onto a 2nd sheet. mPDF
+     never sees this block (it fits those cases on its own). */
   @media print {
     .ksa-app { display: flex; flex-direction: column; height: 276.5mm; }
     .ksa-app > * { flex: none; }
-    .ksa-app > .pg1-gap { flex: 0 1 29pt; min-height: 0; }
+    .ksa-app > .gap-band { flex: 0 1 28.3pt; min-height: 0; }
   }
 @endif
   /* CRITICAL mPDF quirk: table cells do NOT inherit font-family from an
@@ -375,6 +375,13 @@
   </tbody>
 </table>
 
+{{-- Empty framed band (no content): occupies the vertical slot the reference
+     uses for its rows between Duration and Mahram, so every block below sits at
+     the reference's position. Side rules continue the frame; its top rule is
+     the seam with the Duration table (whose last row drops its bottom border)
+     and the Mahram table's top rule closes it. --}}
+<div class="gap-band" style="height:28.3pt;border-top:0.7pt solid #212529;border-left:0.7pt solid #212529;border-right:0.7pt solid #212529;"></div>
+
 {{-- ── MAHRAM / DESTINATION (6-col grid 25/12.5/12.5/25/12.5/12.5) ───────────
      Reference: صلته and the relationship value start at the 25% line; اسم
      المحرم at the 75% line; Destination | value | جهة الوصول in the left half,
@@ -439,17 +446,16 @@
       <td>&nbsp;</td><td>&nbsp;</td>
     </tr>
     <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
-    <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+    {{-- seam-merge: the kingdom table below supplies the single seam line. --}}
+    <tr class="seam-merge"><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
   </tbody>
 </table>
 
 {{-- ── NAME AND ADDRESS IN KINGDOM ───────────────────────────────────────────
-     The 29pt gap absorbs the height of the reference's "Mode of payment" rows,
-     which this form intentionally omits, so the bottom block (kingdom address →
-     declaration → signature → official use → footer) lands at the reference's
-     vertical positions. It is a .pg1-gap div (not a margin) so browser print can
-     shrink it when long data needs the room — see the @media print rule above. --}}
-<div class="pg1-gap" style="height:29pt;"></div>
+     Attached directly to the dependents table (no gap), so the outer frame runs
+     unbroken from the identity grid down to the declaration, as in the
+     reference. The .gap-band above keeps this block at the reference's
+     vertical position. --}}
 <table class="bdr" style="margin-top:0;table-layout:fixed;">
   <colgroup><col style="width:50%"><col style="width:50%"></colgroup>
   <tbody>
