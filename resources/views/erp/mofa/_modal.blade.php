@@ -1,10 +1,11 @@
 @php
-// [key => [label, type, required]] per section. Field keys/ids/names are unchanged; mofaModal() focuses by [name].
-// Compact layout: 3 cards on a 4-column grid. MOFA Issue Date is no longer asked for;
-// passport_validity is a UI-only helper (not in `f`, never sent to the server).
+// [key => [label, type, required, span]] per section. Field keys/ids/names are unchanged; mofaModal() focuses by [name].
+// Compact layout: 2 cards on a 4/2/1-column grid + a small Remarks card. `span` widens a field on
+// desktop so no row is left half-empty. MOFA Issue Date is no longer asked for; passport_validity
+// is a UI-only helper (not in `f`, never sent to the server); 'reference' is the agent select.
 $sections = [
- ['bi-person-vcard', 'Personal Information', ['full_name'=>['Full Name','text',true], 'father_name'=>["Father’s Name",'text',true], 'mother_name'=>["Mother’s Name",'text',true], 'passport_number'=>['Passport Number','text',true], 'date_of_birth'=>['Date of Birth','date',true], 'age'=>['Age','number',false]]],
- ['bi-passport', 'Passport, Visa & MOFA', ['issue_date'=>['Passport Issue Date','date',true], 'passport_validity'=>['Passport Validity','validity',false], 'expiry_date'=>['Passport Expiry Date','date',true], 'visa_number'=>['Visa Number','text',false], 'id_number'=>['ID Number','text',false], 'mofa_number'=>['MOFA Number','text',false], 'mofa_date'=>['MOFA Date','date',false], 'mofa_expiry_date'=>['MOFA Expiry Date','date',true], 'left_day'=>['Left Day','number',false]]],
+ ['bi-person-vcard', 'Personal & Passport Information', ['full_name'=>['Full Name','text',true], 'father_name'=>["Father’s Name",'text',true], 'mother_name'=>["Mother’s Name",'text',true], 'passport_number'=>['Passport Number','text',true], 'date_of_birth'=>['Date of Birth','date',true], 'age'=>['Age','number',false], 'issue_date'=>['Passport Issue Date','date',true], 'passport_validity'=>['Passport Validity','validity',false], 'expiry_date'=>['Passport Expiry Date','date',true], 'reference'=>['Reference','reference',false,'lg:col-span-3']]],
+ ['bi-calendar2-check', 'MOFA & Visa Details', ['mofa_number'=>['MOFA Number','text',false], 'mofa_date'=>['MOFA Date','date',false], 'mofa_expiry_date'=>['MOFA Expiry Date','date',true], 'left_day'=>['Left Day','number',false], 'visa_number'=>['Visa Number','text',false,'lg:col-span-2'], 'id_number'=>['ID Number','text',false,'lg:col-span-2']]],
 ];
 $config=['base'=>url('erp/mofa'),'search'=>route('erp.mofa.hr-search'),'today'=>today()->format('Y-m-d'),'todayDhaka'=>now(\App\Models\MofaEntry::LEFT_DAY_TIMEZONE)->format('Y-m-d'),'mofaDays'=>\App\Models\MofaEntry::MOFA_VALIDITY_DAYS,'validity'=>\App\Models\MofaEntry::DEFAULT_PASSPORT_VALIDITY,'csrf'=>csrf_token(),'add'=>request()->boolean('add'),'edit'=>(int)request('edit'),'fields'=>array_merge(\App\Http\Controllers\Erp\MofaController::FIELDS,['mofa_expiry_date'])];
 $inp = \App\Support\ErpForm::INPUT;
@@ -20,10 +21,13 @@ $state = fn (string $k) => 'x-bind:class="error(\'' . $k . '\') ? \'' . \App\Sup
 
         @foreach($sections as [$icon, $title, $fields])
         <x-erp.section :icon="$icon" :title="$title" cols="4" dense>
-            @foreach($fields as $key=>[$label,$type,$required])
+            @foreach($fields as $key=>$def)
+            @php [$label,$type,$required,$span] = array_pad($def, 4, null); @endphp
             <x-erp.field :label="$label" :for="'mf-'.$key" :required="$required" :auto="in_array($key,['age','left_day'])"
-                         :error="in_array($key,['age','left_day']) ? null : 'error(\''.$key.'\')'" :error-id="'mf-error-'.$key">
-                @if($key==='age')
+                         :error="in_array($key,['age','left_day']) ? null : 'error(\''.$key.'\')'" :error-id="'mf-error-'.$key" :class="$span">
+                @if($key==='reference')
+                    <x-erp.select-search id="mf-reference" :agents="$agentOptions ?? []" x-model="f.reference" x-on:change="changed('reference')" error="error('reference')" />
+                @elseif($key==='age')
                     <input id="mf-age" readonly tabindex="-1" x-bind:value="age()" class="{{ \App\Support\ErpForm::READONLY }}">
                 @elseif($key==='passport_validity')
                     {{-- UI helper: Expiry = Issue Date + N years − 1 day (recalculated only on user change). --}}
@@ -59,13 +63,12 @@ $state = fn (string $k) => 'x-bind:class="error(\'' . $k . '\') ? \'' . \App\Sup
         </x-erp.section>
         @endforeach
 
-        <x-erp.section icon="bi-journal-text" title="Additional Info" cols="2" dense>
-            <x-erp.field label="Reference" for="mf-reference" error="error('reference')" error-id="mf-error-reference">
-                <x-erp.select-search id="mf-reference" :agents="$agentOptions ?? []" x-model="f.reference" x-on:change="changed('reference')" error="error('reference')" />
-            </x-erp.field>
-            <x-erp.textarea label="Remarks" id="mf-remarks" maxlength="2000" x-model="f.remarks" x-on:input="changed('remarks')"
+        {{-- Remarks: small full-width card (same look as a dense section); the textarea's own
+             label is its heading, so there is no duplicate title. --}}
+        <div class="rounded-xl border border-slate-200 bg-white p-3 sm:p-4">
+            <x-erp.textarea label="Remarks" id="mf-remarks" rows="2" maxlength="2000" x-model="f.remarks" x-on:input="changed('remarks')"
                             error="error('remarks')" error-id="mf-error-remarks" />
-        </x-erp.section>
+        </div>
     </x-erp.modal>
 </div>
 @push('scripts')
