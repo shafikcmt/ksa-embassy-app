@@ -108,12 +108,12 @@ class DeliveryController extends Controller
     private static function listColumns(): array
     {
         return [
-            ['label' => 'Name', 'width' => '24%'],
+            ['label' => 'Name', 'width' => '22%'],
             ['label' => 'Date', 'nowrap' => true, 'width' => '10.5%'],
-            ['label' => 'Passport', 'width' => '10.5%'],
-            ['label' => 'Total', 'align' => 'right', 'width' => '9%'],
-            ['label' => 'Paid', 'align' => 'right', 'width' => '8%'],
-            ['label' => 'Due', 'align' => 'right', 'width' => '9%'],
+            ['label' => 'Passport', 'width' => '10%'],
+            ['label' => 'Total', 'align' => 'right'],
+            ['label' => 'Paid', 'align' => 'right'],
+            ['label' => 'Due', 'align' => 'right'],
             ['label' => 'Status', 'width' => '8%'],
             ['label' => 'Payment', 'width' => '9%'],
             ['label' => 'Reference', 'width' => '12%'],

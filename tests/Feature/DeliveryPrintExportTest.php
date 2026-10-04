@@ -61,7 +61,8 @@ class DeliveryPrintExportTest extends TestCase
     /** @return array{0: string[], 1: string[][], 2: string[]} headers, body rows, totals */
     private function table(string $html): array
     {
-        $cells = fn (string $s, string $tag) => array_map(fn ($c) => trim(html_entity_decode(strip_tags($c))), preg_match_all("~<{$tag}[^>]*>(.*?)</{$tag}>~s", $s, $m) ? $m[1] : []);
+        // Cell text as a reader sees it (the taka sign is joined to its amount by a no-break space).
+        $cells = fn (string $s, string $tag) => array_map(fn ($c) => trim(str_replace("\u{00A0}", ' ', html_entity_decode(strip_tags($c)))), preg_match_all("~<{$tag}[^>]*>(.*?)</{$tag}>~s", $s, $m) ? $m[1] : []);
         $body = substr($html, strpos($html, '<tbody>'), strpos($html, '</tbody>') - strpos($html, '<tbody>'));
         preg_match_all('~<tr>(.*?)</tr>~s', $body, $rows);
         $foot = str_contains($html, '<tfoot>') ? substr($html, strpos($html, '<tfoot>')) : '';
@@ -103,6 +104,24 @@ class DeliveryPrintExportTest extends TestCase
             $this->assertStringNotContainsString('VS-SECRET', $output);
             $this->assertStringNotContainsString('Other Agency Person', $output);
         }
+    }
+
+    public function test_taka_sign_renders_in_regular_weight_and_stays_with_its_amount(): void
+    {
+        $this->delivery($this->agency);
+        $this->actingAs($this->admin);
+        foreach ([[], ['download' => 1]] as $query) {
+            $html = $this->get(route('erp.delivery.print', $query))->getContent();
+            $foot = substr($html, strrpos($html, '<tfoot>'));
+            // Bold totals: the sign sits in a regular-weight span, glued to its amount.
+            $this->assertStringContainsString('<span class="tk">৳</span>&nbsp;15,000.00', $foot);
+            $this->assertStringContainsString('.tk { font-family: freeserif, erp-taka, serif; font-weight: normal; }', $html);
+            $this->assertStringNotContainsString('৳ ', $foot);
+        }
+        // The browser-only glyph font is never sent to mPDF.
+        $this->assertStringContainsString("url('/fonts/FreeSerif-taka.ttf')", $this->get(route('erp.delivery.print'))->getContent());
+        $this->assertStringNotContainsString('FreeSerif-taka', $this->get(route('erp.delivery.print', ['download' => 1]))->getContent());
+        $this->assertFileExists(public_path('fonts/FreeSerif-taka.ttf'));
     }
 
     public function test_date_does_not_wrap_and_import_format_is_unchanged(): void

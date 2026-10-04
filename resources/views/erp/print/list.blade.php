@@ -5,6 +5,12 @@
     $cellClass = fn (array $col) => ($col['align'] ?? 'left') === 'right' ? 'r' : 'l';
     $cellStyle = fn (array $col, bool $head = false) => trim((! empty($col['nowrap']) ? 'white-space:nowrap;' : '')
         . ($head && ! empty($col['width']) ? 'width:'.$col['width'].';' : ''));
+    // The taka sign (U+09F3) is wrapped in .tk: mPDF renders Bengali-script text in
+    // FreeSerif, whose BOLD face has no taka glyph (it printed as a box in the bold
+    // totals row), so the sign itself is always regular weight. A non-breaking space keeps
+    // the sign on the same line as its amount. Text is escaped first; strtr is a single
+    // pass, so a sign is wrapped exactly once.
+    $tk = fn ($value) => strtr(e((string) $value), ['৳ ' => '<span class="tk">৳</span>&nbsp;', '৳' => '<span class="tk">৳</span>']);
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -33,12 +39,16 @@
         .r { text-align: right; white-space: nowrap; }
         tfoot td { background: #f8fafc; font-weight: bold; }
         .empty { color: #94a3b8; text-align: center; padding: 12px; }
+        /* Taka sign: regular-weight FreeSerif (the font mPDF uses for it) in bold cells too. */
+        .tk { font-family: freeserif, erp-taka, serif; font-weight: normal; }
 
         {{-- @page is emitted ONLY for the browser. mPDF's constructor already sets
              A4 + 10mm margins; feeding it an @page rule makes this mPDF version
              spray blank pages, so it must be hidden from the PDF render. --}}
         @if(empty($_pdf))
         @page { size: A4; margin: 10mm; }
+        /* Browser preview: the same FreeSerif taka glyph as the PDF (5 KB subset, U+09F3 only). */
+        @font-face { font-family: erp-taka; src: url('/fonts/FreeSerif-taka.ttf') format('truetype'); unicode-range: U+09F3; }
 
         @media screen {
             body { background: #e5e7eb; }
@@ -87,7 +97,7 @@
 
     <h1>{{ $title }}</h1>
     <div class="meta muted">
-        @isset($subtitle){{ $subtitle }}<br>@endisset
+        @isset($subtitle){!! $tk($subtitle) !!}<br>@endisset
         Generated: {{ $generated->format('d M Y, h:i A') }}
     </div>
 
@@ -103,7 +113,7 @@
             @forelse($rows as $row)
                 <tr>
                     @foreach($columns as $i => $col)
-                        <td class="{{ $cellClass($col) }}"@if($cellStyle($col) !== '') style="{{ $cellStyle($col) }}"@endif>{{ $row[$i] ?? '' }}</td>
+                        <td class="{{ $cellClass($col) }}"@if($cellStyle($col) !== '') style="{{ $cellStyle($col) }}"@endif>{!! $tk($row[$i] ?? '') !!}</td>
                     @endforeach
                 </tr>
             @empty
@@ -114,7 +124,7 @@
             <tfoot>
                 <tr>
                     @foreach($columns as $i => $col)
-                        <td class="{{ $cellClass($col) }}"@if($cellStyle($col) !== '') style="{{ $cellStyle($col) }}"@endif>{{ $totals[$i] ?? '' }}</td>
+                        <td class="{{ $cellClass($col) }}"@if($cellStyle($col) !== '') style="{{ $cellStyle($col) }}"@endif>{!! $tk($totals[$i] ?? '') !!}</td>
                     @endforeach
                 </tr>
             </tfoot>
