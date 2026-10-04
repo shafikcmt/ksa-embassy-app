@@ -126,7 +126,12 @@ class ErpPassportDataService
 
     private function mofa(int $agencyId, string $passport, ?array $exclude): ?array
     {
-        $m = $this->latest(MofaEntry::forAgency($agencyId)->where('passport_no', $passport), 'mofa', $exclude);
+        // A passport may have several MOFA entries: newest MOFA Date wins (not the most recently edited).
+        $query = MofaEntry::forAgency($agencyId)->where('passport_no', $passport)->latestMofa();
+        if ($exclude && $exclude[0] === 'mofa') {
+            $query->whereKeyNot($exclude[1]);
+        }
+        $m = $query->first();
 
         return $m ? $this->source('mofa', $m, route('erp.mofa.show', $m), [
             'full_name'            => $m->full_name,

@@ -188,7 +188,7 @@ class VisaStampingController extends Controller
 
         $mofa = MofaEntry::forAgency((int) auth()->user()->agency_id)
             ->where('passport_no', $passport)
-            ->latest('updated_at')->first();
+            ->latestMofa()->first();
 
         if (! $mofa) {
             return response()->json(['found' => false]);

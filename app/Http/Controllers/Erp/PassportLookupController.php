@@ -109,7 +109,7 @@ class PassportLookupController extends Controller
     {
         $row = MofaEntry::where('agency_id', $agencyId)
             ->where('passport_no', $passportNo)
-            ->orderByDesc('updated_at')
+            ->latestMofa()
             ->first();
 
         return $row ? [

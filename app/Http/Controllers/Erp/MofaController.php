@@ -11,7 +11,6 @@ use App\Models\MofaEntry;
 use App\Services\PdfGeneratorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 class MofaController extends Controller
 {
@@ -112,14 +111,11 @@ class MofaController extends Controller
 
     private function save(MofaEntryRequest $request, MofaEntry $entry)
     {
-        // Lock the tenant row so concurrent form saves cannot bypass uniqueness validation.
+        // Lock the tenant row so concurrent saves for this agency stay serialised.
+        // A passport may have several MOFA entries, so there is no duplicate check.
         DB::transaction(function () use ($request, $entry) {
             Agency::whereKey($request->user()->agency_id)->lockForUpdate()->firstOrFail();
             $data = $request->validated();
-            $duplicate = MofaEntry::forAgency((int) $entry->agency_id)->where('passport_no', $data['passport_number'])->when($entry->exists, fn ($q) => $q->whereKeyNot($entry->id))->exists();
-            if ($duplicate) {
-                throw ValidationException::withMessages(['passport_number' => 'Passport number already exists.']);
-            }
             $hr = HrProfile::forAgency((int) $entry->agency_id)->whereHas('passport', fn ($q) => $q->where('passport_number', $data['passport_number']))->first();
             $entry->fill($data)->fill(['hr_profile_id' => $hr?->id, 'updated_by' => $request->user()->id])->save();
         });
@@ -142,6 +138,23 @@ class MofaController extends Controller
         $profiles = HrProfile::forAgency((int) $request->user()->agency_id)->with('passport')->whereHas('passport', fn ($w) => $w->where('passport_number', 'like', addcslashes($q, '%_\\').'%'))->limit(8)->get();
 
         return response()->json($profiles->map(fn ($p) => ['id' => $p->id, 'full_name' => $p->full_name_en, 'father_name' => $p->father_name, 'mother_name' => $p->mother_name, 'date_of_birth' => $p->date_of_birth?->format('Y-m-d'), 'passport_number' => $p->passport->passport_number, 'issue_date' => $p->passport->issue_date?->format('Y-m-d'), 'expiry_date' => $p->passport->expiry_date?->format('Y-m-d')]));
+    }
+
+    /**
+     * Non-blocking form hint: how many MOFA entries this agency already has for a
+     * passport (optionally excluding the entry being edited). Never another agency's.
+     */
+    public function passportCount(Request $request)
+    {
+        $agencyId = (int) $request->user()->agency_id;
+        abort_if($agencyId === 0, 403);
+        $data = $request->validate(['passport' => 'required|string|max:100', 'exclude' => 'nullable|integer']);
+        $count = MofaEntry::forAgency($agencyId)
+            ->where('passport_no', strtoupper(trim($data['passport'])))
+            ->when($data['exclude'] ?? null, fn ($q, $id) => $q->whereKeyNot($id))
+            ->count();
+
+        return response()->json(['count' => $count]);
     }
 
     public static function value(MofaEntry $entry, string $field, string $dateFormat = 'd-M-Y', bool $displayFallback = true)

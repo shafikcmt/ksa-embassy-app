@@ -7,7 +7,7 @@ $sections = [
  ['bi-person-vcard', 'Personal & Passport Information', ['full_name'=>['Full Name','text',true], 'father_name'=>["Father’s Name",'text',true], 'mother_name'=>["Mother’s Name",'text',true], 'passport_number'=>['Passport Number','text',true], 'date_of_birth'=>['Date of Birth','date',true], 'age'=>['Age','number',false], 'issue_date'=>['Passport Issue Date','date',true], 'passport_validity'=>['Passport Validity','validity',false], 'expiry_date'=>['Passport Expiry Date','date',true], 'reference'=>['Reference','reference',false,'lg:col-span-3']]],
  ['bi-calendar2-check', 'MOFA & Visa Details', ['mofa_number'=>['MOFA Number','text',false], 'mofa_date'=>['MOFA Date','date',false], 'mofa_expiry_date'=>['MOFA Expiry Date','date',true], 'left_day'=>['Left Day','number',false], 'visa_number'=>['Visa Number','text',false,'lg:col-span-2'], 'id_number'=>['ID Number','text',false,'lg:col-span-2']]],
 ];
-$config=['base'=>url('erp/mofa'),'search'=>route('erp.mofa.hr-search'),'today'=>today()->format('Y-m-d'),'todayDhaka'=>now(\App\Models\MofaEntry::LEFT_DAY_TIMEZONE)->format('Y-m-d'),'mofaDays'=>\App\Models\MofaEntry::MOFA_VALIDITY_DAYS,'validity'=>\App\Models\MofaEntry::DEFAULT_PASSPORT_VALIDITY,'csrf'=>csrf_token(),'add'=>request()->boolean('add'),'edit'=>(int)request('edit'),'fields'=>array_merge(\App\Http\Controllers\Erp\MofaController::FIELDS,['mofa_expiry_date'])];
+$config=['base'=>url('erp/mofa'),'search'=>route('erp.mofa.hr-search'),'today'=>today()->format('Y-m-d'),'todayDhaka'=>now(\App\Models\MofaEntry::LEFT_DAY_TIMEZONE)->format('Y-m-d'),'mofaDays'=>\App\Models\MofaEntry::MOFA_VALIDITY_DAYS,'validity'=>\App\Models\MofaEntry::DEFAULT_PASSPORT_VALIDITY,'csrf'=>csrf_token(),'countUrl'=>route('erp.mofa.passport-count'),'add'=>request()->boolean('add'),'edit'=>(int)request('edit'),'fields'=>array_merge(\App\Http\Controllers\Erp\MofaController::FIELDS,['mofa_expiry_date'])];
 $inp = \App\Support\ErpForm::INPUT;
 $state = fn (string $k) => 'x-bind:class="error(\'' . $k . '\') ? \'' . \App\Support\ErpForm::BORDER_ERROR . '\' : \'' . \App\Support\ErpForm::BORDER_OK . '\'"'
     . ' x-bind:aria-invalid="!!error(\'' . $k . '\')"';
@@ -57,6 +57,9 @@ $state = fn (string $k) => 'x-bind:class="error(\'' . $k . '\') ? \'' . \App\Sup
                             'passport_issue_date' => 'issue_date', 'passport_expiry_date' => 'expiry_date',
                         ],
                     ])
+                    {{-- Non-blocking: a passport may have several MOFA entries; this only informs, never stops Save. --}}
+                    <p x-show="passportCount > 0" x-cloak role="status" class="mt-1 text-xs font-medium text-amber-700"
+                       x-text="'This passport already has ' + passportCount + ' MOFA ' + (passportCount === 1 ? 'entry' : 'entries') + '. You can still save.'"></p>
                 @endif
             </x-erp.field>
             @endforeach
@@ -84,18 +87,21 @@ function mofaModal() {
     const mofaExpiry=date=>{const p=parts(date);return p?ymd(new Date(p[0],p[1]-1,p[2]+cfg.mofaDays)):'';};
     const dayNo=s=>{const p=parts(s);return p?Date.UTC(p[0],p[1]-1,p[2])/86400000:null;};
     return {
-        f:{},validity:cfg.validity,id:null,touched:{},server:{},message:'',loading:false,saving:false,failedLoad:false,suggestions:[],looking:false,lookupError:'',timer:null,lookupVersion:0,openVersion:0,returnFocus:null,
+        f:{},validity:cfg.validity,passportCount:0,countTimer:null,countVersion:0,id:null,touched:{},server:{},message:'',loading:false,saving:false,failedLoad:false,suggestions:[],looking:false,lookupError:'',timer:null,lookupVersion:0,openVersion:0,returnFocus:null,
         init(){if(cfg.add || cfg.edit) this.$nextTick(()=>this.open(cfg.edit || null));},
         async open(id=null){
-            this.returnFocus=document.activeElement;this.id=id;this.f=Object.fromEntries(cfg.fields.map(k=>[k,'']));this.validity=cfg.validity;this.touched={};this.server={};this.message='';this.suggestions=[];this.failedLoad=false;this.lookupVersion++;const version=++this.openVersion;
+            this.returnFocus=document.activeElement;this.id=id;this.f=Object.fromEntries(cfg.fields.map(k=>[k,'']));this.validity=cfg.validity;this.passportCount=0;this.countVersion++;this.touched={};this.server={};this.message='';this.suggestions=[];this.failedLoad=false;this.lookupVersion++;const version=++this.openVersion;
             this.$refs.dialog.showModal();document.body.style.overflow='hidden';
-            if(id){this.loading=true;try{const r=await fetch(cfg.base+'/'+id,{headers:{Accept:'application/json'}});if(!r.ok)throw Error('Unable to load this entry. Close and try again.');const data=await r.json();if(version===this.openVersion)this.f=Object.assign(this.f,data);}catch(e){if(version===this.openVersion){this.message=e.message;this.failedLoad=true;}}finally{if(version===this.openVersion)this.loading=false;}}
+            if(id){this.loading=true;try{const r=await fetch(cfg.base+'/'+id,{headers:{Accept:'application/json'}});if(!r.ok)throw Error('Unable to load this entry. Close and try again.');const data=await r.json();if(version===this.openVersion){this.f=Object.assign(this.f,data);this.checkPassport();}}catch(e){if(version===this.openVersion){this.message=e.message;this.failedLoad=true;}}finally{if(version===this.openVersion)this.loading=false;}}
             this.$nextTick(()=>this.$refs.dialog.querySelector('[name="full_name"]')?.focus());
         },
         close(){if(this.saving)return;this.openVersion++;this.lookupVersion++;clearTimeout(this.timer);this.loading=false;this.looking=false;this.$refs.dialog.close();document.body.style.overflow='';this.returnFocus?.focus();},
         changed(k){this.touched[k]=true;delete this.server[k];},
         // Auto-dates run only on user edits (never on edit-load), so saved expiries are kept; users may still override them.
-        recalcFrom(k){if(k==='issue_date')this.recalcPassport();if(k==='mofa_date')this.recalcMofa();},
+        recalcFrom(k){if(k==='issue_date')this.recalcPassport();if(k==='mofa_date')this.recalcMofa();if(k==='passport_number')this.checkPassport();},
+        // How many MOFA entries this agency already has for the passport (excluding the one being edited). Info only.
+        checkPassport(){clearTimeout(this.countTimer);const p=String(this.f.passport_number||'').trim();const v=++this.countVersion;if(p.length<3){this.passportCount=0;return;}
+            this.countTimer=setTimeout(async()=>{try{const u=new URL(cfg.countUrl,window.location.origin);u.searchParams.set('passport',p);if(this.id)u.searchParams.set('exclude',this.id);const r=await fetch(u,{headers:{Accept:'application/json'}});if(!r.ok)return;const d=await r.json();if(v===this.countVersion)this.passportCount=Number(d.count)||0;}catch(e){}},350);},
         recalcPassport(){const e=passportExpiry(this.f.issue_date,Number(this.validity));if(e){this.f.expiry_date=e;this.changed('expiry_date');}},
         recalcMofa(){const e=mofaExpiry(this.f.mofa_date);if(e){this.f.mofa_expiry_date=e;this.changed('mofa_expiry_date');}},
         // Auto-fill only fills empty fields; derive an expiry it left empty.

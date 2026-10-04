@@ -4,7 +4,6 @@ namespace App\Http\Requests;
 
 use App\Models\MofaEntry;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class MofaEntryRequest extends FormRequest
 {
@@ -62,7 +61,8 @@ class MofaEntryRequest extends FormRequest
     {
         return [
             'full_name' => ['required', 'string', 'max:100'], 'father_name' => ['required', 'string', 'max:100'], 'mother_name' => ['required', 'string', 'max:100'],
-            'passport_number' => ['required', 'string', 'max:100', Rule::unique('mofa_entries', 'passport_no')->where('agency_id', $this->user()->agency_id)->whereNull('deleted_at')->ignore($this->route('mofa')?->id)],
+            // Not unique: one passport can have several MOFA entries (the form shows a non-blocking count instead).
+            'passport_number' => ['required', 'string', 'max:100'],
             'date_of_birth' => ['required', 'date_format:Y-m-d', 'before:today'],
             'issue_date' => ['required', 'date_format:Y-m-d'], 'expiry_date' => ['required', 'date_format:Y-m-d', 'after:issue_date'],
             // MOFA Issue Date is no longer on the form; kept optional so legacy values still round-trip on edit.
@@ -73,10 +73,5 @@ class MofaEntryRequest extends FormRequest
             'visa_number' => ['nullable', 'string', 'max:100'], 'id_number' => ['nullable', 'string', 'max:100'], 'mofa_number' => ['nullable', 'string', 'max:100'],
             'reference' => ['nullable', 'string', 'max:255'], 'remarks' => ['nullable', 'string', 'max:2000'],
         ];
-    }
-
-    public function messages(): array
-    {
-        return ['passport_number.unique' => 'Passport number already exists.'];
     }
 }

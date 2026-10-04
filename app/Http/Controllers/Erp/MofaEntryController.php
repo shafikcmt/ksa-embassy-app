@@ -204,35 +204,45 @@ class MofaEntryController extends Controller
                 ->withErrors(['file' => 'Some rows are invalid — nothing was imported. Fix and re-upload.']);
         }
 
-        DB::transaction(function () use ($result, $agencyId) {
+        // Duplicates are decided again here, under the agency lock, with the same
+        // rules the preview showed: an exact repeat (same passport + MOFA Number)
+        // is skipped; anything else is inserted.
+        [$count, $skipped] = DB::transaction(function () use ($result, $agencyId) {
             \App\Models\Agency::whereKey($agencyId)->lockForUpdate()->firstOrFail();
+            $classify = $this->duplicateClassifier($agencyId);
+            $count = $skipped = 0;
             foreach ($result['rows'] as $row) {
-                if (MofaEntry::forAgency($agencyId)->where('passport_no', $row['attrs']['passport_no'])->exists()) {
-                    throw \Illuminate\Validation\ValidationException::withMessages(['file' => 'Passport number already exists. Nothing was imported.']);
+                if ($classify($row['attrs'])['skip']) {
+                    $skipped++;
+                    continue;
                 }
                 MofaEntry::create($row['attrs'] + [
                     'agency_id'  => $agencyId,
                     'created_by' => auth()->id(),
                     'updated_by' => auth()->id(),
                 ]);
+                $count++;
             }
+
+            return [$count, $skipped];
         });
 
-        $count = $result['total'];
         Storage::delete($path);
         $request->session()->forget(self::IMPORT_SESSION_KEY);
 
         return redirect()->route('erp.mofa')
-            ->with('success', "Imported {$count} MOFA " . ($count === 1 ? 'entry' : 'entries') . '.');
+            ->with('success', "Imported {$count} MOFA " . ($count === 1 ? 'entry' : 'entries') . '.'
+                . ($skipped ? " Skipped {$skipped} duplicate " . ($skipped === 1 ? 'row' : 'rows') . ' (same passport and MOFA Number).' : ''));
     }
 
     /**
      * Import config for CsvImportService: shared rules() + a normaliser (trim,
-     * lenient enum key/label mapping, date → Y-m-d). Duplicate passports are
-     * rejected; commit also checks the batch under the agency lock.
+     * lenient enum key/label mapping, date → Y-m-d). Duplicate passports never
+     * make a row invalid; they only add notices (see duplicateClassifier()).
      */
     private function importConfig(int $agencyId): array
     {
+        $classify = $this->duplicateClassifier($agencyId);
         $labelToKey = [];
         foreach (MofaEntry::PAYMENT_METHODS as $key => $label) {
             $labelToKey[strtolower($label)] = $key;
@@ -270,7 +280,51 @@ class MofaEntryController extends Controller
 
                 return $a;
             },
+            'notices' => fn (array $a) => $classify($a)['notices'],
         ];
+    }
+
+    /**
+     * Import duplicate rules, applied row by row in file order (preview notices
+     * and the commit use a fresh classifier each, so both see the same rules):
+     *  - same passport + same MOFA Number, already saved for this agency or
+     *    earlier in the file → skip (so re-uploading a file adds nothing);
+     *  - same passport with a different MOFA Number → import, with a notice;
+     *  - empty MOFA Number → import, with a notice (repeats can't be detected).
+     *
+     * @return \Closure(array): array{skip: bool, notices: string[]}
+     */
+    private function duplicateClassifier(int $agencyId): \Closure
+    {
+        $seen = [];   // passport => [MOFA NUMBER => true] from earlier rows of this file
+        $added = [];  // passport => rows of this file that will be imported
+
+        return function (array $a) use ($agencyId, &$seen, &$added): array {
+            $passport = (string) ($a['passport_no'] ?? '');
+            if ($passport === '') {
+                return ['skip' => false, 'notices' => []];
+            }
+            $notices = [];
+            $number = strtoupper(trim((string) ($a['mofa_number'] ?? '')));
+            if ($number !== '') {
+                $saved = MofaEntry::forAgency($agencyId)->where('passport_no', $passport)
+                    ->whereRaw('UPPER(TRIM(mofa_number)) = ?', [$number])->exists();
+                if ($saved || isset($seen[$passport][$number])) {
+                    return ['skip' => true, 'notices' => ["Skipped: this passport's MOFA Number {$a['mofa_number']} "
+                        . ($saved ? 'is already saved.' : 'appears earlier in this file.')]];
+                }
+                $seen[$passport][$number] = true;
+            } else {
+                $notices[] = 'MOFA Number is empty: imported, but a repeat of this row cannot be detected.';
+            }
+            $existing = MofaEntry::forAgency($agencyId)->where('passport_no', $passport)->count() + ($added[$passport] ?? 0);
+            if ($existing > 0) {
+                $notices[] = "This passport already has {$existing} MOFA " . ($existing === 1 ? 'entry' : 'entries') . ': imported as another entry.';
+            }
+            $added[$passport] = ($added[$passport] ?? 0) + 1;
+
+            return ['skip' => false, 'notices' => $notices];
+        };
     }
 
     /** Normalise common date inputs to Y-m-d; leave unparseable values for the rule to reject. */
@@ -359,7 +413,9 @@ class MofaEntryController extends Controller
             'visa_serial'     => ['nullable', 'string', 'max:100'],
             'id_number'       => ['nullable', 'string', 'max:100'],
             'full_name'       => ['required', 'string', 'max:255'],
-            'passport_no'     => ['required', 'string', 'max:100', Rule::unique('mofa_entries', 'passport_no')->where('agency_id', auth()->user()->agency_id)->whereNull('deleted_at')],
+            // Not unique: a passport can have several MOFA entries (import skips exact
+            // passport + MOFA Number repeats instead; see duplicateClassifier()).
+            'passport_no'     => ['required', 'string', 'max:100'],
             'reference_name'  => ['nullable', 'string', 'max:255'],
             'payment_method'  => ['nullable', Rule::in(array_keys(MofaEntry::PAYMENT_METHODS))],
             'whatsapp_number' => ['nullable', 'string', 'max:40'],

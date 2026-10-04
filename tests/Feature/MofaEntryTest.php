@@ -97,12 +97,71 @@ class MofaEntryTest extends TestCase
         $this->assertSoftDeleted($entry);
     }
 
-    public function test_validation_and_unique_passports_are_agency_scoped(): void
+    public function test_validation_still_applies_and_a_repeated_passport_is_allowed(): void
     {
         $this->entry();
-        $this->actingAs($this->admin)->postJson(route('erp.mofa.store'), $this->payload())->assertUnprocessable()->assertJsonValidationErrors('passport_number');
+        // Same passport in the same agency: a second MOFA is allowed (no "already exists" block).
+        $this->actingAs($this->admin)->postJson(route('erp.mofa.store'), $this->payload())->assertOk()->assertJsonMissingValidationErrors('passport_number');
+        $this->assertSame(2, MofaEntry::forAgency($this->agency->id)->where('passport_no', 'AB1234567')->count());
         $this->postJson(route('erp.mofa.store'), $this->payload(['passport_number' => 'NEW', 'expiry_date' => '2025-01-01', 'date_of_birth' => today()->format('Y-m-d'), 'mofa_expiry_date' => '2026-08-01']))->assertUnprocessable()->assertJsonValidationErrors(['expiry_date', 'date_of_birth', 'mofa_expiry_date']);
         $this->actingAs($this->otherAdmin)->postJson(route('erp.mofa.store'), $this->payload())->assertOk();
+    }
+
+    public function test_same_passport_can_have_several_entries_and_each_one_edits(): void
+    {
+        $this->actingAs($this->staff);
+        $this->postJson(route('erp.mofa.store'), $this->payload(['mofa_number' => 'M-1']))->assertOk();
+        $this->postJson(route('erp.mofa.store'), $this->payload(['mofa_number' => 'M-2']))->assertOk();
+        [$first, $second] = MofaEntry::orderBy('id')->get()->all();
+        $this->putJson(route('erp.mofa.update', $first), $this->payload(['mofa_number' => 'M-1', 'remarks' => 'first']))->assertOk();
+        $this->putJson(route('erp.mofa.update', $second), $this->payload(['mofa_number' => 'M-2', 'remarks' => 'second']))->assertOk();
+        $this->assertSame(['first', 'second'], MofaEntry::orderBy('id')->pluck('remarks')->all());
+        $this->assertSame([$this->agency->id], MofaEntry::distinct()->pluck('agency_id')->all());
+    }
+
+    public function test_passport_count_is_agency_scoped_and_excludes_the_entry_being_edited(): void
+    {
+        $first = $this->entry(['mofa_number' => 'M-1']);
+        $this->entry(['mofa_number' => 'M-2']);
+        $foreign = MofaEntry::create($this->payload(['mofa_number' => 'X-1']) + ['agency_id' => $this->other->id]);
+
+        $this->actingAs($this->staff);
+        $this->getJson(route('erp.mofa.passport-count', ['passport' => ' ab1234567 ']))->assertOk()->assertExactJson(['count' => 2]);
+        $this->getJson(route('erp.mofa.passport-count', ['passport' => 'AB1234567', 'exclude' => $first->id]))->assertExactJson(['count' => 1]);
+        $this->getJson(route('erp.mofa.passport-count', ['passport' => 'NOPE123']))->assertExactJson(['count' => 0]);
+
+        // Another agency only ever sees its own entries, whatever it excludes.
+        $this->actingAs($this->otherAdmin);
+        $this->getJson(route('erp.mofa.passport-count', ['passport' => 'AB1234567', 'exclude' => $first->id]))->assertExactJson(['count' => 1]);
+        $this->getJson(route('erp.mofa.passport-count', ['passport' => 'AB1234567', 'exclude' => $foreign->id]))->assertExactJson(['count' => 0]);
+
+        // Unauthenticated: no count.
+        $this->app['auth']->forgetGuards();
+        $this->getJson(route('erp.mofa.passport-count', ['passport' => 'AB1234567']))->assertUnauthorized();
+    }
+
+    public function test_lookups_return_the_latest_mofa_by_date_then_id_within_the_agency(): void
+    {
+        $old = $this->entry(['mofa_number' => 'OLD', 'mofa_date' => '2026-01-10', 'mofa_expiry_date' => '2026-04-10', 'visa_number' => 'V-OLD']);
+        $this->entry(['mofa_number' => 'NEW', 'mofa_date' => '2026-05-01', 'mofa_expiry_date' => '2026-07-30', 'visa_number' => 'V-NEW']);
+        $this->entry(['mofa_number' => 'TIE', 'mofa_date' => '2026-05-01', 'mofa_expiry_date' => '2026-07-30', 'visa_number' => 'V-TIE']);
+        $undated = $this->entry(['mofa_number' => 'NODATE', 'mofa_date' => null, 'mofa_expiry_date' => '2026-12-01', 'visa_number' => 'V-ND']);
+        MofaEntry::create($this->payload(['mofa_number' => 'FOREIGN', 'mofa_date' => '2027-01-01', 'mofa_expiry_date' => '2027-03-01', 'visa_number' => 'V-F']) + ['agency_id' => $this->other->id]);
+        // Editing an older/undated entry later must not make it "latest".
+        $this->travel(5)->minutes();
+        $old->touch();
+        $undated->touch();
+
+        $this->assertSame('TIE', MofaEntry::forAgency($this->agency->id)->where('passport_no', 'AB1234567')->latestMofa()->first()->mofa_number);
+        $this->assertSame('TIE', app(\App\Services\ErpPassportDataService::class)->forPassport($this->agency->id, 'AB1234567')['merged']['mofa_number']['value']);
+        $this->assertSame('FOREIGN', app(\App\Services\ErpPassportDataService::class)->forPassport($this->other->id, 'AB1234567')['merged']['mofa_number']['value']);
+
+        $this->actingAs($this->admin);
+        $this->getJson(route('erp.visa-stamping.mofa-lookup', ['passport' => 'AB1234567']))->assertOk()->assertJsonPath('mofa_number', 'TIE');
+        $this->getJson(route('erp.passport-lookup', ['passport_no' => 'AB1234567']))->assertOk()->assertJsonPath('visa_serial', 'V-TIE');
+
+        // An entry without a MOFA Date sorts last even when it is the only other one.
+        $this->assertSame('NODATE', MofaEntry::forAgency($this->agency->id)->where('passport_no', 'AB1234567')->latestMofa()->get()->last()->mofa_number);
     }
 
     public function test_mofa_expiry_is_exactly_ninety_days_after_mofa_date(): void
@@ -210,20 +269,56 @@ class MofaEntryTest extends TestCase
         $this->actingAs($this->otherAdmin)->getJson(route('erp.mofa.hr-search', ['q' => 'AB123']))->assertExactJson([]);
     }
 
-    public function test_legacy_import_preserves_format_and_rejects_duplicate_batch_atomically(): void
+    private const IMPORT_HEADERS = "mofa_date,mofa_number,visa_serial,full_name,passport_no,reference_name,payment_method,whatsapp_number,payment_note\n";
+
+    private function importCsv(string $rows)
+    {
+        $file = UploadedFile::fake()->createWithContent('mofa.csv', self::IMPORT_HEADERS.$rows);
+
+        return $this->post(route('erp.mofa.import.preview'), ['file' => $file])->assertOk();
+    }
+
+    public function test_import_skips_exact_repeats_and_allows_another_mofa_for_the_same_passport(): void
     {
         Storage::fake('local');
-        $headers = "mofa_date,mofa_number,visa_serial,full_name,passport_no,reference_name,payment_method,whatsapp_number,payment_note\n";
-        $row = "2026-09-25,M100,V100,Legacy Passenger,LEGACY123,Agent,no_payment,,\n";
         $this->actingAs($this->admin);
-        $file = UploadedFile::fake()->createWithContent('mofa.csv', $headers.$row.$row);
-        $this->post(route('erp.mofa.import.preview'), ['file' => $file])->assertOk();
-        $this->post(route('erp.mofa.import'))->assertSessionHasErrors('file');
-        $this->assertDatabaseCount('mofa_entries', 0);
-        $file = UploadedFile::fake()->createWithContent('mofa.csv', $headers.$row);
-        $this->post(route('erp.mofa.import.preview'), ['file' => $file])->assertOk();
-        $this->post(route('erp.mofa.import'))->assertRedirect(route('erp.mofa'));
+        $m100 = "2026-09-25,M100,V100,Legacy Passenger,LEGACY123,Agent,no_payment,,\n";
+        $m200 = "2026-10-01,M200,V200,Legacy Passenger,LEGACY123,Agent,no_payment,,\n";
+        $blank = "2026-10-02,,V300,Legacy Passenger,LEGACY123,Agent,no_payment,,\n";
+        $this->importCsv($m100.$m100.$m200.$blank)
+            ->assertSee('appears earlier in this file')
+            ->assertSee('MOFA Number is empty')
+            ->assertSee('imported as another entry');
+        $this->post(route('erp.mofa.import'))->assertRedirect(route('erp.mofa'))
+            ->assertSessionHas('success', fn ($m) => str_contains($m, 'Imported 3') && str_contains($m, 'Skipped 1'));
+        $this->assertSame(['M100', 'M200', null], MofaEntry::forAgency($this->agency->id)->orderBy('id')->pluck('mofa_number')->all());
         $this->assertSame('processing', MofaEntry::firstOrFail()->status);
+    }
+
+    public function test_same_file_uploaded_twice_adds_no_rows(): void
+    {
+        Storage::fake('local');
+        $this->actingAs($this->admin);
+        $rows = "2026-09-25,M100,V100,Legacy Passenger,LEGACY123,Agent,no_payment,,\n"
+            ."2026-10-01,M200,V200,Other Passenger,OTHER456,Agent,no_payment,,\n";
+        $this->importCsv($rows);
+        $this->post(route('erp.mofa.import'))->assertSessionHas('success', fn ($m) => str_contains($m, 'Imported 2'));
+
+        $this->importCsv($rows)->assertSee('is already saved');
+        $this->post(route('erp.mofa.import'))->assertSessionHas('success', fn ($m) => str_contains($m, 'Imported 0') && str_contains($m, 'Skipped 2'));
+        $this->assertDatabaseCount('mofa_entries', 2);
+    }
+
+    public function test_import_with_an_invalid_row_imports_nothing(): void
+    {
+        Storage::fake('local');
+        $this->actingAs($this->admin);
+        $this->importCsv("2026-09-25,M100,V100,Good Row,GOOD123,Agent,no_payment,,\n"
+            ."not-a-date,M200,V200,Bad Row,BAD123,Agent,no_payment,,\n");
+        $this->post(route('erp.mofa.import'))->assertOk()->assertSee('nothing was imported');
+        $this->assertDatabaseCount('mofa_entries', 0);
+        // Another agency is never affected by this agency's imports.
+        $this->assertSame(0, MofaEntry::forAgency($this->other->id)->count());
     }
 
     public function test_pdf_layouts_and_csv(): void

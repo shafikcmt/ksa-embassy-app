@@ -182,6 +182,8 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
 
         Route::get('/mofa/add', [MofaController::class, 'create'])->name('mofa.create');
         Route::get('/mofa/hr-search', [MofaController::class, 'hrSearch'])->name('mofa.hr-search');
+        // Static path: must stay above /mofa/{mofa} so "passport-count" is not bound as an id.
+        Route::get('/mofa/passport-count', [MofaController::class, 'passportCount'])->name('mofa.passport-count');
         Route::get('/mofa/{mofa}/edit', [MofaController::class, 'edit'])->name('mofa.edit');
         Route::get('/mofa/{mofa}/print-pdf', [MofaController::class, 'printPdf'])->name('mofa.print-pdf');
         Route::get('/mofa/{mofa}', [MofaController::class, 'show'])->name('mofa.show');

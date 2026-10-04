@@ -84,6 +84,16 @@ class MofaEntry extends Model
         return $query->where('agency_id', $agencyId);
     }
 
+    /**
+     * A passport may have several MOFA entries; "latest" is the newest MOFA Date,
+     * then the newest id. Entries without a MOFA Date always sort last (explicit,
+     * so MySQL and SQLite agree).
+     */
+    public function scopeLatestMofa($query)
+    {
+        return $query->orderByRaw('mofa_date IS NULL')->orderByDesc('mofa_date')->orderByDesc('id');
+    }
+
     public function paymentMethodLabel(): ?string
     {
         return $this->payment_method
