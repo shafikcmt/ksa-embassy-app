@@ -59,7 +59,7 @@
                             @php
                                 $field = $fields[$col - 1];
                                 $value = in_array($field, $dateFields, true)
-                                    ? ErpPrintTheme::date($entry->$field)
+                                    ? ErpPrintTheme::date($field === 'mofa_issue_date' ? $entry->displayMofaIssueDate() : $entry->$field)
                                     : MofaController::value($entry, $field);
                                 $class = in_array($field, $numFields, true) ? 'num' : (in_array($field, $wrapFields, true) ? '' : 'c nw');
                                 if ($field === 'left_day' && $value !== null && $value !== '' && (int) $value < 30) {
