@@ -82,7 +82,7 @@ class MofaController extends Controller
         if ($request->expectsJson()) {
             $data = ['id' => $mofa->id];
             foreach (array_merge(self::FIELDS, ['mofa_expiry_date']) as $field) {
-                $data[$field] = $this->value($mofa, $field, 'Y-m-d');
+                $data[$field] = $this->value($mofa, $field, 'Y-m-d', false);
             }
 
             return response()->json($data);
@@ -144,9 +144,11 @@ class MofaController extends Controller
         return response()->json($profiles->map(fn ($p) => ['id' => $p->id, 'full_name' => $p->full_name_en, 'father_name' => $p->father_name, 'mother_name' => $p->mother_name, 'date_of_birth' => $p->date_of_birth?->format('Y-m-d'), 'passport_number' => $p->passport->passport_number, 'issue_date' => $p->passport->issue_date?->format('Y-m-d'), 'expiry_date' => $p->passport->expiry_date?->format('Y-m-d')]));
     }
 
-    public static function value(MofaEntry $entry, string $field, string $dateFormat = 'd-M-Y')
+    public static function value(MofaEntry $entry, string $field, string $dateFormat = 'd-M-Y', bool $displayFallback = true)
     {
-        $value = $entry->$field;
+        // The edit-form JSON passes $displayFallback = false so the MOFA Date
+        // fallback (see MofaEntry::displayMofaIssueDate) is never saved back.
+        $value = $displayFallback && $field === 'mofa_issue_date' ? $entry->displayMofaIssueDate() : $entry->$field;
 
         return $value instanceof \DateTimeInterface ? $value->format($dateFormat) : $value;
     }

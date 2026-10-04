@@ -72,7 +72,7 @@ class MofaEntryTest extends TestCase
 
     private function payload(array $overrides = []): array
     {
-        return array_merge(['full_name' => 'Test Passenger', 'father_name' => 'Test Father', 'mother_name' => 'Test Mother', 'passport_number' => 'AB1234567', 'date_of_birth' => '1995-12-31', 'issue_date' => '2025-01-01', 'expiry_date' => '2030-01-01', 'mofa_issue_date' => '2026-09-01', 'mofa_expiry_date' => '2026-12-01', 'mofa_number' => 'MOFA-100', 'mofa_date' => '2026-09-25', 'reference' => 'Agent'], $overrides);
+        return array_merge(['full_name' => 'Test Passenger', 'father_name' => 'Test Father', 'mother_name' => 'Test Mother', 'passport_number' => 'AB1234567', 'date_of_birth' => '1995-12-31', 'issue_date' => '2025-01-01', 'expiry_date' => '2030-01-01', 'mofa_expiry_date' => '2026-12-01', 'mofa_number' => 'MOFA-100', 'mofa_date' => '2026-09-25', 'reference' => 'Agent'], $overrides);
     }
 
     private function entry(array $overrides = []): MofaEntry
@@ -82,10 +82,11 @@ class MofaEntryTest extends TestCase
 
     public function test_crud_and_computed_values(): void
     {
+        $this->travelTo(Carbon::parse('2026-09-25 12:00:00'));
         $this->actingAs($this->staff)->postJson(route('erp.mofa.store'), $this->payload(['age' => 99, 'left_day' => 999]))->assertOk();
         $entry = MofaEntry::firstOrFail();
         $this->assertSame(today()->year - 1995, $entry->age);
-        $this->assertSame(91, $entry->left_day);
+        $this->assertSame(67, $entry->left_day); // 2026-09-25 → 2026-12-01
         $this->assertSame($this->staff->id, $entry->created_by);
         $this->get(route('erp.mofa'))->assertOk()->assertSee('Test Passenger')->assertSee('mofa-config', false);
         $this->get(route('erp.mofa.show', $entry))->assertOk();
@@ -102,6 +103,69 @@ class MofaEntryTest extends TestCase
         $this->actingAs($this->admin)->postJson(route('erp.mofa.store'), $this->payload())->assertUnprocessable()->assertJsonValidationErrors('passport_number');
         $this->postJson(route('erp.mofa.store'), $this->payload(['passport_number' => 'NEW', 'expiry_date' => '2025-01-01', 'date_of_birth' => today()->format('Y-m-d'), 'mofa_expiry_date' => '2026-08-01']))->assertUnprocessable()->assertJsonValidationErrors(['expiry_date', 'date_of_birth', 'mofa_expiry_date']);
         $this->actingAs($this->otherAdmin)->postJson(route('erp.mofa.store'), $this->payload())->assertOk();
+    }
+
+    public function test_mofa_expiry_is_exactly_ninety_days_after_mofa_date(): void
+    {
+        $this->assertSame(90, MofaEntry::MOFA_VALIDITY_DAYS);
+        foreach (['2026-09-12' => '2026-12-11', '2026-12-09' => '2027-03-09', '2028-01-15' => '2028-04-14', '2027-12-31' => '2028-03-30'] as $mofaDate => $expiry) {
+            $this->assertSame($expiry, MofaEntry::mofaExpiryFor($mofaDate), $mofaDate);
+        }
+    }
+
+    public function test_saves_without_mofa_issue_date_and_server_fills_missing_expiry(): void
+    {
+        $this->actingAs($this->staff)->postJson(route('erp.mofa.store'), $this->payload(['mofa_date' => '2026-09-12', 'mofa_expiry_date' => '']))->assertOk();
+        $entry = MofaEntry::firstOrFail();
+        $this->assertNull($entry->mofa_issue_date);
+        $this->assertSame('2026-12-11', $entry->mofa_expiry_date->format('Y-m-d'));
+
+        // Edit (also without MOFA Issue Date): a provided expiry is kept, not recalculated.
+        $this->putJson(route('erp.mofa.update', $entry), $this->payload(['mofa_date' => '2026-09-12', 'mofa_expiry_date' => '2026-12-20']))->assertOk();
+        $this->assertSame('2026-12-20', $entry->fresh()->mofa_expiry_date->format('Y-m-d'));
+
+        // Neither MOFA Date nor Expiry → still rejected, as before.
+        $this->postJson(route('erp.mofa.store'), $this->payload(['passport_number' => 'NODATES', 'mofa_date' => '', 'mofa_expiry_date' => '']))
+            ->assertUnprocessable()->assertJsonValidationErrors('mofa_expiry_date');
+    }
+
+    public function test_unchanged_legacy_edit_saves_and_keeps_stored_dates(): void
+    {
+        // Legacy row whose expiry is not after its MOFA Date (allowed by the old rule).
+        $legacy = $this->entry(['mofa_issue_date' => '2026-08-01', 'mofa_date' => '2026-09-25', 'mofa_expiry_date' => '2026-09-01']);
+        $this->actingAs($this->admin);
+        $loaded = $this->getJson(route('erp.mofa.show', $legacy))->assertJsonPath('mofa_issue_date', '2026-08-01')->json();
+
+        $this->putJson(route('erp.mofa.update', $legacy), array_merge($loaded, ['remarks' => 'touched']))->assertOk();
+        $fresh = $legacy->fresh();
+        $this->assertSame('2026-08-01', $fresh->mofa_issue_date->format('Y-m-d'));
+        $this->assertSame('2026-09-01', $fresh->mofa_expiry_date->format('Y-m-d'));
+
+        // Changing either MOFA date re-applies "expiry after MOFA Date".
+        $this->putJson(route('erp.mofa.update', $legacy), array_merge($loaded, ['mofa_date' => '2026-09-26']))
+            ->assertUnprocessable()->assertJsonValidationErrors('mofa_expiry_date');
+    }
+
+    public function test_left_day_counts_down_from_today_in_dhaka(): void
+    {
+        $entry = $this->entry(['mofa_expiry_date' => '2026-12-11']);
+        // 2026-09-24 20:00 UTC is already 2026-09-25 02:00 in Dhaka.
+        $this->travelTo(Carbon::parse('2026-09-24 20:00:00', 'UTC'));
+        $this->assertSame(77, $entry->left_day);
+        $this->travelTo(Carbon::parse('2026-12-13 12:00:00', 'UTC'));
+        $this->assertSame(-2, $entry->left_day);
+        $this->assertNull($this->entry(['passport_number' => 'NOEXP', 'mofa_expiry_date' => null])->left_day);
+    }
+
+    public function test_issue_date_column_falls_back_to_mofa_date_for_display_only(): void
+    {
+        $entry = $this->entry(['mofa_issue_date' => null, 'mofa_date' => '2026-09-12']);
+        $this->actingAs($this->admin);
+        $this->assertSame('12-Sep-2026', \App\Http\Controllers\Erp\MofaController::value($entry, 'mofa_issue_date'));
+        $this->assertStringContainsString('12-Sep-2026', $this->get(route('erp.mofa.export'))->streamedContent());
+        // The edit form must not receive (and later save) the fallback.
+        $this->getJson(route('erp.mofa.show', $entry))->assertJsonPath('mofa_issue_date', null);
+        $this->assertNull($entry->fresh()->mofa_issue_date);
     }
 
     public function test_cross_agency_access_is_forbidden(): void

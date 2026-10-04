@@ -11,6 +11,9 @@
                      x-bind:action> with @csrf (+ @method when `method` isn't POST),
                      browser `required` validation, and its own busy flag.
 
+    size="wide"    → wider panel on tablet/desktop (max-w-5xl instead of max-w-3xl).
+    dense          → tighter body padding/gap. Both are opt-in; omitted = unchanged.
+
     Extra attributes land on the panel/dialog element (e.g. x-on:keydown.tab).
     Slots: default = form body, `footer` = extra content above the buttons.
 --}}
@@ -28,17 +31,21 @@
     'loading'  => 'false',
     'action'   => null,
     'method'   => 'POST',
+    'size'     => null,
+    'dense'    => false,
 ])
 @php
     // Classic POST forms have no JS save state, so the panel carries its own flag.
     $native       = $action !== null;
     $busy         = $native ? 'erpBusy' : $busy;
     $disabledExpr = $disabled ?? $busy;
+    $maxW         = $size === 'wide' ? 'sm:max-w-5xl' : 'sm:max-w-3xl';
+    $bodySpace    = $dense ? 'gap-3 overflow-y-auto bg-slate-50 p-3 sm:p-4' : 'gap-4 overflow-y-auto bg-slate-50 p-4 sm:p-5';
 @endphp
 
 @if($kind === 'dialog')
 <dialog x-ref="dialog" x-on:cancel.prevent="{{ $close }}" aria-labelledby="{{ $titleId }}"
-        {{ $attributes->class('m-0 h-[100dvh] max-h-[100dvh] w-full max-w-full flex-col overflow-hidden bg-white p-0 shadow-2xl backdrop:bg-slate-900/50 open:flex sm:m-auto sm:h-auto sm:max-h-[90vh] sm:max-w-3xl sm:rounded-2xl') }}>
+        {{ $attributes->class('m-0 h-[100dvh] max-h-[100dvh] w-full max-w-full flex-col overflow-hidden bg-white p-0 shadow-2xl backdrop:bg-slate-900/50 open:flex sm:m-auto sm:h-auto sm:max-h-[90vh] '.$maxW.' sm:rounded-2xl') }}>
 @else
 <div x-show="{{ $show }}" x-cloak class="fixed inset-0 z-[70] flex items-center justify-center sm:p-4" style="display:none">
     <div x-show="{{ $show }}" x-transition.opacity.duration.150ms class="absolute inset-0 bg-slate-900/50" x-on:click="{{ $close }}" aria-hidden="true"></div>
@@ -46,7 +53,7 @@
          @if($native) x-data="{ erpBusy: false }" @endif
          x-transition:enter="transition duration-200 ease-out" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
          x-transition:leave="transition duration-150 ease-in" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
-         {{ $attributes->class('relative flex h-[100dvh] w-full flex-col overflow-hidden bg-white shadow-2xl sm:h-auto sm:max-h-[90vh] sm:max-w-3xl sm:rounded-2xl') }}>
+         {{ $attributes->class('relative flex h-[100dvh] w-full flex-col overflow-hidden bg-white shadow-2xl sm:h-auto sm:max-h-[90vh] '.$maxW.' sm:rounded-2xl') }}>
 @endif
 
         {{-- Header --}}
@@ -76,7 +83,7 @@
               class="flex min-h-0 flex-1 flex-col">
         @endif
             {{-- Body (scrolls; header and footer stay put) --}}
-            <div class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto bg-slate-50 p-4 sm:p-5 [&>*]:shrink-0">
+            <div class="flex min-h-0 flex-1 flex-col {{ $bodySpace }} [&>*]:shrink-0">
                 {{ $slot }}
             </div>
 

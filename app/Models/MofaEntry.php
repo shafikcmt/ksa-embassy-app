@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 /**
  * ERP MOFA application log entry (E1 operational tracker).
@@ -28,6 +29,33 @@ class MofaEntry extends Model
         'date_of_birth' => 'date', 'issue_date' => 'date', 'expiry_date' => 'date',
         'mofa_issue_date' => 'date', 'mofa_expiry_date' => 'date',
     ];
+
+    /** A MOFA is valid for this many calendar days from its MOFA Date. */
+    public const MOFA_VALIDITY_DAYS = 90;
+
+    /** Passport validity choices (years) offered by the form; UI helper only, not stored. */
+    public const PASSPORT_VALIDITY_YEARS = [10, 5];
+
+    public const DEFAULT_PASSPORT_VALIDITY = 10;
+
+    /** Left Day counts down to MOFA expiry by the Dhaka calendar day (the app itself stays UTC). */
+    public const LEFT_DAY_TIMEZONE = 'Asia/Dhaka';
+
+    /** MOFA Expiry for a MOFA Date (Y-m-d): exactly MOFA_VALIDITY_DAYS calendar days later. */
+    public static function mofaExpiryFor(string $mofaDate): string
+    {
+        return Carbon::createFromFormat('!Y-m-d', $mofaDate)->addDays(self::MOFA_VALIDITY_DAYS)->format('Y-m-d');
+    }
+
+    /**
+     * Display-only value for the list/CSV/print "M-Issu.Date" column: newer entries
+     * have no MOFA Issue Date (the form dropped it), so fall back to MOFA Date.
+     * Never persisted.
+     */
+    public function displayMofaIssueDate(): ?\DateTimeInterface
+    {
+        return $this->mofa_issue_date ?? $this->mofa_date;
+    }
 
     /** Categorical payment tags (value => label). No monetary meaning. */
     public const PAYMENT_METHODS = [
@@ -104,9 +132,16 @@ class MofaEntry extends Model
         return $this->date_of_birth ? today()->year - $this->date_of_birth->year : null;
     }
 
+    // Days from today's Dhaka calendar date to MOFA expiry; negative once expired.
+    // Both sides are bare dates, so the difference is always whole days.
     public function getLeftDayAttribute(): ?int
     {
-        return $this->mofa_issue_date && $this->mofa_expiry_date ? (int) $this->mofa_issue_date->diffInDays($this->mofa_expiry_date, false) : null;
+        if (! $this->mofa_expiry_date) {
+            return null;
+        }
+        $today = Carbon::createFromFormat('!Y-m-d', Carbon::now(self::LEFT_DAY_TIMEZONE)->format('Y-m-d'));
+
+        return (int) $today->diffInDays(Carbon::createFromFormat('!Y-m-d', $this->mofa_expiry_date->format('Y-m-d')), false);
     }
 
     public function getStatusAttribute(): string
