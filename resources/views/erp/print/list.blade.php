@@ -1,3 +1,11 @@
+@php
+    // Per-column options: 'align' => 'right' (as before), plus opt-in 'nowrap' => true
+    // and 'width' => '12%' (header cell). Without the opt-in keys a cell renders exactly
+    // as before; they are inline styles so the shared <style> block stays unchanged.
+    $cellClass = fn (array $col) => ($col['align'] ?? 'left') === 'right' ? 'r' : 'l';
+    $cellStyle = fn (array $col, bool $head = false) => trim((! empty($col['nowrap']) ? 'white-space:nowrap;' : '')
+        . ($head && ! empty($col['width']) ? 'width:'.$col['width'].';' : ''));
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -87,7 +95,7 @@
         <thead>
             <tr>
                 @foreach($columns as $col)
-                    <th class="{{ ($col['align'] ?? 'left') === 'right' ? 'r' : 'l' }}">{{ $col['label'] }}</th>
+                    <th class="{{ $cellClass($col) }}"@if($cellStyle($col, true) !== '') style="{{ $cellStyle($col, true) }}"@endif>{{ $col['label'] }}</th>
                 @endforeach
             </tr>
         </thead>
@@ -95,7 +103,7 @@
             @forelse($rows as $row)
                 <tr>
                     @foreach($columns as $i => $col)
-                        <td class="{{ ($col['align'] ?? 'left') === 'right' ? 'r' : 'l' }}">{{ $row[$i] ?? '' }}</td>
+                        <td class="{{ $cellClass($col) }}"@if($cellStyle($col) !== '') style="{{ $cellStyle($col) }}"@endif>{{ $row[$i] ?? '' }}</td>
                     @endforeach
                 </tr>
             @empty
@@ -106,7 +114,7 @@
             <tfoot>
                 <tr>
                     @foreach($columns as $i => $col)
-                        <td class="{{ ($col['align'] ?? 'left') === 'right' ? 'r' : 'l' }}">{{ $totals[$i] ?? '' }}</td>
+                        <td class="{{ $cellClass($col) }}"@if($cellStyle($col) !== '') style="{{ $cellStyle($col) }}"@endif>{{ $totals[$i] ?? '' }}</td>
                     @endforeach
                 </tr>
             </tfoot>

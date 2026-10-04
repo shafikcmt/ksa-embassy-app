@@ -84,18 +84,10 @@ class DeliveryController extends Controller
         $billed    = (float) $deliveries->sum(fn ($d) => (float) $d->total_amount);
         $collected = (float) $deliveries->sum(fn ($d) => (float) $d->paid_amount);
 
-        $columns = [
-            ['label' => 'Date'], ['label' => 'Name'], ['label' => 'Passport'], ['label' => 'Visa Serial'],
-            ['label' => 'Reference'], ['label' => 'Total', 'align' => 'right'], ['label' => 'Paid', 'align' => 'right'],
-            ['label' => 'Due', 'align' => 'right'], ['label' => 'Status'], ['label' => 'Payment'],
-        ];
-        $rows = $deliveries->map(fn (Delivery $d) => [
-            $d->delivery_date->format('d M Y'), $d->full_name, $d->passport_no, $d->visa_serial ?: '—',
-            $d->reference ?: '—', $money($d->total_amount), $money($d->paid_amount), $money($d->due), $d->statusLabel(), $d->paymentMethodLabel() ?: '—',
-        ])->all();
+        $rows = $deliveries->map(fn (Delivery $d) => $this->listRow($d, $money))->all();
 
-        // Totals footer aligned to the money columns (indices 5/6/7).
-        $totals = ['Totals', '', '', '', '', $money($billed), $money($collected), $money($billed - $collected), '', ''];
+        // Totals footer aligned to the money columns (Total/Paid/Due = indices 3/4/5).
+        $totals = ['Totals', '', '', $money($billed), $money($collected), $money($billed - $collected), '', '', ''];
 
         return $this->respondPrintableList($pdf, [
             'title'    => 'Delivery',
@@ -103,10 +95,39 @@ class DeliveryController extends Controller
             'generated'=> now(),
             'subtitle' => $deliveries->count() . ' deliver' . ($deliveries->count() === 1 ? 'y' : 'ies')
                           . ' · Billed ' . $money($billed) . ' · Collected ' . $money($collected),
-            'columns'  => $columns,
+            'columns'  => self::listColumns(),
             'rows'     => $rows,
             'totals'   => $totals,
         ], 'delivery-' . now()->format('Y-m-d'), 'erp.delivery');
+    }
+
+    /**
+     * Columns shared by the print preview, the PDF and the CSV export, so all three
+     * always match (same labels, same order). nowrap/width are opt-in print options.
+     */
+    private static function listColumns(): array
+    {
+        return [
+            ['label' => 'Name', 'width' => '24%'],
+            ['label' => 'Date', 'nowrap' => true, 'width' => '10.5%'],
+            ['label' => 'Passport', 'width' => '10.5%'],
+            ['label' => 'Total', 'align' => 'right', 'width' => '9%'],
+            ['label' => 'Paid', 'align' => 'right', 'width' => '8%'],
+            ['label' => 'Due', 'align' => 'right', 'width' => '9%'],
+            ['label' => 'Status', 'width' => '8%'],
+            ['label' => 'Payment', 'width' => '9%'],
+            ['label' => 'Reference', 'width' => '12%'],
+        ];
+    }
+
+    /** One delivery as a row in listColumns() order; $money formats Total/Paid/Due. */
+    private function listRow(Delivery $d, callable $money): array
+    {
+        return [
+            $d->full_name, $d->delivery_date?->format('d M Y') ?? '', $d->passport_no,
+            $money($d->total_amount), $money($d->paid_amount), $money($d->due),
+            $d->statusLabel(), $d->paymentMethodLabel() ?: '—', $d->reference ?: '—',
+        ];
     }
 
     /** Shared listing used by both index() and printPdf() (oldest-first). */
@@ -292,24 +313,26 @@ class DeliveryController extends Controller
         ];
     }
 
-    /** CSV data export (E7e) — staff-visible; header matches the import template. */
+    /**
+     * CSV data export (E7e) — staff-visible. Same columns, order and rows as the
+     * print/PDF (listColumns/listRow); amounts are plain numbers so Excel can sum
+     * them; no totals row. UTF-8 BOM so Excel shows ৳ and Bangla correctly. The
+     * import template/parser keep their own CSV_HEADERS format.
+     */
     public function exportCsv(): StreamedResponse
     {
         $deliveries = $this->listing(auth()->user()->agency_id);
+        $number = fn ($v) => number_format((float) $v, 2, '.', ''); // plain decimal, no thousands sep
 
-        return response()->streamDownload(function () use ($deliveries) {
+        return response()->streamDownload(function () use ($deliveries, $number) {
             $out = fopen('php://output', 'w');
-            fputcsv($out, self::CSV_HEADERS);
+            fwrite($out, "\xEF\xBB\xBF"); // UTF-8 BOM
+            fputcsv($out, array_column(self::listColumns(), 'label'));
             foreach ($deliveries as $d) {
-                fputcsv($out, [
-                    optional($d->delivery_date)->format('Y-m-d'),
-                    $d->full_name, $d->passport_no, $d->visa_serial, $d->reference,
-                    number_format((float) $d->total_amount, 2, '.', ''), // plain decimal, no thousands sep
-                    $d->statusLabel(),
-                ]);
+                fputcsv($out, $this->listRow($d, $number));
             }
             fclose($out);
-        }, 'delivery-' . now()->format('Y-m-d') . '.csv', ['Content-Type' => 'text/csv']);
+        }, 'delivery-' . now()->format('Y-m-d') . '.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
     public function importForm()
