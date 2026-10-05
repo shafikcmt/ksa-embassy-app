@@ -102,6 +102,11 @@ class Invoice extends Model
         return $this->belongsTo(User::class, 'paid_by');
     }
 
+    public function deletedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'deleted_by');
+    }
+
     // ── Scopes ───────────────────────────────────────────────────────────────
 
     public function scopeForAgency($query, int $agencyId)
@@ -122,7 +127,7 @@ class Invoice extends Model
         return ! $this->isEditable();
     }
 
-    /** Only drafts can be (soft) deleted; anything issued must be cancelled instead. */
+    /** Drafts are the low-risk delete case; who may delete which status is InvoicePolicy@delete. */
     public function isDeletable(): bool
     {
         return $this->status === 'draft';

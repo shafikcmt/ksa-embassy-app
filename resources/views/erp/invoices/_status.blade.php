@@ -1,4 +1,4 @@
-{{-- Invoice status pill. Expects $invoice. Overdue = pending past its due date. --}}
+{{-- Invoice status pill (+ lock icon for paid/cancelled). Expects $invoice. --}}
 @php
     $chip = [
         'draft'     => 'bg-slate-100 text-slate-700 ring-slate-200',
@@ -10,9 +10,5 @@
 @endphp
 <span class="inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset {{ $chip[$invoice->status] ?? $chip['draft'] }}">
     <i class="bi {{ $icon[$invoice->status] ?? 'bi-circle' }}"></i> {{ $invoice->statusLabel() }}
+    @if($invoice->isLocked())<i class="bi bi-lock-fill opacity-70" title="Locked"></i>@endif
 </span>
-@if($invoice->isOverdue())
-    <span class="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-rose-600 px-2.5 py-0.5 text-xs font-semibold text-white">
-        <i class="bi bi-alarm"></i> Overdue
-    </span>
-@endif

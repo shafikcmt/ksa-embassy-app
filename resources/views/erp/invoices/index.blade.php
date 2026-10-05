@@ -7,8 +7,6 @@
 @php
     $inp  = 'w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-brand-500 focus:ring-brand-500';
     $lbl  = 'mb-1 block text-xs font-semibold text-slate-600';
-    $pill = 'inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold ring-1 ring-inset transition';
-    $isAdmin = auth()->user()->isAgencyAdmin();
 
     // Summary per status → "৳ 1,200.00 · SAR 300.00" (currencies never added together).
     $symbols = \App\Models\Invoice::CURRENCIES;
@@ -36,7 +34,7 @@
 </x-ui.page-header>
 
 {{-- Summary --}}
-<div class="mb-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+<div class="mb-5 grid gap-3 sm:grid-cols-3">
     <a href="{{ route('erp.invoices.index', ['status' => 'pending']) }}" class="rounded-2xl border border-amber-200 bg-amber-50 p-4 transition hover:shadow-sm">
         <div class="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-amber-700"><span>Outstanding</span><i class="bi bi-hourglass-split"></i></div>
         <div class="mt-1 text-lg font-bold text-amber-800">{{ $pending['amount'] }}</div>
@@ -51,11 +49,6 @@
         <div class="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-500"><span>Drafts</span><i class="bi bi-pencil-square"></i></div>
         <div class="mt-1 text-lg font-bold text-slate-900">{{ $draft['count'] }}</div>
         <div class="text-xs text-slate-500">{{ $draft['amount'] }}</div>
-    </a>
-    <a href="{{ route('erp.invoices.index', ['status' => 'overdue']) }}" class="rounded-2xl border {{ $overdueCount ? 'border-rose-200 bg-rose-50' : 'border-slate-200 bg-white' }} p-4 transition hover:shadow-sm">
-        <div class="flex items-center justify-between text-xs font-semibold uppercase tracking-wide {{ $overdueCount ? 'text-rose-700' : 'text-slate-500' }}"><span>Overdue</span><i class="bi bi-alarm"></i></div>
-        <div class="mt-1 text-lg font-bold {{ $overdueCount ? 'text-rose-700' : 'text-slate-900' }}">{{ $overdueCount }}</div>
-        <div class="text-xs {{ $overdueCount ? 'text-rose-600' : 'text-slate-500' }}">Pending past due date</div>
     </a>
 </div>
 
@@ -73,9 +66,7 @@
             <label class="{{ $lbl }}">Status</label>
             <select name="status" class="{{ $inp }}">
                 <option value="">All</option>
-                @foreach($statuses as $key => $label)<option value="{{ $key }}" @selected($filters['status'] === $key)>{{ $label }}</option>@endforeach
-                <option value="overdue" @selected($filters['status'] === 'overdue')>Overdue</option>
-            </select>
+                @foreach($statuses as $key => $label)<option value="{{ $key }}" @selected($filters['status'] === $key)>{{ $label }}</option>@endforeach            </select>
         </div>
         <div class="lg:col-span-2"><label class="{{ $lbl }}">From</label><input type="date" name="from" value="{{ $filters['from'] }}" class="{{ $inp }}"></div>
         <div class="lg:col-span-2"><label class="{{ $lbl }}">To</label><input type="date" name="to" value="{{ $filters['to'] }}" class="{{ $inp }}"></div>
@@ -94,7 +85,7 @@
     </div>
 </form>
 
-{{-- Invoice cards --}}
+{{-- Invoice list --}}
 @if($invoices->isEmpty())
     <div class="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
         <i class="bi bi-receipt mb-2 block text-3xl text-slate-300"></i>
@@ -105,49 +96,65 @@
         @endunless
     </div>
 @else
-    <div class="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
-        @foreach($invoices as $invoice)
-            <div class="flex flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-brand-200 hover:shadow-md">
-                <div class="flex items-start justify-between gap-3">
-                    <div class="min-w-0">
-                        <a href="{{ route('erp.invoices.show', $invoice) }}" class="block truncate font-mono text-sm font-bold text-slate-900 hover:text-brand-700">{{ $invoice->invoice_number }}</a>
-                        <div class="mt-0.5 truncate text-sm text-slate-600"><i class="bi bi-person text-slate-400"></i> {{ $invoice->billToLabel() }}</div>
-                    </div>
-                    <div class="flex shrink-0 flex-col items-end gap-1">@include('erp.invoices._status', ['invoice' => $invoice])</div>
-                </div>
+    @php $th = 'px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500'; @endphp
+    <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+        {{-- Desktop / tablet: table --}}
+        <table class="hidden w-full text-sm md:table">
+            <thead class="border-b border-slate-200 bg-slate-50/80">
+                <tr>
+                    <th class="{{ $th }} rounded-tl-2xl">Invoice No</th>
+                    <th class="{{ $th }}">Bill To</th>
+                    <th class="{{ $th }}">Date</th>
+                    <th class="{{ $th }} text-center">Items</th>
+                    <th class="{{ $th }} !text-right">Total</th>
+                    <th class="{{ $th }}">Status</th>
+                    <th class="{{ $th }} rounded-tr-2xl !text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                @foreach($invoices as $invoice)
+                    <tr class="transition hover:bg-slate-50/70">
+                        <td class="whitespace-nowrap px-4 py-3">
+                            <a href="{{ route('erp.invoices.show', $invoice) }}" class="font-mono text-sm font-bold text-slate-900 hover:text-brand-700">{{ $invoice->invoice_number }}</a>
+                        </td>
+                        <td class="max-w-[16rem] px-4 py-3">
+                            <div class="truncate text-slate-700" title="{{ $invoice->billToLabel() }}">{{ $invoice->billToLabel() }}</div>
+                        </td>
+                        <td class="whitespace-nowrap px-4 py-3 text-slate-600">{{ $invoice->invoice_date->format('d M Y') }}</td>
+                        <td class="px-4 py-3 text-center text-slate-600">{{ $invoice->items_count }}</td>
+                        <td class="whitespace-nowrap px-4 py-3 text-right font-semibold text-slate-900">{{ $invoice->money($invoice->total_amount) }}</td>
+                        <td class="px-4 py-3">@include('erp.invoices._status', ['invoice' => $invoice])</td>
+                        <td class="px-4 py-3">@include('erp.invoices._row_actions', ['invoice' => $invoice])</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
 
-                <div class="mt-4 flex items-end justify-between gap-3">
-                    <dl class="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                        <dt class="text-slate-400">Date</dt><dd class="font-medium text-slate-700">{{ $invoice->invoice_date->format('d M Y') }}</dd>
-                        <dt class="text-slate-400">Due</dt><dd class="font-medium {{ $invoice->isOverdue() ? 'text-rose-600' : 'text-slate-700' }}">{{ $invoice->due_date?->format('d M Y') ?? '—' }}</dd>
-                        <dt class="text-slate-400">Items</dt><dd class="font-medium text-slate-700">{{ $invoice->items_count }}</dd>
-                    </dl>
-                    <div class="text-right">
-                        <div class="text-[0.65rem] font-semibold uppercase tracking-wide text-slate-400">Total</div>
-                        <div class="whitespace-nowrap text-xl font-bold text-slate-900">{{ $invoice->money($invoice->total_amount) }}</div>
+        {{-- Mobile: compact stacked rows --}}
+        <ul class="divide-y divide-slate-100 md:hidden">
+            @foreach($invoices as $invoice)
+                <li class="px-4 py-3">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <a href="{{ route('erp.invoices.show', $invoice) }}" class="block truncate font-mono text-sm font-bold text-slate-900 hover:text-brand-700">{{ $invoice->invoice_number }}</a>
+                            <div class="truncate text-sm text-slate-600">{{ $invoice->billToLabel() }}</div>
+                        </div>
+                        <div class="shrink-0 text-right">
+                            <div class="whitespace-nowrap text-sm font-bold text-slate-900">{{ $invoice->money($invoice->total_amount) }}</div>
+                            <div class="mt-1">@include('erp.invoices._status', ['invoice' => $invoice])</div>
+                        </div>
                     </div>
-                </div>
-
-                <div class="mt-4 flex flex-wrap items-center gap-1.5 border-t border-slate-100 pt-3">
-                    <a href="{{ route('erp.invoices.show', $invoice) }}" class="{{ $pill }} bg-slate-50 text-slate-700 ring-slate-200 hover:bg-slate-100"><i class="bi bi-eye"></i> View</a>
-                    @if($invoice->isEditable())
-                        <a href="{{ route('erp.invoices.edit', $invoice) }}" class="{{ $pill }} bg-amber-50 text-amber-700 ring-amber-200 hover:bg-amber-100"><i class="bi bi-pencil"></i> Edit</a>
-                    @endif
-                    <a href="{{ route('erp.invoices.preview-pdf', $invoice) }}" target="_blank" class="{{ $pill }} bg-brand-50 text-brand-700 ring-brand-200 hover:bg-brand-100"><i class="bi bi-printer"></i> Print</a>
-                    <a href="{{ route('erp.invoices.download-pdf', $invoice) }}" class="{{ $pill }} bg-indigo-50 text-indigo-700 ring-indigo-200 hover:bg-indigo-100"><i class="bi bi-download"></i> PDF</a>
-                    @if($isAdmin && $invoice->isDeletable())
-                        <form method="POST" action="{{ route('erp.invoices.destroy', $invoice) }}" class="ml-auto" onsubmit="return confirm('Delete draft {{ $invoice->invoice_number }}?')">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="{{ $pill }} bg-rose-50 text-rose-700 ring-rose-200 hover:bg-rose-100"><i class="bi bi-trash"></i> Delete</button>
-                        </form>
-                    @elseif($invoice->isLocked())
-                        <span class="ml-auto inline-flex items-center gap-1 text-xs text-slate-400" title="Paid/cancelled invoices are locked"><i class="bi bi-lock-fill"></i> Locked</span>
-                    @endif
-                </div>
-            </div>
-        @endforeach
+                    <div class="mt-2 flex items-center justify-between gap-2">
+                        <div class="text-xs text-slate-500">{{ $invoice->invoice_date->format('d M Y') }} · {{ $invoice->items_count }} item{{ $invoice->items_count === 1 ? '' : 's' }}</div>
+                        @include('erp.invoices._row_actions', ['invoice' => $invoice])
+                    </div>
+                </li>
+            @endforeach
+        </ul>
     </div>
 
     <div class="mt-6">{{ $invoices->links() }}</div>
+
+    @include('erp.invoices._delete_modal')
 @endif
 @endsection

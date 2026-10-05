@@ -5,11 +5,13 @@ namespace App\Providers;
 use App\Models\Agent;
 use App\Models\EmbassyList;
 use App\Models\HrProfile;
+use App\Models\Invoice;
 use App\Models\PaymentVoucher;
 use App\Models\SmartNote;
 use App\Policies\AgentPolicy;
 use App\Policies\EmbassyListPolicy;
 use App\Policies\HrProfilePolicy;
+use App\Policies\InvoicePolicy;
 use App\Policies\PaymentVoucherPolicy;
 use App\Policies\SmartNotePolicy;
 use App\View\Composers\NotificationComposer;
@@ -37,6 +39,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(EmbassyList::class, EmbassyListPolicy::class);
         Gate::policy(SmartNote::class, SmartNotePolicy::class);
         Gate::policy(PaymentVoucher::class, PaymentVoucherPolicy::class);
+        Gate::policy(Invoice::class, InvoicePolicy::class);
 
         // Feed the notification bell in the shared top app-header (used by both the
         // agency and ERP layouts), so alerts show wherever the header renders.

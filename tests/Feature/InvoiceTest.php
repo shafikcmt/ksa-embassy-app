@@ -74,7 +74,6 @@ class InvoiceTest extends TestCase
     {
         return array_merge([
             'invoice_date'   => '2026-09-24',
-            'due_date'       => '2026-10-01',
             'bill_to_name'   => 'Walk-in Customer',
             'status'         => 'pending',
             'currency'       => 'BDT',
@@ -94,6 +93,14 @@ class InvoiceTest extends TestCase
         $this->actingAs($user)->post(route('erp.invoices.store'), $this->payload($overrides))->assertRedirect();
 
         return Invoice::latest('id')->firstOrFail();
+    }
+
+    private function deleteAs(User $user, Invoice $invoice, ?string $reason = 'Entered by mistake', ?string $number = null)
+    {
+        return $this->actingAs($user)->delete(route('erp.invoices.destroy', $invoice), [
+            'delete_reason'  => $reason,
+            'confirm_number' => $number ?? $invoice->invoice_number,
+        ]);
     }
 
     public function test_store_computes_totals_on_server_and_numbers_per_agency(): void
@@ -120,11 +127,16 @@ class InvoiceTest extends TestCase
     public function test_deleted_draft_number_is_never_reissued(): void
     {
         $draft = $this->createAs($this->admin, ['status' => 'draft']);
-        $this->actingAs($this->admin)->delete(route('erp.invoices.destroy', $draft))->assertRedirect();
+        $this->deleteAs($this->admin, $draft)->assertRedirect(route('erp.invoices.index'));
 
         $this->assertSoftDeleted('invoices', ['id' => $draft->id]);
         $next = $this->createAs($this->admin);
         $this->assertStringEndsWith('-0002', $next->invoice_number);
+
+        // A deleted PAID invoice keeps its number reserved too.
+        $this->actingAs($this->admin)->patch(route('erp.invoices.mark-paid', $next), ['payment_method' => 'cash', 'paid_at' => today()->format('Y-m-d')]);
+        $this->deleteAs($this->admin, $next->fresh())->assertRedirect(route('erp.invoices.index'));
+        $this->assertStringEndsWith('-0003', $this->createAs($this->admin)->invoice_number);
     }
 
     public function test_other_agency_cannot_view_edit_pay_or_print(): void
@@ -186,11 +198,9 @@ class InvoiceTest extends TestCase
         $this->assertSame('bank_transfer', $inv->payment_method);
         $this->assertSame($this->admin->id, $inv->paid_by);
 
-        // Locked: no edit, no update, no delete, no cancel, no second payment.
+        // Locked: no edit, no update, no cancel, no second payment (admin-only delete is covered separately).
         $this->actingAs($this->admin)->get(route('erp.invoices.edit', $inv))->assertRedirect(route('erp.invoices.show', $inv));
         $this->actingAs($this->admin)->put(route('erp.invoices.update', $inv), $this->payload())->assertForbidden();
-        $this->actingAs($this->admin)->delete(route('erp.invoices.destroy', $inv));
-        $this->assertNotSoftDeleted('invoices', ['id' => $inv->id]);
         $this->actingAs($this->admin)->patch(route('erp.invoices.cancel', $inv))->assertSessionHasErrors('status');
         $this->actingAs($this->admin)->patch(route('erp.invoices.mark-paid', $inv), ['payment_method' => 'cash', 'paid_at' => '2026-09-24'])
             ->assertSessionHasErrors('payment_method');
@@ -225,17 +235,73 @@ class InvoiceTest extends TestCase
         $this->assertTrue(AuditLog::where('action', 'invoice_updated')->where('auditable_id', $inv->id)->exists());
     }
 
-    public function test_only_admin_deletes_and_only_drafts(): void
+    public function test_delete_permissions_by_status_and_creator(): void
     {
-        $draft = $this->createAs($this->admin, ['status' => 'draft']);
-        $pending = $this->createAs($this->admin);
+        $adminDraft = $this->createAs($this->admin, ['status' => 'draft']);
+        $staffDraft = $this->createAs($this->staff, ['status' => 'draft']);
+        $pending    = $this->createAs($this->staff);
+        $paid       = $this->createAs($this->admin);
+        $this->actingAs($this->admin)->patch(route('erp.invoices.mark-paid', $paid), ['payment_method' => 'cash', 'paid_at' => today()->format('Y-m-d')]);
+        $cancelled  = $this->createAs($this->admin);
+        $this->actingAs($this->admin)->patch(route('erp.invoices.cancel', $cancelled));
 
-        $this->actingAs($this->staff)->delete(route('erp.invoices.destroy', $draft))->assertForbidden();
-        $this->actingAs($this->admin)->delete(route('erp.invoices.destroy', $pending))->assertSessionHas('error');
-        $this->assertNotSoftDeleted('invoices', ['id' => $pending->id]);
+        // Staff: only drafts they created themselves.
+        $this->deleteAs($this->staff, $adminDraft)->assertForbidden();
+        $this->deleteAs($this->staff, $pending)->assertForbidden();   // own, but not a draft
+        $this->deleteAs($this->staff, $paid->fresh())->assertForbidden();
+        $this->deleteAs($this->staff, $cancelled->fresh())->assertForbidden();
+        $this->deleteAs($this->staff, $staffDraft)->assertRedirect(route('erp.invoices.index'));
+        $this->assertSoftDeleted('invoices', ['id' => $staffDraft->id]);
 
-        $this->actingAs($this->admin)->delete(route('erp.invoices.destroy', $draft));
-        $this->assertSoftDeleted('invoices', ['id' => $draft->id]);
+        // Admin: every status.
+        foreach ([$adminDraft, $pending, $paid, $cancelled] as $inv) {
+            $this->deleteAs($this->admin, $inv->fresh())->assertRedirect(route('erp.invoices.index'))->assertSessionHas('success');
+            $this->assertSoftDeleted('invoices', ['id' => $inv->id]);
+        }
+
+        $row = Invoice::withTrashed()->find($paid->id);
+        $this->assertSame($this->admin->id, (int) $row->deleted_by);
+        $this->assertSame('Entered by mistake', $row->delete_reason);
+        $this->assertSame(2, $row->items()->count()); // items stay linked, not deleted
+
+        $log = AuditLog::where('action', 'invoice_deleted')->where('auditable_id', $paid->id)->firstOrFail();
+        $this->assertSame($paid->invoice_number, $log->new_values['invoice_number']);
+        $this->assertSame('Entered by mistake', $log->new_values['delete_reason']);
+        $this->assertSame('paid', $log->new_values['status']);
+    }
+
+    public function test_delete_requires_reason_and_exact_typed_number(): void
+    {
+        $inv = $this->createAs($this->admin);
+
+        $this->deleteAs($this->admin, $inv, '', null)->assertSessionHasErrors('delete_reason');
+        $this->deleteAs($this->admin, $inv, 'oops', null)->assertSessionHasErrors('delete_reason');       // < 5 chars
+        $this->deleteAs($this->admin, $inv, '    abc    ', null)->assertSessionHasErrors('delete_reason'); // trimmed first
+        $this->deleteAs($this->admin, $inv, 'Wrong invoice', '')->assertSessionHasErrors('confirm_number');
+        $this->deleteAs($this->admin, $inv, 'Wrong invoice', strtolower($inv->invoice_number))->assertSessionHasErrors('confirm_number');
+        $this->assertNotSoftDeleted('invoices', ['id' => $inv->id]);
+
+        $this->deleteAs($this->admin, $inv, 'Wrong invoice', '  ' . $inv->invoice_number . ' ')->assertRedirect(route('erp.invoices.index'));
+        $this->assertSoftDeleted('invoices', ['id' => $inv->id]);
+    }
+
+    public function test_other_agency_delete_is_404_and_deleted_invoices_leave_list_and_totals(): void
+    {
+        $inv  = $this->createAs($this->admin);
+        $keep = $this->createAs($this->admin, ['bill_to_name' => 'Kept Customer']);
+
+        $this->deleteAs($this->otherAdmin, $inv)->assertNotFound();
+        $this->assertNotSoftDeleted('invoices', ['id' => $inv->id]);
+
+        $this->deleteAs($this->admin, $inv)->assertRedirect(route('erp.invoices.index'));
+
+        $this->actingAs($this->admin)->get(route('erp.invoices.index'))
+            // (the success flash still names the number, so check the row link instead)
+            ->assertOk()->assertDontSee('href="' . route('erp.invoices.show', $inv) . '"', false)->assertSee($keep->invoice_number)
+            ->assertSee('1 pending invoice');
+        $this->actingAs($this->admin)->get(route('erp.invoices.index', ['q' => $inv->invoice_number]))
+            ->assertOk()->assertSee('No invoices match these filters.'); // search box echoes q, so check the empty state
+        $this->actingAs($this->admin)->get(route('erp.invoices.show', $inv))->assertNotFound();
     }
 
     public function test_pages_and_pdf_render(): void
@@ -245,7 +311,8 @@ class InvoiceTest extends TestCase
         $this->actingAs($this->staff)->get(route('erp.invoices.index'))->assertOk()->assertSee($inv->invoice_number);
         $this->actingAs($this->staff)->get(route('erp.invoices.index', ['status' => 'pending', 'q' => 'Walk-in Customer', 'sort' => 'amount_desc']))
             ->assertOk()->assertSee($inv->invoice_number);
-        $this->actingAs($this->staff)->get(route('erp.invoices.create'))->assertOk();
+        $this->actingAs($this->staff)->get(route('erp.invoices.create'))->assertOk()->assertDontSee('name="due_date"', false);
+        $this->actingAs($this->staff)->get(route('erp.invoices.index', ['status' => 'overdue']))->assertOk(); // old URLs still work
         $this->actingAs($this->staff)->get(route('erp.invoices.show', $inv))->assertOk()->assertSee('3,350.05');
         $this->actingAs($this->staff)->get(route('erp.invoices.edit', $inv))->assertOk();
 

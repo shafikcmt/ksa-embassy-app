@@ -258,20 +258,26 @@ class InvoiceService
         });
     }
 
-    /** Soft delete — drafts only. */
-    public function delete(Invoice $invoice, User $user): void
+    /**
+     * Soft delete (any status — who may delete what is InvoicePolicy@delete).
+     * Items stay linked and hidden with the parent; the number stays reserved
+     * because numbering counts withTrashed().
+     */
+    public function delete(Invoice $invoice, User $user, string $reason): void
     {
-        DB::transaction(function () use ($invoice, $user) {
+        DB::transaction(function () use ($invoice, $user, $reason) {
             $invoice = Invoice::whereKey($invoice->id)->lockForUpdate()->firstOrFail();
-            if (! $invoice->isDeletable()) {
-                throw ValidationException::withMessages(['status' => 'Only draft invoices can be deleted. Cancel it instead.']);
-            }
 
-            $invoice->updated_by = $user->id;
+            $invoice->deleted_by    = $user->id;
+            $invoice->delete_reason = $reason;
             $invoice->save();
             $invoice->delete();
 
-            AuditLog::record('invoice_deleted', $invoice, $this->snapshot($invoice->load('items')), []);
+            AuditLog::record('invoice_deleted', $invoice, $this->snapshot($invoice->load('items')), [
+                'invoice_number' => $invoice->invoice_number,
+                'status'         => $invoice->status,
+                'delete_reason'  => $reason,
+            ]);
         });
     }
 

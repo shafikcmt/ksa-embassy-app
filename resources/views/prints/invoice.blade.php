@@ -169,8 +169,7 @@
             <table class="box">
                 <tr class="box-h"><td colspan="2">Invoice Details:</td></tr>
                 <tr><td class="lbl" style="padding-top:5pt;">Invoice No</td><td class="val" style="padding-top:5pt;">{{ $invoice->invoice_number }}</td></tr>
-                <tr><td class="lbl">Invoice Date</td><td class="val">{{ $invoice->invoice_date->format('d-M-Y') }}</td></tr>
-                <tr><td class="lbl" style="padding-bottom:6pt;">Due Date</td><td class="val" style="padding-bottom:6pt;">{{ $invoice->due_date?->format('d-M-Y') ?? '—' }}</td></tr>
+                <tr><td class="lbl" style="padding-bottom:6pt;">Invoice Date</td><td class="val" style="padding-bottom:6pt;">{{ $invoice->invoice_date->format('d-M-Y') }}</td></tr>
             </table>
         </td>
         <td style="width:30%; vertical-align:top;">
@@ -178,7 +177,6 @@
                 <tr class="box-h"><td colspan="2">Status:</td></tr>
                 <tr><td colspan="2" style="padding-top:5pt; padding-bottom:3pt;">
                     <span class="badge b-{{ $invoice->status }}">{{ strtoupper($invoice->statusLabel()) }}</span>
-                    @if($invoice->isOverdue())&nbsp;<span class="badge b-overdue">OVERDUE</span>@endif
                 </td></tr>
                 <tr><td class="lbl">Currency</td><td class="val">{{ $cur }}</td></tr>
                 @if($invoice->status === 'paid')

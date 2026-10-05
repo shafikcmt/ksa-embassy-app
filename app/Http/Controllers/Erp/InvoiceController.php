@@ -27,7 +27,12 @@ use Illuminate\Validation\Rule;
  *   view / print / PDF .......... any access_erp staff
  *   create / edit (draft|pending) any access_erp staff (create needs active subscription — route)
  *   mark as paid ................ agency admin OR erp_receive_payment grant
- *   cancel / delete (draft only)  agency admin
+ *   cancel ...................... agency admin
+ *   delete (soft) ............... InvoicePolicy: draft → admin or its creator;
+ *                                 pending/paid/cancelled → agency admin only
+ *
+ * Due date is no longer shown or entered; the column and the "overdue" filter
+ * branch stay so old rows and bookmarked URLs keep working.
  *
  * All money + numbering + lifecycle writes go through InvoiceService.
  */
@@ -73,6 +78,7 @@ class InvoiceController extends Controller
             });
         }
 
+        // 'overdue' is no longer offered in the UI; kept so old bookmarked URLs still work.
         if ($filters['status'] === 'overdue') {
             $query->where('status', 'pending')->whereNotNull('due_date')->whereDate('due_date', '<', today());
         } elseif (array_key_exists($filters['status'], Invoice::STATUSES)) {
@@ -103,16 +109,12 @@ class InvoiceController extends Controller
             ->groupBy('status', 'currency')
             ->get();
 
-        $overdueCount = Invoice::forAgency($agencyId)->where('status', 'pending')
-            ->whereNotNull('due_date')->whereDate('due_date', '<', today())->count();
-
         return view('erp.invoices.index', [
-            'invoices'     => $invoices,
-            'filters'      => $filters,
-            'sorts'        => self::SORTS,
-            'statuses'     => Invoice::STATUSES,
-            'summary'      => $summary,
-            'overdueCount' => $overdueCount,
+            'invoices' => $invoices,
+            'filters'  => $filters,
+            'sorts'    => self::SORTS,
+            'statuses' => Invoice::STATUSES,
+            'summary'  => $summary,
         ]);
     }
 
@@ -157,7 +159,6 @@ class InvoiceController extends Controller
         return view('erp.invoices.create', $this->formData($agencyId) + [
             'invoice'     => new Invoice([
                 'invoice_date'  => today(),
-                'due_date'      => today()->addDays(7),
                 'status'        => 'pending',
                 'currency'      => 'BDT',
                 'tax_type'      => 'none',
@@ -230,19 +231,35 @@ class InvoiceController extends Controller
             ->with('success', "Invoice {$invoice->invoice_number} updated.");
     }
 
-    public function destroy(Invoice $invoice)
+    /**
+     * Soft delete. Tenant check first (another agency's invoice → 404, its
+     * existence isn't revealed), then InvoicePolicy@delete (draft: admin or its
+     * creator; pending/paid/cancelled: admin only). Reason + typed invoice
+     * number are enforced here, not just by the modal's JS.
+     */
+    public function destroy(Request $request, Invoice $invoice)
     {
-        $this->authorizeAgency($invoice);
-        abort_unless(auth()->user()->isAgencyAdmin(), 403);
+        abort_unless((int) $invoice->agency_id === (int) auth()->user()->agency_id, 404);
+        $this->authorize('delete', $invoice);
 
-        if (! $invoice->isDeletable()) {
-            return back()->with('error', 'Only draft invoices can be deleted. Cancel it instead.');
-        }
+        $request->merge([
+            'delete_reason'  => trim((string) $request->input('delete_reason', '')),
+            'confirm_number' => trim((string) $request->input('confirm_number', '')),
+        ]);
+        $validated = $request->validate([
+            'delete_reason'  => ['required', 'string', 'min:5', 'max:1000'],
+            'confirm_number' => ['required', 'string', Rule::in([$invoice->invoice_number])],
+        ], [
+            'confirm_number.in' => 'Type the invoice number exactly (' . $invoice->invoice_number . ') to confirm.',
+        ], [
+            'delete_reason'  => 'delete reason',
+            'confirm_number' => 'invoice number',
+        ]);
 
-        $this->invoices->delete($invoice, auth()->user());
+        $this->invoices->delete($invoice, auth()->user(), $validated['delete_reason']);
 
         return redirect()->route('erp.invoices.index')
-            ->with('success', "Draft invoice {$invoice->invoice_number} deleted.");
+            ->with('success', "Invoice {$invoice->invoice_number} deleted.");
     }
 
     public function markAsPaid(Request $request, Invoice $invoice)

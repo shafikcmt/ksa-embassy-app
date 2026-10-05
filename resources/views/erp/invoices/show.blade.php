@@ -17,6 +17,7 @@
         'invoice_deleted'   => ['Deleted',        'bi-trash',         'bg-rose-700'],
     ];
     $adjLabel = fn ($type, $value) => $type === 'percent' ? ' (' . rtrim(rtrim((string) $value, '0'), '.') . '%)' : '';
+    $canDelete = auth()->user()->can('delete', $invoice);
 @endphp
 
 <div x-data="{ paying: {{ $errors->has('payment_method') || $errors->has('paid_at') || $errors->has('payment_reference') ? 'true' : 'false' }} }">
@@ -70,7 +71,7 @@
                 </div>
             </div>
 
-            <div class="grid gap-5 border-b border-slate-100 px-6 py-5 sm:grid-cols-3">
+            <div class="grid gap-5 border-b border-slate-100 px-6 py-5 sm:grid-cols-2">
                 <div>
                     <div class="text-xs font-semibold uppercase tracking-wide text-slate-400">Bill to</div>
                     <div class="mt-1 font-semibold text-slate-900">{{ $invoice->billToLabel() }}</div>
@@ -81,10 +82,6 @@
                 <div>
                     <div class="text-xs font-semibold uppercase tracking-wide text-slate-400">Invoice date</div>
                     <div class="mt-1 font-semibold text-slate-900">{{ $invoice->invoice_date->format('d M Y') }}</div>
-                </div>
-                <div>
-                    <div class="text-xs font-semibold uppercase tracking-wide text-slate-400">Due date</div>
-                    <div class="mt-1 font-semibold {{ $invoice->isOverdue() ? 'text-rose-600' : 'text-slate-900' }}">{{ $invoice->due_date?->format('d M Y') ?? '—' }}</div>
                 </div>
             </div>
 
@@ -168,17 +165,22 @@
                 <p class="mt-3 text-xs text-slate-400">Only an admin (or staff with the Receive Payment permission) can mark invoices as paid.</p>
             @endif
 
-            @if($isAdmin && $invoice->isEditable())
+            @php $canCancel = $isAdmin && $invoice->isEditable(); @endphp
+            @if($canCancel || $canDelete)
                 <div class="mt-4 flex gap-2 border-t border-slate-100 pt-4">
-                    <form method="POST" action="{{ route('erp.invoices.cancel', $invoice) }}" class="flex-1" onsubmit="return confirm('Cancel {{ $invoice->invoice_number }}? It will be locked.')">
-                        @csrf @method('PATCH')
-                        <button type="submit" class="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50"><i class="bi bi-x-circle"></i> Cancel invoice</button>
-                    </form>
-                    @if($invoice->isDeletable())
-                        <form method="POST" action="{{ route('erp.invoices.destroy', $invoice) }}" class="flex-1" onsubmit="return confirm('Delete draft {{ $invoice->invoice_number }}?')">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 ring-1 ring-inset ring-rose-200 hover:bg-rose-100"><i class="bi bi-trash"></i> Delete draft</button>
+                    @if($canCancel)
+                        <form method="POST" action="{{ route('erp.invoices.cancel', $invoice) }}" class="flex-1" onsubmit="return confirm('Cancel {{ $invoice->invoice_number }}? It will be locked.')">
+                            @csrf @method('PATCH')
+                            <button type="submit" class="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50"><i class="bi bi-x-circle"></i> Cancel invoice</button>
                         </form>
+                    @endif
+                    @if($canDelete)
+                        <button type="button"
+                                data-action="{{ route('erp.invoices.destroy', $invoice) }}"
+                                data-number="{{ $invoice->invoice_number }}"
+                                data-kind="{{ $invoice->status === 'draft' ? 'draft' : ($invoice->status === 'pending' ? 'pending' : 'locked') }}"
+                                x-on:click="$dispatch('invoice-delete', { action: $el.dataset.action, number: $el.dataset.number, kind: $el.dataset.kind })"
+                                class="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 ring-1 ring-inset ring-rose-200 hover:bg-rose-100"><i class="bi bi-trash"></i> Delete invoice</button>
                     @endif
                 </div>
             @endif
@@ -239,6 +241,10 @@
             </div>
         </form>
     </div>
+@endif
+
+@if($canDelete)
+    @include('erp.invoices._delete_modal')
 @endif
 
 </div>

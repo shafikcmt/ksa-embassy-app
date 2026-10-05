@@ -46,7 +46,7 @@
         $keys = collect($errors->keys());
         if ($keys->contains(fn ($k) => str_starts_with($k, 'items'))) $initialStep = 2;
         elseif ($keys->contains(fn ($k) => preg_match('/^(tax|discount|notes)/', $k))) $initialStep = 3;
-        if ($keys->contains(fn ($k) => in_array($k, ['invoice_date', 'due_date', 'agent_id', 'bill_to_name', 'bill_to_phone', 'bill_to_address', 'bill_to_email', 'currency', 'status']))) $initialStep = 1;
+        if ($keys->contains(fn ($k) => in_array($k, ['invoice_date', 'agent_id', 'bill_to_name', 'bill_to_phone', 'bill_to_address', 'bill_to_email', 'currency', 'status']))) $initialStep = 1;
     }
 @endphp
 
@@ -99,7 +99,7 @@
             {{-- ── Step 1: Details ── --}}
             <section x-show="step === 1" class="rounded-2xl border border-slate-200 bg-white p-5">
                 <h2 class="mb-4 flex items-center gap-2 text-sm font-bold text-slate-900"><i class="bi bi-file-earmark-text text-brand-600"></i> Invoice details</h2>
-                <div class="grid gap-4 sm:grid-cols-3">
+                <div class="grid gap-4 sm:grid-cols-2">
                     <div>
                         <label class="{{ $lbl }}">Invoice no.</label>
                         <div class="flex h-[38px] items-center rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 font-mono text-sm font-semibold text-slate-700">{{ $nextNumber }}</div>
@@ -109,11 +109,6 @@
                         <label class="{{ $lbl }}">Invoice date <span class="text-rose-500">*</span></label>
                         <input type="date" name="invoice_date" x-ref="invoiceDate" required value="{{ old('invoice_date', optional($invoice->invoice_date)->format('Y-m-d')) }}" class="{{ $inp }}">
                         @error('invoice_date')<p class="{{ $err }}">{{ $message }}</p>@enderror
-                    </div>
-                    <div>
-                        <label class="{{ $lbl }}">Due date</label>
-                        <input type="date" name="due_date" value="{{ old('due_date', optional($invoice->due_date)->format('Y-m-d')) }}" class="{{ $inp }}">
-                        @error('due_date')<p class="{{ $err }}">{{ $message }}</p>@enderror
                     </div>
                 </div>
 
