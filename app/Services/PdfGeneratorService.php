@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Http\Response;
+use Mpdf\HTMLParserMode;
 use Mpdf\Mpdf;
 use Mpdf\MpdfException;
 use Mpdf\Config\ConfigVariables;
@@ -88,6 +89,45 @@ class PdfGeneratorService
             [
                 'Content-Type'        => 'application/pdf',
                 'Content-Disposition' => $disposition . '; filename="' . $filename . '.pdf"',
+            ]
+        );
+    }
+
+    /**
+     * Opt-in variant of generateFromView() for long tables (MOFA summary only).
+     *
+     * mPDF refuses any single WriteHTML() string longer than pcre.backtrack_limit (PHP
+     * default 1,000,000 bytes) and lays out a whole <table> in memory, so one huge table
+     * fails with a 500. Here $view is rendered once as the document shell, with
+     * $data['_rowsMarker'] = $marker where its rows belong; the shell head, each HTML
+     * string from $chunks (complete tables, rendered lazily) and the shell tail are then
+     * written as separate WriteHTML() calls into one document. CSS read from the head
+     * applies to every chunk. No PHP runtime limits are changed.
+     *
+     * @param  iterable<string>  $chunks
+     */
+    public function generateChunkedFromView(string $view, array $data, string $marker, iterable $chunks, string $filename, bool $inline = false, array $options = []): Response
+    {
+        $shell = view($view, array_merge($data, ['_pdf' => true, '_rowsMarker' => $marker]))->render();
+        $parts = explode($marker, $shell);
+        if (count($parts) !== 2) {
+            throw new \LogicException("View [{$view}] must output the rows marker exactly once.");
+        }
+
+        $mpdf = $this->makeMpdf($options);
+        $mpdf->SetTitle($filename);
+        $mpdf->WriteHTML($parts[0]);
+        foreach ($chunks as $html) {
+            $mpdf->WriteHTML($html, HTMLParserMode::HTML_BODY);
+        }
+        $mpdf->WriteHTML($parts[1], HTMLParserMode::HTML_BODY);
+
+        return response(
+            $mpdf->Output($filename . '.pdf', 'S'),
+            200,
+            [
+                'Content-Type'        => 'application/pdf',
+                'Content-Disposition' => ($inline ? 'inline' : 'attachment') . '; filename="' . $filename . '.pdf"',
             ]
         );
     }

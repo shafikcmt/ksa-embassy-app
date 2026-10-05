@@ -18,6 +18,9 @@ class MofaController extends Controller
 
     public const FIELDS = ['full_name', 'father_name', 'mother_name', 'passport_number', 'date_of_birth', 'age', 'issue_date', 'expiry_date', 'visa_number', 'id_number', 'mofa_issue_date', 'left_day', 'mofa_number', 'mofa_date', 'reference', 'remarks'];
 
+    /** Summary PDF rows per table / mPDF WriteHTML() call; keeps each call far below the 1 MB PCRE limit. */
+    public const PDF_CHUNK_ROWS = 150;
+
     private function query(Request $request)
     {
         $filters = $request->validate(['q' => 'nullable|string|max:100', 'status' => 'nullable|in:active,expired,expiring,processing', 'from' => 'nullable|date_format:Y-m-d', 'to' => 'nullable|date_format:Y-m-d'.($request->filled('from') ? '|after_or_equal:from' : '')]);
@@ -198,6 +201,19 @@ class MofaController extends Controller
             return view('prints.mofa-summary', $data);
         }
 
-        return $pdf->generateFromView('prints.mofa-summary', $data, 'mofa-summary', true, \App\Support\ErpPrintTheme::mpdfOptions('landscape'));
+        // Rows go to mPDF in chunks: one huge table breaks pcre.backtrack_limit (~220 rows) and memory.
+        return $pdf->generateChunkedFromView('prints.mofa-summary', $data, '<!--mofa-rows-->', self::pdfRowChunks($entries),
+            'mofa-summary', true, \App\Support\ErpPrintTheme::mpdfOptions('landscape'));
+    }
+
+    /** Lazily renders the summary rows as complete tables of PDF_CHUNK_ROWS rows (SL and striping continue). */
+    public static function pdfRowChunks(\Illuminate\Support\Collection $entries): \Generator
+    {
+        $total = $entries->count();
+        $chunks = $total ? $entries->values()->chunk(self::PDF_CHUNK_ROWS) : collect([collect()]);
+        foreach ($chunks as $i => $rows) {
+            yield view('prints.partials.mofa-summary-table', ['rows' => $rows, 'offset' => $i * self::PDF_CHUNK_ROWS,
+                'total' => $total, 'last' => $i === $chunks->count() - 1, '_pdf' => true])->render();
+        }
     }
 }

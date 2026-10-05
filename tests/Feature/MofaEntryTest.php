@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\Erp\MofaController;
 use App\Models\Agency;
 use App\Models\HrProfile;
 use App\Models\MofaEntry;
@@ -415,6 +416,108 @@ class MofaEntryTest extends TestCase
         $this->assertSame(15, $cells->length);
         $this->assertSame('Final Reference', trim($cells->item(14)->textContent));
         $this->assertSame('Private Remarks', $entry->fresh()->remarks);
+    }
+
+    public function test_populated_pdf_renders_long_null_and_legacy_rows(): void
+    {
+        $long = 'MOHAMMAD ABDUL KARIM CHOWDHURY BHUIYAN';
+        $this->entry(['full_name' => $long, 'father_name' => $long.' SR', 'mother_name' => 'MOSAMMAT FATEMA KHATUN BEGUM', 'visa_number' => '6012345678', 'id_number' => '2012345678',
+            'reference' => 'Kamal Uddin Ahmed (Chittagong Sub-Agent Office, Halishahar Branch) & Co.', 'remarks' => 'Private Remarks']);
+        $this->entry(['full_name' => 'Null Passenger', 'father_name' => null, 'mother_name' => null, 'visa_number' => null, 'id_number' => null,
+            'mofa_number' => null, 'mofa_date' => null, 'mofa_expiry_date' => null, 'reference' => null]);
+        // Legacy row: stored MOFA Issue Date and an expiry long past (negative Left Day).
+        $this->entry(['full_name' => 'Legacy Passenger', 'mofa_issue_date' => '2024-01-10', 'mofa_date' => '2024-01-15', 'mofa_expiry_date' => '2024-04-14', 'reference' => 'Legacy Ref']);
+        $this->actingAs($this->admin);
+
+        $html = $this->get(route('erp.mofa.print', ['preview' => 1]))->assertOk()->getContent();
+        $dom = new \DOMDocument;
+        @$dom->loadHTML($html);
+        $rows = (new \DOMXPath($dom))->query('//table[contains(@class, "mofa-print")]/tbody/tr');
+        $this->assertSame(3, $rows->length);
+        foreach ($rows as $row) {
+            $this->assertSame(15, $row->getElementsByTagName('td')->length);
+        }
+        $this->assertSame('Legacy Ref', trim($rows->item(0)->getElementsByTagName('td')->item(14)->textContent));
+
+        $response = $this->get(route('erp.mofa.print'))->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        $pdf = (new \Smalot\PdfParser\Parser)->parseContent($response->getContent());
+        $text = $pdf->getText();
+        foreach (['Null Passenger', 'Legacy Passenger', 'Halishahar', 'Total: 3 records', 'Reference'] as $needle) {
+            $this->assertStringContainsString($needle, $text);
+        }
+        $this->assertStringNotContainsString('Remarks', $text);
+        $this->assertStringNotContainsString('Left Day', $text);
+        [, , $width, $height] = $pdf->getPages()[0]->getDetails()['MediaBox'];
+        $this->assertGreaterThan($height, $width, 'MOFA summary must stay A4 landscape');
+    }
+
+    public function test_summary_pdf_larger_than_pcre_backtrack_limit_still_renders(): void
+    {
+        // Production 500: mPDF refuses any WriteHTML() string longer than pcre.backtrack_limit
+        // (PHP default 1,000,000 bytes, ~220 rows as one table). A low limit reproduces that
+        // with few rows; the chunked PDF keeps every call under it without changing the limit.
+        for ($i = 1; $i <= 30; $i++) {
+            $this->entry(['full_name' => "Bulk Passenger $i", 'passport_number' => sprintf('BK%07d', $i)]);
+        }
+        $this->actingAs($this->admin);
+        $original = ini_get('pcre.backtrack_limit');
+        ini_set('pcre.backtrack_limit', '50000');
+        try {
+            $response = $this->get(route('erp.mofa.print'));
+        } finally {
+            ini_set('pcre.backtrack_limit', $original);
+        }
+        $response->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        $text = (new \Smalot\PdfParser\Parser)->parseContent($response->getContent())->getText();
+        $this->assertStringContainsString('Total: 30 records', $text);
+        $this->assertStringContainsString('Bulk Passenger 30', $text);
+    }
+
+    public function test_pdf_row_chunks_are_complete_tables_with_continuous_numbering(): void
+    {
+        $size = MofaController::PDF_CHUNK_ROWS;
+        $entries = collect(range(1, $size + 2))->map(fn ($i) => new MofaEntry(['full_name' => "Row $i", 'passport_number' => sprintf('CH%07d', $i)]));
+        $chunks = iterator_to_array(MofaController::pdfRowChunks($entries), false);
+
+        $this->assertCount(2, $chunks);
+        foreach ($chunks as $i => $html) {
+            $this->assertLessThan(500_000, strlen($html));
+            $dom = new \DOMDocument;
+            @$dom->loadHTML($html);
+            $xpath = new \DOMXPath($dom);
+            $this->assertSame(15, $xpath->query('//thead/tr/th')->length);
+            $this->assertSame('Reference', trim($xpath->query('//thead/tr/th')->item(14)->textContent));
+            $this->assertSame($i === 1, $xpath->query('//tfoot')->length === 1, 'only the last chunk carries the total');
+        }
+        $this->assertStringContainsString('<td class="num">'.($size + 1).'</td>', $chunks[1]);
+        $this->assertStringContainsString('Total: '.($size + 2).' records', $chunks[1]);
+        $this->assertStringNotContainsString('Remarks', implode('', $chunks));
+
+        $empty = iterator_to_array(MofaController::pdfRowChunks(collect()), false);
+        $this->assertCount(1, $empty);
+        $this->assertStringContainsString('No MOFA records found.', $empty[0]);
+        $this->assertStringNotContainsString('<tfoot>', $empty[0]);
+    }
+
+    public function test_pdf_over_one_chunk_keeps_every_row_in_order(): void
+    {
+        $count = MofaController::PDF_CHUNK_ROWS + 5;
+        for ($i = 1; $i <= $count; $i++) {
+            $this->entry(['full_name' => "Chunk Passenger $i", 'passport_number' => sprintf('CK%07d', $i)]);
+        }
+        $this->actingAs($this->admin);
+
+        $response = $this->get(route('erp.mofa.print'))->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        $text = (new \Smalot\PdfParser\Parser)->parseContent($response->getContent())->getText();
+        $this->assertStringContainsString("Total: $count records", $text);
+        preg_match_all('/CK(\d{7})/', $text, $m);
+        // Newest first (orderByDesc id), nothing lost or duplicated across the chunk boundary.
+        $this->assertSame(range($count, 1), array_map('intval', $m[1]));
+        $this->assertStringNotContainsString('Remarks', $text);
+
+        $page = $this->get(route('erp.mofa.print', ['current_page' => 1]))->assertOk();
+        $pageText = (new \Smalot\PdfParser\Parser)->parseContent($page->getContent())->getText();
+        $this->assertStringContainsString('Total: 20 records', $pageText);
     }
 
     public function test_pdf_layouts_and_csv(): void
