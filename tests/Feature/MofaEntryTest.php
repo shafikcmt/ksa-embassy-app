@@ -185,7 +185,7 @@ class MofaEntryTest extends TestCase
 
         // Neither MOFA Date nor Expiry → still rejected, as before.
         $this->postJson(route('erp.mofa.store'), $this->payload(['passport_number' => 'NODATES', 'mofa_date' => '', 'mofa_expiry_date' => '']))
-            ->assertUnprocessable()->assertJsonValidationErrors('mofa_expiry_date');
+            ->assertOk();
     }
 
     public function test_unchanged_legacy_edit_saves_and_keeps_stored_dates(): void
@@ -321,16 +321,120 @@ class MofaEntryTest extends TestCase
         $this->assertSame(0, MofaEntry::forAgency($this->other->id)->count());
     }
 
+    public function test_listing_empty_states_use_a_standalone_panel_and_populated_table_still_scrolls(): void
+    {
+        $this->actingAs($this->admin);
+        $empty = $this->get(route('erp.mofa'))->assertOk()->assertSee('0 records')
+            ->assertSee('No MOFA entries yet')->assertSee('id="mf-empty-title"', false)
+            ->assertDontSee('Scroll to see all passenger details')
+            ->assertDontSee('<table class="mf-table">', false)
+            ->assertDontSee('aria-label="MOFA entries, scroll horizontally"', false);
+        $this->assertStringContainsString('@click="$dispatch(\'mofa-add\')">+ Add MOFA Entry</button>', $empty->getContent());
+        $empty->assertSee('mofa-config', false);
+
+        $entry = $this->entry();
+        foreach ([['q' => 'NO-MATCH'], ['status' => 'processing'], ['from' => '2027-01-01']] as $filters) {
+            $this->get(route('erp.mofa', $filters))->assertOk()->assertSee('0 records')
+                ->assertSee('No matching MOFA entries')->assertSee('id="mf-empty-title"', false)
+                ->assertDontSee('Scroll to see all passenger details')
+                ->assertDontSee('<table class="mf-table">', false)
+                ->assertDontSee('aria-label="MOFA entries, scroll horizontally"', false);
+        }
+        $this->get(route('erp.mofa', ['q' => $entry->passport_number]))->assertOk()
+            ->assertSee('1 records')->assertSee('Scroll to see all passenger details')
+            ->assertSee('<table class="mf-table">', false)
+            ->assertSee('aria-label="MOFA entries, scroll horizontally"', false)
+            ->assertSee('Test Passenger')->assertDontSee('id="mf-empty-title"', false);
+    }
+
+    public function test_modal_moves_reference_and_removes_expiry_and_countdown(): void
+    {
+        $this->actingAs($this->staff);
+        $this->get(route('erp.mofa.create'))->assertRedirect(route('erp.mofa', ['add' => 1]));
+        $response = $this->get(route('erp.mofa', ['add' => 1]));
+        $response->assertOk()->assertDontSee('id="mf-mofa_expiry_date"', false)
+            ->assertDontSee('id="mf-left_day"', false)
+            ->assertSeeInOrder(['MOFA &amp; Visa Details', 'id="mf-reference"', 'id="mf-remarks"'], false);
+        $this->assertSame(1, substr_count($response->getContent(), 'id="mf-reference"'));
+        $this->assertSame(1, substr_count($response->getContent(), '>Print</a>'));
+        $response->assertDontSee('Print Landscape')->assertDontSee('Portrait');
+        $response->assertSee('You can still save.')->assertSee('erp-autofilled', false);
+    }
+
+    public function test_create_and_legacy_edit_without_retired_inputs(): void
+    {
+        $payload = $this->payload();
+        unset($payload['mofa_expiry_date']);
+        $this->actingAs($this->staff)->postJson(route('erp.mofa.store'), $payload)->assertOk();
+        $entry = MofaEntry::firstOrFail();
+        $this->assertSame('2026-12-24', $entry->mofa_expiry_date->format('Y-m-d'));
+        foreach (['2026-09-01', null] as $expiry) {
+            $entry->update(['mofa_expiry_date' => $expiry]);
+            $this->get(route('erp.mofa.edit', $entry))->assertRedirect(route('erp.mofa', ['edit' => $entry->id]));
+            $this->putJson(route('erp.mofa.update', $entry), $payload + ['remarks' => 'Edited'])->assertOk();
+            $this->assertSame($expiry, $entry->fresh()->mofa_expiry_date?->format('Y-m-d'));
+            $this->assertSame('Agent', $entry->fresh()->reference);
+        }
+        $this->putJson(route('erp.mofa.update', $entry), array_merge($payload, ['mofa_date' => '2026-10-01']))->assertOk();
+        $this->assertSame('2026-12-30', $entry->fresh()->mofa_expiry_date->format('Y-m-d'));
+        $this->postJson(route('erp.mofa.store'), array_merge($payload, ['mofa_date' => '', 'passport_number' => 'UNDATED']))->assertOk();
+        $this->assertNull(MofaEntry::where('passport_no', 'UNDATED')->firstOrFail()->mofa_expiry_date);
+    }
+
+    public function test_pdf_columns_widths_and_empty_state(): void
+    {
+        $this->actingAs($this->admin);
+        $html = $this->get(route('erp.mofa.print', ['preview' => 1]))->assertOk()
+            ->assertSee('No MOFA records found.')->assertSee('colspan="15"', false)
+            ->assertDontSee('Remarks')->getContent();
+        $dom = new \DOMDocument;
+        @$dom->loadHTML($html);
+        $xpath = new \DOMXPath($dom);
+        $headers = $xpath->query('//table[contains(@class, "mofa-print")]/thead/tr/th');
+        $labels = [];
+        $totalWidth = 0;
+        foreach ($headers as $header) {
+            $labels[] = trim($header->textContent);
+            preg_match('/width:\s*(\d+)%/', $header->getAttribute('style'), $width);
+            $totalWidth += (int) $width[1];
+        }
+        $this->assertCount(15, $labels);
+        $this->assertSame(['MOFA No', 'MOFA Date', 'Reference'], array_slice($labels, -3));
+        $this->assertSame(100, $totalWidth);
+        $pdf = $this->get(route('erp.mofa.print'))->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        $text = (new \Smalot\PdfParser\Parser)->parseContent($pdf->getContent())->getText();
+        $this->assertStringContainsString('No MOFA records found.', $text);
+        $this->assertStringNotContainsString('Remarks', $text);
+
+        $entry = $this->entry(['reference' => 'Final Reference', 'remarks' => 'Private Remarks']);
+        $html = $this->get(route('erp.mofa.print', ['preview' => 1]))->assertOk()
+            ->assertDontSee('Private Remarks')->getContent();
+        @$dom->loadHTML($html);
+        $xpath = new \DOMXPath($dom);
+        $cells = $xpath->query('//table[contains(@class, "mofa-print")]/tbody/tr/td');
+        $this->assertSame(15, $cells->length);
+        $this->assertSame('Final Reference', trim($cells->item(14)->textContent));
+        $this->assertSame('Private Remarks', $entry->fresh()->remarks);
+    }
+
     public function test_pdf_layouts_and_csv(): void
     {
         $entry = $this->entry(['remarks' => '=HYPERLINK("bad")']);
         $this->actingAs($this->admin);
         foreach (['landscape', 'portrait'] as $layout) {
-            $this->get(route('erp.mofa.print-pdf', [$entry, 'layout' => $layout, 'preview' => 1]))->assertOk()->assertSee('MOFA Summary');
+            $this->get(route('erp.mofa.print-pdf', [$entry, 'layout' => $layout, 'preview' => 1]))->assertOk()->assertSee('MOFA Summary')->assertDontSee('Left Day')->assertDontSee('MOFA Expiry Date')->assertDontSee('Part 1 of 2')->assertDontSee('Remarks')->assertDontSee('=HYPERLINK')->assertSee('Reference');
             $response = $this->get(route('erp.mofa.print-pdf', [$entry, 'layout' => $layout]));
             $response->assertOk()->assertHeader('Content-Type', 'application/pdf');
             $this->assertStringStartsWith('%PDF', $response->getContent());
+            $text = (new \Smalot\PdfParser\Parser)->parseContent($response->getContent())->getText();
+            $this->assertStringNotContainsString('Left Day', $text);
+            $this->assertStringNotContainsString('MOFA Expiry Date', $text);
+            $this->assertStringNotContainsString('Remarks', $text);
+            $this->assertStringNotContainsString('HYPERLINK', $text);
+            $this->assertStringContainsString('Reference', $text);
         }
+        $this->get(route('erp.mofa.show', $entry))->assertOk()->assertDontSee('Landscape')->assertDontSee('Portrait');
+        $this->get(route('erp.mofa.print'))->assertOk()->assertHeader('Content-Type', 'application/pdf');
         $response = $this->get(route('erp.mofa.export'));
         $response->assertOk();
         $this->assertStringContainsString("'=HYPERLINK", $response->streamedContent());

@@ -26,10 +26,13 @@ class MofaEntryRequest extends FormRequest
                 }
             }
         }
-        // Backend twin of the form's auto-calculation: an empty MOFA Expiry becomes
-        // MOFA Date + MofaEntry::MOFA_VALIDITY_DAYS (only when MOFA Date is a real date).
+        // Keep expiry/status compatibility without asking for expiry in the form.
+        // An unchanged edit preserves even null or historically inconsistent expiry values.
         $mofaDate = $data['mofa_date'] ?? $this->input('mofa_date');
-        if (blank($this->input('mofa_expiry_date')) && is_string($mofaDate) && $this->isYmd($mofaDate)) {
+        $entry = $this->route('mofa');
+        $unchangedEdit = $entry && $mofaDate === $entry->mofa_date?->format('Y-m-d');
+        if (($this->exists('mofa_expiry_date') || ! $unchangedEdit)
+            && blank($this->input('mofa_expiry_date')) && is_string($mofaDate) && $this->isYmd($mofaDate)) {
             $data['mofa_expiry_date'] = MofaEntry::mofaExpiryFor($mofaDate);
         }
         $this->merge($data);
@@ -54,7 +57,7 @@ class MofaEntryRequest extends FormRequest
         }
 
         return $this->input('mofa_date') !== $entry->mofa_date?->format('Y-m-d')
-            || $this->input('mofa_expiry_date') !== $entry->mofa_expiry_date?->format('Y-m-d');
+            || ($this->exists('mofa_expiry_date') && $this->input('mofa_expiry_date') !== $entry->mofa_expiry_date?->format('Y-m-d'));
     }
 
     public function rules(): array
@@ -67,7 +70,7 @@ class MofaEntryRequest extends FormRequest
             'issue_date' => ['required', 'date_format:Y-m-d'], 'expiry_date' => ['required', 'date_format:Y-m-d', 'after:issue_date'],
             // MOFA Issue Date is no longer on the form; kept optional so legacy values still round-trip on edit.
             'mofa_issue_date' => ['nullable', 'date_format:Y-m-d'],
-            'mofa_expiry_date' => array_merge(['nullable', 'required_without:mofa_date', 'date_format:Y-m-d'],
+            'mofa_expiry_date' => array_merge(['nullable', 'date_format:Y-m-d'],
                 $this->filled('mofa_date') && $this->mofaDatesChanged() ? ['after:mofa_date'] : []),
             'mofa_date' => ['nullable', 'date_format:Y-m-d'],
             'visa_number' => ['nullable', 'string', 'max:100'], 'id_number' => ['nullable', 'string', 'max:100'], 'mofa_number' => ['nullable', 'string', 'max:100'],

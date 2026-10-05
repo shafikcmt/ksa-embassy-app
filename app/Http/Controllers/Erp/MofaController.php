@@ -190,17 +190,14 @@ class MofaController extends Controller
         if ($mofa) {
             $this->authorizeEntry($mofa);
         }
-        $options = $request->validate(['layout' => 'nullable|in:landscape,portrait,auto', 'page' => 'nullable|integer|min:1', 'current_page' => 'nullable|boolean']);
-        $layout = $options['layout'] ?? 'landscape';
+        // Accept old layout links, but always render the single landscape report.
+        $request->validate(['layout' => 'nullable|in:landscape,portrait,auto', 'page' => 'nullable|integer|min:1', 'current_page' => 'nullable|boolean']);
         $entries = $mofa ? collect([$mofa]) : ($request->boolean('current_page') ? $this->query($request)->paginate(20)->getCollection() : $this->query($request)->get());
-        if ($layout === 'auto') {
-            $layout = $entries->count() === 1 ? 'portrait' : 'landscape';
-        }
-        $data = ['entries' => $entries, 'agency' => $request->user()->agency, 'generated' => now(), 'layout' => $layout];
+        $data = ['entries' => $entries, 'agency' => $request->user()->agency, 'generated' => now()];
         if ($request->boolean('preview')) {
             return view('prints.mofa-summary', $data);
         }
 
-        return $pdf->generateFromView('prints.mofa-summary', $data, 'mofa-summary', true, \App\Support\ErpPrintTheme::mpdfOptions($layout === 'portrait' ? 'portrait' : 'landscape'));
+        return $pdf->generateFromView('prints.mofa-summary', $data, 'mofa-summary', true, \App\Support\ErpPrintTheme::mpdfOptions('landscape'));
     }
 }
