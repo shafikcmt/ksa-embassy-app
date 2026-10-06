@@ -77,7 +77,7 @@
 
     {{-- Stepper --}}
     <ol class="mb-5 grid grid-cols-3 gap-2">
-        @foreach([1 => ['Details', 'bi-file-earmark-text'], 2 => ['Line items', 'bi-list-ul'], 3 => ['Adjust & review', 'bi-calculator']] as $n => [$label, $icon])
+        @foreach([1 => ['Details', 'bi-file-earmark-text'], 2 => ['Passengers', 'bi-people'], 3 => ['Adjust & review', 'bi-calculator']] as $n => [$label, $icon])
             <li>
                 <button type="button" x-on:click="go({{ $n }})"
                         class="flex w-full items-center gap-2 rounded-xl border px-3 py-2.5 text-left transition"
@@ -162,17 +162,20 @@
             {{-- ── Step 2: Line items ── --}}
             <section x-show="step === 2" x-cloak class="rounded-2xl border border-slate-200 bg-white p-5">
                 <div class="mb-4 flex items-center justify-between gap-2">
-                    <h2 class="flex items-center gap-2 text-sm font-bold text-slate-900"><i class="bi bi-list-ul text-brand-600"></i> Line items</h2>
-                    <span class="text-xs text-slate-400"><span x-text="items.length"></span> / 100</span>
+                    <h2 class="flex items-center gap-2 text-sm font-bold text-slate-900"><i class="bi bi-people text-brand-600"></i> Passengers</h2>
+                    <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-500"><span x-text="items.length"></span> / 100</span>
                 </div>
                 @error('items')<p class="{{ $err }} mb-3">{{ $message }}</p>@enderror
 
                 <div class="space-y-3">
                     <template x-for="(row, i) in items" x-bind:key="row.key">
-                        <div class="rounded-xl border border-slate-200 bg-slate-50/60 p-3">
-                            <div class="mb-2 flex items-center justify-between">
-                                <span class="text-xs font-bold text-slate-500">Item <span x-text="i + 1"></span></span>
-                                <button type="button" x-on:click="removeRow(i)" x-show="items.length > 1" title="Remove line"
+                        <div class="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+                            <div class="mb-3 flex items-center justify-between">
+                                <span class="inline-flex items-center gap-2 text-sm font-bold text-slate-700">
+                                    <span class="grid h-6 w-6 place-items-center rounded-full bg-brand-600 text-xs font-bold text-white" x-text="i + 1"></span>
+                                    Passenger <span x-text="i + 1"></span>
+                                </span>
+                                <button type="button" x-on:click="removeRow(i)" x-show="items.length > 1" title="Remove passenger"
                                         class="grid h-7 w-7 place-items-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"><i class="bi bi-trash"></i></button>
                             </div>
 
@@ -181,20 +184,43 @@
                                 <input type="hidden" x-bind:name="`items[${i}][hr_profile_id]`" x-bind:value="row.hr_profile_id || ''">
                                 <input type="hidden" x-bind:name="`items[${i}][passenger_name]`" x-bind:value="row.passenger_name || ''">
                                 <input type="hidden" x-bind:name="`items[${i}][passport_no]`" x-bind:value="row.passport_no || ''">
-                                <template x-if="hasPassenger(row)">
-                                    <div class="flex items-center gap-2 rounded-lg border border-brand-200 bg-white px-3 py-2 text-sm">
-                                        <i class="bi bi-person-badge text-brand-600"></i>
-                                        <span class="min-w-0 flex-1 truncate font-medium text-slate-800" x-text="passengerLabel(row)"></span>
-                                        <button type="button" x-on:click="clearPassenger(row)" class="text-slate-400 hover:text-rose-600" title="Unlink passenger"><i class="bi bi-x-lg"></i></button>
+                                <label class="{{ $lbl }}">Passenger</label>
+                                {{-- New passenger typed by hand (not found in HR / ERP) --}}
+                                <template x-if="row.manual">
+                                    <div class="rounded-lg border border-dashed border-brand-300 bg-white p-3">
+                                        <div class="grid gap-2 sm:grid-cols-2">
+                                            <div>
+                                                <label class="{{ $lbl }}">Passenger Name</label>
+                                                <input type="text" x-model="row.passenger_name" maxlength="255" placeholder="Full name" class="{{ $inp }}">
+                                            </div>
+                                            <div>
+                                                <label class="{{ $lbl }}">Passport No</label>
+                                                <input type="text" x-model="row.passport_no" x-on:input="row.passport_no = row.passport_no.toUpperCase()" maxlength="100" placeholder="e.g. A12345678" class="{{ $inp }} font-mono">
+                                            </div>
+                                        </div>
+                                        <button type="button" x-on:click="clearPassenger(row)" class="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-brand-700">
+                                            <i class="bi bi-search"></i> Search existing passenger instead
+                                        </button>
                                     </div>
                                 </template>
-                                <template x-if="! hasPassenger(row)">
+                                <template x-if="! row.manual && hasPassenger(row)">
+                                    <div class="flex items-center gap-3 rounded-lg border border-brand-200 bg-white px-3 py-2 text-sm">
+                                        <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-brand-50 text-brand-600"><i class="bi bi-person-badge"></i></span>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="truncate font-semibold text-slate-800" x-text="passengerName(row) || 'Passenger'"></div>
+                                            <div class="truncate font-mono text-xs text-slate-500" x-text="passengerPassport(row) || 'No passport no.'"></div>
+                                        </div>
+                                        <button type="button" x-on:click="row.manual = true" class="text-slate-400 hover:text-brand-700" title="Edit name / passport"><i class="bi bi-pencil"></i></button>
+                                        <button type="button" x-on:click="clearPassenger(row)" class="text-slate-400 hover:text-rose-600" title="Remove passenger"><i class="bi bi-x-lg"></i></button>
+                                    </div>
+                                </template>
+                                <template x-if="! row.manual && ! hasPassenger(row)">
                                     <div>
                                         <div class="relative">
                                             <i class="bi bi-search pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400"></i>
                                             <input type="text" x-model="row.search" x-on:focus="row.open = true" x-on:input="row.open = true"
                                                    x-on:keydown.escape="row.open = false"
-                                                   placeholder="Link a passenger (name, passport, file no.) — optional"
+                                                   placeholder="Search by name, passport or file no."
                                                    class="{{ $inp }} pl-8">
                                         </div>
                                         <div x-show="row.open" x-cloak class="absolute z-20 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
@@ -205,9 +231,11 @@
                                                 </button>
                                             </template>
                                             <div x-show="matches(row.search).length === 0" class="px-3 py-3 text-center text-xs text-slate-400">No passengers found.</div>
-                                            <button type="button" x-show="(row.search || '').trim() !== ''" x-on:click="useTyped(row)"
-                                                    class="flex w-full items-center gap-2 border-t border-slate-100 px-3 py-2 text-left text-xs font-semibold text-brand-700 hover:bg-brand-50">
-                                                <i class="bi bi-plus-circle"></i> Use “<span x-text="row.search.trim()"></span>” as passport no.
+                                            <button type="button" x-on:click="addNewPassenger(row)"
+                                                    class="flex w-full items-center gap-2 border-t border-slate-100 px-3 py-2.5 text-left text-sm font-semibold text-brand-700 hover:bg-brand-50">
+                                                <i class="bi bi-person-plus"></i>
+                                                <span x-show="(row.search || '').trim() === ''">Add new passenger</span>
+                                                <span x-show="(row.search || '').trim() !== ''">Add new passenger “<span x-text="(row.search || '').trim()"></span>”</span>
                                             </button>
                                         </div>
                                     </div>
@@ -249,7 +277,7 @@
 
                 <button type="button" x-on:click="addRow()" x-bind:disabled="items.length >= 100"
                         class="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-slate-300 px-4 py-3 text-sm font-semibold text-slate-600 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 disabled:opacity-50">
-                    <i class="bi bi-plus-circle"></i> Add line item
+                    <i class="bi bi-person-plus"></i> Add passenger
                 </button>
             </section>
 
@@ -383,6 +411,7 @@ function invoiceForm() {
         hr_profile_id:  r.hr_profile_id ? Number(r.hr_profile_id) : null,
         passenger_name: r.passenger_name ?? '',
         passport_no:    r.passport_no    ?? '',
+        manual: false,
         processing_fee: r.processing_fee ?? '',
         mofa_fee:       r.mofa_fee       ?? '',
         paid_amount:    r.paid_amount    ?? '',
@@ -447,6 +476,16 @@ function invoiceForm() {
             return list.slice(0, 30);
         },
         hasPassenger(row) { return !!(row.hr_profile_id || row.passenger_name || row.passport_no); },
+        passengerName(row) {
+            if (row.passenger_name) return row.passenger_name;
+            const p = row.hr_profile_id ? this.passengers.find(x => x.hr_id === Number(row.hr_profile_id)) : null;
+            return p ? p.name : '';
+        },
+        passengerPassport(row) {
+            if (row.passport_no) return row.passport_no;
+            const p = row.hr_profile_id ? this.passengers.find(x => x.hr_id === Number(row.hr_profile_id)) : null;
+            return p ? (p.passport || '') : '';
+        },
         passengerLabel(row) {
             if (!row.passenger_name && !row.passport_no && row.hr_profile_id) {
                 const p = this.passengers.find(x => x.hr_id === Number(row.hr_profile_id));
@@ -460,14 +499,17 @@ function invoiceForm() {
             row.passport_no = p.passport || '';
             row.open = false; row.search = '';
         },
-        // Not in any module yet: keep the typed passport on the line.
-        useTyped(row) {
+        // Not in HR / ERP yet: type name + passport by hand. The search text
+        // pre-fills the passport (looks like letters+digits) or else the name.
+        addNewPassenger(row) {
+            const typed = (row.search || '').trim();
+            const looksLikePassport = /^[A-Za-z]{0,3}\d{5,}$/.test(typed);
             row.hr_profile_id = null;
-            row.passenger_name = '';
-            row.passport_no = (row.search || '').trim().toUpperCase();
-            row.open = false; row.search = '';
+            row.passport_no = looksLikePassport ? typed.toUpperCase() : '';
+            row.passenger_name = looksLikePassport ? '' : typed;
+            row.manual = true; row.open = false; row.search = '';
         },
-        clearPassenger(row) { row.hr_profile_id = null; row.passenger_name = ''; row.passport_no = ''; },
+        clearPassenger(row) { row.hr_profile_id = null; row.passenger_name = ''; row.passport_no = ''; row.manual = false; },
         pickAgent() {
             const a = this.agents.find(x => String(x.id) === this.agentId);
             if (!a) return;
