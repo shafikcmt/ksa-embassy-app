@@ -7,7 +7,7 @@
        download = attachment). Layout: accent → header (logo | agency | barcode)
        → title → 3 meta boxes (Bill To | Invoice Details | Status) → 9-column
        items grid + GRAND TOTAL → subtotal/tax/discount/TOTAL (+ PAID/CANCELLED
-       stamp) → in words → notes → signatures → pinned footer.
+       stamp) → total / amount paid / BALANCE DUE → in words → notes → signatures → pinned footer.
 
        Rules: fixed font scale — 8pt body text, 7.5pt labels AND the whole items
        table (headers + cells), 9pt box headers. Column widths were sized from
@@ -29,16 +29,18 @@
     .a-name { font-size: 11pt; font-weight: bold; color: #0f172a; }
     .a-rl   { font-size: 9pt; font-weight: bold; color: #334155; margin-top: 2pt; }
     .a-addr { font-size: 8pt; font-style: italic; color: #475569; margin-top: 2pt; }
+    .a-contact { font-size: 7.5pt; color: #475569; margin-top: 1.5pt; }
     .bc-num { font-family: dejavusansmono, monospace; font-size: 7pt; color: #334155; letter-spacing: 0.6pt; margin-top: 1pt; }
 
     /* Title */
     .title td { text-align: center; padding: 9pt 0 7pt; }
     .t-main { color: #0f172a; font-weight: bold; font-size: 14pt; letter-spacing: 1pt; text-decoration: underline; }
 
-    /* Meta boxes */
-    .box { border: 0.5px solid #333333; }
-    .box-h td { background-color: #e8e8e8; border-bottom: 0.5px solid #333333; font-size: 9pt; font-weight: bold; padding: 4pt 6pt; }
-    .box td { padding: 2pt 6pt; vertical-align: top; }
+    /* Meta boxes — one shared table so all three boxes get the same height */
+    .meta td.mh { background-color: #e8e8e8; border: 0.5px solid #333333; font-size: 9pt; font-weight: bold; padding: 4pt 6pt; }
+    .meta td.mb { border: 0.5px solid #333333; border-top: none; padding: 4pt 6pt 6pt; vertical-align: top; }
+    .meta td.gap { border: none; }
+    .kv td { padding: 1.5pt 0; vertical-align: top; }
     .lbl { color: #475569; font-size: 7.5pt; white-space: nowrap; }
     .val { color: #0f172a; font-size: 8pt; font-weight: bold; text-align: right; white-space: nowrap; }
     .bill-name { color: #0f172a; font-size: 9pt; font-weight: bold; }
@@ -66,6 +68,8 @@
     .totals td { font-size: 8pt; padding: 3pt 8pt; }
     .totals .tk { color: #475569; text-align: right; }
     .totals .tv { font-family: dejavusansmono, monospace; font-weight: bold; text-align: right; white-space: nowrap; }
+    .totals tr.total td { border-top: 0.8px solid #94a3b8; color: #0f172a; font-weight: bold; font-size: 8.5pt; }
+    .totals tr.paid td { color: #047857; }
     .totals tr.grand td { background-color: #1e293b; color: #ffffff; font-size: 9pt; font-weight: bold; padding: 5pt 8pt; border: 0.5px solid #1e293b; }
 
     .stamp { font-weight: bold; font-size: 12pt; letter-spacing: 3pt; padding: 4pt 8pt; border: 1.5px solid; text-align: center; }
@@ -73,7 +77,7 @@
     .stamp-cancelled { color: #be123c; border-color: #be123c; }
 
     /* In words / notes */
-    .words td { background-color: #eff6ff; border: 0.5px solid #dbeafe; padding: 6pt 8pt; font-size: 8pt; }
+    .words td { background-color: #eff6ff; border: 0.5px solid #dbeafe; padding: 4pt 8pt; font-size: 8pt; }
     .w-label { color: #334155; font-weight: bold; text-transform: uppercase; letter-spacing: 0.3pt; }
     .w-value { color: #0f172a; font-weight: bold; font-style: italic; }
     .notes-h { color: #475569; font-size: 7.5pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.3pt; margin-bottom: 2pt; }
@@ -105,6 +109,10 @@
     $sumPaid = $invoice->items->sum(fn ($i) => (float) ($i->paid_amount ?? 0));
     $sumDue  = $invoice->items->sum(fn ($i) => (float) $i->due_amount);
 
+    // Footer summary: what was billed, what is already paid, what is still owed.
+    $amountPaid = $invoice->status === 'paid' ? (float) $invoice->total_amount : $sumPaid;
+    $balanceDue = round((float) $invoice->total_amount - $amountPaid, 2);
+
     $hasTax      = (float) $invoice->tax_amount > 0;
     $hasDiscount = (float) $invoice->discount_amount > 0;
 
@@ -125,19 +133,25 @@
     </tr></table>
 </htmlpagefooter>
 <sethtmlpagefooter name="invoiceFooter" value="on" />
+@if($invoice->status === 'draft')
+    <watermarktext content="DRAFT" alpha="0.06" />
+@endif
 
 <table class="accent"><tr><td>&nbsp;</td></tr></table>
 
 {{-- 1. Header: logo | agency info | barcode --}}
 <table class="head">
     <tr>
-        <td style="width:15%;">
-            @if($logoSrc)<img src="{{ $logoSrc }}" style="max-width:20mm; max-height:14mm;">@endif
-        </td>
-        <td style="width:57%;">
+        @if($logoSrc)
+            <td style="width:15%;"><img src="{{ $logoSrc }}" style="max-width:20mm; max-height:14mm;"></td>
+        @endif
+        <td style="width:{{ $logoSrc ? 57 : 72 }}%;">
             <div class="a-name">{{ $agency->name }}</div>
             <div class="a-rl">Recruiting Licence No. : {{ $agency->rl_number ?: '—' }}</div>
             @if($agency->address)<div class="a-addr">{{ $agency->address }}</div>@endif
+            @if($agency->phone || $agency->email)
+                <div class="a-contact">{{ collect([$agency->phone ? 'Phone: ' . $agency->phone : null, $agency->email ? 'Email: ' . $agency->email : null])->filter()->implode('  |  ') }}</div>
+            @endif
         </td>
         <td style="width:28%; text-align:right;">
             @if($barcodeSrc)
@@ -151,39 +165,42 @@
 {{-- 2. Title --}}
 <table class="title"><tr><td><span class="t-main">INVOICE</span></td></tr></table>
 
-{{-- 3. Meta boxes: Bill To | Invoice Details | Status --}}
-<table style="margin-bottom:10pt;">
+{{-- 3. Meta boxes: Bill To | Invoice Details | Status (equal heights) --}}
+<table class="meta" style="margin-bottom:10pt;">
     <tr>
-        <td style="width:36%; padding-right:6pt; vertical-align:top;">
-            <table class="box">
-                <tr class="box-h"><td>Bill To:</td></tr>
-                <tr><td style="padding-top:5pt; padding-bottom:6pt;">
-                    <div class="bill-name">{{ $billName }}</div>
-                    @if($billPhone)<div class="bill-line">Phone: {{ $billPhone }}</div>@endif
-                    @if($billEmail)<div class="bill-line">Email: {{ $billEmail }}</div>@endif
-                    @if($billAddress)<div class="bill-line">{{ $billAddress }}</div>@endif
-                </td></tr>
+        <td class="mh" style="width:35%;">Bill To:</td>
+        <td class="gap" style="width:2%;"></td>
+        <td class="mh" style="width:33%;">Invoice Details:</td>
+        <td class="gap" style="width:2%;"></td>
+        <td class="mh" style="width:28%;">Status:</td>
+    </tr>
+    <tr>
+        <td class="mb">
+            <div class="bill-name">{{ $billName }}</div>
+            @if($billPhone)<div class="bill-line">Phone: {{ $billPhone }}</div>@endif
+            @if($billEmail)<div class="bill-line">Email: {{ $billEmail }}</div>@endif
+            @if($billAddress)<div class="bill-line">{{ $billAddress }}</div>@endif
+        </td>
+        <td class="gap"></td>
+        <td class="mb">
+            <table class="kv">
+                <tr><td class="lbl">Invoice No</td><td class="val">{{ $invoice->invoice_number }}</td></tr>
+                <tr><td class="lbl">Invoice Date</td><td class="val">{{ $invoice->invoice_date->format('d-M-Y') }}</td></tr>
+                @if($invoice->due_date)
+                    <tr><td class="lbl">Due Date</td><td class="val">{{ $invoice->due_date->format('d-M-Y') }}</td></tr>
+                @endif
             </table>
         </td>
-        <td style="width:34%; padding-right:6pt; vertical-align:top;">
-            <table class="box">
-                <tr class="box-h"><td colspan="2">Invoice Details:</td></tr>
-                <tr><td class="lbl" style="padding-top:5pt;">Invoice No</td><td class="val" style="padding-top:5pt;">{{ $invoice->invoice_number }}</td></tr>
-                <tr><td class="lbl" style="padding-bottom:6pt;">Invoice Date</td><td class="val" style="padding-bottom:6pt;">{{ $invoice->invoice_date->format('d-M-Y') }}</td></tr>
-            </table>
-        </td>
-        <td style="width:30%; vertical-align:top;">
-            <table class="box">
-                <tr class="box-h"><td colspan="2">Status:</td></tr>
-                <tr><td colspan="2" style="padding-top:5pt; padding-bottom:3pt;">
-                    <span class="badge b-{{ $invoice->status }}">{{ strtoupper($invoice->statusLabel()) }}</span>
-                </td></tr>
+        <td class="gap"></td>
+        <td class="mb">
+            <table class="kv">
+                <tr><td colspan="2" style="padding-bottom:3pt;"><span class="badge b-{{ $invoice->status }}">{{ strtoupper($invoice->statusLabel()) }}</span></td></tr>
                 <tr><td class="lbl">Currency</td><td class="val">{{ $cur }}</td></tr>
                 @if($invoice->status === 'paid')
                     <tr><td class="lbl">Paid On</td><td class="val">{{ $invoice->paid_at?->format('d-M-Y') }}</td></tr>
-                    <tr><td class="lbl" style="padding-bottom:6pt;">Method</td><td class="val" style="padding-bottom:6pt;">{{ $invoice->paymentMethodLabel() }}</td></tr>
+                    <tr><td class="lbl">Method</td><td class="val">{{ $invoice->paymentMethodLabel() }}</td></tr>
                 @else
-                    <tr><td class="lbl" style="padding-bottom:6pt;">Passengers</td><td class="val" style="padding-bottom:6pt;">{{ $invoice->items->count() }}</td></tr>
+                    <tr><td class="lbl">Passengers</td><td class="val">{{ $invoice->items->count() }}</td></tr>
                 @endif
             </table>
         </td>
@@ -194,15 +211,15 @@
 <table class="grid" autosize="1">
     <thead>
         <tr>
-            <th style="width:6%;">SL No.</th>
-            <th style="width:15%;">Passenger Name</th>
+            <th style="width:5%;">SL No.</th>
+            <th style="width:19%;">Passenger Name</th>
             <th style="width:11%;">Passport No</th>
             <th style="width:13%;">Processing Fee</th>
             <th style="width:10%;">MOFA Fee</th>
             <th style="width:12%;">Total Amount</th>
             <th style="width:11%;">Paid Amount</th>
             <th style="width:11%;">Due Amount</th>
-            <th style="width:11%;">Remarks</th>
+            <th style="width:8%;">Remarks</th>
         </tr>
     </thead>
     <tbody>
@@ -216,7 +233,7 @@
                 <td class="amt">{{ $n2($item->total_amount) }}</td>
                 <td class="amt">{{ $n2($item->paid_amount) }}</td>
                 <td class="amt {{ (float) $item->due_amount > 0 ? 'due-open' : '' }}">{{ $n2($item->due_amount) }}</td>
-                <td class="l">{{ $item->remarks ?: '—' }}</td>
+                <td class="{{ $item->remarks ? 'l' : 'c' }}">{{ $item->remarks ?: '—' }}</td>
             </tr>
         @endforeach
         <tr class="grand">
@@ -253,7 +270,9 @@
                 @if($hasDiscount)
                     <tr><td class="tk">Discount{{ $invoice->discount_type === 'percent' ? ' (' . $pct($invoice->discount_value) . '%)' : ' (fixed)' }}</td><td class="tv">− {{ $cur }} {{ $n2($invoice->discount_amount) }}</td></tr>
                 @endif
-                <tr class="grand"><td style="text-align:right;">TOTAL</td><td style="text-align:right; white-space:nowrap; font-family:dejavusansmono, monospace;">{{ $cur }} {{ $n2($invoice->total_amount) }}</td></tr>
+                <tr class="total"><td class="tk" style="color:#0f172a;">Total</td><td class="tv">{{ $cur }} {{ $n2($invoice->total_amount) }}</td></tr>
+                <tr class="paid"><td class="tk" style="color:#047857;">Amount Paid</td><td class="tv">− {{ $cur }} {{ $n2($amountPaid) }}</td></tr>
+                <tr class="grand"><td style="text-align:right;">BALANCE DUE</td><td style="text-align:right; white-space:nowrap; font-family:dejavusansmono, monospace;">{{ $cur }} {{ $n2($balanceDue) }}</td></tr>
             </table>
         </td>
     </tr>
@@ -261,7 +280,10 @@
 
 {{-- 6. In words --}}
 <table class="words" style="margin-top:8pt;">
-    <tr><td><span class="w-label">In Words:</span> &nbsp;<span class="w-value">{{ $amountInWords }}</span></td></tr>
+    <tr><td><span class="w-label">Total In Words:</span> &nbsp;<span class="w-value">{{ $amountInWords }}</span></td></tr>
+    @if(! empty($dueInWords) && $balanceDue > 0 && $balanceDue != (float) $invoice->total_amount)
+        <tr><td><span class="w-label">Balance Due In Words:</span> &nbsp;<span class="w-value">{{ $dueInWords }}</span></td></tr>
+    @endif
 </table>
 
 {{-- 7. Notes --}}

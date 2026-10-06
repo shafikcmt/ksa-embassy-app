@@ -320,7 +320,18 @@ class InvoiceController extends Controller
             'agency'        => auth()->user()->agency,
             'barcodeSrc'    => $barcode->make($invoice->invoice_number),
             'amountInWords' => NumberToWords::currency((string) $invoice->total_amount, $invoice->currency),
-        ], $invoice->invoice_number, $inline);
+            'dueInWords'    => NumberToWords::currency($this->balanceDue($invoice), $invoice->currency),
+        ], $invoice->invoice_number, $inline, ['showWatermarkText' => true]);
+    }
+
+    /** Total minus what is already paid (a paid invoice owes nothing), as "1234.56". */
+    private function balanceDue(Invoice $invoice): string
+    {
+        $paid = $invoice->status === 'paid'
+            ? (float) $invoice->total_amount
+            : (float) $invoice->items->sum(fn ($i) => (float) ($i->paid_amount ?? 0));
+
+        return number_format(max(0, (float) $invoice->total_amount - $paid), 2, '.', '');
     }
 
     /** Shared create/edit dropdown data — agency-scoped. */
