@@ -8,6 +8,7 @@ use App\Models\Agent;
 use App\Models\MofaEntry;
 use App\Models\Stamping;
 use App\Services\CsvImportService;
+use App\Services\MofaSyncService;
 use App\Services\PdfGeneratorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -216,11 +217,12 @@ class MofaEntryController extends Controller
                     $skipped++;
                     continue;
                 }
-                MofaEntry::create($row['attrs'] + [
+                $entry = MofaEntry::create($row['attrs'] + [
                     'agency_id'  => $agencyId,
                     'created_by' => auth()->id(),
                     'updated_by' => auth()->id(),
                 ]);
+                app(MofaSyncService::class)->created($entry);
                 $count++;
             }
 
@@ -368,11 +370,14 @@ class MofaEntryController extends Controller
             }
         }
 
-        MofaEntry::create($data + [
-            'agency_id'  => $agencyId,
-            'created_by' => auth()->id(),
-            'updated_by' => auth()->id(),
-        ]);
+        DB::transaction(function () use ($data, $agencyId) {
+            $entry = MofaEntry::create($data + [
+                'agency_id'  => $agencyId,
+                'created_by' => auth()->id(),
+                'updated_by' => auth()->id(),
+            ]);
+            app(MofaSyncService::class)->created($entry);
+        });
 
         return redirect()->route('erp.mofa')->with('success', 'MOFA entry added.');
     }
@@ -381,7 +386,10 @@ class MofaEntryController extends Controller
     {
         $this->authorizeAgency($mofa);
 
-        $mofa->update($this->validated($request) + ['updated_by' => auth()->id()]);
+        DB::transaction(function () use ($request, $mofa) {
+            $mofa->update($this->validated($request) + ['updated_by' => auth()->id()]);
+            app(MofaSyncService::class)->updated($mofa);
+        });
 
         return redirect()->route('erp.mofa')->with('success', 'MOFA entry updated.');
     }

@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 class Delivery extends Model
 {
     protected $fillable = [
-        'agency_id', 'delivery_date', 'full_name', 'passport_no',
+        'agency_id', 'mofa_entry_id', 'delivery_date', 'full_name', 'passport_no',
         'visa_serial', 'reference', 'total_amount', 'status', 'payment_method',
         'created_by', 'updated_by',
         // NOTE: paid_amount is deliberately NOT fillable.

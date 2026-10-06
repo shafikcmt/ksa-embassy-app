@@ -64,6 +64,13 @@ class MofaEntry extends Model
         'no_payment' => 'No Payment',
     ];
 
+    protected static function booted(): void
+    {
+        // Deleting a MOFA entry keeps its Double MOFA / Stamping / BMET / Delivery
+        // rows (payments, history) and only drops their link back to it.
+        static::deleted(fn (MofaEntry $entry) => app(\App\Services\MofaSyncService::class)->unlink($entry));
+    }
+
     public function agency(): BelongsTo
     {
         return $this->belongsTo(Agency::class);

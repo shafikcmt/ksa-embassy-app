@@ -18,7 +18,7 @@ class VisaStamping extends Stamping
     protected $table = 'stampings';
 
     protected $fillable = [
-        'agency_id', 'hr_profile_id', 'agent_id',
+        'agency_id', 'mofa_entry_id', 'hr_profile_id', 'agent_id',
         'full_name', 'father_name', 'mother_name', 'passport_number', 'date_of_birth',
         'visa_number', 'id_number', 'mofa_number', 'mofa_date',
         'issued_visa_number', 'issued_date', 'expiry_date',

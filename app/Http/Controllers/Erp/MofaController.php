@@ -8,6 +8,7 @@ use App\Models\Agency;
 use App\Models\Agent;
 use App\Models\HrProfile;
 use App\Models\MofaEntry;
+use App\Services\MofaSyncService;
 use App\Services\PdfGeneratorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -114,13 +115,17 @@ class MofaController extends Controller
 
     private function save(MofaEntryRequest $request, MofaEntry $entry)
     {
+        $sync = app(MofaSyncService::class);
         // Lock the tenant row so concurrent saves for this agency stay serialised.
         // A passport may have several MOFA entries, so there is no duplicate check.
-        DB::transaction(function () use ($request, $entry) {
+        DB::transaction(function () use ($request, $entry, $sync) {
             Agency::whereKey($request->user()->agency_id)->lockForUpdate()->firstOrFail();
             $data = $request->validated();
             $hr = HrProfile::forAgency((int) $entry->agency_id)->whereHas('passport', fn ($q) => $q->where('passport_number', $data['passport_number']))->first();
+            $isNew = ! $entry->exists;
             $entry->fill($data)->fill(['hr_profile_id' => $hr?->id, 'updated_by' => $request->user()->id])->save();
+            // Push the candidate data to Double MOFA / Stamping / BMET / Delivery.
+            $isNew ? $sync->created($entry) : $sync->updated($entry);
         });
         session()->flash('success', 'MOFA entry saved successfully');
 
