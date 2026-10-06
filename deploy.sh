@@ -55,6 +55,15 @@ else
     $PHP_BIN artisan db:seed --class="$SEED_CLASS" --force
 fi
 
+# 4b) One-time data backfills (each guarded by its own lock file, so it runs once).
+MOFA_SYNC_LOCK="storage/app/mofa-pipeline-synced.lock"
+if [ ! -f "$MOFA_SYNC_LOCK" ]; then
+    echo "==> One-time: linking existing MOFA entries to Stamping/BMET/Delivery..."
+    $PHP_BIN artisan erp:sync-mofa-pipeline
+    mkdir -p storage/app
+    echo "Synced on $(date)" > "$MOFA_SYNC_LOCK"
+fi
+
 # 5) Storage symlink (ignore failure if the link already exists).
 echo "==> Linking storage..."
 $PHP_BIN artisan storage:link || true

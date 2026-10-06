@@ -188,6 +188,8 @@ class InvoiceService
                     ? self::fromCents(self::toCents($item['paid_amount'])) : null;
                 $line = $invoice->items()->make([
                     'hr_profile_id'  => $item['hr_profile_id'] ?? null,
+                    'passenger_name' => $item['passenger_name'] ?? null,
+                    'passport_no'    => $item['passport_no'] ?? null,
                     'processing_fee' => self::fromCents(self::toCents($item['processing_fee'] ?? 0)),
                     'mofa_fee'       => self::fromCents(self::toCents($item['mofa_fee'] ?? 0)),
                     'paid_amount'    => $paid,
@@ -300,6 +302,8 @@ class InvoiceService
             'total_amount'    => (string) $invoice->total_amount,
             'items'           => $invoice->items->map(fn ($i) => [
                 'hr_profile_id'  => $i->hr_profile_id,
+                'passenger_name' => $i->passenger_name,
+                'passport_no'    => $i->passport_no,
                 'processing_fee' => (string) $i->processing_fee,
                 'mofa_fee'       => (string) $i->mofa_fee,
                 'total_amount'   => (string) $i->total_amount,

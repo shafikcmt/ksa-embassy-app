@@ -18,6 +18,8 @@ class InvoiceItem extends Model
 {
     protected $fillable = [
         'hr_profile_id',
+        'passenger_name',
+        'passport_no',
         'processing_fee',
         'mofa_fee',
         'paid_amount',
@@ -51,5 +53,16 @@ class InvoiceItem extends Model
     public function hrProfile(): BelongsTo
     {
         return $this->belongsTo(HrProfile::class);
+    }
+
+    /** Name shown on the invoice: the saved snapshot, else the linked HR profile. */
+    public function displayName(): ?string
+    {
+        return $this->passenger_name ?: $this->hrProfile?->full_name_en;
+    }
+
+    public function displayPassport(): ?string
+    {
+        return $this->passport_no ?: $this->hrProfile?->passport?->passport_number;
     }
 }

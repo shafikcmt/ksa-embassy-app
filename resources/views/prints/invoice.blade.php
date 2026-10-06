@@ -209,8 +209,8 @@
         @foreach($invoice->items as $i => $item)
             <tr class="{{ $i % 2 ? 'alt' : '' }}">
                 <td class="c">{{ $i + 1 }}</td>
-                <td class="l">{{ $item->hrProfile?->full_name_en ?? '—' }}</td>
-                <td class="l nw">{{ $item->hrProfile?->passport?->passport_number ?? '—' }}</td>
+                <td class="l">{{ $item->displayName() ?? '—' }}</td>
+                <td class="l nw">{{ $item->displayPassport() ?? '—' }}</td>
                 <td class="amt">{{ $n2($item->processing_fee) }}</td>
                 <td class="amt">{{ $n2($item->mofa_fee) }}</td>
                 <td class="amt">{{ $n2($item->total_amount) }}</td>

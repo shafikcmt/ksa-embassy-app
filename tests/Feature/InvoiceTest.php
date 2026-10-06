@@ -6,6 +6,7 @@ use App\Models\Agency;
 use App\Models\AuditLog;
 use App\Models\HrProfile;
 use App\Models\Invoice;
+use App\Models\MofaEntry;
 use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\User;
@@ -320,5 +321,38 @@ class InvoiceTest extends TestCase
             ->assertOk()->assertHeader('Content-Type', 'application/pdf');
         $res = $this->actingAs($this->staff)->get(route('erp.invoices.download-pdf', $inv))->assertOk();
         $this->assertStringContainsString('attachment', $res->headers->get('Content-Disposition'));
+    }
+
+    public function test_erp_only_passenger_is_searchable_and_shown_on_invoice(): void
+    {
+        MofaEntry::create(['agency_id' => $this->agency->id, 'full_name' => 'Rahim Uddin', 'passport_number' => 'ek0753712', 'mofa_date' => '2026-09-25']);
+        MofaEntry::create(['agency_id' => $this->other->id, 'full_name' => 'Foreign Person', 'passport_number' => 'ZZ0000001', 'mofa_date' => '2026-09-25']);
+
+        // Picker data includes the MOFA-only passenger, never another agency's.
+        $this->actingAs($this->staff)->get(route('erp.invoices.create'))->assertOk()
+            ->assertSee('EK0753712')->assertSee('Rahim Uddin')->assertDontSee('ZZ0000001');
+
+        $inv = $this->createAs($this->admin, ['items' => [
+            ['passenger_name' => 'Rahim Uddin', 'passport_no' => 'ek0753712', 'processing_fee' => '0', 'mofa_fee' => '3000', 'paid_amount' => '3000'],
+        ]]);
+        $item = $inv->items()->sole();
+        $this->assertSame(['Rahim Uddin', 'EK0753712'], [$item->displayName(), $item->displayPassport()]);
+
+        $this->actingAs($this->staff)->get(route('erp.invoices.show', $inv))->assertOk()->assertSee('Rahim Uddin')->assertSee('EK0753712');
+        $this->actingAs($this->staff)->get(route('erp.invoices.index', ['q' => 'EK0753712']))->assertOk()->assertSee($inv->invoice_number);
+        $this->actingAs($this->staff)->get(route('erp.invoices.edit', $inv))->assertOk()->assertSee('EK0753712');
+    }
+
+    public function test_hr_linked_line_snapshots_name_and_passport(): void
+    {
+        $hr = HrProfile::create([
+            'agency_id' => $this->agency->id, 'full_name_en' => 'Hr Pax', 'status' => 'active',
+            'nationality' => 'Bangladeshi', 'date_of_birth' => '1990-01-01', 'gender' => 'male',
+        ]);
+        $hr->passport()->create(['passport_number' => 'HR1234567']);
+
+        $inv = $this->createAs($this->admin, ['items' => [['hr_profile_id' => $hr->id, 'processing_fee' => '1000', 'mofa_fee' => '0']]]);
+        $item = $inv->items()->sole();
+        $this->assertSame(['Hr Pax', 'HR1234567'], [$item->passenger_name, $item->passport_no]);
     }
 }

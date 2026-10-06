@@ -74,7 +74,9 @@ class InvoiceController extends Controller
                     ->orWhere('bill_to_name', 'like', $like)
                     ->orWhere('bill_to_phone', 'like', $like)
                     ->orWhereHas('agent', fn ($a) => $a->where('name', 'like', $like))
-                    ->orWhereHas('items', fn ($i) => $i->whereHas('hrProfile', fn ($h) => $h->where('full_name_en', 'like', $like)));
+                    ->orWhereHas('items', fn ($i) => $i->where('passenger_name', 'like', $like)
+                        ->orWhere('passport_no', 'like', $like)
+                        ->orWhereHas('hrProfile', fn ($h) => $h->where('full_name_en', 'like', $like)));
             });
         }
 
@@ -324,16 +326,7 @@ class InvoiceController extends Controller
     /** Shared create/edit dropdown data — agency-scoped. */
     private function formData(int $agencyId): array
     {
-        $passengers = HrProfile::forAgency($agencyId)
-            ->with('passport:id,hr_profile_id,passport_number')
-            ->orderBy('full_name_en')
-            ->get(['id', 'full_name_en', 'file_number'])
-            ->map(fn (HrProfile $h) => [
-                'id'       => $h->id,
-                'name'     => $h->full_name_en,
-                'passport' => $h->passport?->passport_number,
-                'file'     => $h->file_number,
-            ])->values();
+        $passengers = $this->passengerOptions($agencyId);
 
         $agents = Agent::forAgency($agencyId)
             ->orderBy('name')
@@ -346,6 +339,58 @@ class InvoiceController extends Controller
             'currencies'     => Invoice::CURRENCIES,
             'adjustTypes'    => Invoice::ADJUST_TYPES,
         ];
+    }
+
+    /**
+     * Passenger picker options: HR profiles plus passports that exist only in the
+     * ERP modules (MOFA, Medical, Visa Stamping, BMET, Delivery, Double MOFA).
+     * One option per passport; an HR profile wins over ERP rows. Agency-scoped.
+     */
+    private function passengerOptions(int $agencyId): \Illuminate\Support\Collection
+    {
+        $options = [];
+        $norm = fn ($v) => strtoupper(trim((string) $v));
+
+        HrProfile::forAgency($agencyId)
+            ->with('passport:id,hr_profile_id,passport_number')
+            ->orderBy('full_name_en')
+            ->get(['id', 'full_name_en', 'file_number'])
+            ->each(function (HrProfile $h) use (&$options, $norm) {
+                $passport = $h->passport?->passport_number;
+                $options[$passport ? 'P:' . $norm($passport) : 'H:' . $h->id] = [
+                    'key'      => 'hr-' . $h->id,
+                    'hr_id'    => $h->id,
+                    'name'     => $h->full_name_en,
+                    'passport' => $passport,
+                    'file'     => $h->file_number,
+                ];
+            });
+
+        // Newest ERP record first, so the latest typed name wins for a passport.
+        $erp = [
+            [\App\Models\MofaEntry::class, 'full_name'],
+            [\App\Models\Medical::class, 'full_name'],
+            [\App\Models\VisaStamping::class, 'full_name'],
+            [\App\Models\BmetEntry::class, 'customer_name'],
+            [\App\Models\Delivery::class, 'full_name'],
+            [\App\Models\DoubleMofa::class, 'full_name'],
+        ];
+        foreach ($erp as [$model, $nameCol]) {
+            $model::forAgency($agencyId)->whereNotNull('passport_no')->where('passport_no', '!=', '')
+                ->orderByDesc('id')->get(['passport_no', $nameCol])
+                ->each(function ($r) use (&$options, $norm, $nameCol) {
+                    $passport = $norm($r->passport_no);
+                    $options['P:' . $passport] ??= [
+                        'key'      => 'erp-' . $passport,
+                        'hr_id'    => null,
+                        'name'     => $r->getAttributes()[$nameCol] ?? null,
+                        'passport' => $passport,
+                        'file'     => null,
+                    ];
+                });
+        }
+
+        return collect($options)->sortBy(fn ($o) => strtolower((string) $o['name']))->values();
     }
 
     /** @return array{0: array, 1: array} [header data, items] */
@@ -370,6 +415,8 @@ class InvoiceController extends Controller
 
             'items'                    => ['required', 'array', 'min:1', 'max:100'],
             'items.*.hr_profile_id'    => ['nullable', 'integer', Rule::exists('hr_profiles', 'id')->where('agency_id', $agencyId)],
+            'items.*.passenger_name'   => ['nullable', 'string', 'max:255'],
+            'items.*.passport_no'      => ['nullable', 'string', 'max:100'],
             'items.*.processing_fee'   => ['required', 'regex:' . self::PRICE],
             'items.*.mofa_fee'         => ['required', 'regex:' . self::PRICE],
             'items.*.paid_amount'      => ['nullable', 'regex:' . self::PRICE],
@@ -393,8 +440,16 @@ class InvoiceController extends Controller
             }
         }
 
+        // HR-linked lines without a snapshot take the name/passport from the profile.
+        $hr = HrProfile::forAgency($agencyId)->with('passport:id,hr_profile_id,passport_number')
+            ->whereIn('id', array_filter(array_column($validated['items'], 'hr_profile_id')))
+            ->get(['id', 'full_name_en'])->keyBy('id');
+        $blank = fn ($v) => ($v = trim((string) $v)) === '' ? null : $v;
+
         $items = array_map(fn ($i) => [
             'hr_profile_id'  => $i['hr_profile_id'] ?? null,
+            'passenger_name' => $blank($i['passenger_name'] ?? null) ?? $hr->get($i['hr_profile_id'] ?? 0)?->full_name_en,
+            'passport_no'    => ($p = $blank($i['passport_no'] ?? null) ?? $hr->get($i['hr_profile_id'] ?? 0)?->passport?->passport_number) ? strtoupper($p) : null,
             'processing_fee' => $i['processing_fee'],
             'mofa_fee'       => $i['mofa_fee'],
             'paid_amount'    => $i['paid_amount'] ?? null,

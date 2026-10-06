@@ -106,12 +106,15 @@
                                 <td class="px-4 py-3">
                                     @if($item->hrProfile)
                                         <a href="{{ route('hr.show', $item->hrProfile) }}" class="font-medium text-brand-700 hover:underline">
-                                            {{ $item->hrProfile->full_name_en }}
+                                            {{ $item->displayName() }}
                                         </a>
-                                        @if($item->hrProfile->passport?->passport_number)
-                                            <div class="font-mono text-xs text-slate-500">{{ $item->hrProfile->passport->passport_number }}</div>
-                                        @endif
-                                    @else
+                                    @elseif($item->displayName())
+                                        <span class="font-medium text-slate-800">{{ $item->displayName() }}</span>
+                                    @endif
+                                    @if($item->displayPassport())
+                                        <div class="font-mono text-xs text-slate-500">{{ $item->displayPassport() }}</div>
+                                    @endif
+                                    @if(! $item->displayName() && ! $item->displayPassport())
                                         <span class="text-slate-400">—</span>
                                     @endif
                                 </td>
