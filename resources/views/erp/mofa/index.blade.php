@@ -15,7 +15,7 @@
     </div>
     <section class="mf-card mb-5">
         <form method="get" class="flex flex-wrap items-end gap-3" x-data="{loading:false}" @submit="loading=true" :aria-busy="loading">
-            <div class="min-w-[220px] flex-1"><label class="mf-label" for="mf-search">Search entries</label><input class="mf-input" id="mf-search" name="q" value="{{ request('q') }}" placeholder="Name, passport, visa or MOFA number" @input.debounce.300ms="$el.form.requestSubmit()"></div>
+            <div class="min-w-[170px] flex-1"><label class="mf-label" for="mf-search">Search entries</label><input class="mf-input" id="mf-search" name="q" value="{{ request('q') }}" placeholder="Name, passport, visa or MOFA number" @input.debounce.300ms="$el.form.requestSubmit()"></div>
             <div><label class="mf-label" for="mf-status">Status</label><select id="mf-status" name="status" class="mf-input"><option value="">All statuses</option>@foreach(\App\Models\MofaEntry::STATUSES as $key=>$label)<option value="{{ $key }}" @selected(request('status')===$key)>{{ $label }}</option>@endforeach</select></div>
             <div><label class="mf-label" for="mf-agent">Agent</label><select id="mf-agent" name="agent" class="mf-input"><option value="">All agents</option>@foreach($agentOptions as $opt)<option value="{{ $opt['name'] }}" @selected(request('agent')===$opt['name'])>{{ $opt['name'] }}</option>@endforeach</select></div>
             @foreach(['from'=>'From date','to'=>'To date'] as $key=>$label)<div><label for="mf-{{ $key }}" class="mf-label">{{ $label }}</label><input id="mf-{{ $key }}" class="mf-input" type="date" name="{{ $key }}" value="{{ request($key) }}"></div>@endforeach
@@ -23,7 +23,7 @@
         </form>
         @if($errors->any())<p class="mf-error" role="alert">{{ $errors->first() }}</p>@endif
     </section>
-    <div class="mb-3 flex flex-wrap items-center justify-between gap-3"><p class="text-sm text-slate-500">{{ $entries->total() }} records @if($entries->total() > 0) <span class="mx-2">/</span> Scroll to see all passenger details @endif</p><div class="flex flex-wrap gap-2">
+    <div class="mb-3 flex flex-wrap items-center justify-between gap-3"><p class="text-sm text-slate-500">{{ $entries->total() }} records </p><div class="flex flex-wrap gap-2">
         <a class="mf-btn" href="{{ route('erp.mofa.export',request()->only('q','status','agent','from','to')) }}"><i class="bi bi-download" aria-hidden="true"></i> Export CSV</a>
         <a class="mf-btn" target="_blank" rel="noopener" href="{{ route('erp.mofa.print',request()->only('q','status','agent','from','to')) }}">Print</a>
         @if(auth()->user()->isAgencyAdmin())<a class="mf-btn" href="{{ route('erp.mofa.import.form') }}">Import CSV</a>@endif
@@ -36,15 +36,35 @@
         <button class="mf-btn mf-primary" @click="$dispatch('mofa-add')">+ Add MOFA Entry</button>
     </section>
     @else
-    <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white" tabindex="0" aria-label="MOFA entries, scroll horizontally">
-        <table class="mf-table"><thead><tr>@foreach(\App\Http\Controllers\Erp\MofaController::COLUMNS as $column)<th scope="col">{{ $column }}</th>@endforeach<th scope="col">Actions</th></tr></thead><tbody>
+    @php
+        $mv = fn ($e, $f) => \App\Http\Controllers\Erp\MofaController::value($e, $f) ?? '—';
+        // Compact screen layout: related fields share one cell (2 lines) so all 17 columns fit without a horizontal scrollbar.
+        // Print / CSV keep the full one-field-per-column layout (MofaController::COLUMNS).
+        $pairs = [
+            ["Father’s Name", "Mother’s Name", 'father_name', 'mother_name', 'text'],
+            ['D.O.B', 'Age', 'date_of_birth', 'age', ''],
+            ['Issu Date', 'Exp. Date', 'issue_date', 'expiry_date', ''],
+            ['Visa No', 'Id No', 'visa_number', 'id_number', ''],
+            ['M-Issu.Date', 'Left Day', 'mofa_issue_date', 'left_day', ''],
+            ['Mofa No', 'Mofa Date', 'mofa_number', 'mofa_date', ''],
+            ['Reference', 'Remarks', 'reference', 'remarks', 'text'],
+        ];
+    @endphp
+    <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white" tabindex="0" aria-label="MOFA entries">
+        <table class="mf-table"><thead><tr>
+            <th scope="col">SL</th><th scope="col">Passenger Name</th>
+            <th scope="col" class="mf-c">PP No</th>
+            @foreach($pairs as [$top, $bottom])<th scope="col">{{ $top }}<span class="mf-sub">{{ $bottom }}</span></th>@endforeach
+            <th scope="col" class="mf-r">Actions</th>
+        </tr></thead><tbody>
         @foreach($entries as $entry)
-        <tr><td>{{ $entries->firstItem()+$loop->index }}</td>
-            @foreach(\App\Http\Controllers\Erp\MofaController::FIELDS as $field)
-            <td @class(['text-right'=>in_array($field,['age','left_day'])])>{{ \App\Http\Controllers\Erp\MofaController::value($entry,$field) ?? '—' }}
-            @if($field==='full_name')<br><span class="mf-badge mf-{{ $entry->status }}"><i class="bi bi-circle-fill" aria-hidden="true"></i> {{ $entry->statusLabel() }}</span>@endif</td>
+        <tr><td class="mf-sl">{{ $entries->firstItem()+$loop->index }}</td>
+            <td class="mf-name"><span class="mf-strong">{{ $entry->full_name }}</span><span class="mf-badge mf-{{ $entry->status }}"><i class="bi bi-circle-fill" aria-hidden="true"></i> {{ $entry->statusLabel() }}</span></td>
+            <td class="mf-c mf-nw mf-strong">{{ $mv($entry, 'passport_number') }}</td>
+            @foreach($pairs as [, , $a, $b, $cls])
+            <td @class(['mf-text' => $cls === 'text', 'mf-nw' => $cls !== 'text'])>{{ $mv($entry, $a) }}<span class="mf-sub">{{ $mv($entry, $b) }}</span></td>
             @endforeach
-            <td><div class="mf-actions"><a href="{{ route('erp.mofa.show',$entry) }}" aria-label="View {{ $entry->full_name }}"><i class="bi bi-eye"></i></a><button @click="$dispatch('mofa-edit',{id:{{ $entry->id }}})" aria-label="Edit {{ $entry->full_name }}"><i class="bi bi-pencil"></i></button><a target="_blank" rel="noopener" href="{{ route('erp.mofa.print-pdf',$entry) }}" aria-label="Print {{ $entry->full_name }}"><i class="bi bi-printer"></i></a><form method="post" action="{{ route('erp.mofa.destroy',$entry) }}" @submit="if (!confirm('Delete this MOFA entry?')) $event.preventDefault()">@csrf @method('DELETE')<button aria-label="Delete {{ $entry->full_name }}" class="text-red-700"><i class="bi bi-trash"></i></button></form></div></td>
+            <td><div class="mf-actions"><a href="{{ route('erp.mofa.show',$entry) }}" aria-label="View {{ $entry->full_name }}" title="View"><i class="bi bi-eye"></i></a><button @click="$dispatch('mofa-edit',{id:{{ $entry->id }}})" aria-label="Edit {{ $entry->full_name }}" title="Edit"><i class="bi bi-pencil"></i></button><a target="_blank" rel="noopener" href="{{ route('erp.mofa.print-pdf',$entry) }}" aria-label="Print {{ $entry->full_name }}" title="Print"><i class="bi bi-printer"></i></a><form method="post" action="{{ route('erp.mofa.destroy',$entry) }}" @submit="if (!confirm('Delete this MOFA entry?')) $event.preventDefault()">@csrf @method('DELETE')<button aria-label="Delete {{ $entry->full_name }}" title="Delete" class="text-red-700"><i class="bi bi-trash"></i></button></form></div></td>
         </tr>
         @endforeach
         </tbody></table>

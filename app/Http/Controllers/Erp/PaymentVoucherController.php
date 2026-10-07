@@ -78,7 +78,7 @@ class PaymentVoucherController extends Controller
             ->groupBy('status')->get()->keyBy('status');
 
         return view('erp.payment-vouchers.index', [
-            'vouchers' => $query->paginate(12)->withQueryString(),
+            'vouchers' => $query->paginate(15)->withQueryString(),
             'filters'  => $filters,
             'sorts'    => self::SORTS,
             'statuses' => PaymentVoucher::STATUSES,

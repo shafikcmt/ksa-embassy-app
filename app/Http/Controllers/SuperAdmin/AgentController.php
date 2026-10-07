@@ -31,7 +31,7 @@ class AgentController extends Controller
             $query->where('status', $request->status);
         }
 
-        $agents   = $query->latest()->paginate(20)->withQueryString();
+        $agents   = $query->latest()->paginate(15)->withQueryString();
         $agencies = Agency::orderBy('name')->get(['id', 'name']);
 
         return view('super-admin.agents.index', compact('agents', 'agencies'));

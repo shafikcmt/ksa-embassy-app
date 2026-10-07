@@ -55,7 +55,7 @@ class VisaStampingController extends Controller
             ->selectRaw('status, COUNT(*) AS c')->groupBy('status')->pluck('c', 'status');
 
         return view('erp.visa-stamping.index', [
-            'entries'    => $this->filteredQuery($agencyId, $filters)->paginate(20)->withQueryString(),
+            'entries'    => $this->filteredQuery($agencyId, $filters)->paginate(15)->withQueryString(),
             'filters'    => $filters,
             'statuses'   => Stamping::STATUSES,
             'sorts'      => self::SORTS,

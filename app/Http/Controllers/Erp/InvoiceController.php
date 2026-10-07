@@ -108,7 +108,7 @@ class InvoiceController extends Controller
             default       => $query->orderByDesc('invoice_date')->orderByDesc('id'),
         };
 
-        $invoices = $query->with('agent:id,name')->paginate(12)->withQueryString();
+        $invoices = $query->with('agent:id,name')->paginate(15)->withQueryString();
 
         // Summary strip — whole agency (unfiltered), grouped per currency so
         // BDT and SAR amounts are never added together.

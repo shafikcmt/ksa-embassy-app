@@ -69,7 +69,7 @@ class MofaController extends Controller
             $stats[$status] = $q->count();
         }
 
-        return view('erp.mofa.index', ['entries' => $this->query($request)->paginate(20)->withQueryString(), 'stats' => $stats,
+        return view('erp.mofa.index', ['entries' => $this->query($request)->paginate(15)->withQueryString(), 'stats' => $stats,
             'agentOptions' => Agent::referenceOptions((int) $request->user()->agency_id)]);
     }
 
@@ -204,7 +204,7 @@ class MofaController extends Controller
         }
         // Accept old layout links, but always render the single landscape report.
         $request->validate(['layout' => 'nullable|in:landscape,portrait,auto', 'page' => 'nullable|integer|min:1', 'current_page' => 'nullable|boolean']);
-        $entries = $mofa ? collect([$mofa]) : ($request->boolean('current_page') ? $this->query($request)->paginate(20)->getCollection() : $this->query($request)->get());
+        $entries = $mofa ? collect([$mofa]) : ($request->boolean('current_page') ? $this->query($request)->paginate(15)->getCollection() : $this->query($request)->get());
         $data = ['entries' => $entries, 'agency' => $request->user()->agency, 'generated' => now()];
         // Default → browser print preview (opens the print dialog); ?download=1 → mPDF file.
         if (! $request->boolean('download')) {

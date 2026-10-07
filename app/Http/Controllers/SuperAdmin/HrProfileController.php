@@ -30,7 +30,7 @@ class HrProfileController extends Controller
             $query->where('status', $status);
         }
 
-        $hrProfiles = $query->paginate(20)->withQueryString();
+        $hrProfiles = $query->paginate(15)->withQueryString();
         $agencies   = Agency::orderBy('name')->get();
 
         return view('super-admin.hr.index', compact('hrProfiles', 'agencies'));

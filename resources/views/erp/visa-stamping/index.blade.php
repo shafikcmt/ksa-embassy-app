@@ -20,7 +20,7 @@
     $lbl   = 'mb-1.5 block text-[13px] font-semibold text-gray-700';
     $ghost = 'inline-flex items-center justify-center gap-1.5 rounded-md border border-gray-300 bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition duration-200 hover:bg-gray-50 hover:shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500';
     $addBtn = 'inline-flex items-center justify-center gap-1.5 rounded-md bg-emerald-500 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition duration-200 hover:bg-emerald-600 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2';
-    $icon  = 'grid h-8 w-8 place-items-center rounded-md transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500';
+    $icon  = 'grid h-7 w-7 place-items-center rounded-md transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500';
     // Column visibility: mobile = Name, PP No, Status, Actions; tablet adds Exp. Date + Left Day; desktop = all.
     $xl = 'hidden xl:table-cell';
     $md = 'hidden md:table-cell';
@@ -174,28 +174,27 @@
 @else
     <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <div class="overflow-x-auto">
-            <table class="min-w-full text-[13px] text-gray-800">
+            {{-- Compact layout: related fields share one cell (2 lines) so the list fits without a horizontal scrollbar.
+                 Print / CSV keep one field per column. --}}
+            @php
+                $c   = 'px-1.5 py-1.5';
+                $sub = 'block text-gray-500';
+            @endphp
+            <table class="w-full text-xs leading-snug text-gray-800">
                 <caption class="sr-only">Visa stamping entries</caption>
-                <thead class="border-b border-gray-200 bg-gray-50 text-left text-sm font-semibold text-gray-700">
-                    <tr class="whitespace-nowrap">
-                        <th scope="col" class="{{ $md }} p-3">SL</th>
-                        <th scope="col" class="p-3">Passenger Name</th>
-                        <th scope="col" class="{{ $xl }} p-3">Father's Name</th>
-                        <th scope="col" class="{{ $xl }} p-3">Mother's Name</th>
-                        <th scope="col" class="p-3">PP No</th>
-                        <th scope="col" class="{{ $xl }} p-3">D.O.B</th>
-                        <th scope="col" class="{{ $xl }} p-3 text-center">Age</th>
-                        <th scope="col" class="{{ $xl }} p-3">Visa No</th>
-                        <th scope="col" class="{{ $xl }} p-3">Id No</th>
-                        <th scope="col" class="{{ $xl }} p-3">Mofa No</th>
-                        <th scope="col" class="{{ $xl }} p-3">Mofa Date</th>
-                        <th scope="col" class="{{ $xl }} p-3">Issu Visa No</th>
-                        <th scope="col" class="{{ $xl }} p-3">Issu Date</th>
-                        <th scope="col" class="{{ $md }} p-3">Exp. Date</th>
-                        <th scope="col" class="{{ $md }} p-3 text-center">Left Day</th>
-                        <th scope="col" class="p-3">Status</th>
-                        <th scope="col" class="{{ $xl }} p-3">Reference</th>
-                        <th scope="col" class="sticky right-0 bg-gray-50 p-3 text-right shadow-[-8px_0_8px_-8px_rgba(15,23,42,0.15)]">Actions</th>
+                <thead class="border-b border-gray-200 bg-gray-50 text-left text-[11px] font-semibold text-gray-700">
+                    <tr class="whitespace-nowrap align-bottom">
+                        <th scope="col" class="{{ $md }} {{ $c }}">SL</th>
+                        <th scope="col" class="{{ $c }}">Passenger Name<span class="{{ $sub }} font-medium">Status</span></th>
+                        <th scope="col" class="{{ $c }}">PP No</th>
+                        <th scope="col" class="{{ $xl }} {{ $c }}">Father's Name<span class="{{ $sub }} font-medium">Mother's Name</span></th>
+                        <th scope="col" class="{{ $xl }} {{ $c }}">D.O.B<span class="{{ $sub }} font-medium">Age</span></th>
+                        <th scope="col" class="{{ $xl }} {{ $c }}">Visa No<span class="{{ $sub }} font-medium">Id No</span></th>
+                        <th scope="col" class="{{ $xl }} {{ $c }}">Mofa No<span class="{{ $sub }} font-medium">Mofa Date</span></th>
+                        <th scope="col" class="{{ $xl }} {{ $c }}">Issu Visa No<span class="{{ $sub }} font-medium">Issu Date</span></th>
+                        <th scope="col" class="{{ $md }} {{ $c }}">Exp. Date<span class="{{ $sub }} font-medium">Left Day</span></th>
+                        <th scope="col" class="{{ $xl }} {{ $c }}">Reference</th>
+                        <th scope="col" class="sticky right-0 bg-gray-50 {{ $c }} text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -205,43 +204,40 @@
                             $left  = $e->left_day;
                         @endphp
                         <tr class="border-b-[0.5px] border-gray-200 transition-colors duration-150 last:border-0 odd:bg-white even:bg-gray-100/60 hover:bg-blue-50/60 {{ $isNew ? '!bg-emerald-50' : '' }}">
-                            <td class="{{ $md }} p-3 text-gray-400">{{ $entries->firstItem() + $loop->index }}</td>
-                            <td class="p-3 font-semibold text-gray-900">
+                            <td class="{{ $md }} {{ $c }} text-gray-400">{{ $entries->firstItem() + $loop->index }}</td>
+                            <td class="{{ $c }} min-w-[9rem] max-w-[12rem] font-semibold text-gray-900">
                                 @if($filters['trashed'])
                                     {{ $e->full_name }}
                                 @else
                                     <a href="{{ route('erp.visa-stamping.show', $e) }}" class="hover:text-blue-600 hover:underline">{{ $e->full_name }}</a>
                                 @endif
+                                <span class="mt-0.5 flex">
+                                    <span class="inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-px text-[10.5px] font-semibold {{ $e->statusTone() }} {{ $isNew ? 'animate-[pulse_2s_ease-in-out_3]' : '' }}">
+                                        <i class="bi {{ $e->statusIcon() }}" aria-hidden="true"></i>{{ $e->statusLabel() }}
+                                    </span>
+                                </span>
                             </td>
-                            <td class="{{ $xl }} p-3">{{ $e->father_name ?: '—' }}</td>
-                            <td class="{{ $xl }} p-3">{{ $e->mother_name ?: '—' }}</td>
-                            <td class="whitespace-nowrap p-3 font-mono text-xs">{{ $e->passport_no }}</td>
-                            <td class="{{ $xl }} whitespace-nowrap p-3">{{ $d($e->date_of_birth) }}</td>
-                            <td class="{{ $xl }} p-3 text-center">{{ $e->age ?? '—' }}</td>
-                            <td class="{{ $xl }} whitespace-nowrap p-3">{{ $e->visa_number ?: '—' }}</td>
-                            <td class="{{ $xl }} whitespace-nowrap p-3">{{ $e->id_number ?: '—' }}</td>
-                            <td class="{{ $xl }} whitespace-nowrap p-3">{{ $e->mofa_number ?: '—' }}</td>
-                            <td class="{{ $xl }} whitespace-nowrap p-3">{{ $d($e->mofa_date) }}</td>
-                            <td class="{{ $xl }} whitespace-nowrap p-3">{{ $e->issued_visa_number ?: '—' }}</td>
-                            <td class="{{ $xl }} whitespace-nowrap p-3">{{ $d($e->issued_date) }}</td>
-                            <td class="{{ $md }} whitespace-nowrap p-3 {{ $e->expiry_date?->isPast() ? 'font-semibold text-red-600' : '' }}">{{ $d($e->expiry_date) }}</td>
-                            <td class="{{ $md }} p-3 text-center">
+                            <td class="whitespace-nowrap {{ $c }} font-semibold">{{ $e->passport_no }}</td>
+                            <td class="{{ $xl }} {{ $c }} max-w-[8rem]">{{ $e->father_name ?: '—' }}<span class="{{ $sub }}">{{ $e->mother_name ?: '—' }}</span></td>
+                            <td class="{{ $xl }} whitespace-nowrap {{ $c }}">{{ $d($e->date_of_birth) }}<span class="{{ $sub }}">{{ $e->age ?? '—' }}</span></td>
+                            <td class="{{ $xl }} whitespace-nowrap {{ $c }}">{{ $e->visa_number ?: '—' }}<span class="{{ $sub }}">{{ $e->id_number ?: '—' }}</span></td>
+                            <td class="{{ $xl }} whitespace-nowrap {{ $c }}">{{ $e->mofa_number ?: '—' }}<span class="{{ $sub }}">{{ $d($e->mofa_date) }}</span></td>
+                            <td class="{{ $xl }} whitespace-nowrap {{ $c }}">{{ $e->issued_visa_number ?: '—' }}<span class="{{ $sub }}">{{ $d($e->issued_date) }}</span></td>
+                            <td class="{{ $md }} whitespace-nowrap {{ $c }}">
+                                <span class="{{ $e->expiry_date?->isPast() ? 'font-semibold text-red-600' : '' }}">{{ $d($e->expiry_date) }}</span>
+                                <span class="block">
                                 @if($left === null)
                                     <span class="text-gray-400">—</span>
                                 @else
-                                    <span class="inline-flex items-center gap-1 font-semibold {{ $e->leftDayIsLow() ? 'text-red-600' : 'text-gray-800' }}">
-                                        @if($e->leftDayIsLow())<i class="bi bi-exclamation-triangle-fill text-xs" aria-hidden="true"></i><span class="sr-only">Low:</span>@endif{{ $left }}
+                                    <span class="inline-flex items-center gap-1 font-semibold {{ $e->leftDayIsLow() ? 'text-red-600' : 'text-gray-500' }}">
+                                        @if($e->leftDayIsLow())<i class="bi bi-exclamation-triangle-fill text-[10px]" aria-hidden="true"></i><span class="sr-only">Low:</span>@endif{{ $left }} days
                                     </span>
                                 @endif
-                            </td>
-                            <td class="p-3">
-                                <span class="inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold {{ $e->statusTone() }} {{ $isNew ? 'animate-[pulse_2s_ease-in-out_3]' : '' }}">
-                                    <i class="bi {{ $e->statusIcon() }}" aria-hidden="true"></i>{{ $e->statusLabel() }}
                                 </span>
                             </td>
-                            <td class="{{ $xl }} p-3">{{ $e->reference ?: '—' }}</td>
-                            <td class="sticky right-0 bg-inherit p-3 shadow-[-8px_0_8px_-8px_rgba(15,23,42,0.15)]">
-                                <div class="flex flex-nowrap items-center justify-end gap-1">
+                            <td class="{{ $xl }} {{ $c }} max-w-[8rem]">{{ $e->reference ?: '—' }}</td>
+                            <td class="sticky right-0 bg-inherit {{ $c }}">
+                                <div class="{{ $filters['trashed'] ? 'flex justify-end' : 'ml-auto grid w-max grid-cols-2 gap-0.5' }}">
                                     @if($filters['trashed'])
                                         <form method="POST" action="{{ route('erp.visa-stamping.restore', $e->id) }}">
                                             @csrf @method('PATCH')

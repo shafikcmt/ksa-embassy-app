@@ -65,7 +65,7 @@ class MedicalController extends Controller
             ->pluck('c', 'medical_status');
 
         return view('erp.medical.index', [
-            'entries'   => $this->filteredQuery($agencyId, $filters)->paginate(20)->withQueryString(),
+            'entries'   => $this->filteredQuery($agencyId, $filters)->paginate(15)->withQueryString(),
             'filters'   => $filters,
             'statuses'  => Medical::MEDICAL_STATUSES,
             'sorts'     => self::SORTS,

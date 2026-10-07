@@ -342,9 +342,9 @@ class MofaEntryTest extends TestCase
                 ->assertDontSee('aria-label="MOFA entries, scroll horizontally"', false);
         }
         $this->get(route('erp.mofa', ['q' => $entry->passport_number]))->assertOk()
-            ->assertSee('1 records')->assertSee('Scroll to see all passenger details')
+            ->assertSee('1 records')->assertDontSee('Scroll to see all passenger details')
             ->assertSee('<table class="mf-table">', false)
-            ->assertSee('aria-label="MOFA entries, scroll horizontally"', false)
+            ->assertSee('aria-label="MOFA entries"', false)
             ->assertSee('Test Passenger')->assertDontSee('id="mf-empty-title"', false);
     }
 
@@ -518,7 +518,7 @@ class MofaEntryTest extends TestCase
 
         $page = $this->get(route('erp.mofa.print', ['current_page' => 1, 'download' => 1]))->assertOk();
         $pageText = (new \Smalot\PdfParser\Parser)->parseContent($page->getContent())->getText();
-        $this->assertStringContainsString('Total: 20 records', $pageText);
+        $this->assertStringContainsString('Total: 15 records', $pageText);
     }
 
     public function test_pdf_layouts_and_csv(): void

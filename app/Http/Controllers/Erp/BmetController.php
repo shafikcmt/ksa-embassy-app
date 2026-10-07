@@ -72,7 +72,7 @@ class BmetController extends Controller
         }
 
         return view('erp.bmet.index', [
-            'entries' => $this->query($request)->paginate(20)->withQueryString(), 'stats' => $stats,
+            'entries' => $this->query($request)->paginate(15)->withQueryString(), 'stats' => $stats,
             'agents' => Agent::forAgency((int) $request->user()->agency_id)->orderBy('name')->get(['id', 'name', 'phone', 'address', 'status']),
         ]);
     }

@@ -18,7 +18,7 @@
     $ctl   = 'block w-full rounded-md border border-gray-300 bg-white py-2.5 text-sm text-gray-800 shadow-sm transition duration-150 focus:border-blue-500 focus:outline-none focus:ring-[3px] focus:ring-blue-500/10';
     $lbl   = 'mb-1.5 block text-[13px] font-semibold text-gray-700';
     $ghost = 'inline-flex items-center justify-center gap-1.5 rounded-md border border-gray-300 bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition duration-200 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500';
-    $icon  = 'grid h-8 w-8 place-items-center rounded-md transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500';
+    $icon  = 'grid h-7 w-7 place-items-center rounded-md transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500';
 
     $cards = [
         ['Total Entries', $stats['total'],   'bi-clipboard2-pulse', '',        'bg-blue-50 text-blue-600',       'text-blue-950',   'border-blue-100'],
@@ -164,24 +164,24 @@
 @else
     <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <div class="overflow-x-auto">
-            <table class="min-w-full text-[13px] text-gray-800">
+            <table class="w-full text-xs leading-snug text-gray-800">
                 <caption class="sr-only">Medical entries</caption>
-                <thead class="border-b border-gray-200 bg-gray-50 text-left text-sm font-semibold text-gray-700">
+                <thead class="border-b border-gray-200 bg-gray-50 text-left text-[11px] font-semibold text-gray-700">
                     <tr class="whitespace-nowrap">
-                        <th scope="col" class="p-3">SL</th>
-                        <th scope="col" class="p-3">Name</th>
-                        <th scope="col" class="hidden p-3 md:table-cell">Father Name</th>
-                        <th scope="col" class="p-3">Passport</th>
-                        <th scope="col" class="hidden p-3 md:table-cell">DOB</th>
-                        <th scope="col" class="hidden p-3 text-center md:table-cell">Age</th>
-                        <th scope="col" class="p-3">Medical Center</th>
-                        <th scope="col" class="hidden p-3 2xl:table-cell">Country</th>
-                        <th scope="col" class="hidden p-3 2xl:table-cell">Code No</th>
-                        <th scope="col" class="hidden p-3 md:table-cell">Issue Date</th>
-                        <th scope="col" class="p-3">Expiry Date</th>
-                        <th scope="col" class="p-3">Status</th>
+                        <th scope="col" class="px-2 py-1.5">SL</th>
+                        <th scope="col" class="px-2 py-1.5">Name</th>
+                        <th scope="col" class="hidden px-2 py-1.5 md:table-cell">Father Name</th>
+                        <th scope="col" class="px-2 py-1.5">Passport</th>
+                        <th scope="col" class="hidden px-2 py-1.5 md:table-cell">DOB</th>
+                        <th scope="col" class="hidden px-2 py-1.5 text-center md:table-cell">Age</th>
+                        <th scope="col" class="px-2 py-1.5">Medical Center</th>
+                        <th scope="col" class="hidden px-2 py-1.5 2xl:table-cell">Country</th>
+                        <th scope="col" class="hidden px-2 py-1.5 2xl:table-cell">Code No</th>
+                        <th scope="col" class="hidden px-2 py-1.5 md:table-cell">Issue Date</th>
+                        <th scope="col" class="px-2 py-1.5">Expiry Date</th>
+                        <th scope="col" class="px-2 py-1.5">Status</th>
                         {{-- Sticky so the actions stay reachable when the table scrolls sideways. --}}
-                        <th scope="col" class="sticky right-0 bg-gray-50 p-3 text-right shadow-[-8px_0_8px_-8px_rgba(15,23,42,0.15)]">Actions</th>
+                        <th scope="col" class="sticky right-0 bg-gray-50 px-2 py-1.5 text-right ">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -191,32 +191,32 @@
                             $expired = $e->medical_expire_date?->isPast();
                         @endphp
                         <tr class="border-b-[0.5px] border-gray-200 transition-colors duration-150 last:border-0 odd:bg-white even:bg-gray-100/60 hover:bg-blue-50/60 {{ $isNew ? '!bg-emerald-50' : '' }}">
-                            <td class="p-3 text-gray-400">{{ $entries->firstItem() + $loop->index }}</td>
-                            <td class="p-3 font-semibold text-gray-900">
+                            <td class="px-2 py-1.5 text-gray-400">{{ $entries->firstItem() + $loop->index }}</td>
+                            <td class="px-2 py-1.5 font-semibold text-gray-900">
                                 @if($filters['trashed'])
                                     {{ $e->full_name }}
                                 @else
                                     <a href="{{ route('erp.medical.show', $e) }}" class="hover:text-blue-600 hover:underline">{{ $e->full_name }}</a>
                                 @endif
                             </td>
-                            <td class="hidden p-3 md:table-cell">{{ $e->father_name }}</td>
-                            <td class="whitespace-nowrap p-3 font-mono text-xs">{{ $e->passport_no }}</td>
-                            <td class="hidden whitespace-nowrap p-3 md:table-cell">{{ $d($e->date_of_birth) }}</td>
-                            <td class="hidden p-3 text-center md:table-cell">{{ $e->currentAge() ?? '—' }}</td>
-                            <td class="p-3">{{ $e->medical_center_name ?: '—' }}</td>
-                            <td class="hidden p-3 2xl:table-cell">{{ $e->country ?: '—' }}</td>
-                            <td class="hidden whitespace-nowrap p-3 2xl:table-cell">{{ $e->medical_code ?: '—' }}</td>
-                            <td class="hidden whitespace-nowrap p-3 md:table-cell">{{ $d($e->medical_issue_date) }}</td>
-                            <td class="whitespace-nowrap p-3 {{ $expired ? 'font-semibold text-red-600' : '' }}">
+                            <td class="hidden px-2 py-1.5 md:table-cell">{{ $e->father_name }}</td>
+                            <td class="whitespace-nowrap px-2 py-1.5 font-mono text-xs">{{ $e->passport_no }}</td>
+                            <td class="hidden whitespace-nowrap px-2 py-1.5 md:table-cell">{{ $d($e->date_of_birth) }}</td>
+                            <td class="hidden px-2 py-1.5 text-center md:table-cell">{{ $e->currentAge() ?? '—' }}</td>
+                            <td class="px-2 py-1.5">{{ $e->medical_center_name ?: '—' }}</td>
+                            <td class="hidden px-2 py-1.5 2xl:table-cell">{{ $e->country ?: '—' }}</td>
+                            <td class="hidden whitespace-nowrap px-2 py-1.5 2xl:table-cell">{{ $e->medical_code ?: '—' }}</td>
+                            <td class="hidden whitespace-nowrap px-2 py-1.5 md:table-cell">{{ $d($e->medical_issue_date) }}</td>
+                            <td class="whitespace-nowrap px-2 py-1.5 {{ $expired ? 'font-semibold text-red-600' : '' }}">
                                 {{ $d($e->medical_expire_date) }}
                                 @if($expired)<span class="sr-only">(past expiry)</span><i class="bi bi-exclamation-circle ml-0.5" title="Past expiry date" aria-hidden="true"></i>@endif
                             </td>
-                            <td class="p-3">
+                            <td class="px-2 py-1.5">
                                 <span class="inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold {{ $e->statusTone() }} {{ $isNew ? 'animate-[pulse_2s_ease-in-out_3]' : '' }}">
                                     <i class="bi {{ $e->statusIcon() }}" aria-hidden="true"></i>{{ $e->statusLabel() }}
                                 </span>
                             </td>
-                            <td class="sticky right-0 bg-inherit p-3 shadow-[-8px_0_8px_-8px_rgba(15,23,42,0.15)]">
+                            <td class="sticky right-0 bg-inherit px-2 py-1.5 ">
                                 <div class="flex flex-nowrap items-center justify-end gap-1">
                                     @if($filters['trashed'])
                                         <form method="POST" action="{{ route('erp.medical.restore', $e->id) }}">

@@ -40,7 +40,7 @@ class EmbassyListController extends Controller
             });
         }
 
-        $embassyLists = $query->paginate(20)->withQueryString();
+        $embassyLists = $query->paginate(15)->withQueryString();
         $agencies     = Agency::orderBy('name')->get(['id', 'name']);
 
         return view('super-admin.embassy-lists.index', compact('embassyLists', 'agencies'));

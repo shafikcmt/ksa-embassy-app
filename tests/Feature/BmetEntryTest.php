@@ -191,7 +191,7 @@ class BmetEntryTest extends TestCase
         for ($i = 0; $i < 21; $i++) {
             $this->entry(['passport_number' => 'PAGE'.$i]);
         }
-        $this->get(route('erp.bmet.index', ['page' => 2]))->assertViewHas('entries', fn ($e) => $e->count() === 3 && $e->total() === 23);
+        $this->get(route('erp.bmet.index', ['page' => 2]))->assertViewHas('entries', fn ($e) => $e->count() === 8 && $e->total() === 23);
     }
 
     public function test_date_filters_allow_either_boundary_and_reject_reversed_ranges(): void
