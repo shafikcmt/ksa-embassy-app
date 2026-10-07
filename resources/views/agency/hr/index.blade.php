@@ -71,44 +71,45 @@
          table toolbar below; each form carries the other's values as hidden inputs. --}}
     @php $selCls = 'h-10 rounded-xl border-slate-200 bg-slate-50 text-sm transition focus:border-brand-400 focus:bg-white focus:ring-brand-400'; @endphp
     <x-ui.card class="mb-4">
-        <form method="GET" action="{{ route('hr.index') }}" class="grid grid-cols-1 gap-3 p-3 sm:grid-cols-2 lg:grid-cols-4">
+        <form data-ajax-filter data-ajax-group="agency-hr" method="GET" action="{{ route('hr.index') }}" class="grid grid-cols-1 gap-3 p-3 sm:grid-cols-2 lg:grid-cols-4">
             <input type="hidden" name="search" value="{{ request('search') }}">
             <input type="hidden" name="per_page" value="{{ $perPage }}">
-            <select name="status" class="{{ $selCls }}" onchange="this.form.submit()">
+            <select name="status" class="{{ $selCls }}">
                 <option value="">All status</option>
                 @foreach(['active' => 'Active', 'inactive' => 'Inactive', 'blacklisted' => 'Blacklisted'] as $val => $lbl)
                     <option value="{{ $val }}" @selected(request('status') === $val)>{{ $lbl }}</option>
                 @endforeach
             </select>
-            <select name="agent_id" class="{{ $selCls }}" onchange="this.form.submit()">
+            <select name="agent_id" class="{{ $selCls }}">
                 <option value="">All agents</option>
                 @foreach($agents as $agent)
                     <option value="{{ $agent->id }}" @selected(request('agent_id') == $agent->id)>{{ $agent->name }}</option>
                 @endforeach
             </select>
-            <select name="nationality" class="{{ $selCls }}" onchange="this.form.submit()">
+            <select name="nationality" class="{{ $selCls }}">
                 <option value="">All nationalities</option>
                 @foreach($nationalities as $nat)
                     <option value="{{ $nat }}" @selected(request('nationality') === $nat)>{{ $nat }}</option>
                 @endforeach
             </select>
             <div class="flex gap-2">
-                <x-ui.button type="submit" variant="gradient" class="h-10 flex-1"><i class="bi bi-funnel-fill"></i> Filter</x-ui.button>
-                <x-ui.button :href="route('hr.index')" variant="secondary" size="icon" title="Clear all filters"
+                <noscript><x-ui.button type="submit" variant="gradient" class="h-10 flex-1"><i class="bi bi-funnel-fill"></i> Filter</x-ui.button></noscript>
+                <x-ui.button data-ajax-link data-ajax-group="agency-hr" :href="route('hr.index')" variant="secondary" size="icon" title="Clear all filters"
                              class="h-10 w-10 shrink-0 hover:border-brand-200 hover:text-brand-600"><i class="bi bi-arrow-counterclockwise"></i></x-ui.button>
             </div>
         </form>
     </x-ui.card>
 
+<div data-ajax-region="results" data-ajax-group="agency-hr">
     {{-- Table toolbar: "Show N entries" + search (DataTables-style) --}}
     <x-ui.card class="overflow-hidden">
-        <form method="GET" action="{{ route('hr.index') }}" class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-3">
+        <form data-ajax-filter data-ajax-group="agency-hr" method="GET" action="{{ route('hr.index') }}" class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-3">
             @foreach(['status', 'agent_id', 'nationality'] as $keep)
                 @if(request($keep) !== null && request($keep) !== '')<input type="hidden" name="{{ $keep }}" value="{{ request($keep) }}">@endif
             @endforeach
             <label class="flex items-center gap-2 text-sm text-slate-600">
                 Show
-                <select name="per_page" onchange="this.form.submit()" class="h-9 rounded-lg border-slate-200 py-0 text-sm focus:border-brand-400 focus:ring-brand-400">
+                <select name="per_page" class="h-9 rounded-lg border-slate-200 py-0 text-sm focus:border-brand-400 focus:ring-brand-400">
                     @foreach([10, 25, 50, 100] as $n)<option value="{{ $n }}" @selected($perPage === $n)>{{ $n }}</option>@endforeach
                 </select>
                 entries
@@ -117,11 +118,12 @@
                 <i class="bi bi-search text-sm text-slate-400"></i>
                 <input type="text" name="search" x-model="q" placeholder="Search name, passport, visa, MOFA…"
                        class="h-9 w-full border-0 bg-transparent p-0 text-sm focus:ring-0">
-                <button type="button" x-show="q" x-cloak @click="q = ''; $nextTick(() => $el.closest('form').submit())" title="Clear search"
+                <button type="button" x-show="q" x-cloak @click="q = ''; $nextTick(() => $el.closest('form').requestSubmit())" title="Clear search"
                         class="grid h-6 w-6 shrink-0 place-items-center rounded-md text-slate-400 transition hover:bg-slate-100 hover:text-slate-600">
                     <i class="bi bi-x-lg text-xs"></i>
                 </button>
             </div>
+        <noscript><button type="submit" class="rounded-lg border border-slate-300 px-3 py-2 text-sm">Apply filters</button></noscript>
         </form>
 
         {{-- ── Desktop table ───────────────────────────────────── --}}
@@ -258,6 +260,7 @@
         @endif
     </div>
 
+</div>
     {{-- ── Delete dialog ─────────────────────────────────────── --}}
     <div x-show="del.open" x-cloak class="fixed inset-0 z-[60] flex items-center justify-center p-4" style="display:none">
         <div @click="del.open = false" x-show="del.open" x-transition.opacity class="absolute inset-0 bg-slate-900/50"></div>

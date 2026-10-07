@@ -18,6 +18,7 @@
 
     <x-ui.page-header title="Due List" subtitle="Outstanding payments across Delivery & Double MOFA" icon="bi-hourglass-split" />
 
+<div data-ajax-region="stats" data-ajax-group="erp-due-list">
     {{-- Summary --}}
     <div class="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div class="rounded-2xl border border-sky-200 bg-sky-50 p-4">
@@ -38,8 +39,9 @@
         </div>
     </div>
 
+</div>
     {{-- Filters (GET, bookmarkable) --}}
-    <form method="GET" action="{{ route('erp.due-list') }}" class="mb-6 rounded-2xl border border-slate-200 bg-white p-5">
+    <form data-ajax-filter data-ajax-group="erp-due-list" method="GET" action="{{ route('erp.due-list') }}" class="mb-6 rounded-2xl border border-slate-200 bg-white p-5">
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
             <div>
                 <label class="{{ $lbl }}">Type</label>
@@ -62,11 +64,12 @@
             </div>
         </div>
         <div class="mt-4 flex justify-start gap-2">
-            <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md"><i class="bi bi-funnel"></i> Apply Filters</button>
-            <a href="{{ route('erp.due-list') }}" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50">Reset</a>
+            <noscript><button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md"><i class="bi bi-funnel"></i> Apply Filters</button></noscript>
+            <a data-ajax-link data-ajax-group="erp-due-list" href="{{ route('erp.due-list') }}" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50">Reset</a>
         </div>
     </form>
 
+<div data-ajax-region="results" data-ajax-group="erp-due-list">
     {{-- List --}}
     <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
         <div class="overflow-x-auto">
@@ -117,6 +120,7 @@
         </div>
     </div>
 
+</div>
     {{-- Receive Payment modal → posts to the EXISTING E2 endpoint (ErpPaymentService) --}}
     <div x-show="paying" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-slate-900/50" x-on:click="paying = false"></div>

@@ -27,27 +27,29 @@
     </x-slot:actions>
 </x-ui.page-header>
 
+<div data-ajax-region="stats" data-ajax-group="erp-payment-vouchers">
 {{-- Summary --}}
 <div class="mb-5 grid gap-3 sm:grid-cols-3">
-    <a href="{{ route('erp.payment-vouchers.index', ['status' => 'draft']) }}" class="rounded-2xl border border-slate-200 bg-white p-4 transition hover:shadow-sm">
+    <a data-ajax-link data-ajax-group="erp-payment-vouchers" href="{{ route('erp.payment-vouchers.index', ['status' => 'draft']) }}" class="rounded-2xl border border-slate-200 bg-white p-4 transition hover:shadow-sm">
         <div class="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-500"><span>Drafts</span><i class="bi bi-pencil-square"></i></div>
         <div class="mt-1 text-lg font-bold text-slate-900">{{ $draft['count'] }}</div>
         <div class="text-xs text-slate-500">{{ $draft['amount'] }} awaiting approval</div>
     </a>
-    <a href="{{ route('erp.payment-vouchers.index', ['status' => 'approved']) }}" class="rounded-2xl border border-sky-200 bg-sky-50 p-4 transition hover:shadow-sm">
+    <a data-ajax-link data-ajax-group="erp-payment-vouchers" href="{{ route('erp.payment-vouchers.index', ['status' => 'approved']) }}" class="rounded-2xl border border-sky-200 bg-sky-50 p-4 transition hover:shadow-sm">
         <div class="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-sky-700"><span>Approved · to pay</span><i class="bi bi-patch-check"></i></div>
         <div class="mt-1 text-lg font-bold text-sky-800">{{ $approved['amount'] }}</div>
         <div class="text-xs text-sky-700/80">{{ $approved['count'] }} voucher{{ $approved['count'] === 1 ? '' : 's' }}</div>
     </a>
-    <a href="{{ route('erp.payment-vouchers.index', ['status' => 'paid']) }}" class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 transition hover:shadow-sm">
+    <a data-ajax-link data-ajax-group="erp-payment-vouchers" href="{{ route('erp.payment-vouchers.index', ['status' => 'paid']) }}" class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 transition hover:shadow-sm">
         <div class="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-emerald-700"><span>Paid out</span><i class="bi bi-check-circle"></i></div>
         <div class="mt-1 text-lg font-bold text-emerald-800">{{ $paid['amount'] }}</div>
         <div class="text-xs text-emerald-700/80">{{ $paid['count'] }} voucher{{ $paid['count'] === 1 ? '' : 's' }}</div>
     </a>
 </div>
 
+</div>
 {{-- Filters --}}
-<form method="GET" action="{{ route('erp.payment-vouchers.index') }}" class="mb-5 rounded-2xl border border-slate-200 bg-white p-4">
+<form data-ajax-filter data-ajax-group="erp-payment-vouchers" method="GET" action="{{ route('erp.payment-vouchers.index') }}" class="mb-5 rounded-2xl border border-slate-200 bg-white p-4">
     <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-12">
         <div class="lg:col-span-4">
             <label class="{{ $lbl }}">Search</label>
@@ -67,18 +69,19 @@
         <div class="lg:col-span-2"><label class="{{ $lbl }}">To</label><input type="date" name="to" value="{{ $filters['to'] }}" class="{{ $inp }}"></div>
         <div class="lg:col-span-2">
             <label class="{{ $lbl }}">Sort</label>
-            <select name="sort" class="{{ $inp }}" onchange="this.form.submit()">
+            <select name="sort" class="{{ $inp }}">
                 @foreach($sorts as $key => $label)<option value="{{ $key }}" @selected($filters['sort'] === $key)>{{ $label }}</option>@endforeach
             </select>
         </div>
     </div>
     <div class="mt-3 flex flex-wrap items-center justify-end gap-2">
         @if($hasFilters)
-            <a href="{{ route('erp.payment-vouchers.index') }}" class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-slate-500 hover:text-slate-700"><i class="bi bi-x-lg"></i> Clear</a>
+            <a data-ajax-link data-ajax-group="erp-payment-vouchers" href="{{ route('erp.payment-vouchers.index') }}" class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-slate-500 hover:text-slate-700"><i class="bi bi-x-lg"></i> Clear</a>
         @endif
-        <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"><i class="bi bi-funnel"></i> Apply</button>
+        <noscript><button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"><i class="bi bi-funnel"></i> Apply</button></noscript>
     </div>
 </form>
+<div data-ajax-region="results" data-ajax-group="erp-payment-vouchers">
 
 @if($vouchers->isEmpty())
     <div class="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
@@ -137,4 +140,5 @@
 
     @if($vouchers->hasPages())<div class="mt-6 rounded-2xl border border-slate-200 bg-white px-4 py-3">{{ $vouchers->links() }}</div>@endif
 @endif
+</div>
 @endsection

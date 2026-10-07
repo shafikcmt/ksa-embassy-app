@@ -43,11 +43,12 @@
     </div>
 </div>
 
+<div data-ajax-region="stats" data-ajax-group="erp-medical">
 {{-- Stats --}}
 <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
     @foreach($cards as [$label, $count, $ico, $status, $chip, $num, $border])
         @php $active = $status !== '' && $filters['status'] === $status; @endphp
-        <a href="{{ route('erp.medical', $status ? ['status' => $status] : []) }}"
+        <a data-ajax-link data-ajax-group="erp-medical" href="{{ route('erp.medical', $status ? ['status' => $status] : []) }}"
            class="group flex items-center gap-4 rounded-xl border bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 {{ $active ? 'ring-2 ring-blue-500' : '' }} {{ $border }}">
             <span class="grid h-12 w-12 shrink-0 place-items-center rounded-xl text-xl {{ $chip }}" aria-hidden="true"><i class="bi {{ $ico }}"></i></span>
             <span>
@@ -58,8 +59,9 @@
     @endforeach
 </div>
 
+</div>
 {{-- Search & filters --}}
-<form method="GET" action="{{ route('erp.medical') }}" class="mb-5 rounded-xl border border-gray-200 bg-white p-4 shadow-sm" role="search">
+<form data-ajax-filter data-ajax-group="erp-medical" method="GET" action="{{ route('erp.medical') }}" class="mb-5 rounded-xl border border-gray-200 bg-white p-4 shadow-sm" role="search">
     @if($filters['trashed'])<input type="hidden" name="trashed" value="1">@endif
     <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12 xl:items-end">
         <div class="xl:col-span-2">
@@ -71,14 +73,14 @@
         </div>
         <div class="xl:col-span-2">
             <label for="f_status" class="{{ $lbl }}">Status</label>
-            <select id="f_status" name="status" class="{{ $ctl }} px-3" onchange="this.form.submit()">
+            <select id="f_status" name="status" class="{{ $ctl }} px-3">
                 <option value="">All</option>
                 @foreach($statuses as $key => $label)<option value="{{ $key }}" @selected($filters['status'] === $key)>{{ $label }}</option>@endforeach
             </select>
         </div>
         <div class="xl:col-span-2">
             <label for="f_agent" class="{{ $lbl }}">Agent</label>
-            <select id="f_agent" name="agent" class="{{ $ctl }} px-3" onchange="this.form.submit()">
+            <select id="f_agent" name="agent" class="{{ $ctl }} px-3">
                 <option value="">All agents</option>
                 @foreach($agentOptions as $opt)<option value="{{ $opt['name'] }}" @selected($filters['agent'] === $opt['name'])>{{ $opt['name'] }}</option>@endforeach
             </select>
@@ -93,7 +95,7 @@
         </div>
         <div class="xl:col-span-2">
             <label for="f_sort" class="{{ $lbl }}">Sort</label>
-            <select id="f_sort" name="sort" class="{{ $ctl }} px-3" onchange="this.form.submit()">
+            <select id="f_sort" name="sort" class="{{ $ctl }} px-3">
                 @foreach($sorts as $key => $label)<option value="{{ $key }}" @selected($filters['sort'] === $key)>{{ $label }}</option>@endforeach
             </select>
         </div>
@@ -101,17 +103,17 @@
 
     <div class="mt-4 flex flex-col gap-3 border-t border-gray-100 pt-4 lg:flex-row lg:items-center lg:justify-between">
         <div class="flex flex-wrap items-center gap-2">
-            <button type="submit" class="inline-flex items-center gap-1.5 rounded-md bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-blue-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+            <noscript><button type="submit" class="inline-flex items-center gap-1.5 rounded-md bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-blue-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
                 <i class="bi bi-funnel" aria-hidden="true"></i> Apply
-            </button>
+            </button></noscript>
             @if($hasFilters)
-                <a href="{{ route('erp.medical') }}" class="inline-flex items-center gap-1.5 rounded-md px-3 py-2.5 text-sm font-semibold text-gray-500 transition hover:text-gray-800"><i class="bi bi-x-lg" aria-hidden="true"></i> Clear</a>
+                <a data-ajax-link data-ajax-group="erp-medical" href="{{ route('erp.medical') }}" class="inline-flex items-center gap-1.5 rounded-md px-3 py-2.5 text-sm font-semibold text-gray-500 transition hover:text-gray-800"><i class="bi bi-x-lg" aria-hidden="true"></i> Clear</a>
             @endif
             @if($isAdmin)
                 @if($filters['trashed'])
-                    <a href="{{ route('erp.medical') }}" class="inline-flex items-center gap-1.5 px-2 text-sm font-semibold text-blue-600 hover:underline"><i class="bi bi-arrow-left" aria-hidden="true"></i> Active entries</a>
+                    <a data-ajax-link data-ajax-group="erp-medical" href="{{ route('erp.medical') }}" class="inline-flex items-center gap-1.5 px-2 text-sm font-semibold text-blue-600 hover:underline"><i class="bi bi-arrow-left" aria-hidden="true"></i> Active entries</a>
                 @else
-                    <a href="{{ route('erp.medical', ['trashed' => 1]) }}" class="inline-flex items-center gap-1.5 px-2 text-sm font-semibold text-gray-500 hover:text-gray-800"><i class="bi bi-trash3" aria-hidden="true"></i> Deleted entries</a>
+                    <a data-ajax-link data-ajax-group="erp-medical" href="{{ route('erp.medical', ['trashed' => 1]) }}" class="inline-flex items-center gap-1.5 px-2 text-sm font-semibold text-gray-500 hover:text-gray-800"><i class="bi bi-trash3" aria-hidden="true"></i> Deleted entries</a>
                 @endif
             @endif
         </div>
@@ -128,6 +130,7 @@
         </div>
     </div>
 </form>
+<div data-ajax-region="results" data-ajax-group="erp-medical">
 
 @if($filters['trashed'])
     <div class="mb-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
@@ -151,7 +154,7 @@
         @if($hasFilters)
             <h2 class="text-lg font-bold text-blue-950">No entries match these filters</h2>
             <p class="mt-1 text-sm text-gray-500">Try a different search, status or date range.</p>
-            <a href="{{ route('erp.medical') }}" class="{{ $ghost }} mt-5"><i class="bi bi-x-lg" aria-hidden="true"></i> Clear filters</a>
+            <a data-ajax-link data-ajax-group="erp-medical" href="{{ route('erp.medical') }}" class="{{ $ghost }} mt-5"><i class="bi bi-x-lg" aria-hidden="true"></i> Clear filters</a>
         @else
             <h2 class="text-lg font-bold text-blue-950">No medical entries yet</h2>
             <p class="mt-1 text-sm text-gray-500">Add your first medical record</p>
@@ -245,6 +248,7 @@
     </div>
 @endif
 
+</div>
 {{-- Floating Add button (bottom right) --}}
 <button type="button" x-data x-on:click="$dispatch('medical-add')" aria-label="Add medical entry" title="Add medical entry"
         class="fixed bottom-6 right-6 z-40 grid h-14 w-14 place-items-center rounded-full bg-emerald-500 text-2xl text-white shadow-lg shadow-emerald-500/30 transition duration-200 hover:scale-105 hover:bg-emerald-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/50">

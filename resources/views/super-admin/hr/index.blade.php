@@ -8,7 +8,7 @@
 
 {{-- Search & Filter --}}
 <x-ui.card class="mb-5">
-    <form method="GET" action="{{ route('super-admin.hr.index') }}" class="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-12">
+    <form data-ajax-filter data-ajax-group="super-admin-hr" method="GET" action="{{ route('super-admin.hr.index') }}" class="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-12">
         <div class="lg:col-span-5">
             <div class="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 transition-colors focus-within:border-brand-400 focus-within:ring-1 focus-within:ring-brand-400">
                 <i class="bi bi-search text-sm text-slate-400"></i>
@@ -29,13 +29,14 @@
             <option value="blacklisted" @selected(request('status') == 'blacklisted')>Blacklisted</option>
         </select>
         <div class="flex gap-2 lg:col-span-2">
-            <x-ui.button type="submit" class="flex-1 cursor-pointer"><i class="bi bi-funnel"></i> Filter</x-ui.button>
+            <noscript><x-ui.button type="submit" class="flex-1 cursor-pointer"><i class="bi bi-funnel"></i> Filter</x-ui.button></noscript>
             @if(request()->hasAny(['search','agency_id','status']))
-                <x-ui.button :href="route('super-admin.hr.index')" variant="secondary" size="icon" title="Clear filters" class="cursor-pointer"><i class="bi bi-arrow-counterclockwise"></i></x-ui.button>
+                <x-ui.button data-ajax-link data-ajax-group="super-admin-hr" :href="route('super-admin.hr.index')" variant="secondary" size="icon" title="Clear filters" class="cursor-pointer"><i class="bi bi-arrow-counterclockwise"></i></x-ui.button>
             @endif
         </div>
     </form>
 </x-ui.card>
+<div data-ajax-region="results" data-ajax-group="super-admin-hr">
 
 <x-ui.card class="overflow-hidden">
     <div class="overflow-x-auto">
@@ -91,4 +92,5 @@
         <div class="border-t border-slate-100 px-4 py-3">{{ $hrProfiles->withQueryString()->links() }}</div>
     @endif
 </x-ui.card>
+</div>
 @endsection

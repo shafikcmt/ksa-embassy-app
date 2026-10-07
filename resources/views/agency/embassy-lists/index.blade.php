@@ -25,14 +25,14 @@
 
     {{-- Filter bar --}}
     <x-ui.card class="mb-5">
-        <form method="GET" action="{{ route('embassy-lists.index') }}" class="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-12">
+        <form data-ajax-filter data-ajax-group="agency-embassy-lists" method="GET" action="{{ route('embassy-lists.index') }}" class="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-12">
             <div class="lg:col-span-2">
                 <div class="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 focus-within:border-brand-400 focus-within:ring-1 focus-within:ring-brand-400">
                     <i class="bi bi-search text-sm text-slate-400"></i>
                     <input type="text" name="search" value="{{ request('search') }}" placeholder="List no, candidate, passport…" class="h-10 w-full border-0 bg-transparent p-0 text-sm focus:ring-0">
                 </div>
             </div>
-            <select name="agent_id" title="Agent" onchange="this.form.submit()" class="h-10 rounded-lg border-slate-300 text-sm focus:border-brand-400 focus:ring-brand-400 lg:col-span-2">
+            <select name="agent_id" title="Agent" class="h-10 rounded-lg border-slate-300 text-sm focus:border-brand-400 focus:ring-brand-400 lg:col-span-2">
                 <option value="">All agents</option>
                 @foreach($agents as $agent)
                     <option value="{{ $agent->id }}" @selected((string) request('agent_id') === (string) $agent->id)>{{ $agent->name }}</option>
@@ -47,12 +47,13 @@
             <input type="date" name="date_from" value="{{ request('date_from') }}" title="From date" class="h-10 rounded-lg border-slate-300 text-sm focus:border-brand-400 focus:ring-brand-400 lg:col-span-2">
             <input type="date" name="date_to" value="{{ request('date_to') }}" title="To date" class="h-10 rounded-lg border-slate-300 text-sm focus:border-brand-400 focus:ring-brand-400 lg:col-span-2">
             <div class="flex gap-2 lg:col-span-2">
-                <x-ui.button type="submit" class="flex-1"><i class="bi bi-funnel"></i> Filter</x-ui.button>
-                <x-ui.button :href="route('embassy-lists.index')" variant="secondary" size="icon" title="Clear filters"><i class="bi bi-arrow-counterclockwise"></i></x-ui.button>
+                <noscript><x-ui.button type="submit" class="flex-1"><i class="bi bi-funnel"></i> Filter</x-ui.button></noscript>
+                <x-ui.button data-ajax-link data-ajax-group="agency-embassy-lists" :href="route('embassy-lists.index')" variant="secondary" size="icon" title="Clear filters"><i class="bi bi-arrow-counterclockwise"></i></x-ui.button>
             </div>
         </form>
     </x-ui.card>
 
+<div data-ajax-region="results" data-ajax-group="agency-embassy-lists">
     {{-- ── Desktop table ─────────────────────────────────────── --}}
     <x-ui.card class="hidden overflow-hidden lg:block">
         <div class="overflow-x-auto">
@@ -186,6 +187,7 @@
         @if($embassyLists->hasPages())<div class="pt-1">{{ $embassyLists->withQueryString()->links() }}</div>@endif
     </div>
 
+</div>
     {{-- ── Cancel dialog ─────────────────────────────────────── --}}
     <div x-show="cancel.open" x-cloak class="fixed inset-0 z-[60] flex items-center justify-center p-4" style="display:none">
         <div @click="cancel.open = false" x-show="cancel.open" x-transition.opacity class="absolute inset-0 bg-slate-900/50"></div>

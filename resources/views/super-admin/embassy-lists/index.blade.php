@@ -8,7 +8,7 @@
 
 {{-- Search & Filter --}}
 <x-ui.card class="mb-5">
-    <form method="GET" action="{{ route('super-admin.embassy-lists.index') }}" class="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-12">
+    <form data-ajax-filter data-ajax-group="super-admin-embassy-lists" method="GET" action="{{ route('super-admin.embassy-lists.index') }}" class="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-12">
         <div class="lg:col-span-3">
             <div class="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 transition-colors focus-within:border-brand-400 focus-within:ring-1 focus-within:ring-brand-400">
                 <i class="bi bi-search text-sm text-slate-400"></i>
@@ -34,13 +34,14 @@
         <input type="date" name="date_to" value="{{ request('date_to') }}"
             class="h-10 rounded-lg border-slate-300 text-sm transition-colors focus:border-brand-400 focus:ring-brand-400 lg:col-span-2">
         <div class="flex gap-2 lg:col-span-1">
-            <x-ui.button type="submit" size="icon" title="Filter" class="cursor-pointer"><i class="bi bi-funnel"></i></x-ui.button>
+            <noscript><x-ui.button type="submit" size="icon" title="Filter" class="cursor-pointer"><i class="bi bi-funnel"></i></x-ui.button></noscript>
             @if(request()->hasAny(['search','agency_id','status','date_from','date_to']))
-                <x-ui.button :href="route('super-admin.embassy-lists.index')" variant="secondary" size="icon" title="Clear filters" class="cursor-pointer"><i class="bi bi-arrow-counterclockwise"></i></x-ui.button>
+                <x-ui.button data-ajax-link data-ajax-group="super-admin-embassy-lists" :href="route('super-admin.embassy-lists.index')" variant="secondary" size="icon" title="Clear filters" class="cursor-pointer"><i class="bi bi-arrow-counterclockwise"></i></x-ui.button>
             @endif
         </div>
     </form>
 </x-ui.card>
+<div data-ajax-region="results" data-ajax-group="super-admin-embassy-lists">
 
 <x-ui.card class="overflow-hidden">
     <div class="overflow-x-auto">
@@ -101,4 +102,5 @@
         <div class="border-t border-slate-100 px-4 py-3">{{ $embassyLists->withQueryString()->links() }}</div>
     @endif
 </x-ui.card>
+</div>
 @endsection
