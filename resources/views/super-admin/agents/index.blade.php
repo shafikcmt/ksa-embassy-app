@@ -79,10 +79,7 @@
             </table>
         </div>
         @if($agents->hasPages())
-            <div class="flex items-center justify-between border-t border-slate-100 px-4 py-3">
-                <span class="text-xs text-slate-500">Showing {{ $agents->firstItem() }}–{{ $agents->lastItem() }} of {{ $agents->total() }} agents</span>
-                {{ $agents->withQueryString()->links() }}
-            </div>
+            <div class="border-t border-slate-100 px-4 py-3">{{ $agents->withQueryString()->links() }}</div>
         @endif
     </x-ui.card>
 

@@ -200,8 +200,11 @@
 
         {{-- Footer: "Showing X to Y of Z entries" + pagination (desktop + mobile) --}}
         <div class="hidden flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-4 py-3 text-sm text-slate-500 lg:flex">
-            <div>Showing <strong>{{ $hrProfiles->firstItem() ?? 0 }}</strong> to <strong>{{ $hrProfiles->lastItem() ?? 0 }}</strong> of <strong>{{ $hrProfiles->total() }}</strong> entries</div>
-            @if($hrProfiles->hasPages())<div>{{ $hrProfiles->withQueryString()->links() }}</div>@endif
+            @if($hrProfiles->hasPages())
+                {{ $hrProfiles->withQueryString()->links() }}
+            @else
+                <div>Showing <strong>{{ $hrProfiles->firstItem() ?? 0 }}</strong> to <strong>{{ $hrProfiles->lastItem() ?? 0 }}</strong> of <strong>{{ $hrProfiles->total() }}</strong> entries</div>
+            @endif
         </div>
     </x-ui.card>
 

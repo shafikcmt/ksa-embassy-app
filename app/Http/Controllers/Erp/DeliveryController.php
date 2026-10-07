@@ -72,6 +72,7 @@ class DeliveryController extends Controller
             'totalDue'         => $totalBilled - $totalCollected,
             'referenceOptions' => $referenceOptions,
             'agentOptions'     => Agent::referenceOptions($agencyId),
+            'agentFilter'      => self::agentFilter(),
         ]);
     }
 
@@ -135,8 +136,15 @@ class DeliveryController extends Controller
     {
         return Delivery::forAgency($agencyId)
             ->with(['createdBy:id,name', 'receipts.receivedBy:id,name'])
+            // Agent filter (?agent=): Reference stores the agent's name. Shared by list, totals, print and CSV.
+            ->when(self::agentFilter(), fn ($q, $agent) => $q->where('reference', $agent))
             ->orderBy('delivery_date')->orderBy('id')
             ->get();
+    }
+
+    private static function agentFilter(): string
+    {
+        return mb_substr(trim((string) request()->query('agent', '')), 0, 191);
     }
 
     public function store(Request $request)

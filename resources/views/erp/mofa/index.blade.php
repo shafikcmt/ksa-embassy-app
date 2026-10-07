@@ -17,20 +17,21 @@
         <form method="get" class="flex flex-wrap items-end gap-3" x-data="{loading:false}" @submit="loading=true" :aria-busy="loading">
             <div class="min-w-[220px] flex-1"><label class="mf-label" for="mf-search">Search entries</label><input class="mf-input" id="mf-search" name="q" value="{{ request('q') }}" placeholder="Name, passport, visa or MOFA number" @input.debounce.300ms="$el.form.requestSubmit()"></div>
             <div><label class="mf-label" for="mf-status">Status</label><select id="mf-status" name="status" class="mf-input"><option value="">All statuses</option>@foreach(\App\Models\MofaEntry::STATUSES as $key=>$label)<option value="{{ $key }}" @selected(request('status')===$key)>{{ $label }}</option>@endforeach</select></div>
+            <div><label class="mf-label" for="mf-agent">Agent</label><select id="mf-agent" name="agent" class="mf-input"><option value="">All agents</option>@foreach($agentOptions as $opt)<option value="{{ $opt['name'] }}" @selected(request('agent')===$opt['name'])>{{ $opt['name'] }}</option>@endforeach</select></div>
             @foreach(['from'=>'From date','to'=>'To date'] as $key=>$label)<div><label for="mf-{{ $key }}" class="mf-label">{{ $label }}</label><input id="mf-{{ $key }}" class="mf-input" type="date" name="{{ $key }}" value="{{ request($key) }}"></div>@endforeach
             <button class="mf-btn" :disabled="loading"><span x-text="loading ? 'Searching…' : 'Apply filters'">Apply filters</span></button><a class="mf-btn" href="{{ route('erp.mofa') }}">Reset</a>
         </form>
         @if($errors->any())<p class="mf-error" role="alert">{{ $errors->first() }}</p>@endif
     </section>
     <div class="mb-3 flex flex-wrap items-center justify-between gap-3"><p class="text-sm text-slate-500">{{ $entries->total() }} records @if($entries->total() > 0) <span class="mx-2">/</span> Scroll to see all passenger details @endif</p><div class="flex flex-wrap gap-2">
-        <a class="mf-btn" href="{{ route('erp.mofa.export',request()->only('q','status','from','to')) }}"><i class="bi bi-download" aria-hidden="true"></i> Export CSV</a>
-        <a class="mf-btn" target="_blank" rel="noopener" href="{{ route('erp.mofa.print',request()->only('q','status','from','to')) }}">Print</a>
+        <a class="mf-btn" href="{{ route('erp.mofa.export',request()->only('q','status','agent','from','to')) }}"><i class="bi bi-download" aria-hidden="true"></i> Export CSV</a>
+        <a class="mf-btn" target="_blank" rel="noopener" href="{{ route('erp.mofa.print',request()->only('q','status','agent','from','to')) }}">Print</a>
         @if(auth()->user()->isAgencyAdmin())<a class="mf-btn" href="{{ route('erp.mofa.import.form') }}">Import CSV</a>@endif
     </div></div>
     @if($entries->isEmpty())
     <section class="rounded-lg border border-slate-200 bg-white px-4 py-8 text-center sm:px-6" aria-labelledby="mf-empty-title">
         <i class="bi bi-passport text-4xl text-blue-500" aria-hidden="true"></i>
-        <h2 id="mf-empty-title" class="mt-3 text-lg font-bold">{{ request()->hasAny(['q','status','from','to']) ? 'No matching MOFA entries' : 'No MOFA entries yet' }}</h2>
+        <h2 id="mf-empty-title" class="mt-3 text-lg font-bold">{{ request()->hasAny(['q','status','agent','from','to']) ? 'No matching MOFA entries' : 'No MOFA entries yet' }}</h2>
         <p class="mx-auto mt-2 mb-4 max-w-md text-sm text-slate-500">Add your first MOFA record or adjust your filters.</p>
         <button class="mf-btn mf-primary" @click="$dispatch('mofa-add')">+ Add MOFA Entry</button>
     </section>
@@ -47,7 +48,7 @@
         </tr>
         @endforeach
         </tbody></table>
-    </div><div class="mt-5">{{ $entries->links() }}</div>
+    </div>@if($entries->hasPages())<div class="mt-4 rounded-lg border border-slate-200 bg-white px-4 py-3">{{ $entries->links() }}</div>@endif
     @endif
 </div>
 {{-- Outside the .mofa wrapper so its legacy focus/heading CSS doesn't reach the modal. --}}

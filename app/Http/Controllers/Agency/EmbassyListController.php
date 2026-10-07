@@ -42,6 +42,11 @@ class EmbassyListController extends Controller
             $query->where('status', $status);
         }
 
+        // Agent filter: lists that contain at least one candidate of this agent.
+        if (($agentId = (int) $request->input('agent_id')) > 0) {
+            $query->whereHas('items', fn ($qi) => $qi->where('agent_id', $agentId));
+        }
+
         if ($from = $request->input('date_from')) {
             $query->where('list_date', '>=', $from);
         }
@@ -60,9 +65,11 @@ class EmbassyListController extends Controller
         $draftCount     = EmbassyList::forAgency($agencyId)->draft()->count();
         $finalizedCount = EmbassyList::forAgency($agencyId)->finalized()->count();
 
+        $agents = Agent::forAgency($agencyId)->orderBy('name')->get(['id', 'name']);
+
         return view('agency.embassy-lists.index', compact(
             'embassyLists', 'monthlyLimit', 'monthlyCount',
-            'totalCount', 'draftCount', 'finalizedCount'
+            'totalCount', 'draftCount', 'finalizedCount', 'agents'
         ));
     }
 

@@ -15,6 +15,7 @@ use App\Policies\InvoicePolicy;
 use App\Policies\PaymentVoucherPolicy;
 use App\Policies\SmartNotePolicy;
 use App\View\Composers\NotificationComposer;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
@@ -33,6 +34,9 @@ class AppServiceProvider extends ServiceProvider
         // utf8mb4 a varchar(255) index overflows that, so cap default string
         // length to 191 (191 * 4 bytes = 764) for indexed/primary string columns.
         Schema::defaultStringLength(191);
+
+        // One polished pagination style app-wide (summary + numbered pages).
+        Paginator::defaultView('vendor.pagination.app');
 
         Gate::policy(Agent::class, AgentPolicy::class);
         Gate::policy(HrProfile::class, HrProfilePolicy::class);

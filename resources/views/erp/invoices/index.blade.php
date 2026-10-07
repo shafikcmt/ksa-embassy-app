@@ -21,7 +21,7 @@
     $pending = $sumFor('pending');
     $paid    = $sumFor('paid');
     $draft   = $sumFor('draft');
-    $hasFilters = $filters['q'] !== '' || $filters['status'] !== '' || $filters['from'] !== '' || $filters['to'] !== '';
+    $hasFilters = $filters['q'] !== '' || $filters['status'] !== '' || $filters['agent'] > 0 || $filters['from'] !== '' || $filters['to'] !== '';
 @endphp
 
 <x-ui.page-header title="Invoices" subtitle="Bill passengers & agents with multi-line invoices" icon="bi-receipt">
@@ -55,7 +55,7 @@
 {{-- Filters (server-side, agency-scoped) --}}
 <form method="GET" action="{{ route('erp.invoices.index') }}" class="mb-5 rounded-2xl border border-slate-200 bg-white p-4">
     <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-12">
-        <div class="lg:col-span-4">
+        <div class="lg:col-span-2">
             <label class="{{ $lbl }}">Search</label>
             <div class="relative">
                 <i class="bi bi-search pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400"></i>
@@ -67,6 +67,13 @@
             <select name="status" class="{{ $inp }}">
                 <option value="">All</option>
                 @foreach($statuses as $key => $label)<option value="{{ $key }}" @selected($filters['status'] === $key)>{{ $label }}</option>@endforeach            </select>
+        </div>
+        <div class="lg:col-span-2">
+            <label class="{{ $lbl }}">Agent</label>
+            <select name="agent_id" class="{{ $inp }}" onchange="this.form.submit()">
+                <option value="">All agents</option>
+                @foreach($agents as $agent)<option value="{{ $agent->id }}" @selected($filters['agent'] === $agent->id)>{{ $agent->name }}</option>@endforeach
+            </select>
         </div>
         <div class="lg:col-span-2"><label class="{{ $lbl }}">From</label><input type="date" name="from" value="{{ $filters['from'] }}" class="{{ $inp }}"></div>
         <div class="lg:col-span-2"><label class="{{ $lbl }}">To</label><input type="date" name="to" value="{{ $filters['to'] }}" class="{{ $inp }}"></div>
@@ -153,7 +160,7 @@
         </ul>
     </div>
 
-    <div class="mt-6">{{ $invoices->links() }}</div>
+    @if($invoices->hasPages())<div class="mt-6 rounded-2xl border border-slate-200 bg-white px-4 py-3">{{ $invoices->links() }}</div>@endif
 
     @include('erp.invoices._delete_modal')
 @endif

@@ -344,6 +344,7 @@ class MedicalController extends Controller
             'from'    => $date('from'),
             'to'      => $date('to'),
             'status'  => array_key_exists($status, Medical::MEDICAL_STATUSES) ? $status : '',
+            'agent'   => mb_substr(trim((string) $request->query('agent', '')), 0, 191),
             'sort'    => array_key_exists($sort, self::SORTS) ? $sort : 'issue_asc',
             'trashed' => $request->boolean('trashed') && auth()->user()->isAgencyAdmin(),
         ];
@@ -369,6 +370,11 @@ class MedicalController extends Controller
 
         if ($filters['status'] !== '') {
             $query->where('medical_status', $filters['status']);
+        }
+
+        // Agent filter: Reference stores the agent's name.
+        if ($filters['agent'] !== '') {
+            $query->where('reference', $filters['agent']);
         }
 
         // Date range applies to the medical issue date.

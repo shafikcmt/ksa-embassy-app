@@ -24,7 +24,7 @@ class MofaController extends Controller
 
     private function query(Request $request)
     {
-        $filters = $request->validate(['q' => 'nullable|string|max:100', 'status' => 'nullable|in:active,expired,expiring,processing', 'from' => 'nullable|date_format:Y-m-d', 'to' => 'nullable|date_format:Y-m-d'.($request->filled('from') ? '|after_or_equal:from' : '')]);
+        $filters = $request->validate(['q' => 'nullable|string|max:100', 'status' => 'nullable|in:active,expired,expiring,processing', 'agent' => 'nullable|string|max:191', 'from' => 'nullable|date_format:Y-m-d', 'to' => 'nullable|date_format:Y-m-d'.($request->filled('from') ? '|after_or_equal:from' : '')]);
         $query = MofaEntry::forAgency((int) $request->user()->agency_id);
         if ($q = trim($filters['q'] ?? '')) {
             $query->where(function ($w) use ($q) {
@@ -34,6 +34,10 @@ class MofaController extends Controller
             });
         }
         $this->statusQuery($query, $filters['status'] ?? '');
+        // Agent filter: Reference stores the agent's name.
+        if ($agent = trim($filters['agent'] ?? '')) {
+            $query->where('reference_name', $agent);
+        }
         if ($filters['from'] ?? null) {
             $query->whereDate('mofa_date', '>=', $filters['from']);
         }
@@ -206,7 +210,7 @@ class MofaController extends Controller
         if (! $request->boolean('download')) {
             return view('prints.mofa-summary', $data + [
                 '_downloadUrl' => $request->fullUrlWithQuery(['download' => 1, 'preview' => null]),
-                '_backUrl'     => $mofa ? route('erp.mofa.show', $mofa) : route('erp.mofa', $request->only('q', 'status', 'from', 'to')),
+                '_backUrl'     => $mofa ? route('erp.mofa.show', $mofa) : route('erp.mofa', $request->only('q', 'status', 'agent', 'from', 'to')),
             ]);
         }
 

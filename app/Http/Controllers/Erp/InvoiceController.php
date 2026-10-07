@@ -60,6 +60,7 @@ class InvoiceController extends Controller
         $filters = [
             'q'      => trim((string) $request->query('q', '')),
             'status' => (string) $request->query('status', ''),
+            'agent'  => (int) $request->query('agent_id', 0),
             'from'   => (string) $request->query('from', ''),
             'to'     => (string) $request->query('to', ''),
             'sort'   => array_key_exists($request->query('sort'), self::SORTS) ? $request->query('sort') : 'date_desc',
@@ -85,6 +86,11 @@ class InvoiceController extends Controller
             $query->where('status', 'pending')->whereNotNull('due_date')->whereDate('due_date', '<', today());
         } elseif (array_key_exists($filters['status'], Invoice::STATUSES)) {
             $query->where('status', $filters['status']);
+        }
+
+        // Agent filter (forAgency above keeps it inside this agency).
+        if ($filters['agent'] > 0) {
+            $query->where('agent_id', $filters['agent']);
         }
 
         if ($this->isDate($filters['from'])) {
@@ -117,6 +123,7 @@ class InvoiceController extends Controller
             'sorts'    => self::SORTS,
             'statuses' => Invoice::STATUSES,
             'summary'  => $summary,
+            'agents'   => Agent::forAgency($agencyId)->orderBy('name')->get(['id', 'name']),
         ]);
     }
 

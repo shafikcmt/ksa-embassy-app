@@ -135,6 +135,6 @@
         @endforeach
     </div>
 
-    <div class="mt-6">{{ $vouchers->links() }}</div>
+    @if($vouchers->hasPages())<div class="mt-6 rounded-2xl border border-slate-200 bg-white px-4 py-3">{{ $vouchers->links() }}</div>@endif
 @endif
 @endsection

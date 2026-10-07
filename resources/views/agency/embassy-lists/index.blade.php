@@ -26,12 +26,18 @@
     {{-- Filter bar --}}
     <x-ui.card class="mb-5">
         <form method="GET" action="{{ route('embassy-lists.index') }}" class="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-12">
-            <div class="lg:col-span-4">
+            <div class="lg:col-span-2">
                 <div class="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 focus-within:border-brand-400 focus-within:ring-1 focus-within:ring-brand-400">
                     <i class="bi bi-search text-sm text-slate-400"></i>
                     <input type="text" name="search" value="{{ request('search') }}" placeholder="List no, candidate, passport…" class="h-10 w-full border-0 bg-transparent p-0 text-sm focus:ring-0">
                 </div>
             </div>
+            <select name="agent_id" title="Agent" onchange="this.form.submit()" class="h-10 rounded-lg border-slate-300 text-sm focus:border-brand-400 focus:ring-brand-400 lg:col-span-2">
+                <option value="">All agents</option>
+                @foreach($agents as $agent)
+                    <option value="{{ $agent->id }}" @selected((string) request('agent_id') === (string) $agent->id)>{{ $agent->name }}</option>
+                @endforeach
+            </select>
             <select name="status" class="h-10 rounded-lg border-slate-300 text-sm focus:border-brand-400 focus:ring-brand-400 lg:col-span-2">
                 <option value="">All status</option>
                 @foreach(['draft'=>'Draft','finalized'=>'Finalized','printed'=>'Printed','cancelled'=>'Cancelled'] as $val => $lbl)

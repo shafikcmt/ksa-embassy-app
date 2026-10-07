@@ -40,7 +40,7 @@
             </tr>
             @endforeach
             </tbody></table>
-        </div><div class="mt-5">{{ $entries->links() }}</div>
+        </div>@if($entries->hasPages())<div class="mt-4 rounded-lg border border-gray-200 bg-white px-4 py-3">{{ $entries->links() }}</div>@endif
     @endif
 </div>
 {{-- Outside the .bmet wrapper so its legacy focus/heading CSS doesn't reach the modal. --}}

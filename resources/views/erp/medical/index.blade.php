@@ -6,11 +6,11 @@
 @section('content')
 @php
     $isAdmin    = auth()->user()->isAgencyAdmin();
-    $hasFilters = $filters['q'] !== '' || $filters['status'] !== '' || $filters['from'] !== '' || $filters['to'] !== '' || $filters['trashed'];
+    $hasFilters = $filters['q'] !== '' || $filters['status'] !== '' || $filters['agent'] !== '' || $filters['from'] !== '' || $filters['to'] !== '' || $filters['trashed'];
     $highlight  = (int) session('medical_highlight');
     // Print / Export carry the current search, filters and sort.
     $listQuery  = array_filter([
-        'q' => $filters['q'], 'status' => $filters['status'], 'from' => $filters['from'], 'to' => $filters['to'],
+        'q' => $filters['q'], 'status' => $filters['status'], 'agent' => $filters['agent'], 'from' => $filters['from'], 'to' => $filters['to'],
         'sort' => $filters['sort'], 'trashed' => $filters['trashed'] ? 1 : null,
     ]);
     $d = fn ($date) => $date?->format('d-M-Y') ?? '—';
@@ -62,7 +62,7 @@
 <form method="GET" action="{{ route('erp.medical') }}" class="mb-5 rounded-xl border border-gray-200 bg-white p-4 shadow-sm" role="search">
     @if($filters['trashed'])<input type="hidden" name="trashed" value="1">@endif
     <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12 xl:items-end">
-        <div class="xl:col-span-4">
+        <div class="xl:col-span-2">
             <label for="f_q" class="{{ $lbl }}">Search</label>
             <div class="relative">
                 <i class="bi bi-search pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400" aria-hidden="true"></i>
@@ -74,6 +74,13 @@
             <select id="f_status" name="status" class="{{ $ctl }} px-3" onchange="this.form.submit()">
                 <option value="">All</option>
                 @foreach($statuses as $key => $label)<option value="{{ $key }}" @selected($filters['status'] === $key)>{{ $label }}</option>@endforeach
+            </select>
+        </div>
+        <div class="xl:col-span-2">
+            <label for="f_agent" class="{{ $lbl }}">Agent</label>
+            <select id="f_agent" name="agent" class="{{ $ctl }} px-3" onchange="this.form.submit()">
+                <option value="">All agents</option>
+                @foreach($agentOptions as $opt)<option value="{{ $opt['name'] }}" @selected($filters['agent'] === $opt['name'])>{{ $opt['name'] }}</option>@endforeach
             </select>
         </div>
         <div class="xl:col-span-2">

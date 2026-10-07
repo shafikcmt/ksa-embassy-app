@@ -165,7 +165,7 @@
             @endforeach
         </div>
 
-        <div class="mt-5">{{ $notes->links() }}</div>
+        @if($notes->hasPages())<div class="mt-5 rounded-2xl border border-slate-200 bg-white px-4 py-3">{{ $notes->withQueryString()->links() }}</div>@endif
     @else
         <x-ui.empty icon="{{ $tabs[$view]['icon'] }}" title="No notes here"
             :actionUrl="null" />
