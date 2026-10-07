@@ -1,4 +1,4 @@
-{{-- Visa Stamping Summary — reference column sequence + Status, A4 landscape. Shell: prints/partials/erp-summary/layout. --}}
+{{-- Visa Stamping Summary — reference column sequence + Status (no Exp. Date / Left Day / Remarks), A4 landscape. Shell: prints/partials/erp-summary/layout. --}}
 @use('App\Support\ErpPrintTheme')
 @php($module = 'stamping')
 @extends('prints.partials.erp-summary.layout')
@@ -9,7 +9,7 @@
         <tr>
             {{-- No fixed widths on purpose: mPDF then auto-sizes every column to at least its longest
                  unbreakable token (dates, 10–11 digit numbers, single-word headers) and lets only the
-                 name / reference / remarks columns wrap between words. Fixed % widths made it split
+                 name / reference columns wrap between words. Fixed % widths made it split
                  numbers mid-token. --}}
             <th class="l">SL</th>
             <th>Passenger Name</th>
@@ -24,11 +24,8 @@
             <th>Mofa Date</th>
             <th>Issu Visa No</th>
             <th>Issu Date</th>
-            <th>Exp. Date</th>
-            <th>Left Day</th>
             <th>Status</th>
             <th>Reference</th>
-            <th>Remarks</th>
         </tr>
     </thead>
     <tbody>
@@ -48,18 +45,15 @@
                 <td class="c nw">{{ ErpPrintTheme::date($e->mofa_date) }}</td>
                 <td class="c nw">{{ $e->issued_visa_number }}</td>
                 <td class="c nw">{{ ErpPrintTheme::date($e->issued_date) }}</td>
-                <td class="c nw">{{ ErpPrintTheme::date($e->expiry_date) }}</td>
-                <td class="num {{ $e->leftDayIsLow() ? 'low' : '' }}">{{ $e->left_day }}</td>
                 <td class="c"><span class="badge" style="background:{{ $bg }}; color:{{ $fg }};">{{ $e->statusLabel() }}</span></td>
                 <td>{{ $e->reference }}</td>
-                <td>{{ $e->remarks }}</td>
             </tr>
         @empty
-            <tr><td class="empty" colspan="18"><span style="font-style:normal;">&#8505;</span>&nbsp; No visa stamping records found.</td></tr>
+            <tr><td class="empty" colspan="15"><span style="font-style:normal;">&#8505;</span>&nbsp; No visa stamping records found.</td></tr>
         @endforelse
     </tbody>
     @if($entries->isNotEmpty())
-        <tfoot><tr><td colspan="18">Total: {{ number_format($entries->count()) }} {{ \Illuminate\Support\Str::plural('record', $entries->count()) }}</td></tr></tfoot>
+        <tfoot><tr><td colspan="15">Total: {{ number_format($entries->count()) }} {{ \Illuminate\Support\Str::plural('record', $entries->count()) }}</td></tr></tfoot>
     @endif
 </table>
 @endsection

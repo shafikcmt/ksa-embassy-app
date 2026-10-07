@@ -350,7 +350,8 @@ class VisaStampingTest extends TestCase
         $entry = $this->makeEntry($this->agency);
 
         $this->actingAs($this->staff)->get(route('erp.visa-stamping.print-pdf', $entry))
-            ->assertOk()->assertSee('Visa Stamping Summary')->assertSee('Issu Visa No')->assertSee('A16451237')->assertSee('Total records: 1');
+            ->assertOk()->assertSee('Visa Stamping Summary')->assertSee('Issu Visa No')->assertSee('A16451237')->assertSee('Total records: 1')
+            ->assertDontSee('Exp. Date')->assertDontSee('Left Day')->assertDontSee('Remarks');
 
         $pdf = $this->actingAs($this->staff)->get(route('erp.visa-stamping.print-pdf', [$entry, 'download' => 1]));
         $pdf->assertOk()->assertHeader('Content-Type', 'application/pdf');
