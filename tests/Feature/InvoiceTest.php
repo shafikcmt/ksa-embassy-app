@@ -318,6 +318,8 @@ class InvoiceTest extends TestCase
         $this->actingAs($this->staff)->get(route('erp.invoices.edit', $inv))->assertOk();
 
         $this->actingAs($this->staff)->get(route('erp.invoices.preview-pdf', $inv))
+            ->assertOk()->assertSee('frame.contentWindow.print()', false);
+        $this->actingAs($this->staff)->get(route('erp.invoices.preview-pdf', [$inv, 'raw' => 1]))
             ->assertOk()->assertHeader('Content-Type', 'application/pdf');
         $res = $this->actingAs($this->staff)->get(route('erp.invoices.download-pdf', $inv))->assertOk();
         $this->assertStringContainsString('attachment', $res->headers->get('Content-Disposition'));

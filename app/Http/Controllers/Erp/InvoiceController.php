@@ -298,9 +298,20 @@ class InvoiceController extends Controller
             ->with('success', "Invoice {$invoice->invoice_number} cancelled.");
     }
 
+    /** Print button → print-dialog wrapper; ?raw=1 → the inline PDF it embeds. */
     public function previewPdf(Invoice $invoice, PdfGeneratorService $pdf, BarcodeService $barcode)
     {
-        return $this->pdf($invoice, $pdf, $barcode, true);
+        if (request()->boolean('raw')) {
+            return $this->pdf($invoice, $pdf, $barcode, true);
+        }
+        $this->authorizeAgency($invoice);
+
+        return view('prints.pdf-print', [
+            'title'       => 'Invoice ' . $invoice->invoice_number,
+            'pdfUrl'      => route('erp.invoices.preview-pdf', [$invoice, 'raw' => 1]),
+            'downloadUrl' => route('erp.invoices.download-pdf', $invoice),
+            'backUrl'     => route('erp.invoices.show', $invoice),
+        ]);
     }
 
     public function downloadPdf(Invoice $invoice, PdfGeneratorService $pdf, BarcodeService $barcode)

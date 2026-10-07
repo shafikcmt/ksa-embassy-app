@@ -402,7 +402,8 @@ class MofaEntryTest extends TestCase
         $this->assertCount(15, $labels);
         $this->assertSame(['MOFA No', 'MOFA Date', 'Reference'], array_slice($labels, -3));
         $this->assertSame(100, $totalWidth);
-        $pdf = $this->get(route('erp.mofa.print'))->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        $this->get(route('erp.mofa.print'))->assertOk()->assertSee('window.print()', false)->assertSee('download=1', false);
+        $pdf = $this->get(route('erp.mofa.print', ['download' => 1]))->assertOk()->assertHeader('Content-Type', 'application/pdf');
         $text = (new \Smalot\PdfParser\Parser)->parseContent($pdf->getContent())->getText();
         $this->assertStringContainsString('No MOFA records found.', $text);
         $this->assertStringNotContainsString('Remarks', $text);
@@ -439,7 +440,7 @@ class MofaEntryTest extends TestCase
         }
         $this->assertSame('Legacy Ref', trim($rows->item(0)->getElementsByTagName('td')->item(14)->textContent));
 
-        $response = $this->get(route('erp.mofa.print'))->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        $response = $this->get(route('erp.mofa.print', ['download' => 1]))->assertOk()->assertHeader('Content-Type', 'application/pdf');
         $pdf = (new \Smalot\PdfParser\Parser)->parseContent($response->getContent());
         $text = $pdf->getText();
         foreach (['Null Passenger', 'Legacy Passenger', 'Halishahar', 'Total: 3 records', 'Reference'] as $needle) {
@@ -463,7 +464,7 @@ class MofaEntryTest extends TestCase
         $original = ini_get('pcre.backtrack_limit');
         ini_set('pcre.backtrack_limit', '50000');
         try {
-            $response = $this->get(route('erp.mofa.print'));
+            $response = $this->get(route('erp.mofa.print', ['download' => 1]));
         } finally {
             ini_set('pcre.backtrack_limit', $original);
         }
@@ -507,7 +508,7 @@ class MofaEntryTest extends TestCase
         }
         $this->actingAs($this->admin);
 
-        $response = $this->get(route('erp.mofa.print'))->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        $response = $this->get(route('erp.mofa.print', ['download' => 1]))->assertOk()->assertHeader('Content-Type', 'application/pdf');
         $text = (new \Smalot\PdfParser\Parser)->parseContent($response->getContent())->getText();
         $this->assertStringContainsString("Total: $count records", $text);
         preg_match_all('/CK(\d{7})/', $text, $m);
@@ -515,7 +516,7 @@ class MofaEntryTest extends TestCase
         $this->assertSame(range($count, 1), array_map('intval', $m[1]));
         $this->assertStringNotContainsString('Remarks', $text);
 
-        $page = $this->get(route('erp.mofa.print', ['current_page' => 1]))->assertOk();
+        $page = $this->get(route('erp.mofa.print', ['current_page' => 1, 'download' => 1]))->assertOk();
         $pageText = (new \Smalot\PdfParser\Parser)->parseContent($page->getContent())->getText();
         $this->assertStringContainsString('Total: 20 records', $pageText);
     }
@@ -526,7 +527,7 @@ class MofaEntryTest extends TestCase
         $this->actingAs($this->admin);
         foreach (['landscape', 'portrait'] as $layout) {
             $this->get(route('erp.mofa.print-pdf', [$entry, 'layout' => $layout, 'preview' => 1]))->assertOk()->assertSee('MOFA Summary')->assertDontSee('Left Day')->assertDontSee('MOFA Expiry Date')->assertDontSee('Part 1 of 2')->assertDontSee('Remarks')->assertDontSee('=HYPERLINK')->assertSee('Reference');
-            $response = $this->get(route('erp.mofa.print-pdf', [$entry, 'layout' => $layout]));
+            $response = $this->get(route('erp.mofa.print-pdf', [$entry, 'layout' => $layout, 'download' => 1]));
             $response->assertOk()->assertHeader('Content-Type', 'application/pdf');
             $this->assertStringStartsWith('%PDF', $response->getContent());
             $text = (new \Smalot\PdfParser\Parser)->parseContent($response->getContent())->getText();
@@ -537,7 +538,7 @@ class MofaEntryTest extends TestCase
             $this->assertStringContainsString('Reference', $text);
         }
         $this->get(route('erp.mofa.show', $entry))->assertOk()->assertDontSee('Landscape')->assertDontSee('Portrait');
-        $this->get(route('erp.mofa.print'))->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        $this->get(route('erp.mofa.print', ['download' => 1]))->assertOk()->assertHeader('Content-Type', 'application/pdf');
         $response = $this->get(route('erp.mofa.export'));
         $response->assertOk();
         $this->assertStringContainsString("'=HYPERLINK", $response->streamedContent());

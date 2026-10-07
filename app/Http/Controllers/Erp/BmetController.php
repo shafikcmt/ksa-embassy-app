@@ -193,10 +193,14 @@ class BmetController extends Controller
             $this->authorizeEntry($bmetEntry);
         }
         $data = ['entries' => $bmetEntry ? collect([$bmetEntry]) : $this->query($request)->get(), 'agency' => $request->user()->agency, 'generated' => now()];
-        if ($request->boolean('preview')) {
-            return view('prints.bmet-summary', $data);
+        // Default → browser print preview (opens the print dialog); ?download=1 → mPDF file.
+        if (! $request->boolean('download')) {
+            return view('prints.bmet-summary', $data + [
+                '_downloadUrl' => $request->fullUrlWithQuery(['download' => 1, 'preview' => null]),
+                '_backUrl'     => $bmetEntry ? route('erp.bmet.show', $bmetEntry) : url()->previous(route('erp.bmet.index')),
+            ]);
         }
 
-        return $pdf->generateFromView('prints.bmet-summary', $data, 'bmet-clearance-summary', true, \App\Support\ErpPrintTheme::mpdfOptions());
+        return $pdf->generateFromView('prints.bmet-summary', $data, 'bmet-clearance-summary', false, \App\Support\ErpPrintTheme::mpdfOptions());
     }
 }

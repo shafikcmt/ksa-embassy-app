@@ -206,5 +206,9 @@ td, th { padding: 3pt 5pt; vertical-align: middle; font-size: 9pt; }
 </table>
 
 @if(empty($_pdf))</div>@endif
+@if(empty($_pdf) && request()->boolean('autoprint'))
+{{-- List "Print" buttons pass ?autoprint=1 → open the print dialog once images/fonts load. --}}
+<script>window.addEventListener('load', function () { setTimeout(function () { window.print(); }, 300); });</script>
+@endif
 </body>
 </html>

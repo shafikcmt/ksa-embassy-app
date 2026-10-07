@@ -343,6 +343,8 @@ class PaymentVoucherTest extends TestCase
         $this->actingAs($this->staff)->get(route('erp.payment-vouchers.edit', $v))->assertRedirect(route('erp.payment-vouchers.show', $v));
 
         $this->actingAs($this->staff)->get(route('erp.payment-vouchers.preview-pdf', $v))
+            ->assertOk()->assertSee('frame.contentWindow.print()', false);
+        $this->actingAs($this->staff)->get(route('erp.payment-vouchers.preview-pdf', [$v, 'raw' => 1]))
             ->assertOk()->assertHeader('Content-Type', 'application/pdf');
         $res = $this->actingAs($this->staff)->get(route('erp.payment-vouchers.download-pdf', $v))->assertOk();
         $this->assertStringContainsString('attachment', $res->headers->get('Content-Disposition'));

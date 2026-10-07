@@ -202,13 +202,17 @@ class MofaController extends Controller
         $request->validate(['layout' => 'nullable|in:landscape,portrait,auto', 'page' => 'nullable|integer|min:1', 'current_page' => 'nullable|boolean']);
         $entries = $mofa ? collect([$mofa]) : ($request->boolean('current_page') ? $this->query($request)->paginate(20)->getCollection() : $this->query($request)->get());
         $data = ['entries' => $entries, 'agency' => $request->user()->agency, 'generated' => now()];
-        if ($request->boolean('preview')) {
-            return view('prints.mofa-summary', $data);
+        // Default → browser print preview (opens the print dialog); ?download=1 → mPDF file.
+        if (! $request->boolean('download')) {
+            return view('prints.mofa-summary', $data + [
+                '_downloadUrl' => $request->fullUrlWithQuery(['download' => 1, 'preview' => null]),
+                '_backUrl'     => $mofa ? route('erp.mofa.show', $mofa) : route('erp.mofa', $request->only('q', 'status', 'from', 'to')),
+            ]);
         }
 
         // Rows go to mPDF in chunks: one huge table breaks pcre.backtrack_limit (~220 rows) and memory.
         return $pdf->generateChunkedFromView('prints.mofa-summary', $data, '<!--mofa-rows-->', self::pdfRowChunks($entries),
-            'mofa-summary', true, \App\Support\ErpPrintTheme::mpdfOptions('landscape'));
+            'mofa-summary', false, \App\Support\ErpPrintTheme::mpdfOptions('landscape'));
     }
 
     /** Lazily renders the summary rows as complete tables of PDF_CHUNK_ROWS rows (SL and striping continue). */

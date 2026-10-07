@@ -91,7 +91,7 @@
                                         @endcan
                                     @endif
                                     @if($list->isFinalized() || $list->status === 'printed')
-                                        <a href="{{ route('embassy-lists.print', $list) }}" target="_blank" class="{{ $pill }} bg-blue-50 text-blue-700 ring-blue-200 hover:bg-blue-100"><i class="bi bi-printer"></i> Print</a>
+                                        <a href="{{ route('embassy-lists.print', [$list, 'autoprint' => 1]) }}" target="_blank" class="{{ $pill }} bg-blue-50 text-blue-700 ring-blue-200 hover:bg-blue-100"><i class="bi bi-printer"></i> Print</a>
                                         <a href="{{ route('embassy-lists.download-pdf', $list) }}" class="{{ $pill }} bg-brand-50 text-brand-700 ring-brand-200 hover:bg-brand-100"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
                                     @endif
                                     @if(!$list->isCancelled())
@@ -155,7 +155,7 @@
                         @endcan
                     @endif
                     @if($list->isFinalized() || $list->status === 'printed')
-                        <a href="{{ route('embassy-lists.print', $list) }}" target="_blank" class="{{ $mpill }} bg-blue-50 text-blue-700 ring-blue-200 hover:bg-blue-100"><i class="bi bi-printer"></i> Print</a>
+                        <a href="{{ route('embassy-lists.print', [$list, 'autoprint' => 1]) }}" target="_blank" class="{{ $mpill }} bg-blue-50 text-blue-700 ring-blue-200 hover:bg-blue-100"><i class="bi bi-printer"></i> Print</a>
                         <a href="{{ route('embassy-lists.download-pdf', $list) }}" class="{{ $mpill }} bg-brand-50 text-brand-700 ring-brand-200 hover:bg-brand-100"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
                     @endif
                     @if(!$list->isCancelled())

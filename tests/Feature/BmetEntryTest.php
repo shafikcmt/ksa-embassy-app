@@ -231,7 +231,7 @@ class BmetEntryTest extends TestCase
         $entry = $this->entry(['remarks' => '=UNSAFE()']);
         $this->actingAs($this->admin);
         $this->get(route('erp.bmet.print-pdf', [$entry, 'preview' => 1]))->assertOk()->assertSee('BMET Clearance Summary')->assertSee('Remarks');
-        $response = $this->get(route('erp.bmet.print-pdf', $entry));
+        $response = $this->get(route('erp.bmet.print-pdf', [$entry, 'download' => 1]));
         $response->assertOk()->assertHeader('Content-Type', 'application/pdf');
         $this->assertStringStartsWith('%PDF', $response->getContent());
         $pdf = (new Parser)->parseContent($response->getContent());
@@ -244,6 +244,7 @@ class BmetEntryTest extends TestCase
         $csv = $this->get(route('erp.bmet.export', ['status' => 'hold']))->assertOk()->streamedContent();
         $this->assertStringNotContainsString('BMET Passenger', $csv);
         $this->get(route('erp.bmet.print', ['status' => 'hold', 'preview' => 1]))->assertOk()->assertDontSee('BMET Passenger');
+        $this->get(route('erp.bmet.print'))->assertOk()->assertHeader('Content-Type', 'text/html; charset=UTF-8')->assertSee('window.print()', false);
     }
 
     public function test_guests_and_expired_subscription_cannot_create(): void

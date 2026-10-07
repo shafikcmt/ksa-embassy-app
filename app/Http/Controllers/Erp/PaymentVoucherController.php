@@ -204,9 +204,20 @@ class PaymentVoucherController extends Controller
             ->with('success', "Payment voucher {$paymentVoucher->voucher_number} cancelled.");
     }
 
+    /** Print button → print-dialog wrapper; ?raw=1 → the inline PDF it embeds. */
     public function previewPdf(PaymentVoucher $paymentVoucher, PdfGeneratorService $pdf)
     {
-        return $this->pdf($paymentVoucher, $pdf, true);
+        if (request()->boolean('raw')) {
+            return $this->pdf($paymentVoucher, $pdf, true);
+        }
+        $this->authorize('view', $paymentVoucher);
+
+        return view('prints.pdf-print', [
+            'title'       => 'Payment Voucher ' . $paymentVoucher->voucher_number,
+            'pdfUrl'      => route('erp.payment-vouchers.preview-pdf', [$paymentVoucher, 'raw' => 1]),
+            'downloadUrl' => route('erp.payment-vouchers.download-pdf', $paymentVoucher),
+            'backUrl'     => route('erp.payment-vouchers.show', $paymentVoucher),
+        ]);
     }
 
     public function downloadPdf(PaymentVoucher $paymentVoucher, PdfGeneratorService $pdf)
