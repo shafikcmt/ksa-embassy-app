@@ -37,7 +37,8 @@
     // Common nationalities for the searchable <datalist> (free text still allowed).
     $nationalityOptions = ['BANGLADESH','INDIA','PAKISTAN','NEPAL','SRI LANKA','PHILIPPINES','INDONESIA','MYANMAR','KENYA','UGANDA','ETHIOPIA','NIGERIA'];
 
-    $gender = $v('gender'); $marital = $v('marital_status'); $religion = $v('religion');
+    // Defaults (new records + legacy rows with no value): Male · Married · Muslim.
+    $gender = $v('gender', 'male'); $marital = $v('marital_status', 'married'); $religion = $v('religion', 'Muslim');
 @endphp
 
 <div>
