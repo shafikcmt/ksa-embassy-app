@@ -110,7 +110,7 @@
                     <dl class="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
                         <dt class="text-slate-400">Date</dt><dd class="font-medium text-slate-700">{{ $voucher->voucher_date->format('d M Y') }}</dd>
                         <dt class="text-slate-400">Method</dt><dd class="font-medium text-slate-700">{{ $voucher->paymentMethodLabel() }}</dd>
-                        <dt class="text-slate-400">Items</dt><dd class="font-medium text-slate-700">{{ $voucher->items_count }}</dd>
+                        <dt class="text-slate-400">Expense Head</dt><dd class="font-medium text-slate-700">{{ $voucher->expenseHeadLabel() }}</dd>
                     </dl>
                     <div class="text-right">
                         <div class="text-[0.65rem] font-semibold uppercase tracking-wide text-slate-400">Total</div>

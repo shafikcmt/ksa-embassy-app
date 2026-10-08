@@ -16,6 +16,7 @@
     ];
     // Preserve current filters on export links.
     $exportQuery = array_filter([
+        'expense_head_id' => $filters['expense_head_id'],
         'from' => $filters['from'], 'to' => $filters['to'], 'q' => $filters['q'] ?: null,
     ]);
 @endphp
@@ -28,6 +29,7 @@
         <div><label class="{{ $lbl }}">From</label><input type="date" name="from" value="{{ $filters['from'] }}" class="{{ $inp }}"></div>
         <div><label class="{{ $lbl }}">To</label><input type="date" name="to" value="{{ $filters['to'] }}" class="{{ $inp }}"></div>
         <div><label class="{{ $lbl }}">Search</label><input type="text" name="q" value="{{ $filters['q'] }}" placeholder="Name or passport (dues)" class="{{ $inp }}"></div>
+        <div><label class="{{ $lbl }}">Expense Head (expenses only)</label><select name="expense_head_id" class="{{ $inp }}"><option value="">All heads</option>@foreach($expenseHeads as $head)<option value="{{ $head->id }}" @selected((string) $filters['expense_head_id'] === (string) $head->id)>{{ $head->name }}{{ $head->is_active ? '' : ' (inactive)' }}</option>@endforeach</select></div>
         <div class="flex items-end gap-2">
             <noscript><button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md"><i class="bi bi-funnel"></i> Apply</button></noscript>
             <a data-ajax-link data-ajax-group="erp-reports" href="{{ route('erp.reports') }}" class="inline-flex items-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50">Reset</a>

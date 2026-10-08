@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Erp;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Erp\Concerns\RendersPrintableList;
 use App\Models\Expense;
+use App\Models\ExpenseHead;
 use App\Services\CsvImportService;
 use App\Services\PdfGeneratorService;
 use Illuminate\Http\Request;
@@ -21,11 +22,9 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * outflow. Everything is scoped to the caller's own agency_id (never null),
  * and every row action re-checks ownership (abort 403 otherwise).
  *
- * E7d adds CSV export (staff-visible) + import (admin-only) — the first import
- * carrying a money amount. Import reuses the EXACT rules() (amount gt:0 rejects
- * zero/negatives) and the lenient category/paid_via key-or-label mapping is built
- * ONLY from the model constants, so the deliberately-absent "agent_commission"
- * category is architecturally impossible to import.
+ * CSV export remains staff-visible; imports and manual money changes are
+ * admin-only. Imports retain the five-column format and resolve active agency
+ * head codes/names plus known legacy labels. Agent payouts belong to Khata.
  */
 class ExpenseController extends Controller
 {
@@ -35,27 +34,30 @@ class ExpenseController extends Controller
 
     private const IMPORT_SESSION_KEY = 'erp_expense_import_path';
 
-    public function index()
+    public function index(Request $request)
     {
         $agencyId = auth()->user()->agency_id;
 
         $expenses = $this->listing($agencyId);
+        $allExpenses = $this->listing($agencyId, false);
 
         $now = now();
-        $monthTotal = (float) $expenses
+        $monthTotal = (float) $allExpenses
             ->filter(fn ($e) => $e->expense_date->year === $now->year && $e->expense_date->month === $now->month)
             ->sum(fn ($e) => (float) $e->amount);
-        $allTimeTotal = (float) $expenses->sum(fn ($e) => (float) $e->amount);
+        $allTimeTotal = (float) $allExpenses->sum(fn ($e) => (float) $e->amount);
 
         // By-category breakdown (all-time), largest first, for the summary strip.
-        $byCategory = $expenses
-            ->groupBy('category')
+        $byCategory = $allExpenses
+            ->groupBy(fn ($expense) => $expense->categoryLabel())
             ->map(fn ($rows) => (float) $rows->sum(fn ($e) => (float) $e->amount))
             ->sortDesc();
 
         return view('erp.expense.index', [
             'expenses'     => $expenses,
-            'categories'   => Expense::CATEGORIES,
+            'heads'        => ExpenseHead::forAgency($agencyId)->ordered()->get(),
+            'selectedHead' => (string) $request->query('expense_head_id', ''),
+            'legacyCategories' => $allExpenses->whereNull('expense_head_id')->mapWithKeys(fn ($e) => [$e->category => $e->categoryLabel()]),
             'paidVia'      => Expense::PAID_VIA,
             'monthTotal'   => $monthTotal,
             'allTimeTotal' => $allTimeTotal,
@@ -94,10 +96,12 @@ class ExpenseController extends Controller
     }
 
     /** Shared listing used by both index() and printPdf() (oldest-first). */
-    private function listing(int $agencyId): Collection
+    private function listing(int $agencyId, bool $filtered = true): Collection
     {
         return Expense::forAgency($agencyId)
-            ->with(['createdBy:id,name', 'paymentVoucher:id,voucher_number'])
+            ->with(['createdBy:id,name', 'paymentVoucher:id,voucher_number', 'expenseHead'])
+            ->when($filtered && request('expense_head_id'), fn ($q) => $q->where('expense_head_id', request('expense_head_id')))
+            ->when($filtered && request('category'), fn ($q) => $q->where('category', request('category')))
             ->orderBy('expense_date')->orderBy('id')
             ->get();
     }
@@ -125,7 +129,7 @@ class ExpenseController extends Controller
             return $blocked;
         }
 
-        $expense->update($this->validated($request) + ['updated_by' => auth()->id()]);
+        $expense->update($this->validated($request, $expense) + ['updated_by' => auth()->id()]);
 
         return redirect()->route('erp.expenses')->with('success', 'Expense updated.');
     }
@@ -159,17 +163,31 @@ class ExpenseController extends Controller
             . ' and cannot be edited or deleted here.');
     }
 
-    private function validated(Request $request): array
+    private function validated(Request $request, ?Expense $expense = null): array
     {
-        return $request->validate($this->rules());
+        $head = ExpenseHead::forAgency(auth()->user()->agency_id)
+            ->when($request->filled('expense_head_id'), fn ($q) => $q->whereKey($request->input('expense_head_id')),
+                fn ($q) => $q->where('code', $request->input('category')))->first();
+        if ($head) {
+            $request->merge(['expense_head_id' => $head->id, 'category' => $head->code]);
+        }
+        return $request->validate($this->rules($expense));
     }
 
     /** Single source of truth for validation — shared by manual Add and CSV import. */
-    private function rules(): array
+    private function rules(?Expense $expense = null): array
     {
+        $heads = ExpenseHead::forAgency(auth()->user()->agency_id)->where('is_active', true)->get();
+        $ids = $heads->pluck('id')->all();
+        $codes = $heads->pluck('code')->all();
+        if ($expense) {
+            $codes[] = $expense->category;
+            if ($expense->expense_head_id) $ids[] = $expense->expense_head_id;
+        }
         return [
             'expense_date' => ['required', 'date'],
-            'category'     => ['required', Rule::in(array_keys(Expense::CATEGORIES))],
+            'category'     => ['required', Rule::in($codes)],
+            'expense_head_id' => [$expense && ! $expense->expense_head_id ? 'nullable' : 'required', 'integer', Rule::in($ids)],
             'amount'       => ['required', 'numeric', 'gt:0', 'max:9999999999.99'],
             'paid_via'     => ['nullable', Rule::in(array_keys(Expense::PAID_VIA))],
             'note'         => ['nullable', 'string', 'max:255'],
@@ -187,7 +205,9 @@ class ExpenseController extends Controller
             foreach ($expenses as $e) {
                 fputcsv($out, [
                     optional($e->expense_date)->format('Y-m-d'),
-                    $e->categoryLabel(),
+                    $e->isSystemGenerated()
+                        ? 'voucher:' . ($e->paymentVoucher?->voucher_number ?? $e->payment_voucher_id) . ' — ' . $e->categoryLabel()
+                        : $e->categoryLabel(),
                     number_format((float) $e->amount, 2, '.', ''), // plain decimal, no thousands sep
                     $e->paidViaLabel(),
                     $e->note,
@@ -273,7 +293,8 @@ class ExpenseController extends Controller
     /** Shared-view props for the parameterized import screen. */
     private function importView(): array
     {
-        $cats = collect(Expense::CATEGORIES)->map(fn ($l, $k) => "$k ($l)")->implode(', ');
+        $cats = ExpenseHead::forAgency(auth()->user()->agency_id)->where('is_active', true)->ordered()
+            ->get()->map(fn ($head) => "$head->code ($head->name)")->implode(', ');
 
         return [
             'title'         => 'Import Expenses — CSV',
@@ -287,6 +308,7 @@ class ExpenseController extends Controller
             'legend'        => [
                 'amount: a positive number (greater than 0), max 2 decimals, no thousands separators.',
                 "category: accepts the key or its label — {$cats}.",
+                'Auto-booked voucher rows exported with a voucher: marker are read-only and cannot be imported.',
             ],
             'previewCols'   => [
                 ['label' => 'Date', 'key' => 'expense_date'],
@@ -298,16 +320,20 @@ class ExpenseController extends Controller
     }
 
     /**
-     * Import config: date → Y-m-d; lenient category + paid_via (key OR label,
-     * case-insensitive). The label→key maps are built ONLY from the model
-     * constants, so "agent_commission" — which is intentionally NOT a category —
-     * can never match and always fails Rule::in (all-or-nothing blocks the file).
+     * Import config: date → Y-m-d; active agency head code/name or legacy label,
+     * and paid_via key/label (case-insensitive). Unknown/inactive categories fail
+     * validation; the commit revalidates every row before importing any of them.
      */
     private function importConfig(): array
     {
         $catByLabel = [];
-        foreach (Expense::CATEGORIES as $key => $label) {
+        $categories = ExpenseHead::forAgency(auth()->user()->agency_id)->where('is_active', true)->pluck('name', 'code')->all();
+        $headIds = ExpenseHead::forAgency(auth()->user()->agency_id)->where('is_active', true)->pluck('id', 'code')->all();
+        foreach ($categories as $key => $label) {
             $catByLabel[strtolower($label)] = $key;
+        }
+        foreach (Expense::CATEGORIES as $key => $label) {
+            if (isset($categories[$key]) && ! isset($catByLabel[strtolower($label)])) $catByLabel[strtolower($label)] = $key;
         }
         $viaByLabel = [];
         foreach (Expense::PAID_VIA as $key => $label) {
@@ -328,7 +354,7 @@ class ExpenseController extends Controller
         return [
             'headers' => self::CSV_HEADERS,
             'rules'   => $this->rules(),
-            'normalize' => function (array $r) use ($resolve, $catByLabel, $viaByLabel) {
+            'normalize' => function (array $r) use ($resolve, $catByLabel, $viaByLabel, $categories, $headIds) {
                 $a = array_map(fn ($v) => trim((string) $v), $r);
 
                 $a['expense_date'] = CsvImportService::toYmd($a['expense_date'] ?? '');
@@ -337,7 +363,10 @@ class ExpenseController extends Controller
                 // numeric string for the `numeric`/`gt:0` rules to judge.
                 $a['amount'] = ltrim($a['amount'] ?? '', " ৳\t");
 
-                $a['category'] = $resolve($a['category'] ?? '', Expense::CATEGORIES, $catByLabel);
+                // Keep voucher exports read-only even when their meaningful head is active.
+                $a['category'] = str_starts_with(strtolower($a['category'] ?? ''), 'voucher:')
+                    ? 'payment_voucher' : $resolve($a['category'] ?? '', $categories, $catByLabel);
+                $a['expense_head_id'] = $headIds[$a['category']] ?? null;
 
                 $pv = $resolve($a['paid_via'] ?? '', Expense::PAID_VIA, $viaByLabel);
                 $a['paid_via'] = $pv === '' ? null : $pv;

@@ -103,7 +103,7 @@
 
             <div class="grid gap-5 border-b border-slate-100 px-6 py-5 sm:grid-cols-3">
                 <div>
-                    <div class="text-xs font-semibold uppercase tracking-wide text-slate-400">Payee · {{ $voucher->payeeTypeLabel() }}</div>
+                    <div class="text-xs font-semibold uppercase tracking-wide text-slate-400">Paid To / Recipient</div>
                     <div class="mt-1 font-semibold text-slate-900">{{ $voucher->payee_name }}</div>
                     @if($voucher->payee_phone)<div class="text-sm text-slate-600"><i class="bi bi-telephone text-slate-400"></i> {{ $voucher->payee_phone }}</div>@endif
                     @if($voucher->payee_account)<div class="text-sm text-slate-600"><i class="bi bi-bank text-slate-400"></i> {{ $voucher->payee_account }}</div>@endif
@@ -123,10 +123,12 @@
             </div>
 
             <div class="border-b border-slate-100 px-6 py-4 text-sm text-slate-700">
-                <div class="text-xs font-semibold uppercase tracking-wide text-slate-400">Description</div>
-                <p class="mt-1 whitespace-pre-line">{{ $voucher->description }}</p>
+                <div class="text-xs font-semibold uppercase tracking-wide text-slate-400">Expense Head / Reason of Costing</div>
+                <p class="mt-1 whitespace-pre-line">{{ $voucher->expenseHeadLabel() }}</p>
+                @if($voucher->description !== $voucher->expenseHeadLabel())<p class="mt-2 text-slate-500">{{ $voucher->description }}</p>@endif
             </div>
 
+            @if(! $voucher->expense_head_id || $voucher->expenseHead?->is_system || $voucher->items->count() > 1 || (float) $voucher->tax_amount || (float) $voucher->discount_amount)
             <div class="overflow-x-auto">
                 <table class="min-w-full text-sm">
                     <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -154,6 +156,7 @@
                     </tbody>
                 </table>
             </div>
+            @endif
 
             <div class="flex flex-col gap-5 border-t border-slate-100 px-6 py-5 sm:flex-row sm:justify-between">
                 <div class="max-w-sm text-sm text-slate-600">

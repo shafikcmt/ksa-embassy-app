@@ -7,6 +7,7 @@ use App\Http\Controllers\Erp\DeliveryController;
 use App\Http\Controllers\Erp\DoubleMofaController;
 use App\Http\Controllers\Erp\DueListController;
 use App\Http\Controllers\Erp\ExpenseController;
+use App\Http\Controllers\Erp\ExpenseHeadController;
 use App\Http\Controllers\Erp\InvoiceController;
 use App\Http\Controllers\Erp\ManpowerController;
 use App\Http\Controllers\Erp\BmetController;
@@ -50,6 +51,8 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
 
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
         Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
+        Route::patch('/settings/expense-heads/reorder', [ExpenseHeadController::class, 'reorder'])->name('expense-heads.reorder');
+        Route::resource('/settings/expense-heads', ExpenseHeadController::class)->only(['index', 'store', 'update', 'destroy']);
 
         // ── Cross-module passport auto-fill (read-only AJAX) ──────────────────
         // The Add forms hit this on passport blur to pre-fill known identity

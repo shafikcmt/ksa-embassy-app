@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Erp;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PaymentVoucherRequest;
 use App\Models\AuditLog;
+use App\Models\ExpenseHead;
 use App\Models\PaymentVoucher;
 use App\Services\PaymentVoucherService;
 use App\Services\PdfGeneratorService;
@@ -46,7 +47,7 @@ class PaymentVoucherController extends Controller
             'sort'   => array_key_exists($request->query('sort'), self::SORTS) ? $request->query('sort') : 'date_desc',
         ];
 
-        $query = PaymentVoucher::forAgency($agencyId)->withCount('items');
+        $query = PaymentVoucher::forAgency($agencyId)->with('expenseHead');
 
         if ($filters['q'] !== '') {
             $like = '%' . str_replace(['%', '_'], ['\%', '\_'], $filters['q']) . '%';
@@ -54,6 +55,7 @@ class PaymentVoucherController extends Controller
                 ->orWhere('payee_name', 'like', $like)
                 ->orWhere('payee_phone', 'like', $like)
                 ->orWhere('description', 'like', $like)
+                ->orWhereHas('expenseHead', fn ($h) => $h->where('agency_id', $agencyId)->where('name', 'like', $like))
                 ->orWhereHas('items', fn ($i) => $i->where('description', 'like', $like)));
         }
         if (array_key_exists($filters['status'], PaymentVoucher::STATUSES)) {
@@ -117,7 +119,7 @@ class PaymentVoucherController extends Controller
     public function show(PaymentVoucher $paymentVoucher)
     {
         $this->authorize('view', $paymentVoucher);
-        $paymentVoucher->load(['items', 'expense', 'createdBy:id,name', 'approvedBy:id,name', 'paidBy:id,name']);
+        $paymentVoucher->load(['items', 'expense', 'expenseHead', 'createdBy:id,name', 'approvedBy:id,name', 'paidBy:id,name']);
 
         $timeline = AuditLog::with('user:id,name')
             ->where('agency_id', $paymentVoucher->agency_id)
@@ -142,7 +144,7 @@ class PaymentVoucherController extends Controller
         }
         $this->authorize('update', $paymentVoucher);
 
-        return view('erp.payment-vouchers.edit', $this->formData() + [
+        return view('erp.payment-vouchers.edit', $this->formData($paymentVoucher) + [
             'voucher'    => $paymentVoucher->load('items'),
             'nextNumber' => $paymentVoucher->voucher_number,
         ]);
@@ -228,7 +230,7 @@ class PaymentVoucherController extends Controller
     private function pdf(PaymentVoucher $voucher, PdfGeneratorService $pdf, bool $inline)
     {
         $this->authorize('view', $voucher);
-        $voucher->load(['items', 'createdBy:id,name', 'approvedBy:id,name', 'paidBy:id,name']);
+        $voucher->load(['items', 'expenseHead', 'createdBy:id,name', 'approvedBy:id,name', 'paidBy:id,name']);
 
         return $pdf->generateFromView('prints.payment-voucher', [
             'voucher'       => $voucher,
@@ -237,12 +239,14 @@ class PaymentVoucherController extends Controller
         ], 'Payment-Voucher-' . $voucher->voucher_number, $inline);
     }
 
-    private function formData(): array
+    private function formData(?PaymentVoucher $voucher = null): array
     {
         return [
-            'payeeTypes'     => PaymentVoucher::PAYEE_TYPES,
+            'expenseHeads' => ExpenseHead::forAgency(auth()->user()->agency_id)
+                ->where(fn ($q) => $q->where('is_active', true)
+                    ->when($voucher?->expense_head_id, fn ($same) => $same->orWhere('id', $voucher->expense_head_id)))
+                ->ordered()->get(),
             'paymentMethods' => PaymentVoucher::PAYMENT_METHODS,
-            'adjustTypes'    => PaymentVoucher::ADJUST_TYPES,
         ];
     }
 }

@@ -8,20 +8,18 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * ERP Expense (E3). Agency money-OUT log — simple, no ledger/cache.
  *
- * `category` stores a key from CATEGORIES; `paid_via` a key from PAID_VIA.
- * There is intentionally no "Agent Commission" category (agent payouts belong
- * to Agent Khata) so the same outflow is never counted twice in P&L.
+ * expense_head_id identifies the agency-managed head. category retains its
+ * stable code (or historical string); CATEGORIES is a legacy label/CSV alias map.
+ * paid_via uses PAID_VIA. Default heads exclude Agent Khata payouts.
  *
- * SYSTEM_CATEGORIES are written only by code, never by the manual Add form or
- * CSV import (both validate against CATEGORIES). "payment_voucher" rows are
- * created by PaymentVoucherService when a voucher is marked paid; they carry
- * payment_voucher_id (UNIQUE → one expense per voucher) and are read-only on
- * the Expenses screen so they always match their voucher.
+ * PaymentVoucherService books the selected head when a voucher is paid.
+ * payment_voucher_id (UNIQUE → one expense per voucher) makes these rows
+ * read-only on the Expenses screen. SYSTEM_CATEGORIES labels legacy rows.
  */
 class Expense extends Model
 {
     protected $fillable = [
-        'agency_id', 'expense_date', 'category', 'amount',
+        'agency_id', 'expense_date', 'category', 'expense_head_id', 'amount',
         'paid_via', 'note', 'created_by', 'updated_by',
     ];
 
@@ -63,6 +61,11 @@ class Expense extends Model
         return $this->belongsTo(Agency::class);
     }
 
+    public function expenseHead(): BelongsTo
+    {
+        return $this->belongsTo(ExpenseHead::class);
+    }
+
     public function paymentVoucher(): BelongsTo
     {
         return $this->belongsTo(PaymentVoucher::class)->withTrashed();
@@ -91,7 +94,7 @@ class Expense extends Model
 
     public function categoryLabel(): string
     {
-        return self::CATEGORIES[$this->category]
+        return ($this->expenseHead?->agency_id === $this->agency_id ? $this->expenseHead->name : null) ?? self::CATEGORIES[$this->category]
             ?? self::SYSTEM_CATEGORIES[$this->category]
             ?? ucfirst((string) $this->category);
     }

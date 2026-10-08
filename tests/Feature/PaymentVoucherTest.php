@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Agency;
 use App\Models\AuditLog;
 use App\Models\Expense;
+use App\Models\ExpenseHead;
 use App\Models\Invoice;
 use App\Models\PaymentVoucher;
 use App\Models\Plan;
@@ -72,6 +73,7 @@ class PaymentVoucherTest extends TestCase
     private function payload(array $overrides = []): array
     {
         return array_merge([
+            'expense_head_id' => ExpenseHead::forAgency($this->agency->id)->where('code', 'manpower')->value('id'),
             'voucher_date'   => '2026-09-24',
             'payee_type'     => 'party',
             'payee_name'     => 'Dhaka Manpower Ltd',
@@ -91,7 +93,8 @@ class PaymentVoucherTest extends TestCase
 
     private function createAs(User $user, array $overrides = []): PaymentVoucher
     {
-        $this->actingAs($user)->post(route('erp.payment-vouchers.store'), $this->payload($overrides))->assertRedirect();
+        $headId = ExpenseHead::forAgency($user->agency_id)->where('code', 'manpower')->value('id');
+        $this->actingAs($user)->post(route('erp.payment-vouchers.store'), $this->payload($overrides + ['expense_head_id' => $headId]))->assertRedirect()->assertSessionHasNoErrors();
 
         return PaymentVoucher::latest('id')->firstOrFail();
     }
@@ -248,8 +251,9 @@ class PaymentVoucherTest extends TestCase
 
         $expense = Expense::where('payment_voucher_id', $v->id)->sole();
         $this->assertSame($this->agency->id, $expense->agency_id);
-        $this->assertSame('payment_voucher', $expense->category);
-        $this->assertSame('Payment Voucher', $expense->categoryLabel());
+        $this->assertSame('manpower', $expense->category);
+        $this->assertSame('Manpower Cost', $expense->categoryLabel());
+        $this->assertSame($v->expense_head_id, $expense->expense_head_id);
         $this->assertSame('56750.11', (string) $expense->amount);          // exact, equals voucher total
         $this->assertSame((string) $v->total_amount, (string) $expense->amount);
         $this->assertSame('2026-09-20', $expense->expense_date->format('Y-m-d')); // payment date, not "now"

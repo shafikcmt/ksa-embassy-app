@@ -6,7 +6,6 @@
 @section('content')
     @php
         $money = fn ($v) => '৳ ' . number_format((float) $v, 2);
-        $categoryLabels = \App\Models\Expense::CATEGORIES;
 
         // Primary KPI cards — every value is a read-only aggregate from
         // ErpReportService (verified E1–E3 sources). No math in the view.
@@ -314,7 +313,7 @@
                     @php $pct = $catTotal > 0 ? round($amount / $catTotal * 100) : 0; @endphp
                     <li>
                         <div class="mb-1 flex items-center justify-between">
-                            <span class="text-slate-700">{{ $categoryLabels[$key] ?? ucfirst($key) }}</span>
+                            <span class="text-slate-700">{{ $key }}</span>
                             <span class="font-semibold text-slate-800">৳{{ number_format($amount, 2) }}</span>
                         </div>
                         <div class="h-1.5 overflow-hidden rounded-full bg-slate-100">
