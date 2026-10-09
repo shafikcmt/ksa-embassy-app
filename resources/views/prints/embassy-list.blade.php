@@ -35,6 +35,9 @@ td, th { padding: 3pt 5pt; vertical-align: middle; font-size: 9pt; }
 }
 /* Explicit cell fonts keep mPDF and browser metrics aligned. */
 .embassy-arabic td, .embassy-english td, .embassy-arabic th, .embassy-english th { font-family: ksaroboto, sans-serif; font-size:9.3pt; line-height:14.2pt; }
+@if(!empty($_pdf))
+.embassy-english .data-row td { line-height:14.16pt; }
+@endif
 </style>
 </head>
 <body>
@@ -63,33 +66,33 @@ td, th { padding: 3pt 5pt; vertical-align: middle; font-size: 9pt; }
 
 {{-- Single combined table: office/license header (borderless) + column header + bilingual category bars + rows + group totals.
      The office header lives INSIDE this table so its cells share the same columns and align exactly (mPDF sizes columns by content, so two separate tables cannot be aligned). --}}
-<table class="bdr embassy-arabic" style="table-layout:fixed;direction:rtl;font-size:9.3pt;font-family:ksaroboto,sans-serif;">
+<table class="bdr embassy-arabic" style="width:{{ !empty($_pdf) ? '541.621pt' : '100%' }};table-layout:fixed;direction:rtl;font-size:9.3pt;font-family:ksaroboto,sans-serif;">
   <colgroup>
-    <col style="width:4.2%"><col style="width:14.6%"><col style="width:38.8%"><col style="width:14%"><col style="width:8.4%"><col style="width:20%">
+    <col style="width:4.07%"><col style="width:14.60%"><col style="width:38.82%"><col style="width:14.05%"><col style="width:8.50%"><col style="width:19.96%">
   </colgroup>
   <thead>
     {{-- Office / license / date / signature header — borderless rows sharing the grid columns (RTL) --}}
     <tr>
-      <td colspan="2" style="height:18.12pt;line-height:18.12pt;border:0;text-align:right;padding:0;font-weight:bold;font-size:9.5pt;direction:rtl;font-family:xbriyaz,'DejaVu Sans',sans-serif;">اسم المكتب :</td>
+      <td colspan="2" style="height:18.12pt;line-height:18.12pt;border:0;text-align:right;padding:0;font-weight:bold;font-size:9.3pt;direction:rtl;font-family:xbriyaz,'DejaVu Sans',sans-serif;">اسم المكتب :</td>
       <td style="height:18.12pt;line-height:18.12pt;border:0;text-align:left;padding:0 0 0 34pt;font-weight:bold;font-size:12pt;direction:ltr;white-space:nowrap;">{{ $agency->name }}</td>
-      <td colspan="2" style="height:18.12pt;line-height:18.12pt;border:0;text-align:left;padding:0 0 0 32pt;font-weight:bold;font-size:10pt;direction:rtl;font-family:xbriyaz,'DejaVu Sans',sans-serif;">رقم الرخصة :</td>
+      <td colspan="2" style="height:18.12pt;line-height:18.12pt;border:0;text-align:left;padding:0 0 0 32pt;font-weight:bold;font-size:9.8pt;direction:rtl;font-family:xbriyaz,'DejaVu Sans',sans-serif;">رقم الرخصة :</td>
       <td style="height:18.12pt;line-height:18.12pt;border:0;text-align:right;padding:0 32pt;font-weight:bold;font-size:12pt;direction:ltr;">{{ $agency->rl_number ?: '—' }}</td>
     </tr>
     <tr>
-      <td colspan="2" style="height:18.12pt;line-height:18.12pt;border:0;text-align:right;padding:0;font-weight:bold;font-size:9.5pt;direction:rtl;font-family:xbriyaz,'DejaVu Sans',sans-serif;">توقيع :</td>
+      <td colspan="2" style="height:18.12pt;line-height:18.12pt;border:0;text-align:right;padding:0;font-weight:bold;font-size:9.3pt;direction:rtl;font-family:xbriyaz,'DejaVu Sans',sans-serif;">توقيع :</td>
       <td style="height:18.12pt;line-height:18.12pt;border:0;padding:0 4pt;">&nbsp;</td>
-      <td colspan="2" style="height:18.12pt;line-height:18.12pt;border:0;text-align:left;padding:0 0 0 53pt;font-weight:bold;font-size:10pt;direction:rtl;font-family:xbriyaz,'DejaVu Sans',sans-serif;">التاريخ :</td>
+      <td colspan="2" style="height:18.12pt;line-height:18.12pt;border:0;text-align:left;padding:0 0 0 53pt;font-weight:bold;font-size:9.8pt;direction:rtl;font-family:xbriyaz,'DejaVu Sans',sans-serif;">التاريخ :</td>
       <td style="height:18.12pt;line-height:18.12pt;border:0;text-align:right;padding:0 10pt;font-weight:bold;font-size:12pt;direction:ltr;">{{ $list->list_date->format('d M, Y') }}</td>
     </tr>
     {{-- spacer to keep a gap before the column-header row --}}
-    <tr><td colspan="6" style="border:0;padding:0;height:{{ !empty($_pdf) ? '29.5pt' : '28.5pt' }};font-size:1pt;line-height:{{ !empty($_pdf) ? '29.5pt' : '28.5pt' }};">&nbsp;</td></tr>
+    <tr><td colspan="6" style="border:0;padding:0;height:{{ !empty($_pdf) ? '29.25pt' : '28.5pt' }};font-size:1pt;line-height:{{ !empty($_pdf) ? '29.25pt' : '28.5pt' }};">&nbsp;</td></tr>
     <tr style="background:#fff;">
-      <th style="width:4.2%;border:0.72pt solid #212529;padding:0.75pt 3pt;text-align:center;background-color:#fff;font-family:xbriyaz,'DejaVu Sans',sans-serif;">ت<br><span style="font-size:9.3pt;direction:ltr;unicode-bidi:embed;font-family:ksaroboto,sans-serif;">SL.</span></th>
-      <th style="width:14.6%;border:0.72pt solid #212529;padding:0.75pt 3pt;text-align:center;background-color:#fff;font-family:xbriyaz,'DejaVu Sans',sans-serif;">رقم الجوازات<br><span style="font-size:9.3pt;direction:ltr;unicode-bidi:embed;font-family:ksaroboto,sans-serif;">Passport No.</span></th>
-      <th style="width:38.8%;border:0.72pt solid #212529;padding:0.75pt 3pt;text-align:center;background-color:#fff;font-family:xbriyaz,'DejaVu Sans',sans-serif;">اسم الكفيل<br><span style="font-size:9.3pt;direction:ltr;unicode-bidi:embed;font-family:ksaroboto,sans-serif;">Sponsor Name</span></th>
-      <th style="width:14%;border:0.72pt solid #212529;padding:0.75pt 3pt;text-align:center;background-color:#fff;font-family:xbriyaz,'DejaVu Sans',sans-serif;">رقم التأشيرة<br><span style="font-size:9.3pt;direction:ltr;unicode-bidi:embed;font-family:ksaroboto,sans-serif;">Visa No</span></th>
-      <th style="width:8.4%;border:0.72pt solid #212529;padding:0.75pt 3pt;text-align:center;background-color:#fff;font-family:xbriyaz,'DejaVu Sans',sans-serif;">التاريخ<br><span style="font-size:9.3pt;direction:ltr;unicode-bidi:embed;font-family:ksaroboto,sans-serif;">Year</span></th>
-      <th style="width:20%;border:0.72pt solid #212529;padding:0.75pt 3pt;text-align:center;background-color:#fff;font-family:xbriyaz,'DejaVu Sans',sans-serif;">المهنة<br><span style="font-size:9.3pt;direction:ltr;unicode-bidi:embed;font-family:ksaroboto,sans-serif;">Profession</span></th>
+      <th style="width:4.07%;border:0.72pt solid #212529;padding:0.15pt 1.5pt;text-align:center;background-color:#fff;font-size:9.1pt;font-family:xbriyaz,'DejaVu Sans',sans-serif;">ت<br><span style="font-size:9.3pt;direction:ltr;unicode-bidi:embed;font-family:ksaroboto,sans-serif;">SL.</span></th>
+      <th style="width:14.60%;border:0.72pt solid #212529;padding:0.15pt 3pt;text-align:center;background-color:#fff;font-size:9.1pt;font-family:xbriyaz,'DejaVu Sans',sans-serif;">رقم الجوازات<br><span style="font-size:9.3pt;direction:ltr;unicode-bidi:embed;font-family:ksaroboto,sans-serif;">Passport No.</span></th>
+      <th style="width:38.82%;border:0.72pt solid #212529;padding:0.15pt 3pt;text-align:center;background-color:#fff;font-size:9.1pt;font-family:xbriyaz,'DejaVu Sans',sans-serif;">اسم الكفيل<br><span style="font-size:9.3pt;direction:ltr;unicode-bidi:embed;font-family:ksaroboto,sans-serif;">Sponsor Name</span></th>
+      <th style="width:14.05%;border:0.72pt solid #212529;padding:0.15pt 3pt;text-align:center;background-color:#fff;font-size:9.1pt;font-family:xbriyaz,'DejaVu Sans',sans-serif;">رقم التأشيرة<br><span style="font-size:9.3pt;direction:ltr;unicode-bidi:embed;font-family:ksaroboto,sans-serif;">Visa No</span></th>
+      <th style="width:8.50%;border:0.72pt solid #212529;padding:0.15pt 3pt;text-align:center;background-color:#fff;font-size:9.1pt;font-family:xbriyaz,'DejaVu Sans',sans-serif;">التاريخ<br><span style="font-size:9.3pt;direction:ltr;unicode-bidi:embed;font-family:ksaroboto,sans-serif;">Year</span></th>
+      <th style="width:19.96%;border:0.72pt solid #212529;padding:0.15pt 3pt;text-align:center;background-color:#fff;font-size:9.1pt;font-family:xbriyaz,'DejaVu Sans',sans-serif;">المهنة<br><span style="font-size:9.3pt;direction:ltr;unicode-bidi:embed;font-family:ksaroboto,sans-serif;">Profession</span></th>
     </tr>
   </thead>
   <tbody>
@@ -108,10 +111,10 @@ td, th { padding: 3pt 5pt; vertical-align: middle; font-size: 9pt; }
     <tr class="data-row">
       <td style="border-top:0;border-bottom:0;border-left:0.72pt solid #212529;border-right:0.72pt solid #212529;padding:{{ !empty($_pdf) ? '0.78pt' : '0.75pt' }} 3pt;text-align:center;">{{ $loop->iteration }}</td>
       <td style="border-top:0;border-bottom:0;border-left:0.72pt solid #212529;border-right:0.72pt solid #212529;padding:{{ !empty($_pdf) ? '0.78pt' : '0.75pt' }} 3pt;text-align:center;direction:ltr;font-weight:normal;">{{ $item->snapshot_passport_no ?? '—' }}</td>
-      <td style="border-top:0;border-bottom:0;border-left:0.72pt solid #212529;border-right:0.72pt solid #212529;padding:{{ !empty($_pdf) ? '0.78pt' : '0.75pt' }} 4pt;text-align:center;font-family:xbriyaz,'DejaVu Sans',sans-serif;">{{ $item->snapshot_sponsor_name_ar ?? $item->snapshot_sponsor_name ?? '—' }}</td>
+      <td style="border-top:0;border-bottom:0;border-left:0.72pt solid #212529;border-right:0.72pt solid #212529;padding:{{ !empty($_pdf) ? '0.78pt' : '0.75pt' }} 4pt;text-align:center;font-size:9.1pt;font-family:xbriyaz,'DejaVu Sans',sans-serif;">{{ $item->snapshot_sponsor_name_ar ?? $item->snapshot_sponsor_name ?? '—' }}</td>
       <td style="border-top:0;border-bottom:0;border-left:0.72pt solid #212529;border-right:0.72pt solid #212529;padding:{{ !empty($_pdf) ? '0.78pt' : '0.75pt' }} 3pt;text-align:center;direction:ltr;">{{ $item->snapshot_visa_no ?? '—' }}</td>
       <td style="border-top:0;border-bottom:0;border-left:0.72pt solid #212529;border-right:0.72pt solid #212529;padding:{{ !empty($_pdf) ? '0.78pt' : '0.75pt' }} 3pt;text-align:center;direction:ltr;">{{ $hijriYear ?? '—' }}</td>
-      <td style="border-top:0;border-bottom:0;border-left:0.72pt solid #212529;border-right:0.72pt solid #212529;padding:{{ !empty($_pdf) ? '0.78pt' : '0.75pt' }} 4pt;text-align:center;white-space:nowrap;font-family:xbriyaz,'DejaVu Sans',sans-serif;">{{ $profAr ?: ($profEn ?: '—') }}</td>
+      <td style="border-top:0;border-bottom:0;border-left:0.72pt solid #212529;border-right:0.72pt solid #212529;padding:{{ !empty($_pdf) ? '0.78pt' : '0.75pt' }} 4pt;text-align:center;white-space:nowrap;font-size:9.1pt;font-family:xbriyaz,'DejaVu Sans',sans-serif;">{{ $profAr ?: ($profEn ?: '—') }}</td>
     </tr>
     @endforeach
     @if($items->count() > 0)
@@ -126,16 +129,16 @@ td, th { padding: 3pt 5pt; vertical-align: middle; font-size: 9pt; }
 {{-- Arabic signatures — 2 columns × 3 rows (matches reference) --}}
 <table style="margin-top:23.4pt;margin-left:0;direction:rtl;font-size:9.3pt;width:84%;font-family:xbriyaz,'DejaVu Sans',sans-serif;">
   <tr>
-    <td style="text-align:right;padding:2pt 55pt 2pt 0;line-height:14.2pt;">المستلم :</td>
-    <td style="text-align:right;padding:2pt 55pt 2pt 0;line-height:14.2pt;">الختم :</td>
+    <td style="width:50%;text-align:right;padding:2pt 55pt 2pt 0;font-size:8.2pt;line-height:14.2pt;">المستلم :</td>
+    <td style="width:50%;text-align:right;padding:2pt 56pt 2pt 0;font-size:8.2pt;line-height:14.2pt;">الختم :</td>
   </tr>
   <tr>
-    <td style="text-align:right;padding:2pt 55pt 2pt 0;line-height:14.2pt;">المدقق :</td>
-    <td style="text-align:right;padding:2pt 55pt 2pt 0;line-height:14.2pt;">التعبئة :</td>
+    <td style="width:50%;text-align:right;padding:2pt 55pt 2pt 0;font-size:8.2pt;line-height:14.2pt;">المدقق :</td>
+    <td style="width:50%;text-align:right;padding:2pt 56pt 2pt 0;font-size:8.2pt;line-height:14.2pt;">التعبئة :</td>
   </tr>
   <tr>
-    <td style="text-align:right;padding:2pt 55pt 2pt 0;line-height:14.2pt;">المسئول :</td>
-    <td style="text-align:right;padding:2pt 55pt 2pt 0;line-height:14.2pt;">التسجيل :</td>
+    <td style="width:50%;text-align:right;padding:2pt 55pt 2pt 0;font-size:8.2pt;line-height:14.2pt;">المسئول :</td>
+    <td style="width:50%;text-align:right;padding:2pt 56pt 2pt 0;font-size:8.2pt;line-height:14.2pt;">التسجيل :</td>
   </tr>
 </table>
 
@@ -154,24 +157,24 @@ td, th { padding: 3pt 5pt; vertical-align: middle; font-size: 9pt; }
   $rl = $agency->rl_number;
   $rlSuffix = $rl ? (\Illuminate\Support\Str::startsWith(strtoupper($rl), 'RL') ? ' - ' . $rl : ' - RL' . $rl) : '';
 @endphp
-<div style="text-align:center;margin-bottom:24.5pt;line-height:24pt;font-family:ksaroboto,sans-serif;">
-  <div style="font-size:20.4pt;font-weight:bold;font-family:ksaroboto,sans-serif;">{{ $agency->name }}{{ $rlSuffix }}</div>
-  <div style="font-size:15pt;font-weight:bold;font-family:ksaroboto,sans-serif;margin-top:0;line-height:24pt;">Embassy List - {{ $list->list_date->format('d M, Y') }}</div>
+<div style="text-align:center;margin-bottom:25.5pt;line-height:24pt;font-family:ksaroboto,sans-serif;">
+  <div style="padding-top:2pt;font-size:21pt;font-weight:normal;font-family:ksaroboto,sans-serif;">{{ $agency->name }}{{ $rlSuffix }}</div>
+  <div style="font-size:15.2pt;font-weight:normal;font-family:ksaroboto,sans-serif;margin-top:-3pt;line-height:24pt;">Embassy List - {{ $list->list_date->format('d M, Y') }}</div>
 </div>
 
 {{-- Single combined table: column header + bilingual category bars + rows + group totals --}}
-<table class="bdr embassy-english" style="table-layout:fixed;border-collapse:collapse;font-size:9.3pt;">
+<table class="bdr embassy-english" style="width:{{ !empty($_pdf) ? '541.621pt' : '100%' }};table-layout:fixed;border-collapse:collapse;font-size:9.3pt;">
   <colgroup>
-    <col style="width:3.6%"><col style="width:23.2%"><col style="width:30%"><col style="width:13%"><col style="width:12.6%"><col style="width:17.6%">
+    <col style="width:3.70%"><col style="width:22.92%"><col style="width:29.94%"><col style="width:13.12%"><col style="width:12.57%"><col style="width:17.75%">
   </colgroup>
   <thead>
     <tr style="background:#fff;">
-      <th style="width:3.6%;border:0.72pt solid #212529;padding:0.9pt 3pt;text-align:center;background-color:#fff;">SL.</th>
-      <th style="width:23.2%;border:0.72pt solid #212529;padding:0.9pt 3pt;text-align:center;background-color:#fff;">Agent Name</th>
-      <th style="width:30%;border:0.72pt solid #212529;padding:0.9pt 3pt;text-align:center;background-color:#fff;">Name</th>
-      <th style="width:13%;border:0.72pt solid #212529;padding:0.9pt 3pt;text-align:center;background-color:#fff;">Passport No.</th>
-      <th style="width:12.6%;border:0.72pt solid #212529;padding:0.9pt 3pt;text-align:center;background-color:#fff;">Visa No</th>
-      <th style="width:17.6%;border:0.72pt solid #212529;padding:0.9pt 3pt;text-align:center;background-color:#fff;">Profession</th>
+      <th style="width:3.70%;border:0.72pt solid #212529;padding:0.9pt 3pt;text-align:center;background-color:#fff;">SL.</th>
+      <th style="width:22.92%;border:0.72pt solid #212529;padding:0.9pt 3pt;text-align:center;background-color:#fff;">Agent Name</th>
+      <th style="width:29.94%;border:0.72pt solid #212529;padding:0.9pt 3pt;text-align:center;background-color:#fff;">Name</th>
+      <th style="width:13.12%;border:0.72pt solid #212529;padding:0.9pt 3pt;text-align:center;background-color:#fff;">Passport No.</th>
+      <th style="width:12.57%;border:0.72pt solid #212529;padding:0.9pt 3pt;text-align:center;background-color:#fff;">Visa No</th>
+      <th style="width:17.75%;border:0.72pt solid #212529;padding:0.9pt 3pt;text-align:center;background-color:#fff;">Profession</th>
     </tr>
   </thead>
   <tbody>
