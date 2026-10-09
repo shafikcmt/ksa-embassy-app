@@ -105,8 +105,8 @@
 </htmlpagefooter>
 <sethtmlpagefooter name="voucherFooter" value="on" />
 
-{{-- A modest upper offset balances a single voucher on A4 while leaving room for wrapped details. --}}
-<div style="height:50mm;"></div>
+{{-- A small upper spacer keeps the voucher safely inside printable margins. --}}
+<div style="height:5mm;"></div>
 <table class="accent"><tr><td>&nbsp;</td></tr></table>
 
 {{-- Header --}}
