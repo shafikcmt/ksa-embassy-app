@@ -70,6 +70,17 @@ class PdfGeneratorService
      */
     public function generateFromView(string $view, array $data, string $filename, bool $inline = false, array $options = []): Response
     {
+        // The Embassy List reference uses US Letter; other documents keep A4.
+        if ($view === 'prints.embassy-list') {
+            $options = array_replace([
+                'format' => 'Letter',
+                'margin_top' => 9.525,
+                'margin_left' => 12.573,
+                'margin_right' => 12.065,
+                'margin_bottom' => 12.7,
+            ], $options);
+        }
+
         // _pdf=true lets templates hide screen-only elements (toolbars, flex wrappers)
         $html = view($view, array_merge($data, ['_pdf' => true]))->render();
 
