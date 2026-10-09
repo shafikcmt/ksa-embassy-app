@@ -87,7 +87,7 @@ td, th { padding: 2pt 3pt; vertical-align: middle; font-size: 8pt; }
      own top spacer so single-page and Complete-File PDFs match exactly. --}}
 
 {{-- Shared Forwarding Letter — identical to the single preview --}}
-@include('prints.hr.partials.forwarding-letter-body')
+@include('prints.hr.partials.forwarding-letter-body', ['agency_show_logo' => false])
 
 {{-- ══════════════════════════════════════════════════════════════════════ --}}
 {{-- PAGE BREAK --}}
