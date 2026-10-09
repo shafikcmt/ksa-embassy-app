@@ -26,7 +26,7 @@
         <div class="rounded-2xl border border-slate-200 bg-white p-4">
             <div class="text-xs font-semibold uppercase tracking-wide text-slate-400">Top Category</div>
             @if($byCategory->isNotEmpty())
-                <div class="mt-1 text-sm font-bold text-slate-800">{{ $categories[$byCategory->keys()->first()] ?? $byCategory->keys()->first() }}</div>
+                <div class="mt-1 text-sm font-bold text-slate-800">{{ $byCategory->keys()->first() }}</div>
                 <div class="text-xs text-slate-500">৳{{ number_format($byCategory->first(), 2) }}</div>
             @else
                 <div class="mt-1 text-sm text-slate-400">—</div>
@@ -48,15 +48,16 @@
                 class="mr-auto inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md">
             <i class="bi" x-bind:class="addOpen ? 'bi-dash-lg' : 'bi-plus-lg'"></i> <span x-text="addOpen ? 'Close form' : 'Add Expense'">Add Expense</span>
         </button>
-        <a href="{{ route('erp.expenses.export') }}"
+        <a href="{{ route('erp.expenses.export', request()->only('expense_head_id', 'category')) }}"
            class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3.5 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
             <i class="bi bi-filetype-csv text-emerald-600"></i> Export CSV
         </a>
-        <a href="{{ route('erp.expenses.print') }}" target="_blank"
+        <a href="{{ route('erp.expenses.print', request()->only('expense_head_id', 'category')) }}" target="_blank"
            class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3.5 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
             <i class="bi bi-printer"></i> Print
         </a>
         @if(auth()->user()->isAgencyAdmin())
+            <a href="{{ route('erp.expense-heads.index') }}" class="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700">Manage expense heads</a>
             <a href="{{ route('erp.expenses.import.form') }}"
                class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md">
                 <i class="bi bi-upload"></i> Import CSV
@@ -78,10 +79,10 @@
             <x-erp.field label="Date" for="ex_expense_date" required :name="$addErr ? 'expense_date' : null">
                 <input id="ex_expense_date" type="date" name="expense_date" value="{{ old('expense_date', now()->format('Y-m-d')) }}" required class="{{ $fi }} {{ $bd('expense_date') }}">
             </x-erp.field>
-            <x-erp.field label="Category" for="ex_category" required :name="$addErr ? 'category' : null">
-                <select id="ex_category" name="category" required class="{{ $fi }} {{ $bd('category') }}">
+            <x-erp.field label="Expense Head" for="ex_category" required :name="$addErr ? 'expense_head_id' : null">
+                <select id="ex_category" name="expense_head_id" required class="{{ $fi }} {{ $bd('expense_head_id') }}">
                     <option value="">—</option>
-                    @foreach($categories as $key => $label)<option value="{{ $key }}" @selected(old('category') === $key)>{{ $label }}</option>@endforeach
+                    @foreach($heads->where('is_active', true) as $head)<option value="{{ $head->id }}" @selected((string) old('expense_head_id') === (string) $head->id)>{{ $head->name }}</option>@endforeach
                 </select>
             </x-erp.field>
             <x-erp.field label="Amount (৳)" for="ex_amount" required :name="$addErr ? 'amount' : null">
@@ -107,6 +108,17 @@
     </form>
     </div>
 
+    <form method="GET" action="{{ route('erp.expenses') }}" class="mb-4 flex flex-wrap items-end gap-2">
+        <label><span class="mb-1 block text-sm text-slate-600">Expense head</span><select name="expense_head_id" class="rounded-lg border-slate-300 text-sm">
+            <option value="">All heads</option>
+            @foreach($heads as $head)<option value="{{ $head->id }}" @selected($selectedHead === (string) $head->id)>{{ $head->name }}{{ $head->is_active ? '' : ' (inactive)' }}</option>@endforeach
+        </select></label>
+        @if($legacyCategories->isNotEmpty())
+            <label><span class="mb-1 block text-sm text-slate-600">Legacy category</span><select name="category" class="rounded-lg border-slate-300 text-sm"><option value="">All legacy categories</option>@foreach($legacyCategories as $code => $label)<option value="{{ $code }}" @selected(request('category') === $code)>{{ $label }}</option>@endforeach</select></label>
+        @endif
+        <button type="submit" class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white">Filter</button>
+        <a href="{{ route('erp.expenses') }}" class="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-600">Reset</a>
+    </form>
     {{-- Live search (client-side; filters only the already-loaded, agency-scoped rows) --}}
     <div class="mb-4 max-w-md">
         <div class="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 transition focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-emerald-100">
@@ -156,6 +168,8 @@
                                                 'id' => $e->id,
                                                 'expense_date' => $e->expense_date->format('Y-m-d'),
                                                 'category' => $e->category,
+                                                'expense_head_id' => $e->expense_head_id,
+                                                'head_label' => $e->categoryLabel(),
                                                 'amount' => number_format((float) $e->amount, 2, '.', ''),
                                                 'paid_via' => $e->paid_via,
                                                 'note' => $e->note,
@@ -187,9 +201,11 @@
             <x-erp.field label="Date" for="exe_expense_date" required>
                 <input id="exe_expense_date" type="date" name="expense_date" x-model="form.expense_date" required class="{{ $eb }}">
             </x-erp.field>
-            <x-erp.field label="Category" for="exe_category" required>
-                <select id="exe_category" name="category" x-model="form.category" required class="{{ $eb }}">
-                    @foreach($categories as $key => $label)<option value="{{ $key }}">{{ $label }}</option>@endforeach
+            <x-erp.field label="Expense Head" for="exe_category" required>
+                <input type="hidden" name="category" x-bind:value="form.category">
+                <select id="exe_category" name="expense_head_id" x-model="form.expense_head_id" class="{{ $eb }}">
+                    <option value="" x-show="!form.expense_head_id" x-text="form.head_label + ' (legacy)'">Legacy category</option>
+                    @foreach($heads as $head)<option value="{{ $head->id }}" x-show="{{ $head->is_active ? 'true' : 'false' }} || String(form.original_head_id) === '{{ $head->id }}'">{{ $head->name }}{{ $head->is_active ? '' : ' (inactive)' }}</option>@endforeach
                 </select>
             </x-erp.field>
             <x-erp.field label="Amount (৳)" for="exe_amount" required>
@@ -220,6 +236,7 @@
             form: {},
             openEdit(row) {
                 this.form = Object.assign({}, row);
+                this.form.original_head_id = row.expense_head_id;
                 for (const k in this.form) if (this.form[k] === null) this.form[k] = '';
                 this.editing = true;
             },

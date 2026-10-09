@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\ExpenseHead;
 use App\Models\PaymentVoucher;
 use App\Services\InvoiceService;
 use Illuminate\Foundation\Http\FormRequest;
@@ -31,7 +32,13 @@ class PaymentVoucherRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
+        $current = $this->route('paymentVoucher');
+        $headRule = Rule::exists('expense_heads', 'id')->where(fn ($q) => $q
+            ->where('agency_id', $this->user()->agency_id)
+            ->where(fn ($active) => $active->where('is_active', true)
+                ->when($current?->expense_head_id, fn ($same) => $same->orWhere('id', $current->expense_head_id))));
+        $rules = [
+            'expense_head_id' => ['required', 'integer', $headRule],
             'voucher_date'     => ['required', 'date'],
             'payee_type'       => ['required', Rule::in(array_keys(PaymentVoucher::PAYEE_TYPES))],
             'payee_name'       => ['required', 'string', 'max:255'],
@@ -57,6 +64,18 @@ class PaymentVoucherRequest extends FormRequest
             'items.*.unit_price'  => ['required', 'regex:' . self::PRICE],
             'items.*.remarks'     => ['nullable', 'string', 'max:500'],
         ];
+        if ($this->exists('amount')) {
+            // The simple form books exactly this amount; legacy adjustments/items are ignored.
+            foreach (['items', 'items.*.description', 'items.*.quantity', 'items.*.unit_price', 'items.*.remarks',
+                'tax_type', 'tax_value', 'discount_type', 'discount_value'] as $field) {
+                unset($rules[$field]);
+            }
+            $rules['amount'] = ['required', 'regex:' . self::PRICE, 'gt:0'];
+            $rules['payee_type'] = ['nullable', Rule::in(array_keys(PaymentVoucher::PAYEE_TYPES))];
+            $rules['description'] = ['nullable', 'string', 'max:2000'];
+        }
+
+        return $rules;
     }
 
     public function messages(): array
@@ -79,6 +98,9 @@ class PaymentVoucherRequest extends FormRequest
     public function after(): array
     {
         return [function (Validator $v) {
+            if ($this->exists('amount')) {
+                return;
+            }
             foreach (['tax', 'discount'] as $k) {
                 $value = $this->input($k . '_value');
                 if ($this->input($k . '_type') === 'percent' && is_string($value)
@@ -93,6 +115,21 @@ class PaymentVoucherRequest extends FormRequest
     public function voucherData(): array
     {
         $validated = $this->validated();
+
+        if ($this->exists('amount')) {
+            $head = ExpenseHead::forAgency($this->user()->agency_id)->findOrFail($validated['expense_head_id']);
+            $current = $this->route('paymentVoucher');
+            $amount = $validated['amount'];
+            unset($validated['amount']);
+            $previousPurpose = $current && (! $current->expense_head_id || $current->expense_head_id === $head->id)
+                ? $current->description : null;
+            $validated['description'] = trim((string) ($validated['description'] ?? '')) ?: ($previousPurpose ?: $head->name);
+            $validated['payee_type'] = $validated['payee_type'] ?? $current?->payee_type ?? 'party';
+            $validated['tax_type'] = 'none';
+            $validated['discount_type'] = 'none';
+
+            return [$validated, [['description' => $head->name, 'quantity' => 1, 'unit_price' => $amount]]];
+        }
 
         $items = array_map(fn ($i) => [
             'description' => trim($i['description']),

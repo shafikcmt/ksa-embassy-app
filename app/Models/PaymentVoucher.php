@@ -50,6 +50,7 @@ class PaymentVoucher extends Model
 
     protected $fillable = [
         'voucher_date',
+        'expense_head_id',
         'payee_type', 'payee_name', 'payee_phone', 'payee_address', 'payee_account',
         'payment_method', 'cheque_number', 'bank_name', 'reference_number',
         'description',
@@ -76,6 +77,16 @@ class PaymentVoucher extends Model
     public function agency(): BelongsTo
     {
         return $this->belongsTo(Agency::class);
+    }
+
+    public function expenseHead(): BelongsTo
+    {
+        return $this->belongsTo(ExpenseHead::class);
+    }
+
+    public function expenseHeadLabel(): string
+    {
+        return ($this->expenseHead?->agency_id === $this->agency_id ? $this->expenseHead->name : null) ?? 'Payment Voucher (legacy)';
     }
 
     public function items(): HasMany

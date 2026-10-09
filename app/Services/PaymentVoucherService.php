@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Agency;
 use App\Models\AuditLog;
 use App\Models\Expense;
+use App\Models\ExpenseHead;
 use App\Models\PaymentVoucher;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -27,7 +28,7 @@ use Illuminate\Validation\ValidationException;
  * can't approve/pay/cancel the same voucher concurrently. All changes are
  * written to AuditLog (user + timestamp + old/new values).
  *
- * Paying a voucher also books it as an Expense (category payment_voucher) in
+ * Paying a voucher also books it as an Expense with the selected agency head in
  * the SAME transaction — so it flows into Expenses, Reports and Profit/Loss.
  * expenses.payment_voucher_id is UNIQUE: one voucher can never become two
  * expenses. Paid vouchers can't be cancelled/deleted, so the pair never splits.
@@ -136,6 +137,9 @@ class PaymentVoucherService
         return DB::transaction(function () use ($voucher, $agencyId, $data, $items, $calc, $user) {
             $isNew = $voucher === null;
             $old = [];
+            if ($user->agency_id !== $agencyId || ($voucher && $voucher->agency_id !== $agencyId)) {
+                abort(403);
+            }
 
             if ($isNew) {
                 $voucher = new PaymentVoucher();
@@ -150,6 +154,13 @@ class PaymentVoucherService
                     throw ValidationException::withMessages(['status' => 'This voucher is ' . $voucher->statusLabel() . ' and can no longer be edited.']);
                 }
                 $old = $this->snapshot($voucher->load('items'));
+            }
+
+            // Check against the locked current voucher, never a stale route-bound instance.
+            // New vouchers lock the agency before the head, matching head-management writes.
+            $head = ExpenseHead::forAgency($agencyId)->whereKey($data['expense_head_id'] ?? null)->lockForUpdate()->first();
+            if (! $head || (! $head->is_active && $voucher->expense_head_id !== $head->id)) {
+                throw ValidationException::withMessages(['expense_head_id' => 'Choose an active expense head belonging to your agency.']);
             }
 
             $voucher->fill($data);
@@ -209,10 +220,13 @@ class PaymentVoucherService
             return $existing;
         }
 
+        $head = $voucher->expense_head_id
+            ? ExpenseHead::forAgency($voucher->agency_id)->findOrFail($voucher->expense_head_id) : null;
         $expense = new Expense([
             'agency_id'    => $voucher->agency_id,
             'expense_date' => $voucher->payment_date->format('Y-m-d'),
-            'category'     => 'payment_voucher',
+            'category'     => $head?->code ?? 'payment_voucher',
+            'expense_head_id' => $voucher->expense_head_id,
             'amount'       => (string) $voucher->total_amount,   // decimal string — no float
             'paid_via'     => self::EXPENSE_PAID_VIA[$voucher->payment_method] ?? null,
             'note'         => mb_substr($voucher->voucher_number . ' · ' . $voucher->payee_name, 0, 255),
@@ -321,6 +335,7 @@ class PaymentVoucherService
             'status'          => $voucher->status,
             'voucher_date'    => optional($voucher->voucher_date)->format('Y-m-d'),
             'payee_name'      => $voucher->payee_name,
+            'expense_head_id' => $voucher->expense_head_id,
             'payment_method'  => $voucher->payment_method,
             'subtotal'        => (string) $voucher->subtotal,
             'tax_amount'      => (string) $voucher->tax_amount,

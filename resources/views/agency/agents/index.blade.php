@@ -36,7 +36,7 @@
 
     {{-- Filter bar --}}
     <x-ui.card class="mb-5">
-        <form method="GET" action="{{ route('agents.index') }}" class="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-12">
+        <form data-ajax-filter data-ajax-group="agency-agents" method="GET" action="{{ route('agents.index') }}" class="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-12">
             <div class="lg:col-span-6">
                 <div class="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 transition-colors focus-within:border-brand-400 focus-within:ring-1 focus-within:ring-brand-400">
                     <i class="bi bi-search text-sm text-slate-400"></i>
@@ -50,14 +50,15 @@
                 <option value="inactive" @selected(request('status') === 'inactive')>Inactive</option>
             </select>
             <div class="flex gap-2 lg:col-span-3">
-                <x-ui.button type="submit" class="flex-1 cursor-pointer"><i class="bi bi-funnel"></i> Filter</x-ui.button>
+                <noscript><x-ui.button type="submit" class="flex-1 cursor-pointer"><i class="bi bi-funnel"></i> Filter</x-ui.button></noscript>
                 @if(request()->hasAny(['search','status']))
-                    <x-ui.button :href="route('agents.index')" variant="secondary" size="icon" title="Clear filters" class="cursor-pointer"><i class="bi bi-arrow-counterclockwise"></i></x-ui.button>
+                    <x-ui.button data-ajax-link data-ajax-group="agency-agents" :href="route('agents.index')" variant="secondary" size="icon" title="Clear filters" class="cursor-pointer"><i class="bi bi-arrow-counterclockwise"></i></x-ui.button>
                 @endif
             </div>
         </form>
     </x-ui.card>
 
+<div data-ajax-region="results" data-ajax-group="agency-agents">
     {{-- ── Desktop table ─────────────────────────────────────── --}}
     <x-ui.card class="hidden overflow-hidden lg:block">
         <div class="overflow-x-auto">
@@ -105,7 +106,7 @@
                                     @endcan
                                     @can('delete', $agent)
                                         <button type="button" title="Delete" class="grid h-8 w-8 cursor-pointer place-items-center rounded-lg text-rose-500 transition-colors hover:bg-rose-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
-                                            x-on:click="del.open = true; del.name = @js($agent->name); del.action = '{{ route('agents.destroy', $agent) }}'"><i class="bi bi-trash"></i></button>
+                                            data-agent-name="{{ $agent->name }}" data-delete-url="{{ route('agents.destroy', $agent) }}" x-on:click="del.open = true; del.name = $el.dataset.agentName; del.action = $el.dataset.deleteUrl"><i class="bi bi-trash"></i></button>
                                     @endcan
                                 </div>
                             </td>
@@ -150,7 +151,7 @@
                     @endcan
                     @can('delete', $agent)
                         <x-ui.button type="button" variant="secondary" size="sm" class="cursor-pointer"
-                            x-on:click="del.open = true; del.name = @js($agent->name); del.action = '{{ route('agents.destroy', $agent) }}'" title="Delete"><i class="bi bi-trash text-rose-500"></i></x-ui.button>
+                            data-agent-name="{{ $agent->name }}" data-delete-url="{{ route('agents.destroy', $agent) }}" x-on:click="del.open = true; del.name = $el.dataset.agentName; del.action = $el.dataset.deleteUrl" title="Delete"><i class="bi bi-trash text-rose-500"></i></x-ui.button>
                     @endcan
                 </div>
             </x-ui.card>
@@ -167,6 +168,7 @@
         @endif
     </div>
 
+</div>
     {{-- ── Delete dialog ─────────────────────────────────────── --}}
     <div x-show="del.open" x-cloak class="fixed inset-0 z-[60] flex items-center justify-center p-4" style="display:none">
         <div @click="del.open = false" x-show="del.open" x-transition.opacity class="absolute inset-0 bg-slate-900/50"></div>

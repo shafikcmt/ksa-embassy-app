@@ -19,6 +19,7 @@
 
     <x-ui.page-header title="Delivery" subtitle="Passport delivery & payment collection" icon="bi-truck" />
 
+<div data-ajax-region="stats" data-ajax-group="erp-delivery">
     {{-- Summary --}}
     <div class="mb-5 grid gap-3 sm:grid-cols-3">
         <div class="rounded-2xl border border-slate-200 bg-white p-4">
@@ -35,6 +36,7 @@
         </div>
     </div>
 
+</div>
     {{-- Collapsible Add form: opened by the "Add …" button; starts OPEN after a
          validation error, a duplicate warning or old input so nothing is lost. --}}
     @php
@@ -49,11 +51,11 @@
                 class="mr-auto inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md">
             <i class="bi" x-bind:class="addOpen ? 'bi-dash-lg' : 'bi-plus-lg'"></i> <span x-text="addOpen ? 'Close form' : 'Add Delivery'">Add Delivery</span>
         </button>
-        <a href="{{ route('erp.delivery.export', array_filter(['agent' => $agentFilter])) }}"
+        <a data-ajax-region="export" data-ajax-group="erp-delivery" href="{{ route('erp.delivery.export', array_filter(['agent' => $agentFilter])) }}"
            class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3.5 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
             <i class="bi bi-filetype-csv text-emerald-600"></i> Export CSV
         </a>
-        <a href="{{ route('erp.delivery.print', array_filter(['agent' => $agentFilter])) }}" target="_blank"
+        <a data-ajax-region="print" data-ajax-group="erp-delivery" href="{{ route('erp.delivery.print', array_filter(['agent' => $agentFilter])) }}" target="_blank"
            class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3.5 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
             <i class="bi bi-printer"></i> Print
         </a>
@@ -149,19 +151,20 @@
 
     {{-- Agent filter (server-side: list, totals, print and CSV) + live search (client-side, loaded rows only) --}}
     <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-    <form method="GET" action="{{ route('erp.delivery') }}" class="flex items-center gap-2">
+    <form data-ajax-filter data-ajax-group="erp-delivery" method="GET" action="{{ route('erp.delivery') }}" class="flex items-center gap-2">
         <label for="agentFilter" class="sr-only">Agent</label>
         <div class="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 transition focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-emerald-100">
             <i class="bi bi-person-badge text-sm text-slate-400"></i>
-            <select id="agentFilter" name="agent" onchange="this.form.submit()" class="h-11 min-w-[11rem] border-0 bg-transparent py-0 pl-0 pr-8 text-sm focus:ring-0">
+            <select id="agentFilter" name="agent" class="h-11 min-w-[11rem] border-0 bg-transparent py-0 pl-0 pr-8 text-sm focus:ring-0">
                 <option value="">All agents</option>
                 @foreach($agentOptions as $opt)<option value="{{ $opt['name'] }}" @selected($agentFilter === $opt['name'])>{{ $opt['name'] }}</option>@endforeach
             </select>
         </div>
         @if($agentFilter !== '')
-            <a href="{{ route('erp.delivery') }}" class="text-xs font-semibold text-slate-500 hover:text-slate-700" title="Clear agent filter"><i class="bi bi-x-circle"></i> Clear</a>
+            <a data-ajax-link data-ajax-group="erp-delivery" href="{{ route('erp.delivery') }}" class="text-xs font-semibold text-slate-500 hover:text-slate-700" title="Clear agent filter"><i class="bi bi-x-circle"></i> Clear</a>
         @endif
-    </form>
+    <noscript><button type="submit" class="rounded-lg border border-slate-300 px-3 py-2 text-sm">Apply filters</button></noscript>
+        </form>
     <div class="w-full max-w-md">
         <div class="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 transition focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-emerald-100">
             <i class="bi bi-search text-sm text-slate-400"></i>
@@ -175,6 +178,7 @@
     </div>
     </div>
 
+<div data-ajax-region="results" data-ajax-group="erp-delivery">
     {{-- List --}}
     <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
         <div class="overflow-x-auto">
@@ -257,6 +261,7 @@
         </div>
     </div>
 
+</div>
     {{-- Receive Payment modal --}}
     <div x-show="paying" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-slate-900/50" x-on:click="paying = false"></div>

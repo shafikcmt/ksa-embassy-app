@@ -33,27 +33,29 @@
         </x-slot:actions>
 </x-ui.page-header>
 
+<div data-ajax-region="stats" data-ajax-group="erp-invoices">
 {{-- Summary --}}
 <div class="mb-5 grid gap-3 sm:grid-cols-3">
-    <a href="{{ route('erp.invoices.index', ['status' => 'pending']) }}" class="rounded-2xl border border-amber-200 bg-amber-50 p-4 transition hover:shadow-sm">
+    <a data-ajax-link data-ajax-group="erp-invoices" href="{{ route('erp.invoices.index', ['status' => 'pending']) }}" class="rounded-2xl border border-amber-200 bg-amber-50 p-4 transition hover:shadow-sm">
         <div class="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-amber-700"><span>Outstanding</span><i class="bi bi-hourglass-split"></i></div>
         <div class="mt-1 text-lg font-bold text-amber-800">{{ $pending['amount'] }}</div>
         <div class="text-xs text-amber-700/80">{{ $pending['count'] }} pending invoice{{ $pending['count'] === 1 ? '' : 's' }}</div>
     </a>
-    <a href="{{ route('erp.invoices.index', ['status' => 'paid']) }}" class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 transition hover:shadow-sm">
+    <a data-ajax-link data-ajax-group="erp-invoices" href="{{ route('erp.invoices.index', ['status' => 'paid']) }}" class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 transition hover:shadow-sm">
         <div class="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-emerald-700"><span>Paid</span><i class="bi bi-check-circle"></i></div>
         <div class="mt-1 text-lg font-bold text-emerald-800">{{ $paid['amount'] }}</div>
         <div class="text-xs text-emerald-700/80">{{ $paid['count'] }} paid invoice{{ $paid['count'] === 1 ? '' : 's' }}</div>
     </a>
-    <a href="{{ route('erp.invoices.index', ['status' => 'draft']) }}" class="rounded-2xl border border-slate-200 bg-white p-4 transition hover:shadow-sm">
+    <a data-ajax-link data-ajax-group="erp-invoices" href="{{ route('erp.invoices.index', ['status' => 'draft']) }}" class="rounded-2xl border border-slate-200 bg-white p-4 transition hover:shadow-sm">
         <div class="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-500"><span>Drafts</span><i class="bi bi-pencil-square"></i></div>
         <div class="mt-1 text-lg font-bold text-slate-900">{{ $draft['count'] }}</div>
         <div class="text-xs text-slate-500">{{ $draft['amount'] }}</div>
     </a>
 </div>
 
+</div>
 {{-- Filters (server-side, agency-scoped) --}}
-<form method="GET" action="{{ route('erp.invoices.index') }}" class="mb-5 rounded-2xl border border-slate-200 bg-white p-4">
+<form data-ajax-filter data-ajax-group="erp-invoices" method="GET" action="{{ route('erp.invoices.index') }}" class="mb-5 rounded-2xl border border-slate-200 bg-white p-4">
     <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-12">
         <div class="lg:col-span-2">
             <label class="{{ $lbl }}">Search</label>
@@ -70,7 +72,7 @@
         </div>
         <div class="lg:col-span-2">
             <label class="{{ $lbl }}">Agent</label>
-            <select name="agent_id" class="{{ $inp }}" onchange="this.form.submit()">
+            <select name="agent_id" class="{{ $inp }}">
                 <option value="">All agents</option>
                 @foreach($agents as $agent)<option value="{{ $agent->id }}" @selected($filters['agent'] === $agent->id)>{{ $agent->name }}</option>@endforeach
             </select>
@@ -79,18 +81,19 @@
         <div class="lg:col-span-2"><label class="{{ $lbl }}">To</label><input type="date" name="to" value="{{ $filters['to'] }}" class="{{ $inp }}"></div>
         <div class="lg:col-span-2">
             <label class="{{ $lbl }}">Sort</label>
-            <select name="sort" class="{{ $inp }}" onchange="this.form.submit()">
+            <select name="sort" class="{{ $inp }}">
                 @foreach($sorts as $key => $label)<option value="{{ $key }}" @selected($filters['sort'] === $key)>{{ $label }}</option>@endforeach
             </select>
         </div>
     </div>
     <div class="mt-3 flex flex-wrap items-center justify-end gap-2">
         @if($hasFilters)
-            <a href="{{ route('erp.invoices.index') }}" class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-slate-500 hover:text-slate-700"><i class="bi bi-x-lg"></i> Clear</a>
+            <a data-ajax-link data-ajax-group="erp-invoices" href="{{ route('erp.invoices.index') }}" class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-slate-500 hover:text-slate-700"><i class="bi bi-x-lg"></i> Clear</a>
         @endif
-        <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"><i class="bi bi-funnel"></i> Apply</button>
+        <noscript><button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"><i class="bi bi-funnel"></i> Apply</button></noscript>
     </div>
 </form>
+<div data-ajax-region="results" data-ajax-group="erp-invoices">
 
 {{-- Invoice list --}}
 @if($invoices->isEmpty())
@@ -162,6 +165,7 @@
 
     @if($invoices->hasPages())<div class="mt-6 rounded-2xl border border-slate-200 bg-white px-4 py-3">{{ $invoices->links() }}</div>@endif
 
-    @include('erp.invoices._delete_modal')
 @endif
+</div>
+@include('erp.invoices._delete_modal')
 @endsection

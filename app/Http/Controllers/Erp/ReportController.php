@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Erp;
 
 use App\Http\Controllers\Controller;
+use App\Models\ExpenseHead;
 use App\Services\ErpReportService;
 use App\Services\PdfGeneratorService;
 use Illuminate\Http\Request;
@@ -29,6 +30,7 @@ class ReportController extends Controller
 
         return view('erp.reports.index', $this->build($agencyId, $filters, $reports) + [
             'filters' => $filters,
+            'expenseHeads' => ExpenseHead::forAgency($agencyId)->ordered()->get(),
         ]);
     }
 
@@ -133,6 +135,7 @@ class ReportController extends Controller
             'from' => $request->query('from') ?: null,
             'to'   => $request->query('to') ?: null,
             'q'    => trim((string) $request->query('q', '')),
+            'expense_head_id' => $request->query('expense_head_id') ?: null,
         ];
     }
 }

@@ -26,6 +26,7 @@
         </x-slot:actions>
     </x-ui.page-header>
 
+<div data-ajax-region="stats" data-ajax-group="agency-notes">
     {{-- KPI cards --}}
     <div class="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <x-ui.card class="p-4">
@@ -48,10 +49,12 @@
         </x-ui.card>
     </div>
 
+</div>
+<div data-ajax-region="results" data-ajax-group="agency-notes">
     {{-- Tabs --}}
     <div class="mb-4 flex flex-wrap gap-2">
         @foreach($tabs as $key => $tab)
-            <a href="{{ route('notes.index', ['view' => $key]) }}"
+            <a data-ajax-link data-ajax-group="agency-notes" href="{{ route('notes.index', ['view' => $key]) }}"
                @class([
                    'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition',
                    'bg-brand-600 text-white shadow-sm' => $view === $key,
@@ -64,34 +67,35 @@
 
     {{-- Filters (hidden on trash) --}}
     @if($view !== 'trash')
-        <form method="GET" action="{{ route('notes.index') }}" class="mb-4 flex flex-wrap items-center gap-2">
+        <form data-ajax-filter data-ajax-group="agency-notes" method="GET" action="{{ route('notes.index') }}" class="mb-4 flex flex-wrap items-center gap-2">
             <input type="hidden" name="view" value="{{ $view }}">
-            <select name="category" onchange="this.form.submit()" class="h-9 rounded-lg border-slate-300 text-sm focus:border-brand-400 focus:ring-brand-400">
+            <select name="category" class="h-9 rounded-lg border-slate-300 text-sm focus:border-brand-400 focus:ring-brand-400">
                 <option value="">All Categories</option>
                 @foreach($categories as $k => $label)
                     <option value="{{ $k }}" {{ ($filters['category'] ?? '') === $k ? 'selected' : '' }}>{{ $label }}</option>
                 @endforeach
             </select>
-            <select name="priority" onchange="this.form.submit()" class="h-9 rounded-lg border-slate-300 text-sm focus:border-brand-400 focus:ring-brand-400">
+            <select name="priority" class="h-9 rounded-lg border-slate-300 text-sm focus:border-brand-400 focus:ring-brand-400">
                 <option value="">All Priority</option>
                 @foreach($priorities as $k => $label)
                     <option value="{{ $k }}" {{ ($filters['priority'] ?? '') === $k ? 'selected' : '' }}>{{ $label }}</option>
                 @endforeach
             </select>
-            <select name="status" onchange="this.form.submit()" class="h-9 rounded-lg border-slate-300 text-sm focus:border-brand-400 focus:ring-brand-400">
+            <select name="status" class="h-9 rounded-lg border-slate-300 text-sm focus:border-brand-400 focus:ring-brand-400">
                 <option value="">All Status</option>
                 <option value="pending" {{ ($filters['status'] ?? '') === 'pending' ? 'selected' : '' }}>Pending</option>
                 <option value="completed" {{ ($filters['status'] ?? '') === 'completed' ? 'selected' : '' }}>Completed</option>
             </select>
-            <select name="sort" onchange="this.form.submit()" class="h-9 rounded-lg border-slate-300 text-sm focus:border-brand-400 focus:ring-brand-400">
+            <select name="sort" class="h-9 rounded-lg border-slate-300 text-sm focus:border-brand-400 focus:ring-brand-400">
                 <option value="newest" {{ ($filters['sort'] ?? '') === 'newest' ? 'selected' : '' }}>Newest first</option>
                 <option value="oldest" {{ ($filters['sort'] ?? '') === 'oldest' ? 'selected' : '' }}>Oldest first</option>
                 <option value="priority" {{ ($filters['sort'] ?? '') === 'priority' ? 'selected' : '' }}>Priority</option>
                 <option value="reminder" {{ ($filters['sort'] ?? '') === 'reminder' ? 'selected' : '' }}>Reminder date</option>
             </select>
             @if(array_filter($filters ?? []))
-                <a href="{{ route('notes.index', ['view' => $view]) }}" class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-600 hover:border-slate-300"><i class="bi bi-x-lg"></i> Clear</a>
+                <a data-ajax-link data-ajax-group="agency-notes" href="{{ route('notes.index', ['view' => $view]) }}" class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-600 hover:border-slate-300"><i class="bi bi-x-lg"></i> Clear</a>
             @endif
+        <noscript><button type="submit" class="rounded-lg border border-slate-300 px-3 py-2 text-sm">Apply filters</button></noscript>
         </form>
     @endif
 
@@ -177,6 +181,7 @@
         </p>
     @endif
 
+</div>
     {{-- ── Create / Edit modal ─────────────────────────────── --}}
     <div x-show="open" x-cloak class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/50 p-4 sm:p-8" x-on:click.self="open = false" x-on:keydown.escape.window="open = false">
         <div class="w-full max-w-lg rounded-2xl bg-white shadow-xl" x-transition>

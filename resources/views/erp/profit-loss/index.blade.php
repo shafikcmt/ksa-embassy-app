@@ -35,7 +35,7 @@
 </div>
 
 {{-- Period filter --}}
-<form method="GET" action="{{ route('erp.profit-loss') }}" class="mb-6 rounded-2xl border border-slate-200 bg-white p-5" x-data="{ period: '{{ $period }}' }">
+<form data-ajax-filter data-ajax-group="erp-profit-loss" method="GET" action="{{ route('erp.profit-loss') }}" class="mb-6 rounded-2xl border border-slate-200 bg-white p-5" x-data="{ period: '{{ $period }}' }">
     <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div>
             <label class="{{ $lbl }}">Period</label>
@@ -48,7 +48,7 @@
         <div x-show="period === 'custom'" x-cloak><label class="{{ $lbl }}">From</label><input type="date" name="from" value="{{ $from }}" class="{{ $inp }}"></div>
         <div x-show="period === 'custom'" x-cloak><label class="{{ $lbl }}">To</label><input type="date" name="to" value="{{ $to }}" class="{{ $inp }}"></div>
         <div class="flex items-end">
-            <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md"><i class="bi bi-funnel"></i> Apply</button>
+            <noscript><button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md"><i class="bi bi-funnel"></i> Apply</button></noscript><a data-ajax-link data-ajax-group="erp-profit-loss" href="{{ route('erp.profit-loss') }}" class="text-sm font-semibold text-slate-600">Reset</a>
         </div>
     </div>
     <div class="mt-4 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4">
@@ -57,6 +57,7 @@
         <a href="{{ route('erp.profit-loss.export.csv', $exportQuery) }}" class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"><i class="bi bi-filetype-csv"></i> CSV</a>
     </div>
 </form>
+<div data-ajax-region="results" data-ajax-group="erp-profit-loss">
 
 {{-- Headline profit --}}
 <div class="mb-6 grid gap-4 lg:grid-cols-3">
@@ -108,4 +109,5 @@
 <p class="mt-4 text-center text-[0.7rem] text-slate-400">
     Cash basis: revenue is money actually collected; agent repayments (credits) and unpaid dues are not counted as income.
 </p>
+</div>
 @endsection

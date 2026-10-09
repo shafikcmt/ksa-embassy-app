@@ -275,7 +275,7 @@ class ErpReportService
         $to   = $filters['to'] ?? null;
 
         $all = Expense::forAgency($agencyId)
-            ->with('createdBy:id,name')
+            ->with(['createdBy:id,name', 'expenseHead'])
             ->orderByDesc('expense_date')->orderByDesc('id')
             ->get();
 
@@ -287,12 +287,14 @@ class ErpReportService
         $allTime = (float) $all->sum(fn ($e) => (float) $e->amount);
 
         $byCategory = $all
-            ->groupBy('category')
+            ->groupBy(fn ($expense) => $expense->categoryLabel())
             ->map(fn ($rows) => (float) $rows->sum(fn ($e) => (float) $e->amount))
             ->sortDesc();
 
         // Date-windowed slice for reports (filtered in PHP off the same set).
-        $rows = $all->filter(function ($e) use ($from, $to) {
+        $headId = $filters['expense_head_id'] ?? null;
+        $rows = $all->filter(function ($e) use ($from, $to, $headId) {
+            if ($headId && (string) $e->expense_head_id !== (string) $headId) return false;
             $d = $e->expense_date->format('Y-m-d');
             if ($from && $d < $from) return false;
             if ($to && $d > $to) return false;

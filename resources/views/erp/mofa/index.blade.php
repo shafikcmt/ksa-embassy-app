@@ -8,21 +8,24 @@
         <div><h1 class="text-3xl font-bold">MOFA Summary</h1><p class="mt-2 text-sm text-slate-500">Manage MOFA visa processing and compliance</p></div>
         <div class="flex flex-wrap items-center gap-4"><span class="text-xs text-slate-500">Generated: {{ now()->format('d-M-Y') }}</span><button class="mf-btn mf-primary" @click="$dispatch('mofa-add')"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add MOFA Entry</button></div>
     </header>
+<div data-ajax-region="stats" data-ajax-group="erp-mofa">
     <div class="mf-grid mb-6">
         @foreach(['total'=>['Total Entries','bi-files','processing'],'active'=>['Active','bi-check-circle','active'],'expiring'=>['Expiring Soon','bi-hourglass-split','expiring'],'expired'=>['Expired','bi-calendar-x','expired']] as $key=>$card)
-        <a href="{{ route('erp.mofa', $key==='total'?[]:['status'=>$key]) }}" class="mf-card flex items-center justify-between gap-3"><div><p class="text-sm text-slate-500">{{ $card[0] }}</p><p class="mt-2 text-3xl font-semibold text-blue-950">{{ number_format($stats[$key]) }}</p></div><i class="bi {{ $card[1] }} mf-{{ $card[2] }} rounded-lg p-3 text-xl" aria-hidden="true"></i></a>
+        <a data-ajax-link data-ajax-group="erp-mofa" href="{{ route('erp.mofa', $key==='total'?[]:['status'=>$key]) }}" class="mf-card flex items-center justify-between gap-3"><div><p class="text-sm text-slate-500">{{ $card[0] }}</p><p class="mt-2 text-3xl font-semibold text-blue-950">{{ number_format($stats[$key]) }}</p></div><i class="bi {{ $card[1] }} mf-{{ $card[2] }} rounded-lg p-3 text-xl" aria-hidden="true"></i></a>
         @endforeach
     </div>
+</div>
     <section class="mf-card mb-5">
-        <form method="get" class="flex flex-wrap items-end gap-3" x-data="{loading:false}" @submit="loading=true" :aria-busy="loading">
-            <div class="min-w-[170px] flex-1"><label class="mf-label" for="mf-search">Search entries</label><input class="mf-input" id="mf-search" name="q" value="{{ request('q') }}" placeholder="Name, passport, visa or MOFA number" @input.debounce.300ms="$el.form.requestSubmit()"></div>
+        <form data-ajax-filter data-ajax-group="erp-mofa" method="get" class="flex flex-wrap items-end gap-3">
+            <div class="min-w-[170px] flex-1"><label class="mf-label" for="mf-search">Search entries</label><input class="mf-input" id="mf-search" name="q" value="{{ request('q') }}" placeholder="Name, passport, visa or MOFA number"></div>
             <div><label class="mf-label" for="mf-status">Status</label><select id="mf-status" name="status" class="mf-input"><option value="">All statuses</option>@foreach(\App\Models\MofaEntry::STATUSES as $key=>$label)<option value="{{ $key }}" @selected(request('status')===$key)>{{ $label }}</option>@endforeach</select></div>
             <div><label class="mf-label" for="mf-agent">Agent</label><select id="mf-agent" name="agent" class="mf-input"><option value="">All agents</option>@foreach($agentOptions as $opt)<option value="{{ $opt['name'] }}" @selected(request('agent')===$opt['name'])>{{ $opt['name'] }}</option>@endforeach</select></div>
             @foreach(['from'=>'From date','to'=>'To date'] as $key=>$label)<div><label for="mf-{{ $key }}" class="mf-label">{{ $label }}</label><input id="mf-{{ $key }}" class="mf-input" type="date" name="{{ $key }}" value="{{ request($key) }}"></div>@endforeach
-            <button class="mf-btn" :disabled="loading"><span x-text="loading ? 'Searching…' : 'Apply filters'">Apply filters</span></button><a class="mf-btn" href="{{ route('erp.mofa') }}">Reset</a>
+            <noscript><button class="mf-btn"><span>Apply filters</span></button></noscript><a data-ajax-link data-ajax-group="erp-mofa" class="mf-btn" href="{{ route('erp.mofa') }}">Reset</a>
         </form>
         @if($errors->any())<p class="mf-error" role="alert">{{ $errors->first() }}</p>@endif
     </section>
+<div data-ajax-region="results" data-ajax-group="erp-mofa">
     <div class="mb-3 flex flex-wrap items-center justify-between gap-3"><p class="text-sm text-slate-500">{{ $entries->total() }} records </p><div class="flex flex-wrap gap-2">
         <a class="mf-btn" href="{{ route('erp.mofa.export',request()->only('q','status','agent','from','to')) }}"><i class="bi bi-download" aria-hidden="true"></i> Export CSV</a>
         <a class="mf-btn" target="_blank" rel="noopener" href="{{ route('erp.mofa.print',request()->only('q','status','agent','from','to')) }}">Print</a>
@@ -70,6 +73,7 @@
         </tbody></table>
     </div>@if($entries->hasPages())<div class="mt-4 rounded-lg border border-slate-200 bg-white px-4 py-3">{{ $entries->links() }}</div>@endif
     @endif
+</div>
 </div>
 {{-- Outside the .mofa wrapper so its legacy focus/heading CSS doesn't reach the modal. --}}
 @include('erp.mofa._modal')

@@ -9,6 +9,16 @@ use Illuminate\Support\Str;
 
 class Agency extends Model
 {
+    protected static function booted(): void
+    {
+        static::created(fn (Agency $agency) => ExpenseHead::createDefaults($agency->id));
+    }
+
+    public function expenseHeads(): HasMany
+    {
+        return $this->hasMany(ExpenseHead::class);
+    }
+
     protected $fillable = [
         'name', 'owner_name', 'company_type', 'referral_code', 'slug', 'license_number', 'rl_number',
         'address', 'phone', 'email', 'logo', 'print_logo',

@@ -16,6 +16,7 @@
     ];
     // Preserve current filters on export links.
     $exportQuery = array_filter([
+        'expense_head_id' => $filters['expense_head_id'],
         'from' => $filters['from'], 'to' => $filters['to'], 'q' => $filters['q'] ?: null,
     ]);
 @endphp
@@ -23,14 +24,15 @@
 <x-ui.page-header title="Reports" subtitle="Financial summary & exports" icon="bi-bar-chart" />
 
 {{-- Filters + export --}}
-<form method="GET" action="{{ route('erp.reports') }}" class="mb-6 rounded-2xl border border-slate-200 bg-white p-5">
+<form data-ajax-filter data-ajax-group="erp-reports" method="GET" action="{{ route('erp.reports') }}" class="mb-6 rounded-2xl border border-slate-200 bg-white p-5">
     <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div><label class="{{ $lbl }}">From</label><input type="date" name="from" value="{{ $filters['from'] }}" class="{{ $inp }}"></div>
         <div><label class="{{ $lbl }}">To</label><input type="date" name="to" value="{{ $filters['to'] }}" class="{{ $inp }}"></div>
         <div><label class="{{ $lbl }}">Search</label><input type="text" name="q" value="{{ $filters['q'] }}" placeholder="Name or passport (dues)" class="{{ $inp }}"></div>
+        <div><label class="{{ $lbl }}">Expense Head (expenses only)</label><select name="expense_head_id" class="{{ $inp }}"><option value="">All heads</option>@foreach($expenseHeads as $head)<option value="{{ $head->id }}" @selected((string) $filters['expense_head_id'] === (string) $head->id)>{{ $head->name }}{{ $head->is_active ? '' : ' (inactive)' }}</option>@endforeach</select></div>
         <div class="flex items-end gap-2">
-            <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md"><i class="bi bi-funnel"></i> Apply</button>
-            <a href="{{ route('erp.reports') }}" class="inline-flex items-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50">Reset</a>
+            <noscript><button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md"><i class="bi bi-funnel"></i> Apply</button></noscript>
+            <a data-ajax-link data-ajax-group="erp-reports" href="{{ route('erp.reports') }}" class="inline-flex items-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50">Reset</a>
         </div>
     </div>
 
@@ -47,6 +49,7 @@
         </div>
     @endif
 </form>
+<div data-ajax-region="results" data-ajax-group="erp-reports">
 
 {{-- Summary cards --}}
 <div class="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -144,5 +147,6 @@
             </tbody>
         </table>
     </div>
+</div>
 </div>
 @endsection

@@ -6,6 +6,9 @@
 @section('content')
     <div class="mx-auto max-w-2xl">
         <x-ui.page-header title="ERP Settings" subtitle="Configure ERP defaults & security" icon="bi-sliders" />
+        @if(auth()->user()->isAgencyAdmin())
+            <a href="{{ route('erp.expense-heads.index') }}" class="mb-5 inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"><i class="bi bi-list-check"></i> Manage Expense Heads</a>
+        @endif
 
         <form method="POST" action="{{ route('erp.settings.update') }}" class="space-y-6">
             @csrf

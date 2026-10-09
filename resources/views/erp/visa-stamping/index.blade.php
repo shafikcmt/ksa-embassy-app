@@ -47,11 +47,12 @@
     </div>
 </div>
 
+<div data-ajax-region="stats" data-ajax-group="erp-visa-stamping">
 {{-- Stats --}}
 <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
     @foreach($cards as [$label, $count, $ico, $status, $chip, $num, $border])
         @php $active = $status !== '' && $filters['status'] === $status; @endphp
-        <a href="{{ route('erp.visa-stamping.index', $status ? ['status' => $status] : []) }}"
+        <a data-ajax-link data-ajax-group="erp-visa-stamping" href="{{ route('erp.visa-stamping.index', $status ? ['status' => $status] : []) }}"
            class="flex items-center gap-4 rounded-xl border bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 {{ $active ? 'ring-2 ring-blue-500' : '' }} {{ $border }}">
             <span class="grid h-12 w-12 shrink-0 place-items-center rounded-xl text-xl {{ $chip }}" aria-hidden="true"><i class="bi {{ $ico }}"></i></span>
             <span>
@@ -62,9 +63,12 @@
     @endforeach
 </div>
 
+</div>
 {{-- Search & filters (search submits 300ms after typing stops) --}}
-<form method="GET" action="{{ route('erp.visa-stamping.index') }}" role="search" x-data="{ t: null }"
+<form data-ajax-filter data-ajax-group="erp-visa-stamping" method="GET" action="{{ route('erp.visa-stamping.index') }}" role="search" x-data
       class="mb-5 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+    {{-- Enter in search submits filters without implicitly clicking the direction toggle. --}}
+    <button type="submit" hidden tabindex="-1" aria-hidden="true"></button>
     @if($filters['trashed'])<input type="hidden" name="trashed" value="1">@endif
     <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12 xl:items-end">
         <div class="xl:col-span-4">
@@ -72,20 +76,19 @@
             <div class="relative">
                 <i class="bi bi-search pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400" aria-hidden="true"></i>
                 <input id="vf_q" type="search" name="q" value="{{ $filters['q'] }}" @if($filters['q'] !== '') autofocus onfocus="this.setSelectionRange(this.value.length, this.value.length)" @endif
-                       x-on:input="clearTimeout(t); t = setTimeout(() => $el.form.requestSubmit(), 300)"
                        placeholder="Name, passport, visa no, MOFA no, reference…" class="{{ $ctl }} pl-9 pr-3">
             </div>
         </div>
         <div class="xl:col-span-2">
             <label for="vf_status" class="{{ $lbl }}">Status</label>
-            <select id="vf_status" name="status" class="{{ $ctl }} px-3" onchange="this.form.requestSubmit()">
+            <select id="vf_status" name="status" class="{{ $ctl }} px-3">
                 <option value="">All</option>
                 @foreach($statuses as $key => $label)<option value="{{ $key }}" @selected($filters['status'] === $key)>{{ $label }}</option>@endforeach
             </select>
         </div>
         <div class="xl:col-span-2">
             <label for="vf_agent" class="{{ $lbl }}">Agent</label>
-            <select id="vf_agent" name="agent_id" class="{{ $ctl }} px-3" onchange="this.form.requestSubmit()">
+            <select id="vf_agent" name="agent_id" class="{{ $ctl }} px-3">
                 <option value="">All agents</option>
                 @foreach($agents as $a)<option value="{{ $a->id }}" @selected($filters['agent_id'] === $a->id)>{{ $a->name }}</option>@endforeach
             </select>
@@ -104,16 +107,16 @@
 
     <div class="mt-4 flex flex-col gap-3 border-t border-gray-100 pt-4 lg:flex-row lg:items-center lg:justify-between">
         <div class="flex flex-wrap items-center gap-2">
-            <button type="submit" class="inline-flex items-center gap-1.5 rounded-md bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-blue-600 hover:shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+            <noscript><button type="submit" class="inline-flex items-center gap-1.5 rounded-md bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-blue-600 hover:shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
                 <i class="bi bi-funnel" aria-hidden="true"></i> Filter
                 @if($activeFilters)<span class="grid h-5 min-w-[1.25rem] place-items-center rounded-full bg-white px-1 text-[11px] font-bold text-blue-600" aria-label="{{ $activeFilters }} active filters">{{ $activeFilters }}</span>@endif
-            </button>
+            </button></noscript>
             <label for="vf_sort" class="sr-only">Sort by</label>
-            <select id="vf_sort" name="sort" onchange="this.form.requestSubmit()"
+            <select id="vf_sort" name="sort"
                     class="rounded-md border border-gray-300 bg-white py-2.5 pl-3 pr-8 text-sm text-gray-800 shadow-sm transition duration-150 focus:border-blue-500 focus:outline-none focus:ring-[3px] focus:ring-blue-500/10">
                 @foreach($sorts as $key => $label)<option value="{{ $key }}" @selected($filters['sort'] === $key)>Sort: {{ $label }}</option>@endforeach
             </select>
-            {{-- Current direction rides along on every submit; the toggle's own dir (sent later) wins when clicked. --}}
+            {{-- Shared filter engine merges the submitter over this current direction. --}}
             <input type="hidden" name="dir" value="{{ $filters['dir'] }}">
             <button type="submit" name="dir" value="{{ $filters['dir'] === 'asc' ? 'desc' : 'asc' }}" class="{{ $ghost }} px-3"
                     title="{{ $filters['dir'] === 'asc' ? 'Ascending — switch to descending' : 'Descending — switch to ascending' }}"
@@ -121,13 +124,13 @@
                 <i class="bi {{ $filters['dir'] === 'asc' ? 'bi-sort-up' : 'bi-sort-down' }}" aria-hidden="true"></i>
             </button>
             @if($hasFilters)
-                <a href="{{ route('erp.visa-stamping.index') }}" class="inline-flex items-center gap-1.5 rounded-md px-3 py-2.5 text-sm font-semibold text-gray-500 transition hover:text-gray-800"><i class="bi bi-x-lg" aria-hidden="true"></i> Clear</a>
+                <a data-ajax-link data-ajax-group="erp-visa-stamping" href="{{ route('erp.visa-stamping.index') }}" class="inline-flex items-center gap-1.5 rounded-md px-3 py-2.5 text-sm font-semibold text-gray-500 transition hover:text-gray-800"><i class="bi bi-x-lg" aria-hidden="true"></i> Clear</a>
             @endif
             @if($isAdmin)
                 @if($filters['trashed'])
-                    <a href="{{ route('erp.visa-stamping.index') }}" class="inline-flex items-center gap-1.5 px-2 text-sm font-semibold text-blue-600 hover:underline"><i class="bi bi-arrow-left" aria-hidden="true"></i> Active entries</a>
+                    <a data-ajax-link data-ajax-group="erp-visa-stamping" href="{{ route('erp.visa-stamping.index') }}" class="inline-flex items-center gap-1.5 px-2 text-sm font-semibold text-blue-600 hover:underline"><i class="bi bi-arrow-left" aria-hidden="true"></i> Active entries</a>
                 @else
-                    <a href="{{ route('erp.visa-stamping.index', ['trashed' => 1]) }}" class="inline-flex items-center gap-1.5 px-2 text-sm font-semibold text-gray-500 hover:text-gray-800"><i class="bi bi-trash3" aria-hidden="true"></i> Deleted</a>
+                    <a data-ajax-link data-ajax-group="erp-visa-stamping" href="{{ route('erp.visa-stamping.index', ['trashed' => 1]) }}" class="inline-flex items-center gap-1.5 px-2 text-sm font-semibold text-gray-500 hover:text-gray-800"><i class="bi bi-trash3" aria-hidden="true"></i> Deleted</a>
                 @endif
             @endif
         </div>
@@ -141,6 +144,7 @@
         </div>
     </div>
 </form>
+<div data-ajax-region="results" data-ajax-group="erp-visa-stamping">
 
 @if($filters['trashed'])
     <div class="mb-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
@@ -164,7 +168,7 @@
         @if($hasFilters)
             <h2 class="text-lg font-bold text-blue-950">No entries match these filters</h2>
             <p class="mt-1 text-sm text-gray-500">Try a different search, status, agent or date range.</p>
-            <a href="{{ route('erp.visa-stamping.index') }}" class="{{ $ghost }} mt-5"><i class="bi bi-x-lg" aria-hidden="true"></i> Clear filters</a>
+            <a data-ajax-link data-ajax-group="erp-visa-stamping" href="{{ route('erp.visa-stamping.index') }}" class="{{ $ghost }} mt-5"><i class="bi bi-x-lg" aria-hidden="true"></i> Clear filters</a>
         @else
             <h2 class="text-lg font-bold text-blue-950">No visa stamping entries yet</h2>
             <p class="mt-1 text-sm text-gray-500">Add your first stamping record to start tracking.</p>
@@ -265,6 +269,7 @@
     </div>
 @endif
 
+</div>
 {{-- Floating Add button --}}
 <button type="button" x-data x-on:click="$dispatch('stamping-add')" aria-label="Add visa stamping entry" title="Add visa stamping entry"
         class="fixed bottom-6 right-6 z-40 grid h-14 w-14 place-items-center rounded-full bg-emerald-500 text-2xl text-white shadow-lg shadow-emerald-500/30 transition duration-200 hover:scale-105 hover:bg-emerald-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/50">
