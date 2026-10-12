@@ -18,13 +18,13 @@
     $pillIcon = ['green' => 'bi-shield-check', 'amber' => 'bi-exclamation-triangle', 'red' => 'bi-x-octagon'][$statusTone] ?? 'bi-shield';
 
     // One detail row: muted label on the left, bold value on the right.
-    $row = 'flex items-start justify-between gap-6 py-3.5';
+    $row = 'flex items-start justify-between gap-8 py-4';
     $lbl = 'shrink-0 text-sm text-slate-500';
     $val = 'text-right text-sm font-semibold text-slate-900';
     $mono = 'font-mono tracking-wide';
 @endphp
 
-<div class="mx-auto max-w-6xl">
+<div class="mx-auto w-full max-w-[88rem]">
 
     {{-- Header + status --}}
     <div class="mb-6 flex flex-wrap items-end justify-between gap-3">
@@ -43,15 +43,15 @@
         </span>
     </div>
 
-    <div class="grid gap-6 lg:grid-cols-2 lg:items-start">
+    <div class="grid gap-8 lg:grid-cols-2 lg:items-start">
 
         {{-- License details --}}
         <section class="rounded-2xl border border-slate-200 bg-white shadow-sm" aria-labelledby="lic-details">
-            <h2 id="lic-details" class="border-b border-slate-100 px-6 py-4 text-base font-bold text-slate-900">License Details</h2>
-            <dl class="divide-y divide-slate-100 px-6 py-1">
+            <h2 id="lic-details" class="border-b border-slate-100 px-8 py-5 text-lg font-bold text-slate-900">License Details</h2>
+            <dl class="divide-y divide-slate-100 px-8 py-2">
                 <div class="{{ $row }}"><dt class="{{ $lbl }}">License Holder Name</dt><dd class="{{ $val }}">{{ $agency->owner_name ?: '—' }}</dd></div>
                 <div class="{{ $row }}"><dt class="{{ $lbl }}">Company</dt><dd class="{{ $val }}">{{ $agency->name }}</dd></div>
-                <div class="{{ $row }}"><dt class="{{ $lbl }}">Address</dt><dd class="{{ $val }} max-w-[22rem] font-medium">{{ $agency->address ?: '—' }}</dd></div>
+                <div class="{{ $row }}"><dt class="{{ $lbl }}">Address</dt><dd class="{{ $val }} max-w-[30rem] font-medium">{{ $agency->address ?: '—' }}</dd></div>
                 <div class="{{ $row }}"><dt class="{{ $lbl }}">RL Number</dt><dd class="{{ $val }} {{ $mono }}">{{ $agency->rl_number ?: '—' }}</dd></div>
                 <div class="{{ $row }}"><dt class="{{ $lbl }}">License Code</dt><dd class="{{ $val }} {{ $mono }}">{{ $agency->license_number ?: '—' }}</dd></div>
                 <div class="{{ $row }}"><dt class="{{ $lbl }}">Last Renewal Date</dt><dd class="{{ $val }}">{{ $agency->license_renewed_at?->format('d M Y') ?? '—' }}</dd></div>
@@ -80,10 +80,10 @@
 
         {{-- Payment information — Super Admin configured; each row appears only when it is set --}}
         <section class="rounded-2xl border border-slate-200 bg-white shadow-sm" aria-labelledby="lic-pay">
-            <h2 id="lic-pay" class="flex items-center gap-2 border-b border-slate-100 px-6 py-4 text-base font-bold text-slate-900">
+            <h2 id="lic-pay" class="flex items-center gap-2 border-b border-slate-100 px-8 py-5 text-lg font-bold text-slate-900">
                 <i class="bi bi-credit-card text-slate-500" aria-hidden="true"></i> Payment Information
             </h2>
-            <div class="space-y-3 px-6 py-5">
+            <div class="space-y-4 px-8 py-6">
                 @unless($hasPayment)
                     <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center">
                         <i class="bi bi-wallet2 text-3xl text-slate-400" aria-hidden="true"></i>
