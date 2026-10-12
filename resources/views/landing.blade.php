@@ -396,9 +396,12 @@
 <section class="hero hero-slider" style="padding:0" data-hero-slider aria-roledescription="carousel" aria-label="VisaDeskPro highlights">
   <div class="slides">
     @foreach($slides as $i => $s)
-      @php $hasPhoto = file_exists(public_path('images/hero/'.$s['photo'])); @endphp
+      @php
+        $photoFile = collect(['jpg', 'jpeg', 'png', 'webp'])->map(fn ($e) => 'images/hero/slide-'.($i + 1).'.'.$e)->first(fn ($f) => file_exists(public_path($f)));
+        $hasPhoto = (bool) $photoFile;
+      @endphp
       <div class="slide theme-{{ $s['theme'] }} {{ $i === 0 ? 'is-active' : '' }}" data-slide role="group" aria-roledescription="slide" aria-label="{{ $i + 1 }} of {{ count($slides) }}" @if($i) aria-hidden="true" @endif>
-        @if($hasPhoto)<div class="slide-photo" style="background-image:url('{{ asset('images/hero/'.$s['photo']) }}')"></div>@endif
+        @if($hasPhoto)<div class="slide-photo" style="background-image:url('{{ asset($photoFile) }}')"></div>@endif
         <div class="slide-scene">@include('landing._hero-scenes', ['scene' => $s['scene']])</div>
         <div class="wrap slide-grid {{ ($s['mock'] ?? false) ? 'has-mock' : '' }}">
           <div class="slide-copy">
