@@ -428,7 +428,7 @@ class InvoiceController extends Controller
 
         $agents = Agent::forAgency($agencyId)
             ->orderBy('name')
-            ->get(['id', 'name', 'phone', 'address']);
+            ->get(['id', 'name', 'phone', 'address', 'email']);
 
         return [
             'passengers'     => $passengers,

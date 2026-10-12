@@ -71,7 +71,7 @@
                     'passportKey' => 'passport_no',
                     'inputId'     => 'md_passport_no',
                     'idKey'       => 'editId',
-                    'map'         => ['full_name' => 'full_name', 'father_name' => 'father_name', 'date_of_birth' => 'date_of_birth', 'mobile_no' => 'mobile_no'],
+                    'map'         => ['full_name' => 'full_name', 'father_name' => 'father_name', 'date_of_birth' => 'date_of_birth', 'mobile_no' => 'mobile_no', 'reference' => 'reference'],
                 ])
             </x-erp.field>
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Erp;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PaymentVoucherRequest;
+use App\Models\Agent;
 use App\Models\AuditLog;
 use App\Models\ExpenseHead;
 use App\Models\PaymentVoucher;
@@ -247,6 +248,12 @@ class PaymentVoucherController extends Controller
                     ->when($voucher?->expense_head_id, fn ($same) => $same->orWhere('id', $voucher->expense_head_id)))
                 ->ordered()->get(),
             'paymentMethods' => PaymentVoucher::PAYMENT_METHODS,
+            // "Paid To" suggestions: names used on earlier vouchers + this agency's agents (never typed twice).
+            'payeeSuggestions' => PaymentVoucher::where('agency_id', (int) auth()->user()->agency_id)
+                ->whereNotNull('payee_name')->where('payee_name', '!=', '')
+                ->distinct()->orderBy('payee_name')->limit(200)->pluck('payee_name')
+                ->merge(Agent::forAgency((int) auth()->user()->agency_id)->orderBy('name')->pluck('name'))
+                ->unique()->values(),
         ];
     }
 }

@@ -3,12 +3,16 @@
 namespace Tests\Feature;
 
 use App\Models\Agency;
+use App\Models\Agent;
 use App\Models\BmetEntry;
+use App\Models\Delivery;
+use App\Models\DoubleMofa;
 use App\Models\HrProfile;
 use App\Models\Medical;
 use App\Models\MofaEntry;
 use App\Models\Passport;
 use App\Models\Plan;
+use App\Models\Visa;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Models\VisaStamping;
@@ -130,13 +134,13 @@ class ErpAutoFillTest extends TestCase
         $this->mofa($this->agency);
         $this->stamping($this->agency);
         $this->bmet($this->agency);
-        $this->hr($this->agency); // ignored: ERP data exists
+        $this->hr($this->agency); // listed as a source, but ranks last for every field
 
         $json = $this->lookup()->assertOk()->json();
 
         $this->assertTrue($json['found']);
         $this->assertTrue($json['erp']);
-        $this->assertSame(['medical', 'mofa', 'stamping', 'bmet'], array_keys($json['sources']));
+        $this->assertSame(['medical', 'mofa', 'stamping', 'bmet', 'hr'], array_keys($json['sources']));
 
         $m = $json['merged'];
         $this->assertSame(['Medical Name', 'medical'], [$m['full_name']['value'], $m['full_name']['source']]);
@@ -166,12 +170,19 @@ class ErpAutoFillTest extends TestCase
         $this->assertArrayNotHasKey('expiry_date', $m);
     }
 
-    public function test_hr_profile_is_only_a_fallback(): void
+    public function test_hr_profile_ranks_last_and_only_fills_gaps(): void
     {
         $this->hr($this->agency);
         $medical = $this->medical($this->agency);
 
-        $this->assertArrayNotHasKey('hr', $this->lookup()->json('sources'));
+        $json = $this->lookup()->assertOk()->json();
+        $this->assertSame(['medical', 'hr'], array_keys($json['sources']));
+        // ERP wins where it has a value …
+        $this->assertSame(['Medical Name', 'medical'], [$json['merged']['full_name']['value'], $json['merged']['full_name']['source']]);
+        $this->assertSame('medical', $json['merged']['mobile_no']['source']);
+        // … and HR fills what the ERP record lacks.
+        $this->assertSame(['HR Mother', 'hr'], [$json['merged']['mother_name']['value'], $json['merged']['mother_name']['source']]);
+        $this->assertSame('2021-02-02', $json['merged']['passport_issue_date']['value']);
 
         $medical->delete(); // soft-deleted records don't count
 
@@ -180,7 +191,40 @@ class ErpAutoFillTest extends TestCase
         $this->assertTrue($json['found']);
         $this->assertFalse($json['erp']);
         $this->assertSame(['HR Mother', 'hr'], [$json['merged']['mother_name']['value'], $json['merged']['mother_name']['source']]);
-        $this->assertSame('2021-02-02', $json['merged']['passport_issue_date']['value']);
+    }
+
+    public function test_hr_visa_sponsor_mofa_and_agent_feed_the_erp_forms(): void
+    {
+        $hr = $this->hr($this->agency);
+        $agent = Agent::create(['agency_id' => $this->agency->id, 'name' => 'Sabbir Howlader', 'phone' => '01700000000', 'address' => 'Dhaka', 'status' => 'active']);
+        $hr->update(['agent_id' => $agent->id, 'mofa_new' => 'E-HR-777']);
+        Visa::create(['hr_profile_id' => $hr->id, 'visa_number' => '1306123456', 'sponsor_id' => '7023490084']);
+        $this->medical($this->agency); // knows nothing about visa / sponsor / mofa / agent
+
+        $m = $this->lookup()->assertOk()->json('merged');
+
+        $this->assertSame(['1306123456', 'hr'], [$m['visa_number']['value'], $m['visa_number']['source']]);
+        $this->assertSame(['7023490084', 'hr'], [$m['id_number']['value'], $m['id_number']['source']]);
+        $this->assertSame(['E-HR-777', 'hr'], [$m['mofa_number']['value'], $m['mofa_number']['source']]);
+        $this->assertSame(['Sabbir Howlader', 'hr'], [$m['reference']['value'], $m['reference']['source']]);
+    }
+
+    public function test_medical_delivery_and_double_mofa_supply_the_agent_reference(): void
+    {
+        $this->medical($this->agency)->update(['reference' => 'Medical Agent']);
+        $this->assertSame(['Medical Agent', 'medical'], array_values(array_intersect_key($this->lookup()->json('merged.reference'), ['value' => 1, 'source' => 1])));
+
+        Medical::query()->delete();
+        Delivery::create(['agency_id' => $this->agency->id, 'delivery_date' => '2026-09-01', 'full_name' => 'Delivery Name', 'passport_no' => self::PP, 'reference' => 'Delivery Agent', 'total_amount' => 100, 'status' => 'pending']);
+        $json = $this->lookup()->json();
+        $this->assertSame(['delivery'], array_keys($json['sources']));
+        $this->assertTrue($json['erp']);
+        $this->assertSame(['Delivery Name', 'delivery'], [$json['merged']['full_name']['value'], $json['merged']['full_name']['source']]);
+
+        DoubleMofa::create(['agency_id' => $this->agency->id, 'mofa_date' => '2026-09-02', 'full_name' => 'Double Name', 'passport_no' => self::PP, 'reference' => 'Double Agent']);
+        $json = $this->lookup()->json();
+        $this->assertSame(['delivery', 'double_mofa'], array_keys($json['sources']));
+        $this->assertSame('Delivery Agent', $json['merged']['reference']['value'], 'Delivery outranks Double MOFA');
     }
 
     public function test_exclude_leaves_out_the_record_being_edited(): void

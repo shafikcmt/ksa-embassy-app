@@ -4,7 +4,8 @@
     Include it INSIDE the modal's Alpine component, right under the passport
     input. It watches the parent's passport value; once a full passport is typed
     (5–20 letters/digits, debounced) it calls erp.autofill, which searches
-    Medical → MOFA → Stamping → BMET (HR profile only as fallback), then:
+    Medical → MOFA → Stamping → BMET → Delivery → Double MOFA (the HR profile ranks
+    last for every field and only fills what the others lack), then:
       • fills the parent's EMPTY form fields listed in $map (never overwrites),
         but only while the user is typing in the passport field — loading an
         Edit shows the tags without silently changing the saved record;
@@ -96,6 +97,8 @@
             mofa: 'bg-blue-50 text-blue-700 ring-blue-200',
             stamping: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
             bmet: 'bg-blue-50 text-blue-700 ring-blue-200',
+            delivery: 'bg-amber-50 text-amber-700 ring-amber-200',
+            double_mofa: 'bg-amber-50 text-amber-700 ring-amber-200',
             hr: 'bg-purple-50 text-purple-700 ring-purple-200',
         };
         const PASSPORT = /^[A-Z0-9]{5,20}$/;
@@ -169,7 +172,8 @@
 
             erpTags() {
                 const keys = ['medical', 'mofa', 'stamping', 'bmet'];
-                if (this.erp.sources.hr) keys.push('hr');
+                // Secondary sources show up only when they actually hold the passport.
+                ['delivery', 'double_mofa', 'hr'].forEach(k => { if (this.erp.sources[k]) keys.push(k); });
                 return keys.map(key => ({ key, label: cfg.labels[key], found: !!this.erp.sources[key], tone: TONES[key] }));
             },
             erpFound() { return Object.keys(this.erp.sources).length > 0; },

@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\BmetEntry;
+use App\Models\Delivery;
+use App\Models\DoubleMofa;
 use App\Models\HrProfile;
 use App\Models\Medical;
 use App\Models\MofaEntry;
@@ -15,8 +17,10 @@ use Illuminate\Database\Eloquent\Model;
  * Medical, MOFA, Visa Stamping and BMET modals (and, later, the HR Application).
  *
  * Looks the passport up in each ERP module (latest record per module, always
- * scoped to ONE agency) in the pipeline order Medical → MOFA → Stamping → BMET.
- * The HR profile is consulted only when no ERP module has the passport.
+ * scoped to ONE agency) in the pipeline order Medical → MOFA → Stamping → BMET,
+ * then Delivery and Double MOFA (identity + agent only). The HR profile is always
+ * consulted too, but ranks LAST for every field: it fills what the ERP records
+ * lack (visa / sponsor ID / MOFA no / agent …) and never overrides them.
  *
  * Every source is normalised to one canonical field vocabulary, then merged
  * per field by an explicit priority list (see FIELD_PRIORITY), so each value
@@ -31,33 +35,35 @@ use Illuminate\Database\Eloquent\Model;
  */
 class ErpPassportDataService
 {
-    public const MODULES = ['medical', 'mofa', 'stamping', 'bmet'];
+    public const MODULES = ['medical', 'mofa', 'stamping', 'bmet', 'delivery', 'double_mofa'];
 
     public const LABELS = [
         'medical'  => 'Medical',
         'mofa'     => 'MOFA',
         'stamping' => 'Stamping',
         'bmet'     => 'BMET',
+        'delivery' => 'Delivery',
+        'double_mofa' => 'Double MOFA',
         'hr'       => 'HR Profile',
     ];
 
     /** Which sources may supply each canonical field, highest priority first. */
     public const FIELD_PRIORITY = [
-        'full_name'            => ['medical', 'mofa', 'stamping', 'bmet', 'hr'],
+        'full_name'            => ['medical', 'mofa', 'stamping', 'bmet', 'delivery', 'double_mofa', 'hr'],
         'father_name'          => ['medical', 'mofa', 'stamping', 'bmet', 'hr'],
         'mother_name'          => ['mofa', 'stamping', 'hr'],
         'date_of_birth'        => ['medical', 'mofa', 'stamping', 'hr'],
         'mobile_no'            => ['medical', 'hr'],
-        'mofa_number'          => ['mofa', 'stamping'],
+        'mofa_number'          => ['mofa', 'stamping', 'hr'],
         'mofa_date'            => ['mofa', 'stamping'],
-        'visa_number'          => ['mofa', 'stamping', 'bmet'],
-        'id_number'            => ['mofa', 'stamping', 'bmet'],
+        'visa_number'          => ['mofa', 'stamping', 'bmet', 'double_mofa', 'delivery', 'hr'],
+        'id_number'            => ['mofa', 'stamping', 'bmet', 'hr'],
         'passport_issue_date'  => ['mofa', 'hr'],
         'passport_expiry_date' => ['mofa', 'hr'],
         'issued_visa_number'   => ['stamping'],
         'issued_date'          => ['stamping'],
         'expiry_date'          => ['stamping'],
-        'reference'            => ['bmet', 'stamping', 'mofa'],
+        'reference'            => ['bmet', 'stamping', 'mofa', 'medical', 'delivery', 'double_mofa', 'hr'],
     ];
 
     /**
@@ -73,12 +79,11 @@ class ErpPassportDataService
             'mofa'     => $this->mofa($agencyId, $passport, $exclude),
             'stamping' => $this->stamping($agencyId, $passport, $exclude),
             'bmet'     => $this->bmet($agencyId, $passport, $exclude),
+            'delivery' => $this->delivery($agencyId, $passport, $exclude),
+            'double_mofa' => $this->doubleMofa($agencyId, $passport, $exclude),
+            // Lowest priority for every field (FIELD_PRIORITY): fills gaps only.
+            'hr'       => $this->hr($agencyId, $passport),
         ]);
-
-        // HR profile is a fallback only — used when no ERP module knows the passport.
-        if (! $sources && ($hr = $this->hr($agencyId, $passport))) {
-            $sources['hr'] = $hr;
-        }
 
         return [
             'passport' => $passport,
@@ -116,6 +121,7 @@ class ErpPassportDataService
             'father_name'   => $m->father_name,
             'date_of_birth' => $this->ymd($m->date_of_birth),
             'mobile_no'     => $m->mobile_no,
+            'reference'     => $m->reference,
         ], [
             'Medical center' => $m->medical_center_name,
             'Status'         => $m->statusLabel(),
@@ -190,10 +196,37 @@ class ErpPassportDataService
         ]) : null;
     }
 
+    private function delivery(int $agencyId, string $passport, ?array $exclude): ?array
+    {
+        $d = $this->latest(Delivery::forAgency($agencyId)->where('passport_no', $passport), 'delivery', $exclude);
+
+        return $d ? $this->source('delivery', $d, route('erp.delivery'), [
+            'full_name'   => $d->full_name,
+            'visa_number' => $d->visa_serial,
+            'reference'   => $d->reference,
+        ], [
+            'Delivery date' => $this->dmy($d->delivery_date),
+        ]) : null;
+    }
+
+    private function doubleMofa(int $agencyId, string $passport, ?array $exclude): ?array
+    {
+        $d = $this->latest(DoubleMofa::forAgency($agencyId)->where('passport_no', $passport), 'double_mofa', $exclude);
+
+        return $d ? $this->source('double_mofa', $d, route('erp.double-mofa'), [
+            'full_name'   => $d->full_name,
+            'visa_number' => $d->visa_serial,
+            'reference'   => $d->reference,
+        ], [
+            'Old MOFA no' => $d->old_mofa_number,
+            'MOFA date'   => $this->dmy($d->mofa_date),
+        ]) : null;
+    }
+
     private function hr(int $agencyId, string $passport): ?array
     {
         $hr = HrProfile::forAgency($agencyId)
-            ->with('passport')
+            ->with(['passport', 'visa', 'agent'])
             ->whereHas('passport', fn ($q) => $q->where('passport_number', $passport))
             ->latest('updated_at')
             ->first();
@@ -206,6 +239,11 @@ class ErpPassportDataService
             'mobile_no'            => $hr->phone,
             'passport_issue_date'  => $this->ymd($hr->passport?->issue_date),
             'passport_expiry_date' => $this->ymd($hr->passport?->expiry_date),
+            // HR visa block → ERP "Visa No" / "Id No" (the sponsor's ID); HR's new MOFA no; the HR agent = ERP "Reference".
+            'visa_number'          => $hr->visa?->visa_number,
+            'id_number'            => $hr->visa?->sponsor_id,
+            'mofa_number'          => $hr->mofa_new,
+            'reference'            => $hr->agent?->name,
         ], [
             'File number' => $hr->file_number,
         ]) : null;

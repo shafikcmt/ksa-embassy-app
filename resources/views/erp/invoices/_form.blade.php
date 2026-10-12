@@ -195,7 +195,7 @@
                                             </div>
                                             <div>
                                                 <label class="{{ $lbl }}">Passport No</label>
-                                                <input type="text" x-model="row.passport_no" x-on:input="row.passport_no = row.passport_no.toUpperCase()" maxlength="100" placeholder="e.g. A12345678" class="{{ $inp }} font-mono">
+                                                <input type="text" x-model="row.passport_no" x-on:input="row.passport_no = row.passport_no.toUpperCase(); fillFromPassport(row)" maxlength="100" placeholder="e.g. A12345678" class="{{ $inp }} font-mono">
                                             </div>
                                         </div>
                                         <button type="button" x-on:click="clearPassenger(row)" class="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-brand-700">
@@ -509,11 +509,21 @@ function invoiceForm() {
             row.passenger_name = looksLikePassport ? '' : typed;
             row.manual = true; row.open = false; row.search = '';
         },
+        // Typing a passport we already know (HR or any ERP module) fills the name and links the HR profile —
+        // nothing is overwritten once a name has been typed.
+        fillFromPassport(row) {
+            const pp = (row.passport_no || '').trim().toUpperCase();
+            if (pp.length < 5 || (row.passenger_name || '').trim() !== '') return;
+            const p = this.passengers.find(x => (x.passport || '').toUpperCase() === pp);
+            if (!p) return;
+            row.passenger_name = p.name || '';
+            if (p.hr_id) row.hr_profile_id = p.hr_id;
+        },
         clearPassenger(row) { row.hr_profile_id = null; row.passenger_name = ''; row.passport_no = ''; row.manual = false; },
         pickAgent() {
             const a = this.agents.find(x => String(x.id) === this.agentId);
             if (!a) return;
-            this.billTo = { name: a.name || '', phone: a.phone || '', address: a.address || '', email: this.billTo.email || '' };
+            this.billTo = { name: a.name || '', phone: a.phone || '', address: a.address || '', email: a.email || this.billTo.email || '' };
         },
 
         // ── wizard ──

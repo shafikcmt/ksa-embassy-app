@@ -49,6 +49,7 @@ $state = fn (string $k) => 'x-bind:class="error(\'' . $k . '\') ? \'' . \App\Sup
                             'date_of_birth' => 'date_of_birth', 'mofa_number' => 'mofa_number', 'mofa_date' => 'mofa_date',
                             'visa_number' => 'visa_number', 'id_number' => 'id_number',
                             'passport_issue_date' => 'issue_date', 'passport_expiry_date' => 'expiry_date',
+                            'reference' => 'reference',
                         ],
                     ])
                     {{-- Non-blocking: a passport may have several MOFA entries; this only informs, never stops Save. --}}

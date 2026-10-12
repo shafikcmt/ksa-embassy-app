@@ -22,7 +22,8 @@
                     @endforeach
                 </select>
             </label>
-            <label><span class="{{ $label }}">Paid To / Recipient</span><input name="payee_name" value="{{ old('payee_name', $voucher->payee_name) }}" maxlength="255" required class="{{ $input }}"></label>
+            <label><span class="{{ $label }}">Paid To / Recipient</span><input name="payee_name" value="{{ old('payee_name', $voucher->payee_name) }}" maxlength="255" required list="payeeSuggestions" autocomplete="off" class="{{ $input }}">
+                <datalist id="payeeSuggestions">@foreach($payeeSuggestions ?? [] as $name)<option value="{{ $name }}"></option>@endforeach</datalist></label>
             <label><span class="{{ $label }}">Amount (BDT)</span><input name="amount" type="number" min="0.01" max="99999999999.99" step="0.01" value="{{ old('amount', $voucher->exists ? $voucher->total_amount : '') }}" required class="{{ $input }}"></label>
             <label><span class="{{ $label }}">Payment Method</span><select name="payment_method" x-model="method" class="{{ $input }}">@foreach($paymentMethods as $key => $value)<option value="{{ $key }}" @selected(old('payment_method', $voucher->payment_method ?: 'cash') === $key)>{{ $value }}</option>@endforeach</select></label>
             <label><span class="{{ $label }}">Reference</span><input name="reference_number" value="{{ old('reference_number', $voucher->reference_number) }}" maxlength="100" class="{{ $input }}"></label>

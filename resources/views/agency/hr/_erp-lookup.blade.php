@@ -1,6 +1,6 @@
 <fieldset id="hrErpLookup" class="hr-sec" aria-labelledby="hrErpTitle">
     <legend id="hrErpTitle" class="hr-legend">Find in ERP</legend>
-    <p class="hr-note">Enter at least one value. When you enter more, every value must match the same person.</p>
+    <p class="hr-note">Just type the Passport, Visa or MOFA number in the form below — matching ERP details are filled in automatically. Or search here by hand; when you enter more than one value, all must match the same person.</p>
     <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:end">
         @foreach(['passport' => 'Passport No', 'visa' => 'Visa No / Serial', 'mofa' => 'MOFA No'] as $key => $label)
             <div style="flex:1 1 220px;min-width:0">
@@ -113,6 +113,31 @@
         });
     });
     search.addEventListener('click', runSearch);
+
+    // ── Automatic mode ────────────────────────────────────────────────────────
+    // Typing the form's OWN Passport / Visa / MOFA field is enough: after a short pause the ERP is
+    // searched and, when exactly one person matches, the EMPTY fields are filled (never overwritten).
+    // Several matches still wait for the user to pick one. The box above stays as a manual fallback.
+    const AUTO = [['passport_number', 'passport', 5], ['visa_number', 'visa', 6], ['mofa_new', 'mofa', 6]];
+    let autoTimer = null, autoLast = '', applying = false;
+    apply.addEventListener('click', () => { applying = true; setTimeout(() => { applying = false; }, 0); }, true);
+
+    AUTO.forEach(([fieldName, key, min]) => {
+        const field = form.elements.namedItem(fieldName);
+        if (!field || field.type === 'hidden') return;
+        field.addEventListener('input', () => {
+            if (applying) return; // the lookup itself filled this field
+            clearTimeout(autoTimer);
+            autoTimer = setTimeout(async () => {
+                const value = normalize(field.value);
+                if (value.length < min || autoLast === key + ':' + value) return;
+                autoLast = key + ':' + value;
+                inputs.forEach(box => { box.value = box.dataset.erpKey === key ? value : ''; });
+                await runSearch();
+                if (selected) apply.click(); // exactly one person found
+            }, 600);
+        });
+    });
     apply.addEventListener('click', () => {
         if (!selected) return;
         const passport = form.elements.namedItem('passport_number');
