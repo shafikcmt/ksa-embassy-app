@@ -73,7 +73,7 @@
   /* Badge (secondary variant) — shadcn: rounded-full, text-xs, font-medium */
   .eyebrow{display:inline-flex;align-items:center;gap:8px;background:var(--navy-l);color:var(--navy-d);font-weight:500;font-size:12.5px;padding:5px 12px;border:1px solid transparent;border-radius:999px;margin-bottom:20px}
   .eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--emerald)}
-  h1.hero-title{font-size:48px;line-height:1.08;letter-spacing:-.03em;font-weight:800;margin-bottom:18px}
+  .hero-title{font-size:48px;line-height:1.08;letter-spacing:-.03em;font-weight:800;margin-bottom:18px}
   h1.hero-title .grad{color:var(--navy-d)}
   .hero-link{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:15px;color:var(--navy-d);padding:12px 6px;transition:color .18s ease}
   .hero-link:hover{color:var(--navy)}
@@ -224,6 +224,60 @@
   .foot-col a:hover{color:#fff}
   .foot-bottom{border-top:1px solid #1e293b;padding-top:22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;font-size:13px;color:#94a3b8}
 
+
+  /* ───── Hero slider ───── */
+  .hero-slider{position:relative;overflow:hidden;background:#06233f;color:#fff}
+  .hero-slider .slides{display:grid}
+  .slide{grid-area:1/1;position:relative;overflow:hidden;opacity:0;visibility:hidden;transition:opacity .8s ease,visibility 0s linear .8s;min-height:600px;display:flex;align-items:center}
+  .slide.is-active{opacity:1;visibility:visible;transition:opacity .8s ease}
+  .slide.theme-riyadh{background:linear-gradient(160deg,#06233f 0%,#0e3a66 55%,#0b6b66 120%)}
+  .slide.theme-haram{background:linear-gradient(160deg,#052e22 0%,#065f46 60%,#0e9f6e 130%)}
+  .slide.theme-desert{background:linear-gradient(170deg,#3b1d0a 0%,#9a4a12 55%,#f59e0b 140%)}
+  .slide.theme-flight{background:linear-gradient(170deg,#0b3a73 0%,#1d78c9 60%,#8ccbf5 130%)}
+  .slide-photo{position:absolute;inset:0;background-size:cover;background-position:center}
+  .slide-photo::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(6,20,36,.82),rgba(6,20,36,.35) 70%,rgba(6,20,36,.2))}
+  .slide-scene{position:absolute;left:0;right:0;bottom:0;height:62%;pointer-events:none;opacity:.95}
+  .slide-scene svg{width:100%;height:100%}
+  .slide.is-active .slide-scene svg{animation:sceneIn 1.2s cubic-bezier(.16,1,.3,1) both}
+  @keyframes sceneIn{from{transform:translateY(22px);opacity:0}to{transform:none;opacity:1}}
+  .slide-grid{position:relative;z-index:2;display:block;padding:76px 20px 104px;width:100%}
+  .slide-grid.has-mock{display:grid;grid-template-columns:1.05fr .95fr;gap:54px;align-items:center}
+  .slide-copy{max-width:640px}
+  .slide.is-active .slide-copy>*{animation:riseIn .7s cubic-bezier(.16,1,.3,1) both}
+  .slide.is-active .slide-copy>*:nth-child(2){animation-delay:.08s}
+  .slide.is-active .slide-copy>*:nth-child(3){animation-delay:.16s}
+  .slide.is-active .slide-copy>*:nth-child(4){animation-delay:.24s}
+  .slide.is-active .slide-copy>*:nth-child(5){animation-delay:.32s}
+  .hero-slider .eyebrow{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(4px)}
+  .hero-slider .eyebrow .dot{background:#34d399}
+  .hero-slider .hero-title{color:#fff;text-shadow:0 2px 24px rgba(0,0,0,.25)}
+  .hero-slider h1.hero-title .grad,.hero-slider .hero-title .grad{color:#6ee7b7}
+  .hero-slider .hero p.lead,.hero-slider p.lead{color:rgba(255,255,255,.9);max-width:560px}
+  .hero-slider .btn-white{color:var(--navy-d);font-weight:600}
+  .hero-link.on-dark{color:#fff}.hero-link.on-dark:hover{color:#d1fae5}
+  .hero-mini.on-dark{color:rgba(255,255,255,.88)}
+  .hero-mini.on-dark .check{color:#6ee7b7}
+  .hero-slider .mock{position:relative;z-index:2;color:var(--ink);text-shadow:none}
+  .hs-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:5;width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.14);color:#fff;display:grid;place-items:center;cursor:pointer;backdrop-filter:blur(6px);transition:background .18s ease,transform .18s ease}
+  .hs-arrow:hover{background:rgba(255,255,255,.28)}
+  .hs-arrow:focus-visible,.hs-dots button:focus-visible{outline:3px solid #6ee7b7;outline-offset:2px}
+  .hs-prev{left:18px}.hs-next{right:18px}
+  .hs-dots{position:absolute;left:0;right:0;bottom:46px;z-index:5;display:flex;justify-content:center;gap:10px}
+  .hs-dots button{width:11px;height:11px;border-radius:999px;border:0;background:rgba(255,255,255,.5);cursor:pointer;padding:0;transition:width .25s ease,background .25s ease}
+  .hs-dots button.is-active{width:34px;background:#fff}
+  .hs-progress{position:absolute;left:0;right:0;bottom:0;height:4px;background:rgba(255,255,255,.15);z-index:5}
+  .hs-progress i{display:block;height:100%;width:0;background:#34d399}
+  @media(max-width:1000px){.hs-arrow{display:none}}
+  @media(max-width:860px){
+    .slide{min-height:640px}
+    .slide-grid.has-mock{grid-template-columns:1fr}
+    .slide-grid{padding:56px 20px 96px}
+    .hero-slider .mock{display:none}
+    .slide-scene{height:44%}
+  }
+  @media(max-width:560px){.slide{min-height:620px}.hero-slider .hero-cta .btn{flex:1 1 100%}}
+  @media (prefers-reduced-motion:reduce){.slide,.slide.is-active{transition:none}.slide.is-active .slide-copy>*,.slide.is-active .slide-scene svg{animation:none}}
+
   /* Responsive */
   @media(max-width:1000px){
     .feat-grid,.doc-grid,.steps{grid-template-columns:repeat(2,1fr)}
@@ -238,14 +292,14 @@
     #mnav{display:block;position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);border:0}
     #mnav:focus-visible + .hamburger{box-shadow:0 0 0 3px rgba(21,73,126,.35);border-radius:8px}
     .hero-grid{grid-template-columns:1fr;gap:48px;padding:54px 0 64px}
-    h1.hero-title{font-size:36px}
+    .hero-title{font-size:36px}
     .mock{max-width:420px;margin:0 auto}
     .ba{grid-template-columns:1fr}
   }
   @media(max-width:560px){
     .feat-grid,.doc-grid,.steps,.stats-grid{grid-template-columns:1fr}
     .sec-head h2,.cta h2{font-size:27px}
-    h1.hero-title{font-size:31px}
+    .hero-title{font-size:31px}
     .hero p.lead{font-size:16px}
     section{padding:60px 0}
     .cta{padding:44px 22px}
@@ -316,77 +370,101 @@
 
 <a id="top"></a>
 
-{{-- ===================== HERO ===================== --}}
-<section class="hero" style="padding:0">
-  <div class="wrap hero-grid">
-    <div>
-      <span class="eyebrow"><span class="dot"></span> Built for recruiting &amp; manpower agencies</span>
-      <h1 class="hero-title"><span class="grad">VisaDeskPro</span> — Smart Agency &amp; Visa Document Management Platform</h1>
-      <p class="lead">Manage HR records, agency applications, embassy/application formats, payment requests, and print-ready documents from one secure SaaS dashboard.</p>
-      <div class="hero-cta">
-        @auth
-          <a href="{{ $dashUrl }}" class="btn btn-primary">Login to Dashboard</a>
-        @else
-          @if (Route::has('register'))
-            <a href="{{ route('register') }}" class="btn btn-primary">Get Started
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-            </a>
-          @endif
-          <a href="{{ route('login') }}" class="btn btn-ghost">Login to Dashboard</a>
-        @endauth
-        <a href="#features" class="hero-link">View Features
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        </a>
-      </div>
-      <div class="hero-mini">
-        <span><svg class="check" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> 4 documents, one input</span>
-        <span><svg class="check" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Auto barcode</span>
-        <span><svg class="check" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> A4 print-ready PDF</span>
-      </div>
-    </div>
-
-    {{-- Hero mockup --}}
-    <div class="mock">
-      <div class="float f1">
-        <span class="ic ic-emerald">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5a1 1 0 0 1 1-1h2M4 17v2a1 1 0 0 0 1 1h2M20 7V5a1 1 0 0 0-1-1h-2M20 17v2a1 1 0 0 1-1 1h-2"/><path d="M7 8v8M10 8v8M13 8v8M16 8v8"/></svg>
-        </span>
-        <div>Auto Barcode<small>VS &amp; Passport No.</small></div>
-      </div>
-      <div class="float f2">
-        <span class="ic ic-indigo">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
-        </span>
-        <div>4 Documents<small>Ready to print</small></div>
-      </div>
-
-      <div class="mock-card">
-        <div class="mock-top"><i></i><i></i><i></i><b>Embassy Application — Preview</b></div>
-        <div class="mock-body">
-          <div class="doc-head">
-            <div class="doc-photo">Photo</div>
-            <div style="flex:1">
-              <div class="barcode"></div>
-              <div class="barcode-no">1306141188</div>
+{{-- ===================== HERO SLIDER ===================== --}}
+@php
+  // Optional real photos: drop files into public/images/hero/ (slide-1.jpg … slide-4.jpg) and they replace the illustrations.
+  $slides = [
+    ['scene' => 'riyadh', 'theme' => 'riyadh', 'eyebrow' => 'Built for recruiting & manpower agencies', 'photo' => 'slide-1.jpg',
+     'title' => '<span class="grad">VisaDeskPro</span> — Smart Agency & Visa Document Management',
+     'lead' => 'Manage HR records, agency applications, embassy/application formats, payment requests, and print-ready documents from one secure SaaS dashboard.',
+     'tags' => ['4 documents, one input', 'Auto barcode', 'A4 print-ready PDF'], 'mock' => true],
+    ['scene' => 'haram', 'theme' => 'haram', 'eyebrow' => 'Makkah · Madinah · Kingdom of Saudi Arabia', 'photo' => 'slide-2.jpg',
+     'title' => 'Embassy-format applications, <span class="grad">exactly as required</span>',
+     'lead' => 'Application, Forwarding, Agreement and Checklist generated in the official KSA layout — A4, barcode and photo placed correctly every time.',
+     'tags' => ['Official KSA format', 'Barcode & photo', 'Preview before print']],
+    ['scene' => 'desert', 'theme' => 'desert', 'eyebrow' => 'Riyadh · AlUla · Jeddah', 'photo' => 'slide-3.jpg',
+     'title' => 'MOFA, Medical, Stamping &amp; Delivery — <span class="grad">in one place</span>',
+     'lead' => 'Type a passport number once. Name, DOB, visa and agent details fill in everywhere, so your team never retypes the same data.',
+     'tags' => ['Auto-fill from passport', 'Agent-wise filters', 'Invoices & vouchers']],
+    ['scene' => 'flight', 'theme' => 'flight', 'eyebrow' => 'From file to flight', 'photo' => 'slide-4.jpg',
+     'title' => 'Secure, multi-agency and <span class="grad">ready to grow</span>',
+     'lead' => 'Every agency sees only its own records. Role-based access, subscription control and secure backups keep your business safe.',
+     'tags' => ['Multi-agency isolation', 'Role-based access', 'Secure backup']],
+  ];
+  $tick = '<svg class="check" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+@endphp
+<section class="hero hero-slider" style="padding:0" data-hero-slider aria-roledescription="carousel" aria-label="VisaDeskPro highlights">
+  <div class="slides">
+    @foreach($slides as $i => $s)
+      @php $hasPhoto = file_exists(public_path('images/hero/'.$s['photo'])); @endphp
+      <div class="slide theme-{{ $s['theme'] }} {{ $i === 0 ? 'is-active' : '' }}" data-slide role="group" aria-roledescription="slide" aria-label="{{ $i + 1 }} of {{ count($slides) }}" @if($i) aria-hidden="true" @endif>
+        @if($hasPhoto)<div class="slide-photo" style="background-image:url('{{ asset('images/hero/'.$s['photo']) }}')"></div>@endif
+        <div class="slide-scene">@include('landing._hero-scenes', ['scene' => $s['scene']])</div>
+        <div class="wrap slide-grid {{ ($s['mock'] ?? false) ? 'has-mock' : '' }}">
+          <div class="slide-copy">
+            <span class="eyebrow"><span class="dot"></span> {{ $s['eyebrow'] }}</span>
+            @if($i === 0)<h1 class="hero-title">{!! $s['title'] !!}</h1>@else<h2 class="hero-title">{!! $s['title'] !!}</h2>@endif
+            <p class="lead">{{ $s['lead'] }}</p>
+            <div class="hero-cta">
+              @auth
+                <a href="{{ $dashUrl }}" class="btn btn-white">Login to Dashboard</a>
+              @else
+                @if (Route::has('register'))
+                  <a href="{{ route('register') }}" class="btn btn-white">Get Started
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                  </a>
+                @endif
+                <a href="{{ route('login') }}" class="btn btn-light">Login to Dashboard</a>
+              @endauth
+              <a href="#features" class="hero-link on-dark">View Features
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              </a>
             </div>
-            <div class="doc-title">E817745856<br><span style="font-weight:600;color:var(--muted)">EMBASSY OF<br>SAUDI ARABIA</span></div>
+            <div class="hero-mini on-dark">
+              @foreach($s['tags'] as $t)<span>{!! $tick !!} {{ $t }}</span>@endforeach
+            </div>
           </div>
-          <div class="doc-rows">
-            <div class="drow"><span>Full Name</span><span>MD Saydul Khan</span></div>
-            <div class="drow"><span>Passport No.</span><span>A19101335</span></div>
-            <div class="drow"><span>Profession</span><span>Load &amp; Unload Worker</span></div>
-            <div class="drow"><span>Visa No.</span><span>1306141188</span></div>
+
+          @if($s['mock'] ?? false)
+          <div class="mock">
+            <div class="float f1">
+              <span class="ic ic-emerald"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5a1 1 0 0 1 1-1h2M4 17v2a1 1 0 0 0 1 1h2M20 7V5a1 1 0 0 0-1-1h-2M20 17v2a1 1 0 0 1-1 1h-2"/><path d="M7 8v8M10 8v8M13 8v8M16 8v8"/></svg></span>
+              <div>Auto Barcode<small>VS &amp; Passport No.</small></div>
+            </div>
+            <div class="float f2">
+              <span class="ic ic-indigo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span>
+              <div>4 Documents<small>Ready to print</small></div>
+            </div>
+            <div class="mock-card">
+              <div class="mock-top"><i></i><i></i><i></i><b>Embassy Application — Preview</b></div>
+              <div class="mock-body">
+                <div class="doc-head">
+                  <div class="doc-photo">Photo</div>
+                  <div style="flex:1"><div class="barcode"></div><div class="barcode-no">1306141188</div></div>
+                  <div class="doc-title">E817745856<br><span style="font-weight:600;color:var(--muted)">EMBASSY OF<br>SAUDI ARABIA</span></div>
+                </div>
+                <div class="doc-rows">
+                  <div class="drow"><span>Full Name</span><span>MD Saydul Khan</span></div>
+                  <div class="drow"><span>Passport No.</span><span>A19101335</span></div>
+                  <div class="drow"><span>Profession</span><span>Load &amp; Unload Worker</span></div>
+                  <div class="drow"><span>Visa No.</span><span>1306141188</span></div>
+                </div>
+                <div class="mock-foot"><span class="pill indigo">Application</span><span class="pill indigo">Forwarding</span><span class="pill">Agreement</span><span class="pill">Checklist</span></div>
+              </div>
+            </div>
           </div>
-          <div class="mock-foot">
-            <span class="pill indigo">Application</span>
-            <span class="pill indigo">Forwarding</span>
-            <span class="pill">Agreement</span>
-            <span class="pill">Checklist</span>
-          </div>
+          @endif
         </div>
       </div>
-    </div>
+    @endforeach
   </div>
+
+  <button type="button" class="hs-arrow hs-prev" data-hs-prev aria-label="Previous slide"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+  <button type="button" class="hs-arrow hs-next" data-hs-next aria-label="Next slide"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button>
+  <div class="hs-dots" role="tablist" aria-label="Choose slide">
+    @foreach($slides as $i => $s)<button type="button" role="tab" data-hs-dot="{{ $i }}" aria-label="Slide {{ $i + 1 }}" class="{{ $i === 0 ? 'is-active' : '' }}"></button>@endforeach
+  </div>
+  <div class="hs-progress"><i data-hs-bar></i></div>
 </section>
 
 {{-- ===================== STATS ===================== --}}
