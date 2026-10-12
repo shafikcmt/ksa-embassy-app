@@ -12,7 +12,7 @@
 
 {{-- Filters --}}
 <x-ui.card class="mb-5">
-    <form method="GET" class="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-12">
+    <form data-ajax-filter method="GET" class="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-12">
         <select name="agency_id" class="h-10 rounded-lg border-slate-300 text-sm transition-colors focus:border-brand-400 focus:ring-brand-400 lg:col-span-5">
             <option value="">All Agencies</option>
             @foreach($agencies as $ag)
@@ -26,13 +26,11 @@
             @endforeach
         </select>
         <div class="flex gap-2 lg:col-span-3">
-            <x-ui.button type="submit" class="flex-1 cursor-pointer"><i class="bi bi-funnel"></i> Filter</x-ui.button>
-            @if(request()->hasAny(['status','agency_id']))
                 <x-ui.button :href="route('super-admin.subscriptions.index')" variant="secondary" size="icon" title="Clear filters" class="cursor-pointer"><i class="bi bi-arrow-counterclockwise"></i></x-ui.button>
-            @endif
         </div>
     </form>
 </x-ui.card>
+<div id="sa-subscriptions-results" data-ajax-region>
 
 <x-ui.card class="overflow-hidden">
     <div class="overflow-x-auto">
@@ -94,4 +92,5 @@
         <div class="border-t border-slate-100 px-4 py-3">{{ $subscriptions->withQueryString()->links() }}</div>
     @endif
 </x-ui.card>
+</div>
 @endsection

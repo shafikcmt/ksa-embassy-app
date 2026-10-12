@@ -35,7 +35,7 @@
 </div>
 
 {{-- Period filter --}}
-<form method="GET" action="{{ route('erp.profit-loss') }}" class="mb-6 rounded-2xl border border-slate-200 bg-white p-5" x-data="{ period: '{{ $period }}' }">
+<form data-ajax-filter method="GET" action="{{ route('erp.profit-loss') }}" class="mb-6 rounded-2xl border border-slate-200 bg-white p-5" x-data="{ period: '{{ $period }}' }">
     <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div>
             <label class="{{ $lbl }}">Period</label>
@@ -47,17 +47,17 @@
         </div>
         <div x-show="period === 'custom'" x-cloak><label class="{{ $lbl }}">From</label><input type="date" name="from" value="{{ $from }}" class="{{ $inp }}"></div>
         <div x-show="period === 'custom'" x-cloak><label class="{{ $lbl }}">To</label><input type="date" name="to" value="{{ $to }}" class="{{ $inp }}"></div>
-        <div class="flex items-end">
-            <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md"><i class="bi bi-funnel"></i> Apply</button>
-        </div>
     </div>
+<div id="pl-export" data-ajax-region>
     <div class="mt-4 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4">
         <span class="text-xs font-semibold uppercase tracking-wide text-slate-400">Export</span>
         <a href="{{ route('erp.profit-loss.export.pdf', $exportQuery) }}" class="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-100"><i class="bi bi-file-earmark-pdf"></i> PDF</a>
         <a href="{{ route('erp.profit-loss.export.csv', $exportQuery) }}" class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"><i class="bi bi-filetype-csv"></i> CSV</a>
     </div>
+</div>
 </form>
 
+<div id="pl-results" data-ajax-region>
 {{-- Headline profit --}}
 <div class="mb-6 grid gap-4 lg:grid-cols-3">
     <div class="rounded-2xl border {{ $profitPositive ? 'border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50' : 'border-rose-200 bg-gradient-to-br from-rose-50 to-orange-50' }} p-6 lg:col-span-1">
@@ -108,4 +108,5 @@
 <p class="mt-4 text-center text-[0.7rem] text-slate-400">
     Cash basis: revenue is money actually collected; agent repayments (credits) and unpaid dues are not counted as income.
 </p>
+</div>
 @endsection

@@ -1,3 +1,6 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Live AJAX filters (resources/js/ajax-filter.js): dim the list while it reloads. */
+.ajax-loading { opacity: .55; pointer-events: none; transition: opacity .15s; }

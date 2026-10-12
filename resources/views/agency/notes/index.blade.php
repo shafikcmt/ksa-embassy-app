@@ -64,7 +64,7 @@
 
     {{-- Filters (hidden on trash) --}}
     @if($view !== 'trash')
-        <form method="GET" action="{{ route('notes.index') }}" class="mb-4 flex flex-wrap items-center gap-2">
+        <form data-ajax-filter method="GET" action="{{ route('notes.index') }}" class="mb-4 flex flex-wrap items-center gap-2">
             <input type="hidden" name="view" value="{{ $view }}">
             <select name="category" onchange="this.form.submit()" class="h-9 rounded-lg border-slate-300 text-sm focus:border-brand-400 focus:ring-brand-400">
                 <option value="">All Categories</option>
@@ -95,6 +95,7 @@
         </form>
     @endif
 
+<div id="notes-results" data-ajax-region>
     {{-- Notes grid --}}
     @if($notes->count())
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -177,6 +178,7 @@
         </p>
     @endif
 
+</div>
     {{-- ── Create / Edit modal ─────────────────────────────── --}}
     <div x-show="open" x-cloak class="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/50 p-4 sm:p-8" x-on:click.self="open = false" x-on:keydown.escape.window="open = false">
         <div class="w-full max-w-lg rounded-2xl bg-white shadow-xl" x-transition>

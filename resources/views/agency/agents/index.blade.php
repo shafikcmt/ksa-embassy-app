@@ -36,8 +36,8 @@
 
     {{-- Filter bar --}}
     <x-ui.card class="mb-5">
-        <form method="GET" action="{{ route('agents.index') }}" class="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-12">
-            <div class="lg:col-span-6">
+        <form data-ajax-filter method="GET" action="{{ route('agents.index') }}" class="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-12">
+            <div class="lg:col-span-8">
                 <div class="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 transition-colors focus-within:border-brand-400 focus-within:ring-1 focus-within:ring-brand-400">
                     <i class="bi bi-search text-sm text-slate-400"></i>
                     <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by name, phone, or email…"
@@ -49,15 +49,13 @@
                 <option value="active"   @selected(request('status') === 'active')>Active</option>
                 <option value="inactive" @selected(request('status') === 'inactive')>Inactive</option>
             </select>
-            <div class="flex gap-2 lg:col-span-3">
-                <x-ui.button type="submit" class="flex-1 cursor-pointer"><i class="bi bi-funnel"></i> Filter</x-ui.button>
-                @if(request()->hasAny(['search','status']))
-                    <x-ui.button :href="route('agents.index')" variant="secondary" size="icon" title="Clear filters" class="cursor-pointer"><i class="bi bi-arrow-counterclockwise"></i></x-ui.button>
-                @endif
+            <div class="flex gap-2 lg:col-span-1">
+                <x-ui.button :href="route('agents.index')" variant="secondary" size="icon" title="Clear filters" class="cursor-pointer"><i class="bi bi-arrow-counterclockwise"></i></x-ui.button>
             </div>
         </form>
     </x-ui.card>
 
+<div id="ag-results" data-ajax-region>
     {{-- ── Desktop table ─────────────────────────────────────── --}}
     <x-ui.card class="hidden overflow-hidden lg:block">
         <div class="overflow-x-auto">
@@ -150,7 +148,7 @@
                     @endcan
                     @can('delete', $agent)
                         <x-ui.button type="button" variant="secondary" size="sm" class="cursor-pointer"
-                            x-on:click="del.open = true; del.name = @js($agent->name); del.action = '{{ route('agents.destroy', $agent) }}'" title="Delete"><i class="bi bi-trash text-rose-500"></i></x-ui.button>
+                            x-on:click="del.open = true; del.name = {{ \Illuminate\Support\Js::from($agent->name) }}; del.action = '{{ route('agents.destroy', $agent) }}'" title="Delete"><i class="bi bi-trash text-rose-500"></i></x-ui.button>
                     @endcan
                 </div>
             </x-ui.card>
@@ -167,6 +165,7 @@
         @endif
     </div>
 
+</div>
     {{-- ── Delete dialog ─────────────────────────────────────── --}}
     <div x-show="del.open" x-cloak class="fixed inset-0 z-[60] flex items-center justify-center p-4" style="display:none">
         <div @click="del.open = false" x-show="del.open" x-transition.opacity class="absolute inset-0 bg-slate-900/50"></div>

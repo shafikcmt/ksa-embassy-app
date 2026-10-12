@@ -53,7 +53,7 @@
 </div>
 
 {{-- Filters (server-side, agency-scoped) --}}
-<form method="GET" action="{{ route('erp.invoices.index') }}" class="mb-5 rounded-2xl border border-slate-200 bg-white p-4">
+<form data-ajax-filter method="GET" action="{{ route('erp.invoices.index') }}" class="mb-5 rounded-2xl border border-slate-200 bg-white p-4">
     <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-12">
         <div class="lg:col-span-2">
             <label class="{{ $lbl }}">Search</label>
@@ -85,13 +85,11 @@
         </div>
     </div>
     <div class="mt-3 flex flex-wrap items-center justify-end gap-2">
-        @if($hasFilters)
-            <a href="{{ route('erp.invoices.index') }}" class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-slate-500 hover:text-slate-700"><i class="bi bi-x-lg"></i> Clear</a>
-        @endif
-        <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"><i class="bi bi-funnel"></i> Apply</button>
+        <a href="{{ route('erp.invoices.index') }}" class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-slate-500 hover:text-slate-700"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
     </div>
 </form>
 
+<div id="inv-results" data-ajax-region>
 {{-- Invoice list --}}
 @if($invoices->isEmpty())
     <div class="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
@@ -164,4 +162,5 @@
 
     @include('erp.invoices._delete_modal')
 @endif
+</div>
 @endsection

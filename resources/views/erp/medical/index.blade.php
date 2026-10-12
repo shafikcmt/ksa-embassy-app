@@ -59,7 +59,7 @@
 </div>
 
 {{-- Search & filters --}}
-<form method="GET" action="{{ route('erp.medical') }}" class="mb-5 rounded-xl border border-gray-200 bg-white p-4 shadow-sm" role="search">
+<form data-ajax-filter method="GET" action="{{ route('erp.medical') }}" class="mb-5 rounded-xl border border-gray-200 bg-white p-4 shadow-sm" role="search">
     @if($filters['trashed'])<input type="hidden" name="trashed" value="1">@endif
     <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12 xl:items-end">
         <div class="xl:col-span-2">
@@ -101,9 +101,6 @@
 
     <div class="mt-4 flex flex-col gap-3 border-t border-gray-100 pt-4 lg:flex-row lg:items-center lg:justify-between">
         <div class="flex flex-wrap items-center gap-2">
-            <button type="submit" class="inline-flex items-center gap-1.5 rounded-md bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-blue-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
-                <i class="bi bi-funnel" aria-hidden="true"></i> Apply
-            </button>
             @if($hasFilters)
                 <a href="{{ route('erp.medical') }}" class="inline-flex items-center gap-1.5 rounded-md px-3 py-2.5 text-sm font-semibold text-gray-500 transition hover:text-gray-800"><i class="bi bi-x-lg" aria-hidden="true"></i> Clear</a>
             @endif
@@ -115,7 +112,7 @@
                 @endif
             @endif
         </div>
-        <div class="flex flex-wrap items-center gap-2">
+        <div id="md-actions" data-ajax-region class="flex flex-wrap items-center gap-2">
             @if($isAdmin)
                 <a href="{{ route('erp.medical.import.form') }}" class="{{ $ghost }}"><i class="bi bi-upload" aria-hidden="true"></i> Import</a>
             @endif
@@ -135,6 +132,7 @@
     </div>
 @endif
 
+<div id="md-results" data-ajax-region>
 {{-- Table / empty state --}}
 @if($entries->isEmpty())
     <div class="flex flex-col items-center rounded-xl border border-gray-200 bg-white px-6 py-16 text-center shadow-sm">
@@ -244,6 +242,7 @@
         @endif
     </div>
 @endif
+</div>
 
 {{-- Floating Add button (bottom right) --}}
 <button type="button" x-data x-on:click="$dispatch('medical-add')" aria-label="Add medical entry" title="Add medical entry"

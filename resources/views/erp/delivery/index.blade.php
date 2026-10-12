@@ -19,6 +19,7 @@
 
     <x-ui.page-header title="Delivery" subtitle="Passport delivery & payment collection" icon="bi-truck" />
 
+<div id="dl-summary" data-ajax-region>
     {{-- Summary --}}
     <div class="mb-5 grid gap-3 sm:grid-cols-3">
         <div class="rounded-2xl border border-slate-200 bg-white p-4">
@@ -35,6 +36,7 @@
         </div>
     </div>
 
+</div>
     {{-- Collapsible Add form: opened by the "Add …" button; starts OPEN after a
          validation error, a duplicate warning or old input so nothing is lost. --}}
     @php
@@ -49,6 +51,7 @@
                 class="mr-auto inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md">
             <i class="bi" x-bind:class="addOpen ? 'bi-dash-lg' : 'bi-plus-lg'"></i> <span x-text="addOpen ? 'Close form' : 'Add Delivery'">Add Delivery</span>
         </button>
+        <span id="dl-links" data-ajax-region class="contents">
         <a href="{{ route('erp.delivery.export', array_filter(['agent' => $agentFilter])) }}"
            class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3.5 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
             <i class="bi bi-filetype-csv text-emerald-600"></i> Export CSV
@@ -57,6 +60,7 @@
            class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3.5 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
             <i class="bi bi-printer"></i> Print
         </a>
+        </span>
         @if(auth()->user()->isAgencyAdmin())
             <a href="{{ route('erp.delivery.import.form') }}"
                class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md">
@@ -149,7 +153,7 @@
 
     {{-- Agent filter (server-side: list, totals, print and CSV) + live search (client-side, loaded rows only) --}}
     <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-    <form method="GET" action="{{ route('erp.delivery') }}" class="flex items-center gap-2">
+    <form data-ajax-filter method="GET" action="{{ route('erp.delivery') }}" class="flex items-center gap-2">
         <label for="agentFilter" class="sr-only">Agent</label>
         <div class="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 transition focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-emerald-100">
             <i class="bi bi-person-badge text-sm text-slate-400"></i>
@@ -158,9 +162,11 @@
                 @foreach($agentOptions as $opt)<option value="{{ $opt['name'] }}" @selected($agentFilter === $opt['name'])>{{ $opt['name'] }}</option>@endforeach
             </select>
         </div>
+        <span id="dl-clear" data-ajax-region>
         @if($agentFilter !== '')
             <a href="{{ route('erp.delivery') }}" class="text-xs font-semibold text-slate-500 hover:text-slate-700" title="Clear agent filter"><i class="bi bi-x-circle"></i> Clear</a>
         @endif
+        </span>
     </form>
     <div class="w-full max-w-md">
         <div class="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 transition focus-within:border-emerald-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-emerald-100">
@@ -175,6 +181,7 @@
     </div>
     </div>
 
+<div id="dl-list" data-ajax-region>
     {{-- List --}}
     <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
         <div class="overflow-x-auto">
@@ -257,6 +264,7 @@
         </div>
     </div>
 
+</div>
     {{-- Receive Payment modal --}}
     <div x-show="paying" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-slate-900/50" x-on:click="paying = false"></div>

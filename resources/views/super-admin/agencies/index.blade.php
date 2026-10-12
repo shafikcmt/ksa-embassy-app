@@ -12,7 +12,7 @@
 
 {{-- Filters --}}
 <x-ui.card class="mb-5">
-    <form method="GET" class="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-12">
+    <form data-ajax-filter method="GET" class="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-12">
         <div class="lg:col-span-6">
             <div class="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 transition-colors focus-within:border-brand-400 focus-within:ring-1 focus-within:ring-brand-400">
                 <i class="bi bi-search text-sm text-slate-400"></i>
@@ -26,13 +26,11 @@
             <option value="suspended" @selected(request('status') === 'suspended')>Suspended</option>
         </select>
         <div class="flex gap-2 lg:col-span-3">
-            <x-ui.button type="submit" class="flex-1 cursor-pointer"><i class="bi bi-funnel"></i> Filter</x-ui.button>
-            @if(request()->hasAny(['search','status']))
                 <x-ui.button :href="route('super-admin.agencies.index')" variant="secondary" size="icon" title="Clear filters" class="cursor-pointer"><i class="bi bi-arrow-counterclockwise"></i></x-ui.button>
-            @endif
         </div>
     </form>
 </x-ui.card>
+<div id="sa-agencies-results" data-ajax-region>
 
 <x-ui.card class="overflow-hidden">
     <div class="overflow-x-auto">
@@ -99,4 +97,5 @@
         <div class="border-t border-slate-100 px-4 py-3">{{ $agencies->withQueryString()->links() }}</div>
     @endif
 </x-ui.card>
+</div>
 @endsection

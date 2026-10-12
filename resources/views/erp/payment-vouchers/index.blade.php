@@ -47,7 +47,7 @@
 </div>
 
 {{-- Filters --}}
-<form method="GET" action="{{ route('erp.payment-vouchers.index') }}" class="mb-5 rounded-2xl border border-slate-200 bg-white p-4">
+<form data-ajax-filter method="GET" action="{{ route('erp.payment-vouchers.index') }}" class="mb-5 rounded-2xl border border-slate-200 bg-white p-4">
     <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-12">
         <div class="lg:col-span-4">
             <label class="{{ $lbl }}">Search</label>
@@ -73,13 +73,11 @@
         </div>
     </div>
     <div class="mt-3 flex flex-wrap items-center justify-end gap-2">
-        @if($hasFilters)
-            <a href="{{ route('erp.payment-vouchers.index') }}" class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-slate-500 hover:text-slate-700"><i class="bi bi-x-lg"></i> Clear</a>
-        @endif
-        <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"><i class="bi bi-funnel"></i> Apply</button>
+        <a href="{{ route('erp.payment-vouchers.index') }}" class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-slate-500 hover:text-slate-700"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
     </div>
 </form>
 
+<div id="pv-results" data-ajax-region>
 @if($vouchers->isEmpty())
     <div class="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
         <i class="bi bi-wallet2 mb-2 block text-3xl text-slate-300"></i>
@@ -137,4 +135,5 @@
 
     @if($vouchers->hasPages())<div class="mt-6 rounded-2xl border border-slate-200 bg-white px-4 py-3">{{ $vouchers->links() }}</div>@endif
 @endif
+</div>
 @endsection

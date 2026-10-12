@@ -63,7 +63,7 @@
 </div>
 
 {{-- Search & filters (search submits 300ms after typing stops) --}}
-<form method="GET" action="{{ route('erp.visa-stamping.index') }}" role="search" x-data="{ t: null }"
+<form data-ajax-filter method="GET" action="{{ route('erp.visa-stamping.index') }}" role="search"
       class="mb-5 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
     @if($filters['trashed'])<input type="hidden" name="trashed" value="1">@endif
     <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12 xl:items-end">
@@ -72,7 +72,6 @@
             <div class="relative">
                 <i class="bi bi-search pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400" aria-hidden="true"></i>
                 <input id="vf_q" type="search" name="q" value="{{ $filters['q'] }}" @if($filters['q'] !== '') autofocus onfocus="this.setSelectionRange(this.value.length, this.value.length)" @endif
-                       x-on:input="clearTimeout(t); t = setTimeout(() => $el.form.requestSubmit(), 300)"
                        placeholder="Name, passport, visa no, MOFA no, reference…" class="{{ $ctl }} pl-9 pr-3">
             </div>
         </div>
@@ -104,22 +103,20 @@
 
     <div class="mt-4 flex flex-col gap-3 border-t border-gray-100 pt-4 lg:flex-row lg:items-center lg:justify-between">
         <div class="flex flex-wrap items-center gap-2">
-            <button type="submit" class="inline-flex items-center gap-1.5 rounded-md bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-blue-600 hover:shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
-                <i class="bi bi-funnel" aria-hidden="true"></i> Filter
-                @if($activeFilters)<span class="grid h-5 min-w-[1.25rem] place-items-center rounded-full bg-white px-1 text-[11px] font-bold text-blue-600" aria-label="{{ $activeFilters }} active filters">{{ $activeFilters }}</span>@endif
-            </button>
             <label for="vf_sort" class="sr-only">Sort by</label>
             <select id="vf_sort" name="sort" onchange="this.form.requestSubmit()"
                     class="rounded-md border border-gray-300 bg-white py-2.5 pl-3 pr-8 text-sm text-gray-800 shadow-sm transition duration-150 focus:border-blue-500 focus:outline-none focus:ring-[3px] focus:ring-blue-500/10">
                 @foreach($sorts as $key => $label)<option value="{{ $key }}" @selected($filters['sort'] === $key)>Sort: {{ $label }}</option>@endforeach
             </select>
             {{-- Current direction rides along on every submit; the toggle's own dir (sent later) wins when clicked. --}}
+            <span id="vs-dir" data-ajax-region class="contents">
             <input type="hidden" name="dir" value="{{ $filters['dir'] }}">
             <button type="submit" name="dir" value="{{ $filters['dir'] === 'asc' ? 'desc' : 'asc' }}" class="{{ $ghost }} px-3"
                     title="{{ $filters['dir'] === 'asc' ? 'Ascending — switch to descending' : 'Descending — switch to ascending' }}"
                     aria-label="{{ $filters['dir'] === 'asc' ? 'Sorted ascending, switch to descending' : 'Sorted descending, switch to ascending' }}">
                 <i class="bi {{ $filters['dir'] === 'asc' ? 'bi-sort-up' : 'bi-sort-down' }}" aria-hidden="true"></i>
             </button>
+            </span>
             @if($hasFilters)
                 <a href="{{ route('erp.visa-stamping.index') }}" class="inline-flex items-center gap-1.5 rounded-md px-3 py-2.5 text-sm font-semibold text-gray-500 transition hover:text-gray-800"><i class="bi bi-x-lg" aria-hidden="true"></i> Clear</a>
             @endif
@@ -131,7 +128,7 @@
                 @endif
             @endif
         </div>
-        <div class="flex flex-wrap items-center gap-2">
+        <div id="vs-actions" data-ajax-region class="flex flex-wrap items-center gap-2">
             @if($isAdmin)
                 <a href="{{ route('erp.stamping.import.form') }}" class="{{ $ghost }}"><i class="bi bi-upload" aria-hidden="true"></i> Import</a>
             @endif
@@ -142,6 +139,7 @@
     </div>
 </form>
 
+<div id="vs-results" data-ajax-region>
 @if($filters['trashed'])
     <div class="mb-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
         <i class="bi bi-trash3" aria-hidden="true"></i> Showing deleted entries. Restore one to bring it back into the list.
@@ -265,6 +263,7 @@
     </div>
 @endif
 
+</div>
 {{-- Floating Add button --}}
 <button type="button" x-data x-on:click="$dispatch('stamping-add')" aria-label="Add visa stamping entry" title="Add visa stamping entry"
         class="fixed bottom-6 right-6 z-40 grid h-14 w-14 place-items-center rounded-full bg-emerald-500 text-2xl text-white shadow-lg shadow-emerald-500/30 transition duration-200 hover:scale-105 hover:bg-emerald-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/50">

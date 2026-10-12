@@ -71,7 +71,7 @@
          table toolbar below; each form carries the other's values as hidden inputs. --}}
     @php $selCls = 'h-10 rounded-xl border-slate-200 bg-slate-50 text-sm transition focus:border-brand-400 focus:bg-white focus:ring-brand-400'; @endphp
     <x-ui.card class="mb-4">
-        <form method="GET" action="{{ route('hr.index') }}" class="grid grid-cols-1 gap-3 p-3 sm:grid-cols-2 lg:grid-cols-4">
+        <form data-ajax-filter method="GET" action="{{ route('hr.index') }}" class="grid grid-cols-1 gap-3 p-3 sm:grid-cols-2 lg:grid-cols-4">
             <input type="hidden" name="search" value="{{ request('search') }}">
             <input type="hidden" name="per_page" value="{{ $perPage }}">
             <select name="status" class="{{ $selCls }}" onchange="this.form.submit()">
@@ -93,7 +93,6 @@
                 @endforeach
             </select>
             <div class="flex gap-2">
-                <x-ui.button type="submit" variant="gradient" class="h-10 flex-1"><i class="bi bi-funnel-fill"></i> Filter</x-ui.button>
                 <x-ui.button :href="route('hr.index')" variant="secondary" size="icon" title="Clear all filters"
                              class="h-10 w-10 shrink-0 hover:border-brand-200 hover:text-brand-600"><i class="bi bi-arrow-counterclockwise"></i></x-ui.button>
             </div>
@@ -102,7 +101,7 @@
 
     {{-- Table toolbar: "Show N entries" + search (DataTables-style) --}}
     <x-ui.card class="overflow-hidden">
-        <form method="GET" action="{{ route('hr.index') }}" class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-3">
+        <form data-ajax-filter method="GET" action="{{ route('hr.index') }}" class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-3">
             @foreach(['status', 'agent_id', 'nationality'] as $keep)
                 @if(request($keep) !== null && request($keep) !== '')<input type="hidden" name="{{ $keep }}" value="{{ request($keep) }}">@endif
             @endforeach
@@ -117,14 +116,15 @@
                 <i class="bi bi-search text-sm text-slate-400"></i>
                 <input type="text" name="search" x-model="q" placeholder="Search name, passport, visa, MOFA…"
                        class="h-9 w-full border-0 bg-transparent p-0 text-sm focus:ring-0">
-                <button type="button" x-show="q" x-cloak @click="q = ''; $nextTick(() => $el.closest('form').submit())" title="Clear search"
+                <button type="button" x-show="q" x-cloak @click="q = ''; $nextTick(() => $el.closest('form').requestSubmit())" title="Clear search"
                         class="grid h-6 w-6 shrink-0 place-items-center rounded-md text-slate-400 transition hover:bg-slate-100 hover:text-slate-600">
                     <i class="bi bi-x-lg text-xs"></i>
                 </button>
             </div>
         </form>
 
-        {{-- ── Desktop table ───────────────────────────────────── --}}
+        <div id="hr-desktop" data-ajax-region>
+{{-- ── Desktop table ───────────────────────────────────── --}}
         @php
             $pill = 'inline-flex items-center gap-1 whitespace-nowrap rounded-md px-2 py-1 text-[0.7rem] font-bold uppercase tracking-wide text-white shadow-sm transition';
             $mono = 'font-mono text-xs';
@@ -206,8 +206,10 @@
                 <div>Showing <strong>{{ $hrProfiles->firstItem() ?? 0 }}</strong> to <strong>{{ $hrProfiles->lastItem() ?? 0 }}</strong> of <strong>{{ $hrProfiles->total() }}</strong> entries</div>
             @endif
         </div>
+</div>
     </x-ui.card>
 
+<div id="hr-mobile" data-ajax-region>
     {{-- ── Mobile cards ──────────────────────────────────────── --}}
     <div class="mt-3 space-y-3 lg:hidden">
         @forelse($hrProfiles as $hr)
@@ -258,6 +260,7 @@
         @endif
     </div>
 
+</div>
     {{-- ── Delete dialog ─────────────────────────────────────── --}}
     <div x-show="del.open" x-cloak class="fixed inset-0 z-[60] flex items-center justify-center p-4" style="display:none">
         <div @click="del.open = false" x-show="del.open" x-transition.opacity class="absolute inset-0 bg-slate-900/50"></div>

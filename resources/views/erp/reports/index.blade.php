@@ -23,17 +23,17 @@
 <x-ui.page-header title="Reports" subtitle="Financial summary & exports" icon="bi-bar-chart" />
 
 {{-- Filters + export --}}
-<form method="GET" action="{{ route('erp.reports') }}" class="mb-6 rounded-2xl border border-slate-200 bg-white p-5">
+<form data-ajax-filter method="GET" action="{{ route('erp.reports') }}" class="mb-6 rounded-2xl border border-slate-200 bg-white p-5">
     <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div><label class="{{ $lbl }}">From</label><input type="date" name="from" value="{{ $filters['from'] }}" class="{{ $inp }}"></div>
         <div><label class="{{ $lbl }}">To</label><input type="date" name="to" value="{{ $filters['to'] }}" class="{{ $inp }}"></div>
         <div><label class="{{ $lbl }}">Search</label><input type="text" name="q" value="{{ $filters['q'] }}" placeholder="Name or passport (dues)" class="{{ $inp }}"></div>
         <div class="flex items-end gap-2">
-            <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:shadow-md"><i class="bi bi-funnel"></i> Apply</button>
             <a href="{{ route('erp.reports') }}" class="inline-flex items-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50">Reset</a>
         </div>
     </div>
 
+<div id="rp-export" data-ajax-region>
     @if($isAdmin)
         <div class="mt-4 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4">
             <span class="text-xs font-semibold uppercase tracking-wide text-slate-400">Export</span>
@@ -46,8 +46,10 @@
             <i class="bi bi-lock"></i> Exports are available to agency admins.
         </div>
     @endif
+</div>
 </form>
 
+<div id="rp-results" data-ajax-region>
 {{-- Summary cards --}}
 <div class="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
     <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
@@ -144,5 +146,6 @@
             </tbody>
         </table>
     </div>
+</div>
 </div>
 @endsection

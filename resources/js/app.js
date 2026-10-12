@@ -1,4 +1,5 @@
 import './bootstrap';
+import './ajax-filter';
 
 import Alpine from 'alpinejs';
 import { animate, inView } from 'motion';
