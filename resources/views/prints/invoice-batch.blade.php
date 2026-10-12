@@ -6,16 +6,12 @@
 @include('prints.partials.invoice-styles')
 
     /* ── Compact sheet: two invoices per A4 page ─────────────────────────────
-       Same design as the single invoice, tightened vertically so a normal
-       invoice (header → signatures) fits in half of the 277mm printable height.
-       Widths and font sizes of the items grid are untouched. */
+       Same design AND same font sizes as the single invoice — only the empty
+       space (padding / margins) is tightened so a normal invoice fits in half
+       of the printable height. */
     .head td { padding: 0 4pt 3pt; }
-    .a-name { font-size: 10pt; }
-    .a-rl { font-size: 8pt; margin-top: 1pt; }
-    .a-addr { font-size: 7.5pt; margin-top: 1pt; }
-    .a-contact { margin-top: 1pt; }
+    .a-rl, .a-addr, .a-contact { margin-top: 1pt; }
     .title td { padding: 3pt 0 3pt; }
-    .t-main { font-size: 12pt; }
     .meta td.mh { padding: 2.5pt 6pt; }
     .meta td.mb { padding: 3pt 6pt 4pt; }
     .kv td { padding: 1pt 0; }

@@ -43,10 +43,11 @@ class InvoiceController extends Controller
 
     /**
      * Row "weight" (1 per passenger + 1 per notes line) an invoice may have and still share an A4
-     * sheet with another one. Measured: 5 rows is the hard limit, 4 leaves a row of slack for a
-     * long address or a wrapped name so the second invoice never spills onto a new page.
+     * sheet with another one (same font sizes as a single invoice). Measured: 4 rows is the hard limit,
+     * 3 leaves a row of slack for a long address or a wrapped name so the second invoice never spills
+     * onto a new page.
      */
-    public const HALF_PAGE_MAX_ROWS = 4;
+    public const HALF_PAGE_MAX_ROWS = 3;
 
     /** Invoice sheets use a slim top margin (the header starts right under it). */
     private const PRINT_OPTIONS = ['margin_top' => 6, 'margin_bottom' => 12];

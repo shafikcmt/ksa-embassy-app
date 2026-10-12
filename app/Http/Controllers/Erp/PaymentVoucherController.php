@@ -24,6 +24,15 @@ use Illuminate\Validation\Rule;
  */
 class PaymentVoucherController extends Controller
 {
+    /** Vouchers per "Print selected" run. */
+    private const BATCH_LIMIT = 50;
+
+    /** Extra rows (see rowWeight) a voucher may carry and still share an A4 sheet with another one (2 is the hard limit with unchanged fonts; 1 leaves a row of slack). */
+    public const HALF_PAGE_MAX_ROWS = 1;
+
+    /** Voucher sheets use a slim top margin (the header starts right under it). */
+    private const PRINT_OPTIONS = ['margin_top' => 6, 'margin_bottom' => 12];
+
     public const SORTS = [
         'date_desc'   => 'Newest first',
         'date_asc'    => 'Oldest first',
@@ -228,6 +237,62 @@ class PaymentVoucherController extends Controller
         return $this->pdf($paymentVoucher, $pdf, false);
     }
 
+    /**
+     * Print several vouchers picked on the list: ?ids=3,5,8 (max BATCH_LIMIT).
+     * Two normal vouchers share one A4 page; heavy ones get a page of their own.
+     * Default → print-dialog wrapper; ?raw=1 → inline PDF; ?download=1 → attachment.
+     * Ids outside the user's agency (or deleted) are dropped silently — never exposed.
+     */
+    public function printSelected(Request $request, PdfGeneratorService $pdf)
+    {
+        $raw = (string) $request->query('ids', '');
+        abort_unless(preg_match('/^\d+(,\d+)*$/', $raw) === 1, 422, 'Select at least one voucher.');
+        $ids = array_values(array_unique(array_map('intval', explode(',', $raw))));
+        abort_if(count($ids) > self::BATCH_LIMIT, 422, 'You can print up to ' . self::BATCH_LIMIT . ' vouchers at once.');
+
+        $vouchers = PaymentVoucher::forAgency((int) auth()->user()->agency_id)
+            ->whereIn('id', $ids)
+            ->with(['items', 'expenseHead', 'createdBy:id,name', 'approvedBy:id,name', 'paidBy:id,name'])
+            ->get()
+            ->sortBy(fn (PaymentVoucher $v) => array_search($v->id, $ids, true))
+            ->values();
+        abort_if($vouchers->isEmpty(), 404);
+
+        $query = ['ids' => implode(',', $vouchers->pluck('id')->all())];
+
+        if (! $request->boolean('raw') && ! $request->boolean('download')) {
+            return view('prints.pdf-print', [
+                'title'       => 'Print ' . $vouchers->count() . ' ' . \Illuminate\Support\Str::plural('voucher', $vouchers->count()),
+                'pdfUrl'      => route('erp.payment-vouchers.print-selected', $query + ['raw' => 1]),
+                'downloadUrl' => route('erp.payment-vouchers.print-selected', $query + ['download' => 1]),
+                'backUrl'     => route('erp.payment-vouchers.index'),
+            ]);
+        }
+
+        $sheets = $vouchers->map(fn (PaymentVoucher $v) => [
+            'voucher'       => $v,
+            'amountInWords' => NumberToWords::currency((string) $v->total_amount, 'BDT'),
+            'half'          => $this->rowWeight($v) <= self::HALF_PAGE_MAX_ROWS,
+        ])->all();
+
+        return $pdf->generateFromView('prints.payment-voucher-batch', [
+            'sheets' => $sheets,
+            'agency' => auth()->user()->agency,
+        ], 'payment-vouchers-' . now()->format('Ymd-His'), $request->boolean('raw'), self::PRINT_OPTIONS);
+    }
+
+    /** Extra vertical rows a voucher needs: remarks lines, historic tax/discount, payee address/phone. */
+    private function rowWeight(PaymentVoucher $v): int
+    {
+        $lines = fn (?string $text) => ($t = trim((string) $text)) === '' ? 0
+            : max((int) ceil(mb_strlen($t) / 80), substr_count($t, "\n") + 1);
+        $description = $v->description && $v->description !== $v->expenseHeadLabel() ? $v->description : '';
+
+        return $lines($description) + $lines($v->notes)
+            + ((float) $v->tax_amount > 0 ? 1 : 0) + ((float) $v->discount_amount > 0 ? 1 : 0)
+            + ($v->payee_address ? 1 : 0) + ($v->payee_phone ? 1 : 0) + ($v->payee_account ? 1 : 0);
+    }
+
     private function pdf(PaymentVoucher $voucher, PdfGeneratorService $pdf, bool $inline)
     {
         $this->authorize('view', $voucher);
@@ -237,7 +302,7 @@ class PaymentVoucherController extends Controller
             'voucher'       => $voucher,
             'agency'        => auth()->user()->agency,
             'amountInWords' => NumberToWords::currency((string) $voucher->total_amount, 'BDT'),
-        ], 'Payment-Voucher-' . $voucher->voucher_number, $inline);
+        ], 'Payment-Voucher-' . $voucher->voucher_number, $inline, self::PRINT_OPTIONS);
     }
 
     private function formData(?PaymentVoucher $voucher = null): array

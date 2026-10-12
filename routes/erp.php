@@ -301,6 +301,8 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
                 Route::post('/', [PaymentVoucherController::class, 'store'])->name('store');
             });
             Route::get('/', [PaymentVoucherController::class, 'index'])->name('index');
+            // Static path: must stay above /{paymentVoucher} so "print-selected" is not bound as an id.
+            Route::get('/print-selected', [PaymentVoucherController::class, 'printSelected'])->name('print-selected');
             Route::get('/{paymentVoucher}', [PaymentVoucherController::class, 'show'])->name('show');
             Route::get('/{paymentVoucher}/edit', [PaymentVoucherController::class, 'edit'])->name('edit');
             Route::put('/{paymentVoucher}', [PaymentVoucherController::class, 'update'])->name('update');

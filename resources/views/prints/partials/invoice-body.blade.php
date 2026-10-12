@@ -54,7 +54,7 @@
         </td>
         <td style="width:28%; text-align:right;">
             @if($barcodeSrc)
-                <img src="{{ $barcodeSrc }}" style="width:{{ $compact ? 34 : 40 }}mm; height:{{ $compact ? 9 : 11 }}mm;">
+                <img src="{{ $barcodeSrc }}" style="width:40mm; height:11mm;">
                 <div class="bc-num">{{ $invoice->invoice_number }}</div>
             @endif
         </td>
