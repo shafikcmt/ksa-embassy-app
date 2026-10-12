@@ -4,7 +4,7 @@
 
 @section('content')
 @php
-    $hasPayment = ! empty($payment);
+    $hasPayment = ! empty($payment); // payment rows exist
     $plural = fn (int $n) => $n . ' ' . \Illuminate\Support\Str::plural('day', $n);
     $expiry = $agency->license_expiry_date;
 
@@ -24,7 +24,7 @@
     $mono = 'font-mono tracking-wide';
 @endphp
 
-<div class="mx-auto {{ $hasPayment ? 'max-w-6xl' : 'max-w-3xl' }}">
+<div class="mx-auto max-w-6xl">
 
     {{-- Header + status --}}
     <div class="mb-6 flex flex-wrap items-end justify-between gap-3">
@@ -43,7 +43,7 @@
         </span>
     </div>
 
-    <div class="grid gap-6 {{ $hasPayment ? 'lg:grid-cols-2 lg:items-start' : '' }}">
+    <div class="grid gap-6 lg:grid-cols-2 lg:items-start">
 
         {{-- License details --}}
         <section class="rounded-2xl border border-slate-200 bg-white shadow-sm" aria-labelledby="lic-details">
@@ -54,6 +54,7 @@
                 <div class="{{ $row }}"><dt class="{{ $lbl }}">Address</dt><dd class="{{ $val }} max-w-[22rem] font-medium">{{ $agency->address ?: '—' }}</dd></div>
                 <div class="{{ $row }}"><dt class="{{ $lbl }}">RL Number</dt><dd class="{{ $val }} {{ $mono }}">{{ $agency->rl_number ?: '—' }}</dd></div>
                 <div class="{{ $row }}"><dt class="{{ $lbl }}">License Code</dt><dd class="{{ $val }} {{ $mono }}">{{ $agency->license_number ?: '—' }}</dd></div>
+                <div class="{{ $row }}"><dt class="{{ $lbl }}">Last Renewal Date</dt><dd class="{{ $val }}">{{ $agency->license_renewed_at?->format('d M Y') ?? '—' }}</dd></div>
                 <div class="{{ $row }}">
                     <dt class="{{ $lbl }}">License Expiry Date</dt>
                     <dd class="{{ $val }} {{ $expiry?->isPast() ? '!text-rose-600' : '' }}">{{ $expiry?->format('d M Y') ?? '—' }}</dd>
@@ -78,12 +79,18 @@
         </section>
 
         {{-- Payment information — Super Admin configured; each row appears only when it is set --}}
-        @if($hasPayment)
         <section class="rounded-2xl border border-slate-200 bg-white shadow-sm" aria-labelledby="lic-pay">
             <h2 id="lic-pay" class="flex items-center gap-2 border-b border-slate-100 px-6 py-4 text-base font-bold text-slate-900">
                 <i class="bi bi-credit-card text-slate-500" aria-hidden="true"></i> Payment Information
             </h2>
             <div class="space-y-3 px-6 py-5">
+                @unless($hasPayment)
+                    <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center">
+                        <i class="bi bi-wallet2 text-3xl text-slate-400" aria-hidden="true"></i>
+                        <p class="mt-2 text-sm font-semibold text-slate-700">Payment details have not been added yet</p>
+                        <p class="mt-0.5 text-sm text-slate-500">পেমেন্টের তথ্য এখনো যোগ করা হয়নি। নবায়নের জন্য আপনার সিস্টেম অ্যাডমিনের সাথে যোগাযোগ করুন।</p>
+                    </div>
+                @endunless
                 @isset($payment['amount'])
                     <div class="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-4">
                         <span class="text-sm font-semibold text-emerald-800">Renewal Amount</span>
@@ -115,7 +122,6 @@
                 @endisset
             </div>
         </section>
-        @endif
     </div>
 
     <p class="mt-5 flex items-start gap-1.5 text-sm text-slate-500">

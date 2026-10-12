@@ -22,11 +22,12 @@ class Agency extends Model
     protected $fillable = [
         'name', 'owner_name', 'company_type', 'referral_code', 'slug', 'license_number', 'rl_number',
         'address', 'phone', 'email', 'logo', 'print_logo',
-        'license_expiry_date', 'status', 'notes',
+        'license_expiry_date', 'license_renewed_at', 'status', 'notes',
     ];
 
     protected $casts = [
         'license_expiry_date' => 'date',
+        'license_renewed_at'  => 'date',
         'print_logo' => 'boolean',
     ];
 

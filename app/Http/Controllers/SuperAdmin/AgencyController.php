@@ -169,6 +169,12 @@ class AgencyController extends Controller
             $agencyData['logo'] = $request->file('logo')->store('logos', 'public');
         }
 
+        // Extending the license expiry counts as a renewal → remember the day it happened.
+        $newExpiry = ! empty($agencyData['license_expiry_date']) ? \Illuminate\Support\Carbon::parse($agencyData['license_expiry_date']) : null;
+        if ($newExpiry && (! $agency->license_expiry_date || $newExpiry->gt($agency->license_expiry_date))) {
+            $agencyData['license_renewed_at'] = today();
+        }
+
         $agency->update($agencyData);
 
         // Super Admin may also update the agency admin's login email / password.

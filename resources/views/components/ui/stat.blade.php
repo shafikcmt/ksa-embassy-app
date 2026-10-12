@@ -1,6 +1,7 @@
 @props([
     'icon'  => 'bi-bar-chart',
     'label' => '',
+    'bn'    => null,        // optional Bangla label shown under the English one
     'value' => '',
     'sub'   => null,
     'href'  => null,
@@ -89,6 +90,7 @@
     </div>
     <div class="text-2xl font-extrabold leading-none tracking-tight text-slate-900">{{ $value }}</div>
     <div class="mt-1.5 text-sm font-medium text-slate-500">{{ $label }}</div>
+    @if($bn)<div class="text-sm font-medium text-slate-400">{{ $bn }}</div>@endif
     @if(!is_null($sub) && $sub !== '')
         <div class="mt-0.5 text-xs font-medium {{ $subCls }}">{{ $sub }}</div>
     @endif

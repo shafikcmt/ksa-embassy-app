@@ -14,7 +14,8 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Plus Jakarta Sans', 'Figtree', 'Inter', ...defaultTheme.fontFamily.sans],
+                // Latin: Plus Jakarta Sans; Bangla glyphs fall through to Hind Siliguri (clear at small sizes).
+                sans: ['Plus Jakarta Sans', 'Hind Siliguri', 'Figtree', 'Inter', ...defaultTheme.fontFamily.sans],
             },
             colors: {
                 // Primary SaaS accent (indigo/blue). `brand-600` == #2563eb.

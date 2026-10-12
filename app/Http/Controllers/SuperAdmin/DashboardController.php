@@ -30,9 +30,28 @@ class DashboardController extends Controller
         $topAgencies     = $this->statsService->superAdminTopAgencies(6);
         $recentAuditLogs = $this->statsService->superAdminRecentAuditLogs(10);
 
+        // Money (BDT) — what the platform has collected and what is still waiting for a payment.
+        $monthStart = now()->startOfMonth();
+        $money = [
+            'total'          => (float) Subscription::where('payment_status', 'paid')->sum('amount'),
+            'this_month'     => (float) Subscription::where('payment_status', 'paid')->where('created_at', '>=', $monthStart)->sum('amount'),
+            'pending_amount' => (float) Subscription::where('payment_status', 'pending')->sum('amount'),
+            'pending_count'  => Subscription::where('payment_status', 'pending')->count(),
+        ];
+        $pendingPayments = Subscription::with(['agency', 'plan'])
+            ->where('payment_status', 'pending')->latest()->limit(6)->get();
+
+        // Agency licenses that expire (or already expired) within 30 days — the renewal follow-up list.
+        $licenseDue = Agency::whereNotNull('license_expiry_date')
+            ->where('status', 'active')
+            ->whereDate('license_expiry_date', '<=', now()->addDays(30))
+            ->orderBy('license_expiry_date')->limit(6)->get();
+        $licenseDueCount = Agency::whereNotNull('license_expiry_date')->where('status', 'active')
+            ->whereDate('license_expiry_date', '<=', now()->addDays(30))->count();
+
         return view('super-admin.dashboard', compact(
             'stats', 'recentAgencies', 'expiringSubscriptions',
-            'topAgencies', 'recentAuditLogs'
+            'topAgencies', 'recentAuditLogs', 'money', 'pendingPayments', 'licenseDue', 'licenseDueCount'
         ));
     }
 }
