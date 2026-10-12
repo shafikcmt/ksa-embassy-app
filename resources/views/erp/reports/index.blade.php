@@ -6,7 +6,7 @@
 @section('content')
 @php
     $inp = 'w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500';
-    $lbl = 'mb-1 block text-xs font-semibold text-slate-600';
+    $lbl = 'mb-1.5 block text-sm font-semibold text-slate-700';
     $money = fn ($v) => '৳' . number_format((float) $v, 2);
     $isAdmin = auth()->user()->isAgencyAdmin();
     $rangeLabel = ($filters['from'] ?: 'beginning') . ' → ' . ($filters['to'] ?: 'today');

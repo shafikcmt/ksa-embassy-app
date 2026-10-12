@@ -46,7 +46,7 @@ $state = fn (string $k) => 'x-bind:class="error(\'' . $k . '\') ? \'' . \App\Sup
                         'idKey'       => 'id',
                         'map'         => [
                             'full_name' => 'full_name', 'father_name' => 'father_name', 'mother_name' => 'mother_name',
-                            'date_of_birth' => 'date_of_birth', 'mofa_number' => 'mofa_number', 'mofa_date' => 'mofa_date',
+                            'date_of_birth' => 'date_of_birth', 'mofa_number' => 'mofa_number',
                             'visa_number' => 'visa_number', 'id_number' => 'id_number',
                             'passport_issue_date' => 'issue_date', 'passport_expiry_date' => 'expiry_date',
                             'reference' => 'reference',
@@ -86,7 +86,7 @@ function mofaModal() {
         f:{},validity:cfg.validity,passportCount:0,countTimer:null,countVersion:0,id:null,touched:{},server:{},message:'',loading:false,saving:false,failedLoad:false,suggestions:[],looking:false,lookupError:'',timer:null,lookupVersion:0,openVersion:0,returnFocus:null,
         init(){if(cfg.add || cfg.edit) this.$nextTick(()=>this.open(cfg.edit || null));},
         async open(id=null){
-            this.returnFocus=document.activeElement;this.id=id;this.f=Object.fromEntries(cfg.fields.map(k=>[k,'']));this.validity=cfg.validity;this.passportCount=0;this.countVersion++;this.touched={};this.server={};this.message='';this.suggestions=[];this.failedLoad=false;this.lookupVersion++;const version=++this.openVersion;
+            this.returnFocus=document.activeElement;this.id=id;this.f=Object.fromEntries(cfg.fields.map(k=>[k,'']));if(!id)this.f.mofa_date=cfg.today; /* new entry: MOFA Date starts as today (editable) */ this.validity=cfg.validity;this.passportCount=0;this.countVersion++;this.touched={};this.server={};this.message='';this.suggestions=[];this.failedLoad=false;this.lookupVersion++;const version=++this.openVersion;
             this.$refs.dialog.showModal();document.body.style.overflow='hidden';
             if(id){this.loading=true;try{const r=await fetch(cfg.base+'/'+id,{headers:{Accept:'application/json'}});if(!r.ok)throw Error('Unable to load this entry. Close and try again.');const data=await r.json();if(version===this.openVersion){this.f=Object.fromEntries(cfg.fields.map(k=>[k,data[k]??'']));this.checkPassport();}}catch(e){if(version===this.openVersion){this.message=e.message;this.failedLoad=true;}}finally{if(version===this.openVersion)this.loading=false;}}
             this.$nextTick(()=>this.$refs.dialog.querySelector('[name="full_name"]')?.focus());

@@ -6,7 +6,7 @@
 @section('content')
 @php
     $inp  = 'w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-brand-500 focus:ring-brand-500';
-    $lbl  = 'mb-1 block text-xs font-semibold text-slate-600';
+    $lbl  = 'mb-1.5 block text-sm font-semibold text-slate-700';
 
     // Summary per status → "৳ 1,200.00 · SAR 300.00" (currencies never added together).
     $symbols = \App\Models\Invoice::CURRENCIES;

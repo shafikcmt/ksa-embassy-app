@@ -31,7 +31,7 @@
             Contract details
             <span class="inline-flex items-center gap-1 text-xs font-medium text-emerald-600"><i class="bi bi-check-circle"></i> Filled from HR Pool</span>
         </div>
-        @php $inp = 'h-9 w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-brand-400 focus:ring-brand-400'; $lbl = 'mb-1 block text-xs font-semibold text-slate-600'; $sub = 'font-normal text-slate-400'; @endphp
+        @php $inp = 'h-9 w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-brand-400 focus:ring-brand-400'; $lbl = 'mb-1.5 block text-sm font-semibold text-slate-700'; $sub = 'font-normal text-slate-400'; @endphp
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div class="sm:col-span-2">
                 <label class="{{ $lbl }}">Passport No. <span class="{{ $sub }}">(type this — the rest fills in)</span></label>

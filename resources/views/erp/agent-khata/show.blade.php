@@ -6,7 +6,7 @@
 @section('content')
 @php
     $inp = 'w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500';
-    $lbl = 'mb-1 block text-xs font-semibold text-slate-600';
+    $lbl = 'mb-1.5 block text-sm font-semibold text-slate-700';
     // Display-only label context (does NOT change AgentTransaction::TYPES or any
     // stored key/calculation). debit = "Paid" (advance out to the agent, balance ↑),
     // credit = "Received" (repayment in from the agent, balance ↓).

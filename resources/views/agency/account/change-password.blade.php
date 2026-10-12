@@ -5,7 +5,7 @@
 @section('content')
 @php
     $inp = 'w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-brand-400 focus:ring-brand-400';
-    $lbl = 'mb-1 block text-xs font-semibold text-slate-600';
+    $lbl = 'mb-1.5 block text-sm font-semibold text-slate-700';
 @endphp
 
 <div class="mx-auto max-w-xl">

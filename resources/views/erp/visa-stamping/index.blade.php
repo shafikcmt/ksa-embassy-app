@@ -17,7 +17,7 @@
     $d = fn ($date) => $date?->format('d-M-Y') ?? '—';
 
     $ctl   = 'block w-full rounded-md border border-gray-300 bg-white py-2.5 text-sm text-gray-800 shadow-sm transition duration-150 focus:border-blue-500 focus:outline-none focus:ring-[3px] focus:ring-blue-500/10';
-    $lbl   = 'mb-1.5 block text-sm font-semibold text-gray-700';
+    $lbl   = 'mb-1.5 block text-sm font-semibold text-slate-700';
     $ghost = 'inline-flex items-center justify-center gap-1.5 rounded-md border border-gray-300 bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition duration-200 hover:bg-gray-50 hover:shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500';
     $addBtn = 'inline-flex items-center justify-center gap-1.5 rounded-md bg-emerald-500 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition duration-200 hover:bg-emerald-600 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2';
     $icon  = 'grid h-7 w-7 place-items-center rounded-md transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500';

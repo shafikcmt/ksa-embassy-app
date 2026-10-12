@@ -6,7 +6,7 @@
 @section('content')
 @php
     $inp = 'w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-emerald-500 focus:ring-emerald-500';
-    $lbl = 'mb-1 block text-xs font-semibold text-slate-600';
+    $lbl = 'mb-1.5 block text-sm font-semibold text-slate-700';
     $statusChip = [
         'unpaid'  => 'bg-rose-100 text-rose-700',
         'partial' => 'bg-amber-100 text-amber-700',

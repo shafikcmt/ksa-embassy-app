@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Agent;
 use App\Models\Stamping;
 use App\Models\VisaStamping;
 use Illuminate\Foundation\Http\FormRequest;
@@ -24,6 +25,19 @@ class VisaStampingRequest extends FormRequest
     {
         if ($this->has('passport_number')) {
             $this->merge(['passport_number' => strtoupper(trim((string) $this->input('passport_number')))]);
+        }
+
+        // "Reference" is the single agent field: the agent is derived from the chosen name (agency-scoped),
+        // so the list's agent filter and agent balances keep working. A free-text reference simply has no agent.
+        // An explicit agent_id (API clients) is still honoured and validated below.
+        if ($this->has('reference')) {
+            $reference = trim((string) $this->input('reference'));
+            $merge = ['reference' => $reference !== '' ? $reference : null];
+            if (! $this->filled('agent_id')) {
+                $merge['agent_id'] = $reference === '' ? null
+                    : Agent::forAgency((int) $this->user()->agency_id)->where('name', $reference)->value('id');
+            }
+            $this->merge($merge);
         }
     }
 

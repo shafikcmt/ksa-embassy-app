@@ -6,3 +6,23 @@
 @layer base {
     input::placeholder, textarea::placeholder { color: #8391a5; opacity: 1; }
 }
+
+/* ── One standard for every form control ─────────────────────────────────────
+   HR, ERP modals, filter bars, invoices, vouchers, settings … all share the same
+   control height (42px), text size (15px) and corner radius (8px); labels use
+   text-sm / semibold / slate-700 (see x-ui.field, x-erp.field). Table cells,
+   checkboxes/radios, and borderless search boxes inside a wrapper (.border-0)
+   are left alone; add .no-std to opt a control out. */
+body :is(input, select):not([type="checkbox"], [type="radio"], [type="file"], [type="range"], [type="hidden"], [type="color"], [type="submit"], [type="button"], [type="reset"], [type="image"]):not(.border-0):not(.no-std):not(.sr-only):not(table *) {
+    height: 2.625rem;
+    font-size: 0.9375rem;
+    line-height: 1.375rem;
+    border-radius: 0.5rem;
+}
+body textarea:not(.border-0):not(.no-std):not(table *) {
+    font-size: 0.9375rem;
+    line-height: 1.5rem;
+    border-radius: 0.5rem;
+}
+/* HR bilingual rows: the ع / En buttons sit next to inputs and must match their height. */
+body .ar-gen, body .en-gen { height: 2.625rem; width: 2.625rem; }

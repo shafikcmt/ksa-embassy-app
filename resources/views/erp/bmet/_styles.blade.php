@@ -9,7 +9,7 @@
 .bm-btn:disabled { background:#e5e7eb; color:#6b7280; cursor:not-allowed; box-shadow:none; }
 .bm-card { padding:16px; border:1px solid var(--bm-line); border-radius:10px; background:white; }
 .bm-stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; }
-.bm-label { display:block; margin-bottom:6px; font-size:14.5px; font-weight:600; }
+.bm-label { display:block; margin-bottom:6px; font-size:15px; font-weight:600; color:#334155; }
 .bm-input { width:100%; min-height:38px; padding:7px 10px; border:1px solid #cbd5e1; border-radius:6px; background:white; color:#1f2937; font-size:15px; transition:border-color .15s,box-shadow .15s; }
 .bm-input:focus { border-color:#3b82f6; box-shadow:0 0 0 3px #3b82f61a; }
 .bm-filters > div { flex:1 1 105px; min-width:0; }

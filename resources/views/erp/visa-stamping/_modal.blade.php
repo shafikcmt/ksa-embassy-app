@@ -9,16 +9,16 @@
     ID, issue/expiry). The auto-filled card is read-only until "Edit manually".
     Validation mirrors VisaStampingRequest; the server stays the authority.
 
-    Expects: $statuses, $agents.
+    Expects: $statuses, $agentOptions.
 --}}
 @php
     $cfgJson = json_encode([
         'base'      => url('erp/visa-stamping'),
         'storeUrl'  => route('erp.visa-stamping.store'),
-        'agents'    => $agents->map(fn ($a) => ['id' => $a->id, 'name' => $a->name])->values(),
         'statuses'  => $statuses,
         'today'     => today()->format('Y-m-d'),
         'warnDays'  => \App\Models\VisaStamping::LEFT_DAY_WARNING,
+        'validDays' => \App\Models\VisaStamping::VISA_VALID_DAYS,
         'openAdd'   => request()->boolean('add'),
         'openEdit'  => (int) request()->query('edit', 0) ?: null,
     ], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE);
@@ -139,7 +139,7 @@
         </x-erp.section>
 
         {{-- Section 3 — Stamping date & status --}}
-        <x-erp.section id="vs-sec-status" icon="bi-calendar2-check" title="Stamping Date & Status">
+        <x-erp.section id="vs-sec-status" icon="bi-calendar2-check" title="Stamping Date & Status" cols="2">
             <x-erp.field label="Stamping Date" for="vs_stamp_date" required error="fieldError('stamping_date')" error-id="vs-err-stamping_date">
                 <input id="vs_stamp_date" type="date" x-model="f.stamping_date" x-bind:max="cfg.today" x-on:change="touch('stamping_date')" x-on:blur="touch('stamping_date')"
                        class="{{ $inp }}" {!! $state('stamping_date') !!}>
@@ -149,19 +149,14 @@
                     @foreach($statuses as $key => $label)<option value="{{ $key }}">{{ $label }}</option>@endforeach
                 </select>
             </x-erp.field>
-            <x-erp.field label="Agent" for="vs_agent" error="fieldError('agent_id')" error-id="vs-err-agent_id">
-                <select id="vs_agent" x-model="f.agent_id" x-on:change="onAgent()" class="{{ $inp }}" {!! $state('agent_id') !!}>
-                    <option value="">— None —</option>
-                    @foreach($agents as $a)<option value="{{ $a->id }}">{{ $a->name }}</option>@endforeach
-                </select>
-            </x-erp.field>
         </x-erp.section>
 
         {{-- Section 4 — Additional --}}
         <x-erp.section id="vs-sec-extra" icon="bi-journal-text" title="Additional Info" cols="2">
-            {{-- Filled from the Agent select (single source); read-only so old values are kept as-is. --}}
-            <x-erp.field label="Reference" for="vs_reference" auto error="fieldError('reference')" error-id="vs-err-reference">
-                <input id="vs_reference" type="text" readonly tabindex="-1" x-model="f.reference" placeholder="—" class="{{ \App\Support\ErpForm::READONLY }}">
+            {{-- The one agent field: pick an agent (or auto-filled from the passport's other records).
+                 The server derives agent_id from the name, so list filters and agent balances keep working. --}}
+            <x-erp.field label="Reference" for="vs_reference" error="fieldError('reference')" error-id="vs-err-reference">
+                <x-erp.select-search id="vs_reference" :agents="$agentOptions ?? []" x-model="f.reference" error="fieldError('reference')" />
             </x-erp.field>
             <x-erp.textarea label="Remarks" id="vs_remarks" maxlength="1000" x-model="f.remarks"
                             error="fieldError('remarks')" error-id="vs-err-remarks" />
@@ -192,7 +187,7 @@
         };
         const blank = () => ({
             full_name: '', passport_number: '', visa_number: '', id_number: '',
-            stamping_date: cfg.today, status: 'pending', agent_id: '', reference: '',
+            stamping_date: cfg.today, status: 'pending', reference: '',
             father_name: '', mother_name: '', date_of_birth: '', mofa_number: '', mofa_date: '',
             issued_visa_number: '', issued_date: '', expiry_date: '', remarks: '',
         });
@@ -208,6 +203,14 @@
                 this.$watch('f', () => {
                     for (const k in this.server) if (this.f[k] !== this.serverSnapshot[k]) delete this.server[k];
                 }, { deep: true });
+                // Visa validity: Expiry Date follows Issued Date + 90 days. A value the user typed (or one that
+                // was saved) is never overwritten; only an empty or still-automatic expiry moves with the issue date.
+                this.$watch('f.issued_date', (value, previous) => {
+                    if (!value) return;
+                    const auto = this.addDays(value, cfg.validDays);
+                    const before = previous ? this.addDays(previous, cfg.validDays) : '';
+                    if (!this.f.expiry_date || this.f.expiry_date === before) this.f.expiry_date = auto;
+                });
                 if (cfg.openAdd) this.$nextTick(() => this.openAdd());
                 else if (cfg.openEdit) this.$nextTick(() => this.openEdit(cfg.openEdit));
             },
@@ -216,7 +219,6 @@
             reset(data) {
                 this.f = Object.assign(blank(), data || {});
                 for (const k in this.f) if (this.f[k] === null) this.f[k] = '';
-                this.f.agent_id = this.f.agent_id ? String(this.f.agent_id) : '';
                 this.touched = {}; this.server = {}; this.manual = false;
                 this.mofa = { checked: false, linked: !!this.f.mofa_number, number: this.f.mofa_number };
             },
@@ -275,6 +277,10 @@
                 const a = Date.parse(this.f.issued_date + 'T00:00:00Z'), b = Date.parse(this.f.expiry_date + 'T00:00:00Z');
                 return Number.isFinite(a) && Number.isFinite(b) ? Math.round((b - a) / dayMs) : '';
             },
+            addDays(ymd, days) {
+                const t = Date.parse(ymd + 'T00:00:00Z');
+                return Number.isNaN(t) ? '' : new Date(t + days * dayMs).toISOString().slice(0, 10);
+            },
             leftLow() { const d = this.leftDay(); return d !== '' && d < cfg.warnDays; },
             tone() { return TONES[this.f.status] || 'bg-gray-100 text-gray-700'; },
             icon() { return ICONS[this.f.status] || 'bi-circle'; },
@@ -302,12 +308,6 @@
             },
             touch(k) { this.touched[k] = true; },
 
-            // ── agent → reference ──────────────────────────────────────────
-            onAgent() {
-                const a = cfg.agents.find(x => String(x.id) === String(this.f.agent_id));
-                if (a) { this.f.reference = a.name; }
-            },
-
             // ── ERP auto-fill result (from erp.partials._erp-autofill) ─────
             // Drives the "Linked to MOFA" chip on the auto-filled card.
             onErpResult(data) {
@@ -332,7 +332,7 @@
                 fetch(editing ? cfg.base + '/' + this.editId : cfg.storeUrl, {
                     method: editing ? 'PUT' : 'POST',
                     headers: Object.assign({ 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf }, JSON_HEADERS),
-                    body: JSON.stringify(Object.assign({}, this.f, { agent_id: this.f.agent_id || null })),
+                    body: JSON.stringify(this.f),
                 })
                     .then(async r => ({ status: r.status, data: await r.json().catch(() => ({})) }))
                     .then(({ status, data }) => {

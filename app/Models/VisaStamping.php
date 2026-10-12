@@ -35,6 +35,9 @@ class VisaStamping extends Stamping
     ];
 
     /** Left Day at or below this is flagged red. */
+    /** A stamped visa is valid for this many days after its issue date (Expiry Date defaults to Issued + this). */
+    public const VISA_VALID_DAYS = 90;
+
     public const LEFT_DAY_WARNING = 30;
 
     /** Badge colours (Tailwind) — Stamped green, Pending amber, Completed blue, Expired red, Rejected gray. */

@@ -1,6 +1,6 @@
 @php
     $input = 'w-full rounded-lg border-slate-300 text-sm focus:border-brand-500 focus:ring-brand-500';
-    $label = 'mb-1 block text-sm font-medium text-slate-600';
+    $label = 'mb-1.5 block text-sm font-semibold text-slate-700';
 @endphp
 <form method="POST" action="{{ $action }}" class="max-w-4xl space-y-5" x-data="{ method: @js(old('payment_method', $voucher->payment_method ?: 'cash')), busy: false }" @submit="busy = true">
     @csrf

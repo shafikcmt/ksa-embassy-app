@@ -193,6 +193,28 @@ class VisaStampingTest extends TestCase
         $this->actingAs($this->staff)->postJson(route('erp.visa-stamping.store'), $this->payload())->assertOk();
     }
 
+    public function test_reference_picks_the_agent_and_expiry_defaults_to_issue_plus_90_days(): void
+    {
+        $agent = $this->makeAgent($this->agency);
+
+        $this->actingAs($this->staff)->postJson(route('erp.visa-stamping.store'), $this->payload([
+            'passport_number' => 'RR1111111', 'agent_id' => null, 'reference' => $agent->name,
+            'issued_date' => '2026-09-30', 'expiry_date' => null,
+        ]))->assertOk();
+        $e = VisaStamping::where('passport_no', 'RR1111111')->firstOrFail();
+        $this->assertSame($agent->id, $e->agent_id, 'agent derived from the Reference name');
+        $this->assertSame('2026-12-29', $e->expiry_date->format('Y-m-d'), '30 Sep + 90 days');
+
+        // A typed expiry is never overwritten; a free-text reference has no agent.
+        $this->actingAs($this->staff)->postJson(route('erp.visa-stamping.store'), $this->payload([
+            'passport_number' => 'RR2222222', 'agent_id' => null, 'reference' => 'Walk-in',
+            'issued_date' => '2026-09-30', 'expiry_date' => '2027-01-15',
+        ]))->assertOk();
+        $e2 = VisaStamping::where('passport_no', 'RR2222222')->firstOrFail();
+        $this->assertNull($e2->agent_id);
+        $this->assertSame('2027-01-15', $e2->expiry_date->format('Y-m-d'));
+    }
+
     public function test_agent_must_belong_to_the_agency(): void
     {
         $foreign = $this->makeAgent($this->other, 'Foreign Agent');

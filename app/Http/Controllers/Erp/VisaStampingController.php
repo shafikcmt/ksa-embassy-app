@@ -61,6 +61,7 @@ class VisaStampingController extends Controller
             'sorts'      => self::SORTS,
             'dateFields' => self::DATE_FIELDS,
             'agents'     => $this->agents($agencyId),
+            'agentOptions' => Agent::referenceOptions($agencyId),
             'stats'      => [
                 'total'   => (int) $counts->sum(),
                 'stamped' => (int) ($counts['stamped'] ?? 0),
@@ -79,7 +80,7 @@ class VisaStampingController extends Controller
     public function store(VisaStampingRequest $request)
     {
         $agencyId = (int) auth()->user()->agency_id;
-        $data     = $request->validated();
+        $data     = $this->withDefaultExpiry($request->validated());
 
         $entry = VisaStamping::create($data + [
             'agency_id'     => $agencyId,
@@ -116,7 +117,7 @@ class VisaStampingController extends Controller
     public function update(VisaStampingRequest $request, VisaStamping $visaStamping)
     {
         $this->authorizeAgency($visaStamping);
-        $data = $request->validated();
+        $data = $this->withDefaultExpiry($request->validated());
 
         $visaStamping->update($data + [
             'hr_profile_id' => $this->hrProfileIdFor($visaStamping->agency_id, $data['passport_number']),
@@ -339,6 +340,16 @@ class VisaStampingController extends Controller
         };
 
         return $query->orderBy('id', $dir);
+    }
+
+    /** Issued date without an expiry → expiry = issued + VISA_VALID_DAYS (an explicit expiry always wins). */
+    private function withDefaultExpiry(array $data): array
+    {
+        if (! empty($data['issued_date']) && empty($data['expiry_date'])) {
+            $data['expiry_date'] = \Illuminate\Support\Carbon::parse($data['issued_date'])->addDays(VisaStamping::VISA_VALID_DAYS)->format('Y-m-d');
+        }
+
+        return $data;
     }
 
     private function agents(int $agencyId): Collection
