@@ -20,49 +20,31 @@
     $inp = 'h-10 w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-brand-400 focus:ring-brand-400';
 @endphp
 
-{{-- ── Workflow hint strip ─────────────────────────────────────── --}}
-<div class="mb-5 hidden items-center gap-1 overflow-x-auto rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-medium text-slate-400 shadow-soft md:flex">
-    @foreach(['Enter details', 'Find & filter', 'Select candidates', 'Assign category', 'Review & save'] as $i => $step)
-        <span class="flex items-center gap-1.5 whitespace-nowrap {{ $i === 0 ? 'text-brand-600' : '' }}">
-            <span class="grid h-5 w-5 place-items-center rounded-full {{ $i === 0 ? 'bg-brand-100 text-brand-700' : 'bg-slate-100 text-slate-500' }} text-[0.78rem] font-bold">{{ $i + 1 }}</span>
-            {{ $step }}
-        </span>
-        @if(! $loop->last)<i class="bi bi-chevron-right mx-1 text-[0.75rem] text-slate-300"></i>@endif
-    @endforeach
-</div>
-
 <div class="grid grid-cols-1 gap-5 lg:grid-cols-3">
     {{-- ── Left: details + picker ─────────────────────────────── --}}
     <div class="space-y-5 lg:col-span-2">
 
-        {{-- List details --}}
+        {{-- List details: only the date is required; title/notes are optional and tucked away --}}
+        @php $hasExtra = old('title', $embassyList?->title) || old('notes', $embassyList?->notes) || $errors->has('title') || $errors->has('notes'); @endphp
         <x-ui.card class="p-5">
-            <h2 class="mb-4 flex items-center gap-2 text-sm font-bold text-slate-800"><span class="grid h-6 w-6 place-items-center rounded-lg bg-brand-50 text-brand-600"><i class="bi bi-info-circle text-xs"></i></span> List Details</h2>
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <x-ui.field label="List Date" name="list_date" :required="true">
+            <div class="flex flex-wrap items-end gap-4">
+                <x-ui.field label="List Date" name="list_date" :required="true" class="w-full sm:w-56">
                     <input type="date" name="list_date" required value="{{ old('list_date', $embassyList?->list_date?->format('Y-m-d') ?? now()->format('Y-m-d')) }}" class="{{ $inp }} field-watch @error('list_date') !border-rose-400 @enderror">
                 </x-ui.field>
-                <x-ui.field label="Title" name="title" hint="Optional — helps you find this list later" class="sm:col-span-2">
-                    <input type="text" name="title" value="{{ old('title', $embassyList?->title) }}" placeholder="e.g. First batch January 2026" class="{{ $inp }} field-watch">
-                </x-ui.field>
-                <x-ui.field label="Notes" name="notes" hint="Optional" class="sm:col-span-3">
-                    <textarea name="notes" rows="2" placeholder="Any internal note about this batch…" class="field-watch w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-brand-400 focus:ring-brand-400">{{ old('notes', $embassyList?->notes) }}</textarea>
-                </x-ui.field>
+                <details class="group min-w-0 flex-1" @if($hasExtra) open @endif>
+                    <summary class="inline-flex h-10 cursor-pointer list-none items-center gap-1.5 text-sm font-semibold text-brand-700 hover:text-brand-800 [&::-webkit-details-marker]:hidden">
+                        <i class="bi bi-plus-circle"></i> Add title / note <span class="font-normal text-slate-500">(optional)</span>
+                    </summary>
+                    <div class="mt-3 grid grid-cols-1 gap-4">
+                        <x-ui.field label="Title" name="title">
+                            <input type="text" name="title" value="{{ old('title', $embassyList?->title) }}" placeholder="e.g. First batch January 2026" class="{{ $inp }} field-watch">
+                        </x-ui.field>
+                        <x-ui.field label="Notes" name="notes">
+                            <textarea name="notes" rows="2" placeholder="Any internal note about this batch…" class="field-watch w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-brand-400 focus:ring-brand-400">{{ old('notes', $embassyList?->notes) }}</textarea>
+                        </x-ui.field>
+                    </div>
+                </details>
             </div>
-        </x-ui.card>
-
-        {{-- Quick add by passport --}}
-        <x-ui.card class="p-5">
-            <h2 class="mb-1 flex items-center gap-2 text-sm font-bold text-slate-800"><span class="grid h-6 w-6 place-items-center rounded-lg bg-violet-50 text-violet-600"><i class="bi bi-upc-scan text-xs"></i></span> Quick Add by Passport</h2>
-            <p class="mb-3 text-xs text-slate-400">Scan or type a passport number and press Enter to find the candidate instantly.</p>
-            <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <div class="relative flex-1">
-                    <i class="bi bi-upc absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                    <input type="text" id="passportLookupInput" maxlength="50" placeholder="Enter passport number…" class="h-10 w-full rounded-lg border-slate-300 pl-9 text-sm shadow-sm focus:border-brand-400 focus:ring-brand-400">
-                </div>
-                <button type="button" id="passportLookupBtn" class="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg bg-brand-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700"><i class="bi bi-search"></i> Find</button>
-            </div>
-            <div id="passportLookupResult" class="mt-3 hidden text-sm"></div>
         </x-ui.card>
 
         {{-- Candidate selection --}}
@@ -72,36 +54,48 @@
                 <span id="selectedCount" class="rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-semibold text-brand-700">0 selected</span>
             </div>
 
-            {{-- Filters --}}
+            {{-- Search (also finds by passport) + agent; extra filters tucked under "More" --}}
             <div class="border-b border-slate-100 bg-slate-50/60 p-4">
                 <div class="grid grid-cols-1 gap-2 sm:grid-cols-12">
-                    <div class="relative sm:col-span-12 lg:col-span-4">
+                    <div class="relative sm:col-span-6">
                         <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400"></i>
-                        <input type="text" id="hrSearch" placeholder="Search name, passport, visa, nationality…" class="h-10 w-full rounded-lg border-slate-300 pl-9 text-sm shadow-sm focus:border-brand-400 focus:ring-brand-400">
+                        <input type="text" id="hrSearch" autofocus placeholder="Name or passport, press Enter" class="{{ $inp }} pl-9">
                     </div>
-                    <select id="agentFilter" class="{{ $inp }} sm:col-span-4 lg:col-span-2">
+                    <select id="agentFilter" class="{{ $inp }} sm:col-span-3">
                         <option value="">All Agents</option>
                         @foreach($agents as $agent)<option value="{{ $agent->id }}">{{ $agent->name }}</option>@endforeach
                     </select>
-                    <select id="nationalityFilter" class="{{ $inp }} sm:col-span-4 lg:col-span-2">
-                        <option value="">All Nationalities</option>
-                        @foreach($nationalities as $nat)<option value="{{ strtolower($nat) }}">{{ $nat }}</option>@endforeach
-                    </select>
-                    <select id="statusFilter" class="{{ $inp }} sm:col-span-4 lg:col-span-2">
-                        <option value="">All Statuses</option>
-                        @foreach($statusLabels as $val => $label)<option value="{{ $val }}">{{ $label }}</option>@endforeach
-                    </select>
-                    <select id="sortSelect" class="{{ $inp }} sm:col-span-4 lg:col-span-2">
-                        <option value="name-asc">Name A–Z</option>
-                        <option value="name-desc">Name Z–A</option>
-                        <option value="nationality">By nationality</option>
-                    </select>
+                    <div class="flex items-center gap-2 sm:col-span-3">
+                        <label for="defaultCategory" class="shrink-0 text-sm font-semibold text-slate-600">Category</label>
+                        <select id="defaultCategory" class="{{ $inp }}">
+                            @foreach($categories as $val => $label)<option value="{{ $val }}">{{ $label }}</option>@endforeach
+                        </select>
+                    </div>
                 </div>
-                <div class="mt-2 flex flex-wrap items-center gap-2">
-                    <button type="button" id="selectAllFiltered" class="inline-flex h-8 items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-3 text-xs font-semibold text-brand-700 transition hover:bg-brand-100"><i class="bi bi-check2-all"></i> Select all filtered</button>
-                    <button type="button" id="clearSelection" class="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"><i class="bi bi-x-circle"></i> Clear selection</button>
-                    <button type="button" id="clearFilters" class="inline-flex h-8 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"><i class="bi bi-funnel"></i> Reset filters</button>
-                    <span id="visibleCount" class="ml-auto text-xs text-slate-400"></span>
+                <div id="passportLookupResult" class="mt-2 hidden text-sm"></div>
+                <details class="mt-2">
+                    <summary class="inline-flex cursor-pointer list-none items-center gap-1 text-sm font-semibold text-slate-600 hover:text-slate-900 [&::-webkit-details-marker]:hidden"><i class="bi bi-sliders"></i> More filters</summary>
+                    <div class="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                        <select id="nationalityFilter" class="{{ $inp }}">
+                            <option value="">All Nationalities</option>
+                            @foreach($nationalities as $nat)<option value="{{ strtolower($nat) }}">{{ $nat }}</option>@endforeach
+                        </select>
+                        <select id="statusFilter" class="{{ $inp }}">
+                            <option value="">All Statuses</option>
+                            @foreach($statusLabels as $val => $label)<option value="{{ $val }}">{{ $label }}</option>@endforeach
+                        </select>
+                        <select id="sortSelect" class="{{ $inp }}">
+                            <option value="name-asc">Name A–Z</option>
+                            <option value="name-desc">Name Z–A</option>
+                            <option value="nationality">By nationality</option>
+                        </select>
+                    </div>
+                </details>
+                <div class="mt-3 flex flex-wrap items-center gap-2">
+                    <button type="button" id="selectAllFiltered" class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-3 text-sm font-semibold text-brand-700 transition hover:bg-brand-100"><i class="bi bi-check2-all"></i> Select all shown</button>
+                    <button type="button" id="clearSelection" class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"><i class="bi bi-x-circle"></i> Clear</button>
+                    <button type="button" id="clearFilters" class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"><i class="bi bi-funnel"></i> Reset</button>
+                    <span id="visibleCount" class="ml-auto text-sm text-slate-500"></span>
                 </div>
             </div>
 
@@ -130,7 +124,6 @@
                                 </th>
                                 <th class="px-3 py-2.5">Candidate</th>
                                 <th class="px-3 py-2.5">Passport #</th>
-                                <th class="px-3 py-2.5">Visa #</th>
                                 <th class="px-3 py-2.5">Agent</th>
                                 <th class="px-3 py-2.5">Category</th>
                             </tr>
@@ -166,7 +159,6 @@
                                         </div>
                                     </td>
                                     <td class="px-3 py-3"><span class="font-mono text-xs text-slate-600">{{ $hr->passport?->passport_number ?? '—' }}</span></td>
-                                    <td class="px-3 py-3 text-slate-500">{{ $hr->visa?->visa_number ?? '—' }}</td>
                                     <td class="px-3 py-3 text-slate-500">{{ $hr->agent?->name ?? '—' }}</td>
                                     <td class="px-3 py-3">
                                         <select class="category-select h-8 rounded-lg border-slate-300 text-xs focus:border-brand-400 focus:ring-brand-400 {{ $preCategory ? '' : 'hidden' }}">
@@ -177,9 +169,9 @@
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="6" class="px-3 py-10 text-center text-sm text-slate-400"><i class="bi bi-people mb-1 block text-2xl opacity-40"></i>No available HR profiles. <a href="{{ route('hr.create') }}" class="font-semibold text-brand-600">Add HR profiles</a> first.</td></tr>
+                                <tr><td colspan="5" class="px-3 py-10 text-center text-sm text-slate-400"><i class="bi bi-people mb-1 block text-2xl opacity-40"></i>No available HR profiles. <a href="{{ route('hr.create') }}" class="font-semibold text-brand-600">Add HR profiles</a> first.</td></tr>
                             @endforelse
-                            <tr id="noResultsRow" class="hidden"><td colspan="6" class="px-3 py-10 text-center text-sm text-slate-400"><i class="bi bi-search mb-1 block text-2xl opacity-40"></i>No candidates match your filters.</td></tr>
+                            <tr id="noResultsRow" class="hidden"><td colspan="5" class="px-3 py-10 text-center text-sm text-slate-400"><i class="bi bi-search mb-1 block text-2xl opacity-40"></i>No candidates match your filters.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -262,6 +254,7 @@
     const mobileBar    = document.getElementById('mobileBar');
     const bulkBar      = document.getElementById('bulkBar');
     const form         = document.getElementById('embassyForm');
+    const defCat       = document.getElementById('defaultCategory');
     let   dirty        = false;
 
     const catLabel = c => ({ new: 'New', restamping: 'Re-stamping', cancellation: 'Cancellation' }[c] || c);
@@ -379,7 +372,7 @@
         });
 
         cb.addEventListener('change', function () {
-            if (this.checked) selectRow(hrId, catSelect.value);
+            if (this.checked) selectRow(hrId, defCat.value);
             else deselectRow(hrId);
             sync();
         });
@@ -474,7 +467,7 @@
         let added = 0;
         rows.forEach(row => {
             const cb = row.querySelector('.hr-checkbox');
-            if (!cb.checked) { selectRow(row.dataset.id, row.querySelector('.category-select').value); added++; }
+            if (!cb.checked) { selectRow(row.dataset.id, defCat.value); added++; }
         });
         sync();
         return added;
@@ -524,11 +517,11 @@
     document.getElementById('bulkRemove').addEventListener('click', clearAll);
 
     // ── Passport lookup ──────────────────────────────────────────
-    const lookupInput  = document.getElementById('passportLookupInput');
-    const lookupBtn    = document.getElementById('passportLookupBtn');
+    const lookupInput  = searchEl;                 // one box: filters the list AND finds by passport
+    const lookupBtn    = { disabled: false };
     const lookupResult = document.getElementById('passportLookupResult');
 
-    function note(cls, html) { lookupResult.className = 'mt-3 rounded-lg border px-3 py-2 text-sm ' + cls; lookupResult.innerHTML = html; }
+    function note(cls, html) { lookupResult.className = 'mt-2 rounded-lg border px-3 py-2 text-sm ' + cls; lookupResult.innerHTML = html; }
 
     function runPassportLookup() {
         const passportNo = lookupInput.value.trim();
@@ -547,7 +540,7 @@
             if (!data.found) { note('border-amber-200 bg-amber-50 text-amber-700', '<i class="bi bi-exclamation-circle mr-1"></i>' + data.message); return; }
             if (selected[data.id]) { note('border-brand-200 bg-brand-50 text-brand-700', '<i class="bi bi-info-circle mr-1"></i><strong>' + data.full_name_en + '</strong> is already selected.'); return; }
             const onPage = !!rowFor(data.id);
-            lookupResult.className = 'mt-3';
+            lookupResult.className = 'mt-2';
             lookupResult.innerHTML =
                 '<div class="rounded-xl border border-slate-200 bg-white p-3 text-sm shadow-soft">' +
                     '<div class="flex flex-wrap items-start justify-between gap-3">' +
@@ -559,7 +552,7 @@
                         '</div>' +
                         '<div class="flex shrink-0 items-center gap-2">' +
                             '<select id="lookupCategory" class="h-9 rounded-lg border-slate-300 text-xs focus:border-brand-400 focus:ring-brand-400">' +
-                                '<option value="new">New</option><option value="restamping">Re-stamping</option><option value="cancellation">Cancellation</option>' +
+                                '<option value="new"' + (defCat.value === 'new' ? ' selected' : '') + '>New</option><option value="restamping"' + (defCat.value === 'restamping' ? ' selected' : '') + '>Re-stamping</option><option value="cancellation"' + (defCat.value === 'cancellation' ? ' selected' : '') + '>Cancellation</option>' +
                             '</select>' +
                             '<button type="button" id="addFoundBtn" class="inline-flex h-9 items-center gap-1 rounded-lg bg-emerald-600 px-3 text-xs font-semibold text-white hover:bg-emerald-700" data-hr-id="' + data.id + '" data-name="' + data.full_name_en.replace(/"/g, '&quot;') + '"><i class="bi bi-plus-lg"></i> Add</button>' +
                         '</div>' +
@@ -577,7 +570,7 @@
                 sync();
                 note('border-emerald-200 bg-emerald-50 text-emerald-700', '<i class="bi bi-check-circle mr-1"></i><strong>' + name + '</strong> added as ' + catLabel(cat) + '.');
                 toast(name + ' added', 'success');
-                lookupInput.value = '';
+                lookupInput.value = ''; applyFilter();
                 lookupInput.focus();
             });
         })
@@ -585,8 +578,22 @@
         .finally(() => { lookupBtn.disabled = false; });
     }
 
-    lookupBtn.addEventListener('click', runPassportLookup);
-    lookupInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); runPassportLookup(); } });
+    // Enter in the search box: one match → add it straight away; no match → look it up by passport number.
+    searchEl.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter') return;
+        e.preventDefault();
+        const q = searchEl.value.trim();
+        if (!q) return;
+        const rows = visibleRows();
+        if (rows.length === 1) {
+            const row = rows[0], id = row.dataset.id, nm = row.querySelector('[data-cand-name]').textContent.trim();
+            if (!selected[id]) { selectRow(id, defCat.value); sync(); toast(nm + ' added as ' + catLabel(defCat.value), 'success'); }
+            else toast(nm + ' is already selected', 'info');
+            searchEl.value = ''; applyFilter(); searchEl.focus();
+        } else if (rows.length === 0) {
+            runPassportLookup();
+        }
+    });
 
     // ── Unsaved-changes guard ────────────────────────────────────
     document.querySelectorAll('.field-watch').forEach(el => el.addEventListener('input', markDirty));
