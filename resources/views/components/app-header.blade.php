@@ -30,7 +30,7 @@
         // Smart Notes intentionally lives in the ERP sidebar (erp-app), not the main nav.
     ], fn ($l) => $gate($l['module'])));
 
-    $qatarUrl = 'https://portal.moi.gov.qa/wps/portal/MOIInternet/services/inquiries/visaservices/enquiryandprinting';
+    $importantLinks = config('important_links', []);
 
     // Shared pill styling: compact items, soft lavender highlight when active.
     $navBase = 'inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors';
@@ -68,10 +68,26 @@
                         <span>{{ $link['label'] }}</span>
                     </a>
                 @endforeach
-                <a href="{{ $qatarUrl }}" target="_blank" rel="noopener noreferrer" @class([$navBase, $navOff])>
-                    <i class="bi bi-box-arrow-up-right text-base text-slate-400"></i>
-                    <span>Qatar Visa Check</span>
-                </a>
+                {{-- Important Links dropdown (official portals; opens in a new tab) --}}
+                <div x-data="{ open: false }" class="relative" @keydown.escape.window="open = false">
+                    <button type="button" @click="open = !open" :aria-expanded="open" @class([$navBase, $navOff])>
+                        <i class="bi bi-link-45deg text-base text-slate-400"></i>
+                        <span>Important Links</span>
+                        <i class="bi bi-chevron-down text-xs text-slate-400 transition" :class="open && 'rotate-180'"></i>
+                    </button>
+                    <div x-show="open" x-cloak @click.outside="open = false"
+                         x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                         class="absolute left-0 z-50 mt-2 w-64 origin-top-left overflow-hidden rounded-xl border border-slate-200 bg-white py-1.5 shadow-lg">
+                        @foreach($importantLinks as $l)
+                            <a href="{{ $l['url'] }}" target="_blank" rel="noopener noreferrer" @click="open = false"
+                               class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-brand-700">
+                                <i class="bi {{ $l['icon'] }} w-5 text-center text-base text-slate-400"></i>
+                                <span class="flex-1">{{ $l['label'] }}</span>
+                                <i class="bi bi-box-arrow-up-right text-xs text-slate-300"></i>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
             </nav>
 
             {{-- Right utilities — kept minimal: notifications + account only --}}
@@ -208,10 +224,20 @@
                 </a>
             @endforeach
 
-            <a href="{{ $qatarUrl }}" target="_blank" rel="noopener noreferrer" @click="mobileNav = false" @class([$drawerItem, $drawerOff])>
-                <i class="bi bi-box-arrow-up-right w-5 text-center text-base text-slate-400"></i>
-                <span>Qatar Visa Check</span>
-            </a>
+            <div x-data="{ open: false }">
+                <button type="button" @click="open = !open" :aria-expanded="open" @class([$drawerItem, $drawerOff, 'w-full'])>
+                    <i class="bi bi-link-45deg w-5 text-center text-base text-slate-400"></i>
+                    <span class="flex-1 text-left">Important Links</span>
+                    <i class="bi bi-chevron-down text-xs text-slate-400 transition" :class="open && 'rotate-180'"></i>
+                </button>
+                <div x-show="open" x-cloak class="ml-4 border-l border-slate-100 pl-2">
+                    @foreach($importantLinks as $l)
+                        <a href="{{ $l['url'] }}" target="_blank" rel="noopener noreferrer" @click="mobileNav = false" @class([$drawerItem, $drawerOff])>
+                            <i class="bi {{ $l['icon'] }} w-5 text-center text-base text-slate-400"></i><span>{{ $l['label'] }}</span>
+                        </a>
+                    @endforeach
+                </div>
+            </div>
 
             @if($isAdmin)
                 <div class="my-2 border-t border-slate-100"></div>

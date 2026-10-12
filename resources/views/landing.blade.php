@@ -278,6 +278,15 @@
   @media(max-width:560px){.slide{min-height:620px}.hero-slider .hero-cta .btn{flex:1 1 100%}}
   @media (prefers-reduced-motion:reduce){.slide,.slide.is-active{transition:none}.slide.is-active .slide-copy>*,.slide.is-active .slide-scene svg{animation:none}}
 
+  /* Important links */
+  .links-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;max-width:1100px;margin:0 auto}
+  .link-btn{display:flex;align-items:center;justify-content:center;gap:10px;height:56px;padding:0 18px;border-radius:999px;background:var(--navy);color:#fff;font-weight:700;font-size:16px;box-shadow:0 8px 18px -10px rgba(21,73,126,.6);transition:transform .18s ease,background .18s ease,box-shadow .18s ease}
+  .link-btn:hover{background:var(--emerald-d);transform:translateY(-2px);box-shadow:0 14px 24px -10px rgba(11,125,87,.6)}
+  .link-btn:focus-visible{outline:3px solid rgba(14,159,110,.45);outline-offset:3px}
+  .link-btn svg{flex:0 0 auto;opacity:.85}
+  @media(max-width:1000px){.links-grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:560px){.links-grid{grid-template-columns:1fr}}
+
   /* Responsive */
   @media(max-width:1000px){
     .feat-grid,.doc-grid,.steps{grid-template-columns:repeat(2,1fr)}
@@ -331,6 +340,7 @@
       <a href="#features">Features</a>
       <a href="#how">How It Works</a>
       <a href="#documents">Documents</a>
+      <a href="#links">Links</a>
       <a href="#get-app">Get App</a>
       <a href="#contact">Contact</a>
     </nav>
@@ -352,6 +362,7 @@
       <a href="#features">Features</a>
       <a href="#how">How It Works</a>
       <a href="#documents">Documents</a>
+      <a href="#links">Links</a>
       <a href="#get-app">Get App</a>
       <a href="#contact">Contact</a>
       <div class="mrow">
@@ -562,6 +573,24 @@
 </section>
 
 {{-- ===================== HOW IT WORKS ===================== --}}
+{{-- ===================== IMPORTANT LINKS ===================== --}}
+<section id="links" style="background:linear-gradient(180deg,#fff,#f1f6fb)">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-tag">Important Links</span>
+      <h2>Check Status On Time</h2>
+      <p>Official visa, medical, training and embassy portals — one click away, opens in a new tab.</p>
+    </div>
+    <div class="links-grid">
+      @foreach(array_slice(config('important_links', []), 0, 8) as $l)
+        <a class="link-btn" href="{{ $l['url'] }}" target="_blank" rel="noopener noreferrer">{{ $l['label'] }}
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M8 7h9v9"/></svg>
+        </a>
+      @endforeach
+    </div>
+  </div>
+</section>
+
 <section id="how">
   <div class="wrap">
     <div class="sec-head">
@@ -677,6 +706,7 @@
         <h4>Product</h4>
         <a href="#features">Features</a>
         <a href="#documents">Documents</a>
+      <a href="#links">Links</a>
         <a href="#how">How It Works</a>
         <a href="#get-app">Get App</a>
       </div>
