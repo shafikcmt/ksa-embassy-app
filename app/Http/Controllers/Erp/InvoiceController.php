@@ -38,6 +38,19 @@ use Illuminate\Validation\Rule;
  */
 class InvoiceController extends Controller
 {
+    /** Invoices per "Print selected" run. */
+    private const BATCH_LIMIT = 50;
+
+    /**
+     * Row "weight" (1 per passenger + 1 per notes line) an invoice may have and still share an A4
+     * sheet with another one. Measured: 5 rows is the hard limit, 4 leaves a row of slack for a
+     * long address or a wrapped name so the second invoice never spills onto a new page.
+     */
+    public const HALF_PAGE_MAX_ROWS = 4;
+
+    /** Invoice sheets use a slim top margin (the header starts right under it). */
+    private const PRINT_OPTIONS = ['margin_top' => 6, 'margin_bottom' => 12];
+
     private const MONEY = '/^\d{1,12}(\.\d{1,2})?$/';
     private const PRICE = '/^\d{1,9}(\.\d{1,2})?$/';
 
@@ -326,6 +339,53 @@ class InvoiceController extends Controller
         return $this->pdf($invoice, $pdf, $barcode, false);
     }
 
+    /**
+     * Print several invoices picked on the list: ?ids=3,5,8 (max BATCH_LIMIT).
+     * Two normal invoices share one A4 page; long ones get their own page(s).
+     * Default → print-dialog wrapper; ?raw=1 → inline PDF; ?download=1 → attachment.
+     * Ids outside the user's agency (or deleted) are dropped silently — never exposed.
+     */
+    public function printSelected(Request $request, PdfGeneratorService $pdf, BarcodeService $barcode)
+    {
+        $raw = (string) $request->query('ids', '');
+        abort_unless(preg_match('/^\d+(,\d+)*$/', $raw) === 1, 422, 'Select at least one invoice.');
+        $ids = array_values(array_unique(array_map('intval', explode(',', $raw))));
+        abort_if(count($ids) > self::BATCH_LIMIT, 422, 'You can print up to ' . self::BATCH_LIMIT . ' invoices at once.');
+
+        $invoices = Invoice::forAgency((int) auth()->user()->agency_id)
+            ->whereIn('id', $ids)
+            ->with(['items.hrProfile.passport', 'agent'])
+            ->get()
+            ->sortBy(fn (Invoice $i) => array_search($i->id, $ids, true))
+            ->values();
+        abort_if($invoices->isEmpty(), 404);
+
+        $query = ['ids' => implode(',', $invoices->pluck('id')->all())];
+
+        if (! $request->boolean('raw') && ! $request->boolean('download')) {
+            return view('prints.pdf-print', [
+                'title'       => 'Print ' . $invoices->count() . ' ' . \Illuminate\Support\Str::plural('invoice', $invoices->count()),
+                'pdfUrl'      => route('erp.invoices.print-selected', $query + ['raw' => 1]),
+                'downloadUrl' => route('erp.invoices.print-selected', $query + ['download' => 1]),
+                'backUrl'     => route('erp.invoices.index'),
+            ]);
+        }
+
+        $sheets = $invoices->map(fn (Invoice $i) => [
+            'invoice'       => $i,
+            'barcodeSrc'    => $barcode->make($i->invoice_number),
+            'amountInWords' => NumberToWords::currency((string) $i->total_amount, $i->currency),
+            'dueInWords'    => NumberToWords::currency($this->balanceDue($i), $i->currency),
+            // Fits half a sheet? (few passengers, short notes) — otherwise it takes a page of its own.
+            'half'          => $this->rowWeight($i) <= self::HALF_PAGE_MAX_ROWS,
+        ])->all();
+
+        return $pdf->generateFromView('prints.invoice-batch', [
+            'sheets' => $sheets,
+            'agency' => auth()->user()->agency,
+        ], 'invoices-' . now()->format('Ymd-His'), $request->boolean('raw'), self::PRINT_OPTIONS);
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     private function pdf(Invoice $invoice, PdfGeneratorService $pdf, BarcodeService $barcode, bool $inline)
@@ -339,7 +399,16 @@ class InvoiceController extends Controller
             'barcodeSrc'    => $barcode->make($invoice->invoice_number),
             'amountInWords' => NumberToWords::currency((string) $invoice->total_amount, $invoice->currency),
             'dueInWords'    => NumberToWords::currency($this->balanceDue($invoice), $invoice->currency),
-        ], $invoice->invoice_number, $inline, ['showWatermarkText' => true]);
+        ], $invoice->invoice_number, $inline, ['showWatermarkText' => true] + self::PRINT_OPTIONS);
+    }
+
+    /** Passenger rows + wrapped notes lines — how much vertical room an invoice needs. */
+    private function rowWeight(Invoice $invoice): int
+    {
+        $notes = trim((string) $invoice->notes);
+        $noteLines = $notes === '' ? 0 : max((int) ceil(mb_strlen($notes) / 70), substr_count($notes, "\n") + 1);
+
+        return $invoice->items->count() + $noteLines;
     }
 
     /** Total minus what is already paid (a paid invoice owes nothing), as "1234.56". */

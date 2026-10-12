@@ -282,6 +282,8 @@ Route::middleware(['auth', 'agency-access', 'page-access:erp'])
         // JSON lookup for the payment-voucher form's "Link invoice" auto-fill.
         // Must precede the resource so "search" isn't bound as {invoice}.
         Route::get('/invoices/search', [InvoiceController::class, 'search'])->name('invoices.search');
+        // Static path: must stay above the invoices resource so "print-selected" is not bound as an id.
+        Route::get('/invoices/print-selected', [InvoiceController::class, 'printSelected'])->name('invoices.print-selected');
         Route::resource('invoices', InvoiceController::class)->except(['create', 'store']);
         Route::patch('/invoices/{invoice}/mark-paid', [InvoiceController::class, 'markAsPaid'])->name('invoices.mark-paid');
         Route::patch('/invoices/{invoice}/cancel', [InvoiceController::class, 'cancel'])->name('invoices.cancel');

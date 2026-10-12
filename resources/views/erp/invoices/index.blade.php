@@ -54,6 +54,22 @@
 </div>
 
 </div>
+{{-- Selection lives OUTSIDE the AJAX region, so picked invoices survive filtering and paging. --}}
+<div x-data="{
+        sel: [],
+        limit: 50,
+        url: @js(route('erp.invoices.print-selected')),
+        pageIds() { return [...new Set([...document.querySelectorAll('input[data-invoice-check]')].map(i => Number(i.value)))]; },
+        toggle(id, on) { this.sel = on ? [...new Set([...this.sel, id])] : this.sel.filter(x => x !== id); },
+        togglePage(on) { const ids = this.pageIds(); this.sel = on ? [...new Set([...this.sel, ...ids])] : this.sel.filter(x => !ids.includes(x)); },
+        get allOnPage() { const ids = this.pageIds(); return ids.length > 0 && ids.every(id => this.sel.includes(id)); },
+        printSelected() {
+            if (!this.sel.length) return;
+            if (this.sel.length > this.limit) { alert('You can print up to ' + this.limit + ' invoices at once.'); return; }
+            window.open(this.url + '?ids=' + this.sel.join(','), '_blank');
+        },
+    }">
+
 {{-- Filters (server-side, agency-scoped) --}}
 <form data-ajax-filter data-ajax-group="erp-invoices" method="GET" action="{{ route('erp.invoices.index') }}" class="mb-5 rounded-2xl border border-slate-200 bg-white p-4">
     <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-12">
@@ -112,7 +128,11 @@
         <table class="hidden w-full text-sm md:table">
             <thead class="border-b border-slate-200 bg-slate-50/80">
                 <tr>
-                    <th class="{{ $th }} rounded-tl-2xl">Invoice No</th>
+                    <th class="{{ $th }} w-10 rounded-tl-2xl">
+                        <input type="checkbox" x-bind:checked="allOnPage" x-on:change="togglePage($event.target.checked)" aria-label="Select all invoices on this page"
+                               class="h-4 w-4 cursor-pointer rounded border-slate-300 text-brand-600 focus:ring-brand-500">
+                    </th>
+                    <th class="{{ $th }}">Invoice No</th>
                     <th class="{{ $th }}">Bill To</th>
                     <th class="{{ $th }}">Date</th>
                     <th class="{{ $th }} text-center">Items</th>
@@ -123,7 +143,11 @@
             </thead>
             <tbody class="divide-y divide-slate-100">
                 @foreach($invoices as $invoice)
-                    <tr class="transition hover:bg-slate-50/70">
+                    <tr class="transition hover:bg-slate-50/70" x-bind:class="sel.includes({{ $invoice->id }}) ? '!bg-brand-50/60' : ''">
+                        <td class="w-10 px-4 py-3">
+                            <input type="checkbox" data-invoice-check value="{{ $invoice->id }}" x-bind:checked="sel.includes({{ $invoice->id }})" x-on:change="toggle({{ $invoice->id }}, $event.target.checked)"
+                                   aria-label="Select {{ $invoice->invoice_number }}" class="h-4 w-4 cursor-pointer rounded border-slate-300 text-brand-600 focus:ring-brand-500">
+                        </td>
                         <td class="whitespace-nowrap px-4 py-3">
                             <a href="{{ route('erp.invoices.show', $invoice) }}" class="font-mono text-sm font-bold text-slate-900 hover:text-brand-700">{{ $invoice->invoice_number }}</a>
                         </td>
@@ -143,9 +167,11 @@
         {{-- Mobile: compact stacked rows --}}
         <ul class="divide-y divide-slate-100 md:hidden">
             @foreach($invoices as $invoice)
-                <li class="px-4 py-3">
+                <li class="px-4 py-3" x-bind:class="sel.includes({{ $invoice->id }}) ? 'bg-brand-50/60' : ''">
                     <div class="flex items-start justify-between gap-3">
-                        <div class="min-w-0">
+                        <input type="checkbox" data-invoice-check value="{{ $invoice->id }}" x-bind:checked="sel.includes({{ $invoice->id }})" x-on:change="toggle({{ $invoice->id }}, $event.target.checked)"
+                               aria-label="Select {{ $invoice->invoice_number }}" class="mt-1 h-4 w-4 shrink-0 cursor-pointer rounded border-slate-300 text-brand-600 focus:ring-brand-500">
+                        <div class="min-w-0 flex-1">
                             <a href="{{ route('erp.invoices.show', $invoice) }}" class="block truncate font-mono text-sm font-bold text-slate-900 hover:text-brand-700">{{ $invoice->invoice_number }}</a>
                             <div class="truncate text-sm text-slate-600">{{ $invoice->billToLabel() }}</div>
                         </div>
@@ -166,6 +192,20 @@
     @if($invoices->hasPages())<div class="mt-6 rounded-2xl border border-slate-200 bg-white px-4 py-3">{{ $invoices->links() }}</div>@endif
 
 @endif
+</div>
+
+{{-- Floating bar: appears once something is ticked --}}
+<div x-show="sel.length" x-cloak x-transition
+     class="fixed inset-x-0 bottom-4 z-40 mx-auto flex w-max max-w-[calc(100%-2rem)] items-center gap-3 rounded-2xl bg-slate-900 px-4 py-3 text-sm text-white shadow-2xl">
+    <span><strong x-text="sel.length"></strong> selected</span>
+    <button type="button" x-on:click="printSelected()"
+            class="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3.5 py-1.5 font-semibold text-white transition hover:bg-brand-500">
+        <i class="bi bi-printer"></i> Print selected
+        <span class="hidden text-xs font-normal text-brand-100 sm:inline">· 2 per A4 page</span>
+    </button>
+    <button type="button" x-on:click="sel = []" class="rounded-lg px-2 py-1.5 font-semibold text-slate-300 transition hover:text-white">Clear</button>
+</div>
+
 </div>
 @include('erp.invoices._delete_modal')
 @endsection
