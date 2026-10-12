@@ -135,6 +135,18 @@ class EmbassyListController extends Controller
 
         AuditLog::record('create', $embassyList, [], ['list_no' => $embassyList->list_no, 'total_items' => $embassyList->total_items]);
 
+        // One-click flow: "Save & Finalize" / "Save & Print" run the normal finalize step right after saving.
+        $after = $request->input('after');
+        if (in_array($after, ['finalize', 'print'], true)) {
+            $this->authorize('finalize', $embassyList);
+            $this->finalizeList($embassyList);
+
+            return $after === 'print'
+                ? redirect()->route('embassy-lists.print', $embassyList)
+                : redirect()->route('embassy-lists.show', $embassyList)
+                    ->with('success', "List {$embassyList->list_no} saved and finalized. {$embassyList->total_items} candidate(s) marked as listed.");
+        }
+
         return redirect()->route('embassy-lists.show', $embassyList)
             ->with('success', "Embassy list {$embassyList->list_no} created successfully.");
     }
@@ -291,6 +303,15 @@ class EmbassyListController extends Controller
                 ->with('error', 'Cannot finalize an empty list. Add at least one candidate.');
         }
 
+        $this->finalizeList($embassyList);
+
+        return redirect()->route('embassy-lists.show', $embassyList)
+            ->with('success', "List {$embassyList->list_no} finalized. {$embassyList->total_items} candidate(s) marked as listed.");
+    }
+
+    /** Assign serials per category, mark the list finalized and its candidates as listed. */
+    private function finalizeList(EmbassyList $embassyList): void
+    {
         DB::transaction(function () use ($embassyList) {
             // Assign serial numbers per category
             foreach (['new', 'restamping', 'cancellation'] as $category) {
@@ -322,9 +343,6 @@ class EmbassyListController extends Controller
             'total_items' => $embassyList->total_items,
             'finalized_at'=> now()->toDateTimeString(),
         ]);
-
-        return redirect()->route('embassy-lists.show', $embassyList)
-            ->with('success', "List {$embassyList->list_no} finalized. {$embassyList->total_items} candidate(s) marked as listed.");
     }
 
     public function cancel(EmbassyList $embassyList)

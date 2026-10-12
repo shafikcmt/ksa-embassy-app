@@ -215,11 +215,21 @@
             </div>
 
             <div class="border-t border-slate-100 p-4">
-                <button type="submit" id="saveBtn" class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 text-sm font-semibold text-white shadow-sm shadow-brand-600/30 transition hover:shadow-md disabled:pointer-events-none disabled:opacity-50">
-                    <i class="bi bi-floppy"></i> <span id="saveBtnLabel">{{ $saveLabel }}</span>
-                </button>
+                <input type="hidden" name="after" id="afterInput" value="">
+                @if($mode === 'create')
+                    <button type="submit" id="printBtn" data-after="print" disabled class="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-brand-600 text-base font-semibold text-white shadow-sm transition hover:shadow-md disabled:pointer-events-none disabled:opacity-50">
+                        <i class="bi bi-printer"></i> Save &amp; Print
+                    </button>
+                    <button type="submit" id="saveBtn" data-after="draft" class="mt-2 inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-brand-200 bg-brand-50 text-sm font-semibold text-brand-700 transition hover:bg-brand-100 disabled:pointer-events-none disabled:opacity-50">
+                        <i class="bi bi-floppy"></i> <span id="saveBtnLabel">{{ $saveLabel }}</span>
+                    </button>
+                @else
+                    <button type="submit" id="saveBtn" class="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 text-sm font-semibold text-white shadow-sm shadow-brand-600/30 transition hover:shadow-md disabled:pointer-events-none disabled:opacity-50">
+                        <i class="bi bi-floppy"></i> <span id="saveBtnLabel">{{ $saveLabel }}</span>
+                    </button>
+                @endif
                 <a href="{{ $cancelUrl }}" id="cancelLink" class="mt-2 inline-flex h-10 w-full items-center justify-center rounded-xl border border-slate-300 bg-white text-sm font-semibold text-slate-600 transition hover:bg-slate-50">Cancel</a>
-                <p class="mt-2 text-center text-[0.78rem] text-slate-400">Saved as a <strong>draft</strong> — finalize later to submit to the embassy.</p>
+                <p class="mt-2 text-center text-[0.78rem] text-slate-500">@if($mode === 'create')<strong>Save &amp; Print</strong> finalizes the list and opens print. <strong>Draft</strong> lets you finalize later.@else Saved as a <strong>draft</strong> — finalize later to submit to the embassy.@endif</p>
             </div>
         </x-ui.card>
     </div>
@@ -229,8 +239,8 @@
 <div id="mobileBar" class="fixed inset-x-0 bottom-0 z-30 hidden border-t border-slate-200 bg-white/95 p-3 shadow-[0_-4px_16px_-6px_rgba(15,23,42,.15)] backdrop-blur lg:hidden">
     <div class="flex items-center gap-3">
         <div class="text-sm"><span class="font-bold text-slate-900" id="mobileCount">0</span> <span class="text-slate-400">selected</span></div>
-        <button type="submit" id="mobileSaveBtn" class="ml-auto inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 text-sm font-semibold text-white shadow-sm disabled:opacity-50">
-            <i class="bi bi-floppy"></i> {{ $saveLabel }}
+        <button type="submit" id="mobileSaveBtn" @if($mode === 'create') data-after="print" @endif class="ml-auto inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 text-sm font-semibold text-white shadow-sm disabled:opacity-50">
+            <i class="bi {{ $mode === 'create' ? 'bi-printer' : 'bi-floppy' }}"></i> {{ $mode === 'create' ? 'Save & Print' : $saveLabel }}
         </button>
     </div>
 </div>
@@ -250,6 +260,8 @@
     const emptyMsg     = document.getElementById('emptyMsg');
     const hiddenInputs = document.getElementById('hiddenInputs');
     const saveBtn      = document.getElementById('saveBtn');
+    const printBtn     = document.getElementById('printBtn');
+    const afterInput   = document.getElementById('afterInput');
     const mobileSave   = document.getElementById('mobileSaveBtn');
     const mobileBar    = document.getElementById('mobileBar');
     const bulkBar      = document.getElementById('bulkBar');
@@ -290,6 +302,7 @@
         document.getElementById('bulkCount').textContent = total;
         document.getElementById('mobileCount').textContent = total;
         if (saveBtn)    saveBtn.disabled = total === 0;
+        if (printBtn)   printBtn.disabled = total === 0;
         if (mobileSave) mobileSave.disabled = total === 0;
         emptyMsg.style.display = total === 0 ? 'block' : 'none';
         document.getElementById('clearAllBtn').classList.toggle('hidden', total === 0);
@@ -598,11 +611,19 @@
     // ── Unsaved-changes guard ────────────────────────────────────
     document.querySelectorAll('.field-watch').forEach(el => el.addEventListener('input', markDirty));
 
+    // Which button was used → "after" (print / draft). Finalizing marks candidates as listed, so confirm it once.
+    form.addEventListener('click', function (e) {
+        const btn = e.target.closest('[data-after]');
+        if (!btn) return;
+        if (btn.dataset.after === 'print' && !confirm('Save, finalize and open print?\nSelected candidates will be marked as listed.')) { e.preventDefault(); return; }
+        afterInput.value = btn.dataset.after === 'draft' ? '' : btn.dataset.after;
+    });
+
     form.addEventListener('submit', function () {
         dirty = false;                         // allow navigation away after save
-        saveBtn.disabled = true;
-        saveBtn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin"></i> Saving…';
-        if (mobileSave) mobileSave.disabled = true;
+        [saveBtn, printBtn, mobileSave].forEach(b => { if (b) b.disabled = true; });
+        const busy = '<i class="bi bi-arrow-repeat animate-spin"></i> Saving…';
+        (afterInput.value === 'print' ? (printBtn || mobileSave) : saveBtn).innerHTML = busy;
     });
 
     document.getElementById('cancelLink').addEventListener('click', function (e) {
