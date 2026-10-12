@@ -26,7 +26,7 @@
         <div class="text-right">
             <div class="text-xs font-semibold uppercase tracking-wide text-slate-400">Current Balance</div>
             <div class="text-2xl font-bold {{ $balance > 0 ? 'text-emerald-700' : ($balance < 0 ? 'text-rose-600' : 'text-slate-500') }}">৳{{ number_format($balance, 2) }}</div>
-            <div class="text-[0.7rem] text-slate-400">{{ $balance > 0 ? 'agent owes agency' : ($balance < 0 ? 'agency owes agent' : 'settled') }}</div>
+            <div class="text-[0.8rem] text-slate-400">{{ $balance > 0 ? 'agent owes agency' : ($balance < 0 ? 'agency owes agent' : 'settled') }}</div>
         </div>
     </div>
 
@@ -97,8 +97,8 @@
                             <td class="px-4 py-3 whitespace-nowrap">{{ $t->txn_date->format('d M Y') }}</td>
                             <td class="px-4 py-3">
                                 <span class="rounded-full px-2 py-0.5 text-xs font-semibold {{ $t->type === 'debit' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700' }}">{{ $typeHint[$t->type] ?? $t->typeLabel() }}</span>
-                                @if($t->isReversal())<span class="ml-1 rounded-full bg-slate-200 px-2 py-0.5 text-[0.6rem] font-bold uppercase text-slate-500">Reversal</span>@endif
-                                @if($isReversed)<span class="ml-1 rounded-full bg-slate-200 px-2 py-0.5 text-[0.6rem] font-bold uppercase text-slate-500">Reversed</span>@endif
+                                @if($t->isReversal())<span class="ml-1 rounded-full bg-slate-200 px-2 py-0.5 text-[0.75rem] font-bold uppercase text-slate-500">Reversal</span>@endif
+                                @if($isReversed)<span class="ml-1 rounded-full bg-slate-200 px-2 py-0.5 text-[0.75rem] font-bold uppercase text-slate-500">Reversed</span>@endif
                             </td>
                             <td class="px-4 py-3 text-right whitespace-nowrap font-semibold {{ $t->type === 'debit' ? 'text-emerald-700' : 'text-rose-600' }}"><i class="bi {{ $t->type === 'debit' ? 'bi-arrow-up-short' : 'bi-arrow-down-short' }}"></i>৳{{ number_format((float) $t->amount, 2) }}</td>
                             <td class="px-4 py-3 text-slate-600">{{ $t->note ?: '—' }}</td>

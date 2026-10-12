@@ -23,12 +23,12 @@
          here as plain CSS because the prebuilt Tailwind bundle is not rebuilt on
          deploy. Visual only — no markup, route or behaviour changes. --}}
     <style>
-        .erp-nav-heading { margin: .9rem .75rem .3rem; font-size: .62rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #94a3b8; }
+        .erp-nav-heading { margin: .9rem .75rem .3rem; font-size: .75rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: #64748b; }
         .erp-nav-heading:first-child { margin-top: .4rem; }
 
         /* Page header (x-ui.page-header) — same weight as the Medical/MOFA summaries */
-        .erp-main .ui-page-title { font-size: 1.6rem; font-weight: 800; letter-spacing: -.02em; color: #0f172a; }
-        .erp-main .ui-page-subtitle { color: #64748b; }
+        .erp-main .ui-page-title { font-size: 1.75rem; font-weight: 800; letter-spacing: -.02em; color: #0f172a; }
+        .erp-main .ui-page-subtitle { color: #475569; font-size: .95rem; }
         .erp-main .ui-page-icon { background: linear-gradient(135deg, #10b981, #0d9488); color: #fff; box-shadow: 0 6px 16px -6px rgba(13, 148, 136, .55); }
 
         /* Cards: soft elevation + gentle hover on clickable ones */
@@ -38,7 +38,7 @@
         .erp-main a.rounded-2xl.border { transition: box-shadow .15s ease, transform .15s ease, border-color .15s ease; }
 
         /* Tables: one header style, calm borders, clear row hover */
-        .erp-main table thead th { background: #f8fafc; color: #64748b; font-size: .68rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+        .erp-main table thead th { background: #f8fafc; color: #475569; font-size: .78rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
         .erp-main table tbody td { border-color: #f1f5f9; }
         .erp-main table tbody td > span.rounded-full, .erp-main table tbody td > span.rounded-md { white-space: nowrap; }
         .erp-main table tbody tr { transition: background-color .12s ease; }
@@ -147,7 +147,7 @@
                         <span @class([$erpItem, 'cursor-not-allowed text-slate-400']) aria-disabled="true">
                             <i class="bi {{ $link['icon'] }} w-5 text-center text-base text-slate-300"></i>
                             <span class="flex-1">{{ $link['label'] }}</span>
-                            <span class="rounded-full bg-slate-100 px-1.5 py-0.5 text-[0.55rem] font-bold uppercase tracking-wide text-slate-400">Soon</span>
+                            <span class="rounded-full bg-slate-100 px-1.5 py-0.5 text-[0.75rem] font-bold uppercase tracking-wide text-slate-400">Soon</span>
                         </span>
                     @else
                         <a href="{{ route($link['route']) }}" @click="erpNav = false"

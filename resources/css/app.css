@@ -1,3 +1,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Placeholders stay clearly lighter than typed values (the muted text colours were darkened for contrast). */
+@layer base {
+    input::placeholder, textarea::placeholder { color: #8391a5; opacity: 1; }
+}

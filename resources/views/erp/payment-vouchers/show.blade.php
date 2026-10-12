@@ -91,12 +91,12 @@
         <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div class="flex flex-col gap-4 bg-gradient-to-br from-[#1a1f2e] via-slate-800 to-brand-900 px-6 py-5 text-white sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                    <div class="text-[0.65rem] font-semibold uppercase tracking-widest text-white/60">Payment voucher</div>
+                    <div class="text-[0.78rem] font-semibold uppercase tracking-widest text-white/60">Payment voucher</div>
                     <div class="mt-1 font-mono text-lg font-bold">{{ $voucher->voucher_number }}</div>
                     <div class="mt-2">@include('erp.payment-vouchers._status', ['voucher' => $voucher])</div>
                 </div>
                 <div class="sm:text-right">
-                    <div class="text-[0.65rem] font-semibold uppercase tracking-widest text-white/60">Total to pay</div>
+                    <div class="text-[0.78rem] font-semibold uppercase tracking-widest text-white/60">Total to pay</div>
                     <div class="mt-1 text-3xl font-bold">{{ $voucher->money($voucher->total_amount) }}</div>
                 </div>
             </div>
@@ -219,7 +219,7 @@
                     @foreach($timeline as $log)
                         @php [$label, $icon, $dot] = $events[$log->action] ?? [ucfirst(str_replace('_', ' ', $log->action)), 'bi-dot', 'bg-slate-400']; @endphp
                         <li class="relative">
-                            <span class="absolute -left-[1.95rem] grid h-5 w-5 place-items-center rounded-full {{ $dot }} text-[0.6rem] text-white ring-4 ring-white"><i class="bi {{ $icon }}"></i></span>
+                            <span class="absolute -left-[1.95rem] grid h-5 w-5 place-items-center rounded-full {{ $dot }} text-[0.75rem] text-white ring-4 ring-white"><i class="bi {{ $icon }}"></i></span>
                             <div class="text-sm font-semibold text-slate-800">{{ $label }}</div>
                             <div class="text-xs text-slate-500">{{ $log->created_at?->format('d M Y, g:i A') }} · {{ $log->user?->name ?? 'System' }}</div>
                             @if($log->action === 'voucher_paid' && ! empty($log->new_values['payment_method']))

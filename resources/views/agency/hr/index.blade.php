@@ -128,13 +128,13 @@
 
         {{-- ── Desktop table ───────────────────────────────────── --}}
         @php
-            $pill = 'inline-flex items-center gap-1 whitespace-nowrap rounded-md px-2 py-1 text-[0.7rem] font-bold uppercase tracking-wide text-white shadow-sm transition';
+            $pill = 'inline-flex items-center gap-1 whitespace-nowrap rounded-md px-2 py-1 text-[0.8rem] font-bold uppercase tracking-wide text-white shadow-sm transition';
             $mono = 'font-mono text-xs';
         @endphp
         <div class="hidden overflow-x-auto lg:block">
             <table class="w-full text-sm">
                 <thead>
-                    <tr class="border-b border-slate-200 bg-slate-50 text-left text-[0.7rem] font-bold uppercase tracking-wider text-slate-500">
+                    <tr class="border-b border-slate-200 bg-slate-50 text-left text-[0.8rem] font-bold uppercase tracking-wider text-slate-500">
                         <th class="px-3 py-3">#</th>
                         <th class="px-3 py-3">Name</th>
                         <th class="px-3 py-3">MOFA ID</th>
@@ -302,7 +302,7 @@
                     <div class="min-w-0">
                         <div class="flex items-center gap-2">
                             <h3 class="truncate text-base font-bold text-slate-900" x-text="preview.name"></h3>
-                            <span class="shrink-0 rounded-full px-2 py-0.5 text-[0.68rem] font-semibold capitalize"
+                            <span class="shrink-0 rounded-full px-2 py-0.5 text-[0.78rem] font-semibold capitalize"
                                   :class="{
                                       'bg-emerald-50 text-emerald-600': preview.status === 'active',
                                       'bg-slate-100 text-slate-500': preview.status === 'inactive',

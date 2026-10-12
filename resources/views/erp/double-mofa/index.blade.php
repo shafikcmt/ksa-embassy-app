@@ -301,8 +301,8 @@
                                 <span class="text-sm font-bold" :class="r.is_reversal ? 'text-rose-600' : 'text-emerald-700'">
                                     <span x-text="r.is_reversal ? '−৳' : '৳'"></span><span x-text="r.amount"></span>
                                 </span>
-                                <span x-show="r.is_reversal" class="rounded-full bg-rose-100 px-2 py-0.5 text-[0.6rem] font-bold uppercase text-rose-600">Reversal</span>
-                                <span x-show="r.reversed" class="rounded-full bg-slate-200 px-2 py-0.5 text-[0.6rem] font-bold uppercase text-slate-500">Reversed</span>
+                                <span x-show="r.is_reversal" class="rounded-full bg-rose-100 px-2 py-0.5 text-[0.75rem] font-bold uppercase text-rose-600">Reversal</span>
+                                <span x-show="r.reversed" class="rounded-full bg-slate-200 px-2 py-0.5 text-[0.75rem] font-bold uppercase text-slate-500">Reversed</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <span class="text-xs text-slate-400" x-text="r.at"></span>

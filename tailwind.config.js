@@ -31,12 +31,22 @@ export default {
                     900: '#1e3a8a',
                     950: '#172554',
                 },
+                // Muted text one step darker for contrast (WCAG AA 4.5:1 on white):
+                // text-slate-400 → old 500, 500 → old 600, 600 → old 700. Same for gray.
+                slate: { 400: '#64748b', 500: '#475569', 600: '#334155' },
+                gray:  { 400: '#6b7280', 500: '#4b5563', 600: '#374151' },
                 // Dark navy used by the sidebar shell.
                 navy: {
                     700: '#101a33',
                     800: '#0b1430',
                     900: '#0a1124',
                 },
+            },
+            // Readable type scale (was 12 / 14px): small UI text is the app's most common text, so xs/sm are
+            // lifted to 13 / 15px with matching line-heights. Headings keep the default scale.
+            fontSize: {
+                xs: ['0.8125rem', { lineHeight: '1.2rem' }],
+                sm: ['0.9375rem', { lineHeight: '1.45rem' }],
             },
             boxShadow: {
                 soft: '0 1px 2px rgba(15,23,42,.04), 0 1px 3px rgba(15,23,42,.06)',

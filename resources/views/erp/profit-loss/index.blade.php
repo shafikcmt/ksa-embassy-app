@@ -106,7 +106,7 @@
     </div>
 </div>
 
-<p class="mt-4 text-center text-[0.7rem] text-slate-400">
+<p class="mt-4 text-center text-[0.8rem] text-slate-400">
     Cash basis: revenue is money actually collected; agent repayments (credits) and unpaid dues are not counted as income.
 </p>
 </div>

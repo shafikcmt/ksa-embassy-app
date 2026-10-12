@@ -138,7 +138,7 @@
 
             <div class="mt-6 rounded-xl border border-slate-100 bg-slate-50 p-4 text-xs text-slate-600">
                 <div class="mb-1 font-semibold text-slate-700">Columns (required marked *)</div>
-                <code class="text-[0.7rem]">{{ $columnsHint }}</code>
+                <code class="text-[0.8rem]">{{ $columnsHint }}</code>
                 <div class="mt-2"><span class="font-semibold text-slate-700">Dates:</span> use YYYY-MM-DD.</div>
                 @foreach($legend as $line)
                     <div class="mt-1">{{ $line }}</div>

@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="mx-auto {{ !empty($payment) ? 'max-w-5xl' : 'max-w-3xl' }}">
-    @php $dt = 'text-[0.7rem] font-semibold uppercase tracking-wider text-slate-400'; @endphp
+    @php $dt = 'text-[0.8rem] font-semibold uppercase tracking-wider text-slate-400'; @endphp
 
     <x-ui.page-header
         title="License Information"

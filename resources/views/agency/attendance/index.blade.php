@@ -119,7 +119,7 @@
                     <i class="bi {{ $icon }}"></i>
                     <span>{{ $label }}</span>
                     @unless($ready)
-                        <span class="rounded-full bg-slate-100 px-1.5 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide text-slate-400">Soon</span>
+                        <span class="rounded-full bg-slate-100 px-1.5 py-0.5 text-[0.75rem] font-semibold uppercase tracking-wide text-slate-400">Soon</span>
                     @endunless
                 </button>
             @endforeach
@@ -159,14 +159,14 @@
                     <i class="bi bi-graph-up-arrow text-slate-400"></i>
                 </div>
                 <div class="mt-1 text-2xl font-bold text-slate-900">{{ $onTime === null ? '—' : $onTime.'%' }}</div>
-                <div class="mt-0.5 text-[0.7rem] text-slate-400">present ÷ (present+late+half-day)</div>
+                <div class="mt-0.5 text-[0.8rem] text-slate-400">present ÷ (present+late+half-day)</div>
             </div>
         </div>
 
         <x-ui.card>
             <div class="mb-3 flex items-center justify-between">
                 <h3 class="text-sm font-bold text-slate-900"><i class="bi bi-bar-chart-line mr-1 text-brand-500"></i>This week</h3>
-                <span class="text-[0.7rem] font-semibold uppercase tracking-wide text-slate-400">Last 7 days</span>
+                <span class="text-[0.8rem] font-semibold uppercase tracking-wide text-slate-400">Last 7 days</span>
             </div>
             <div class="relative h-64"><canvas id="attWeekChart"></canvas></div>
         </x-ui.card>

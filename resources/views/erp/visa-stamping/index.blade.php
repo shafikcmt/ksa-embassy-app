@@ -17,7 +17,7 @@
     $d = fn ($date) => $date?->format('d-M-Y') ?? '—';
 
     $ctl   = 'block w-full rounded-md border border-gray-300 bg-white py-2.5 text-sm text-gray-800 shadow-sm transition duration-150 focus:border-blue-500 focus:outline-none focus:ring-[3px] focus:ring-blue-500/10';
-    $lbl   = 'mb-1.5 block text-[13px] font-semibold text-gray-700';
+    $lbl   = 'mb-1.5 block text-sm font-semibold text-gray-700';
     $ghost = 'inline-flex items-center justify-center gap-1.5 rounded-md border border-gray-300 bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition duration-200 hover:bg-gray-50 hover:shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500';
     $addBtn = 'inline-flex items-center justify-center gap-1.5 rounded-md bg-emerald-500 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition duration-200 hover:bg-emerald-600 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2';
     $icon  = 'grid h-7 w-7 place-items-center rounded-md transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500';
@@ -56,7 +56,7 @@
            class="flex items-center gap-4 rounded-xl border bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 {{ $active ? 'ring-2 ring-blue-500' : '' }} {{ $border }}">
             <span class="grid h-12 w-12 shrink-0 place-items-center rounded-xl text-xl {{ $chip }}" aria-hidden="true"><i class="bi {{ $ico }}"></i></span>
             <span>
-                <span class="block text-[13px] font-semibold text-gray-500">{{ $label }}</span>
+                <span class="block text-sm font-semibold text-gray-500">{{ $label }}</span>
                 <span class="block text-2xl font-bold {{ $num }}">{{ number_format($count) }}</span>
             </span>
         </a>
@@ -71,7 +71,7 @@
     <button type="submit" hidden tabindex="-1" aria-hidden="true"></button>
     @if($filters['trashed'])<input type="hidden" name="trashed" value="1">@endif
     <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12 xl:items-end">
-        <div class="xl:col-span-4">
+        <div class="xl:col-span-3">
             <label for="vf_q" class="{{ $lbl }}">Search</label>
             <div class="relative">
                 <i class="bi bi-search pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400" aria-hidden="true"></i>
@@ -93,9 +93,9 @@
                 @foreach($agents as $a)<option value="{{ $a->id }}" @selected($filters['agent_id'] === $a->id)>{{ $a->name }}</option>@endforeach
             </select>
         </div>
-        <div class="xl:col-span-4">
+        <div class="xl:col-span-5">
             <span class="{{ $lbl }}" id="vf_range_lbl">Date range</span>
-            <div class="grid grid-cols-3 gap-2" role="group" aria-labelledby="vf_range_lbl">
+            <div class="grid grid-cols-[minmax(8.5rem,1fr)_1.2fr_1.2fr] gap-2" role="group" aria-labelledby="vf_range_lbl">
                 <select name="date_field" aria-label="Date field" class="{{ $ctl }} px-2">
                     @foreach($dateFields as $key => $label)<option value="{{ $key }}" @selected($filters['date_field'] === $key)>{{ $label }}</option>@endforeach
                 </select>
@@ -109,7 +109,7 @@
         <div class="flex flex-wrap items-center gap-2">
             <noscript><button type="submit" class="inline-flex items-center gap-1.5 rounded-md bg-blue-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition duration-200 hover:bg-blue-600 hover:shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
                 <i class="bi bi-funnel" aria-hidden="true"></i> Filter
-                @if($activeFilters)<span class="grid h-5 min-w-[1.25rem] place-items-center rounded-full bg-white px-1 text-[11px] font-bold text-blue-600" aria-label="{{ $activeFilters }} active filters">{{ $activeFilters }}</span>@endif
+                @if($activeFilters)<span class="grid h-5 min-w-[1.25rem] place-items-center rounded-full bg-white px-1 text-xs font-bold text-blue-600" aria-label="{{ $activeFilters }} active filters">{{ $activeFilters }}</span>@endif
             </button></noscript>
             <label for="vf_sort" class="sr-only">Sort by</label>
             <select id="vf_sort" name="sort"
@@ -186,7 +186,7 @@
             @endphp
             <table class="w-full text-xs leading-snug text-gray-800">
                 <caption class="sr-only">Visa stamping entries</caption>
-                <thead class="border-b border-gray-200 bg-gray-50 text-left text-[11px] font-semibold text-gray-700">
+                <thead class="border-b border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-700">
                     <tr class="whitespace-nowrap align-bottom">
                         <th scope="col" class="{{ $md }} {{ $c }}">SL</th>
                         <th scope="col" class="{{ $c }}">Passenger Name<span class="{{ $sub }} font-medium">Status</span></th>
@@ -216,7 +216,7 @@
                                     <a href="{{ route('erp.visa-stamping.show', $e) }}" class="hover:text-blue-600 hover:underline">{{ $e->full_name }}</a>
                                 @endif
                                 <span class="mt-0.5 flex">
-                                    <span class="inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-px text-[10.5px] font-semibold {{ $e->statusTone() }} {{ $isNew ? 'animate-[pulse_2s_ease-in-out_3]' : '' }}">
+                                    <span class="inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-px text-xs font-semibold {{ $e->statusTone() }} {{ $isNew ? 'animate-[pulse_2s_ease-in-out_3]' : '' }}">
                                         <i class="bi {{ $e->statusIcon() }}" aria-hidden="true"></i>{{ $e->statusLabel() }}
                                     </span>
                                 </span>
@@ -234,7 +234,7 @@
                                     <span class="text-gray-400">—</span>
                                 @else
                                     <span class="inline-flex items-center gap-1 font-semibold {{ $e->leftDayIsLow() ? 'text-red-600' : 'text-gray-500' }}">
-                                        @if($e->leftDayIsLow())<i class="bi bi-exclamation-triangle-fill text-[10px]" aria-hidden="true"></i><span class="sr-only">Low:</span>@endif{{ $left }} days
+                                        @if($e->leftDayIsLow())<i class="bi bi-exclamation-triangle-fill text-xs" aria-hidden="true"></i><span class="sr-only">Low:</span>@endif{{ $left }} days
                                     </span>
                                 @endif
                                 </span>

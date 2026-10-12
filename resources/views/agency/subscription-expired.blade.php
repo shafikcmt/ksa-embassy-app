@@ -21,15 +21,15 @@
         <x-ui.card class="mb-4 border-l-4 border-l-rose-400">
             <div class="grid grid-cols-3 gap-2 p-4 text-center">
                 <div>
-                    <div class="text-[0.7rem] uppercase tracking-wide text-slate-400">Last Plan</div>
+                    <div class="text-[0.8rem] uppercase tracking-wide text-slate-400">Last Plan</div>
                     <div class="font-bold text-slate-800">{{ $lastSubscription->plan->name ?? '—' }}</div>
                 </div>
                 <div>
-                    <div class="text-[0.7rem] uppercase tracking-wide text-slate-400">Expired On</div>
+                    <div class="text-[0.8rem] uppercase tracking-wide text-slate-400">Expired On</div>
                     <div class="font-bold text-rose-600">{{ $lastSubscription->end_date->format('d M Y') }}</div>
                 </div>
                 <div>
-                    <div class="text-[0.7rem] uppercase tracking-wide text-slate-400">Plan Price</div>
+                    <div class="text-[0.8rem] uppercase tracking-wide text-slate-400">Plan Price</div>
                     <div class="font-bold text-slate-800">
                         @if($lastSubscription->plan?->price)
                             {{ $lastSubscription->plan->priceLabel('/period') }}

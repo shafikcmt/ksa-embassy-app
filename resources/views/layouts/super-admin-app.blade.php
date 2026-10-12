@@ -68,14 +68,14 @@
             </span>
             <div class="min-w-0">
                 <div class="truncate text-sm font-bold text-white">VisaDesk<span class="text-brand-300">Pro</span></div>
-                <div class="text-[0.65rem] tracking-wide text-slate-400">Super Admin Panel</div>
+                <div class="text-[0.78rem] tracking-wide text-slate-400">Super Admin Panel</div>
             </div>
         </div>
 
         {{-- Nav --}}
         <nav class="flex-1 overflow-y-auto px-3 py-4">
             @foreach($navGroups as $label => $links)
-                <div class="px-3 pb-1.5 pt-2 text-[0.62rem] font-bold uppercase tracking-[0.13em] text-slate-500">{{ $label }}</div>
+                <div class="px-3 pb-1.5 pt-2 text-[0.75rem] font-bold uppercase tracking-[0.13em] text-slate-500">{{ $label }}</div>
                 @foreach($links as $link)
                     <a href="{{ route($link['route']) }}" @click="sidebar = false"
                        @class([$navItem, $navOn => $link['active'], $navOff => ! $link['active']])>
@@ -102,7 +102,7 @@
                 <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-rose-500 to-rose-700 text-sm font-bold text-white">{{ strtoupper($initials ?: 'S') }}</span>
                 <div class="min-w-0">
                     <div class="truncate text-sm font-semibold text-white">{{ $authUser->name }}</div>
-                    <div class="truncate text-[0.68rem] text-rose-300">Super Admin</div>
+                    <div class="truncate text-[0.78rem] text-rose-300">Super Admin</div>
                 </div>
             </div>
         </div>
@@ -120,7 +120,7 @@
             </div>
 
             <div class="flex items-center gap-2 sm:gap-3">
-                <span class="rounded-full bg-rose-50 px-2.5 py-1 text-[0.68rem] font-bold uppercase tracking-wide text-rose-600 ring-1 ring-inset ring-rose-200">Super Admin</span>
+                <span class="rounded-full bg-rose-50 px-2.5 py-1 text-[0.78rem] font-bold uppercase tracking-wide text-rose-600 ring-1 ring-inset ring-rose-200">Super Admin</span>
                 <span class="hidden h-6 w-px bg-slate-200 sm:block"></span>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf

@@ -24,10 +24,10 @@
 <div class="mb-5 hidden items-center gap-1 overflow-x-auto rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-medium text-slate-400 shadow-soft md:flex">
     @foreach(['Enter details', 'Find & filter', 'Select candidates', 'Assign category', 'Review & save'] as $i => $step)
         <span class="flex items-center gap-1.5 whitespace-nowrap {{ $i === 0 ? 'text-brand-600' : '' }}">
-            <span class="grid h-5 w-5 place-items-center rounded-full {{ $i === 0 ? 'bg-brand-100 text-brand-700' : 'bg-slate-100 text-slate-500' }} text-[0.65rem] font-bold">{{ $i + 1 }}</span>
+            <span class="grid h-5 w-5 place-items-center rounded-full {{ $i === 0 ? 'bg-brand-100 text-brand-700' : 'bg-slate-100 text-slate-500' }} text-[0.78rem] font-bold">{{ $i + 1 }}</span>
             {{ $step }}
         </span>
-        @if(! $loop->last)<i class="bi bi-chevron-right mx-1 text-[0.6rem] text-slate-300"></i>@endif
+        @if(! $loop->last)<i class="bi bi-chevron-right mx-1 text-[0.75rem] text-slate-300"></i>@endif
     @endforeach
 </div>
 
@@ -158,10 +158,10 @@
                                         <div class="mt-0.5 flex flex-wrap items-center gap-1 text-xs text-slate-400">
                                             <span>{{ $hr->nationality }}</span>
                                             @if($inOtherList)
-                                                <span class="rounded bg-amber-100 px-1.5 py-0.5 text-[0.6rem] font-semibold text-amber-700"><i class="bi bi-list-check"></i> In a list</span>
+                                                <span class="rounded bg-amber-100 px-1.5 py-0.5 text-[0.75rem] font-semibold text-amber-700"><i class="bi bi-list-check"></i> In a list</span>
                                             @endif
                                             @if(! $hasPassport)
-                                                <span class="rounded bg-rose-100 px-1.5 py-0.5 text-[0.6rem] font-semibold text-rose-700"><i class="bi bi-exclamation-triangle"></i> No passport</span>
+                                                <span class="rounded bg-rose-100 px-1.5 py-0.5 text-[0.75rem] font-semibold text-rose-700"><i class="bi bi-exclamation-triangle"></i> No passport</span>
                                             @endif
                                         </div>
                                     </td>
@@ -199,19 +199,19 @@
             <div class="grid grid-cols-4 gap-px bg-slate-100 text-center">
                 <div class="bg-white py-2.5">
                     <div class="text-lg font-extrabold leading-none text-emerald-600" id="countNew">0</div>
-                    <div class="mt-0.5 text-[0.62rem] font-semibold uppercase tracking-wide text-slate-400">New</div>
+                    <div class="mt-0.5 text-[0.75rem] font-semibold uppercase tracking-wide text-slate-400">New</div>
                 </div>
                 <div class="bg-white py-2.5">
                     <div class="text-lg font-extrabold leading-none text-brand-600" id="countRestamp">0</div>
-                    <div class="mt-0.5 text-[0.62rem] font-semibold uppercase tracking-wide text-slate-400">Re-stamp</div>
+                    <div class="mt-0.5 text-[0.75rem] font-semibold uppercase tracking-wide text-slate-400">Re-stamp</div>
                 </div>
                 <div class="bg-white py-2.5">
                     <div class="text-lg font-extrabold leading-none text-rose-600" id="countCancel">0</div>
-                    <div class="mt-0.5 text-[0.62rem] font-semibold uppercase tracking-wide text-slate-400">Cancel</div>
+                    <div class="mt-0.5 text-[0.75rem] font-semibold uppercase tracking-wide text-slate-400">Cancel</div>
                 </div>
                 <div class="bg-white py-2.5">
                     <div class="text-lg font-extrabold leading-none text-slate-800" id="countTotal">0</div>
-                    <div class="mt-0.5 text-[0.62rem] font-semibold uppercase tracking-wide text-slate-400">Total</div>
+                    <div class="mt-0.5 text-[0.75rem] font-semibold uppercase tracking-wide text-slate-400">Total</div>
                 </div>
             </div>
 
@@ -227,7 +227,7 @@
                     <i class="bi bi-floppy"></i> <span id="saveBtnLabel">{{ $saveLabel }}</span>
                 </button>
                 <a href="{{ $cancelUrl }}" id="cancelLink" class="mt-2 inline-flex h-10 w-full items-center justify-center rounded-xl border border-slate-300 bg-white text-sm font-semibold text-slate-600 transition hover:bg-slate-50">Cancel</a>
-                <p class="mt-2 text-center text-[0.68rem] text-slate-400">Saved as a <strong>draft</strong> — finalize later to submit to the embassy.</p>
+                <p class="mt-2 text-center text-[0.78rem] text-slate-400">Saved as a <strong>draft</strong> — finalize later to submit to the embassy.</p>
             </div>
         </x-ui.card>
     </div>
@@ -314,7 +314,7 @@
             div.innerHTML =
                 '<div class="min-w-0">' +
                     '<div class="truncate text-sm font-semibold text-slate-700">' + item.name + '</div>' +
-                    '<span class="mt-1 inline-block rounded-full px-2 py-0.5 text-[0.65rem] font-semibold ' + catBadge(item.category) + '">' + catLabel(item.category) + '</span>' +
+                    '<span class="mt-1 inline-block rounded-full px-2 py-0.5 text-[0.78rem] font-semibold ' + catBadge(item.category) + '">' + catLabel(item.category) + '</span>' +
                 '</div>' +
                 '<button type="button" class="remove-btn grid h-7 w-7 shrink-0 place-items-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-500" title="Remove" data-hr-id="' + hrId + '"><i class="bi bi-x-lg text-xs"></i></button>';
             selectedList.insertBefore(div, emptyMsg);
@@ -555,7 +555,7 @@
                             '<strong>' + data.full_name_en + '</strong>' + (data.full_name_ar ? ' <span class="text-slate-400">' + data.full_name_ar + '</span>' : '') +
                             ' <span class="text-slate-400">' + (data.nationality || '') + '</span>' +
                             '<div class="text-xs text-slate-400">Passport: ' + (data.passport_no || '—') + ' · Visa: ' + (data.visa_no || '—') + ' · Agent: ' + (data.agent_name || '—') + '</div>' +
-                            (onPage ? '' : '<div class="mt-1 text-[0.7rem] font-semibold text-amber-600"><i class="bi bi-exclamation-triangle"></i> Not in the list below — will be added directly.</div>') +
+                            (onPage ? '' : '<div class="mt-1 text-[0.8rem] font-semibold text-amber-600"><i class="bi bi-exclamation-triangle"></i> Not in the list below — will be added directly.</div>') +
                         '</div>' +
                         '<div class="flex shrink-0 items-center gap-2">' +
                             '<select id="lookupCategory" class="h-9 rounded-lg border-slate-300 text-xs focus:border-brand-400 focus:ring-brand-400">' +

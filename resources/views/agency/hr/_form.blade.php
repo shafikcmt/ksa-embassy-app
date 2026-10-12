@@ -201,7 +201,7 @@
                             <div>
                                 <div class="mb-1 flex h-6 items-center justify-between gap-2">
                                     <label for="previous_nationality" class="text-xs font-semibold text-slate-600">Previous Nationality</label>
-                                    <label class="inline-flex cursor-pointer select-none items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-[0.7rem] font-semibold text-slate-500 transition hover:border-brand-300 has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50 has-[:checked]:text-brand-700">
+                                    <label class="inline-flex cursor-pointer select-none items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-[0.8rem] font-semibold text-slate-500 transition hover:border-brand-300 has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50 has-[:checked]:text-brand-700">
                                         <input type="checkbox" id="sameAsPresent" class="peer sr-only" {{ $natSynced ? 'checked' : '' }}>
                                         <i class="bi bi-link-45deg text-sm peer-checked:hidden"></i>
                                         <i class="bi bi-check-circle-fill hidden text-sm peer-checked:inline"></i>

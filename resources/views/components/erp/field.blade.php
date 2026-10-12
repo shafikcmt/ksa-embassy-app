@@ -15,7 +15,7 @@
     'name'     => null,
 ])
 <div {{ $attributes }}>
-    <label @if($for) for="{{ $for }}" @endif class="mb-1.5 block text-[13px] font-medium text-slate-700">
+    <label @if($for) for="{{ $for }}" @endif class="mb-1.5 block text-sm font-medium text-slate-700">
         {{ $label }}@if($auto) <span class="font-normal text-slate-400">(auto)</span>@endif @if($required)<span class="text-red-500" aria-hidden="true">*</span>@endif
     </label>
 

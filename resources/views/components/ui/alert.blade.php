@@ -72,9 +72,9 @@
                 @if($title)
                     <span class="text-sm font-semibold leading-snug {{ $t['title'] }}">{{ $title }}</span>
                 @endif
-                <span class="inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[0.62rem] font-bold uppercase tracking-wide {{ $t['pill'] }}">{{ $badge ?? $t['label'] }}</span>
+                <span class="inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[0.75rem] font-bold uppercase tracking-wide {{ $t['pill'] }}">{{ $badge ?? $t['label'] }}</span>
             </div>
-            <div class="mt-1 text-[0.82rem] leading-snug {{ $t['body'] }}">
+            <div class="mt-1 text-[0.9rem] leading-snug {{ $t['body'] }}">
                 @if($slot->isNotEmpty()){{ $slot }}@else{!! $message !!}@endif
             </div>
         </div>
@@ -85,7 +85,7 @@
         <div class="flex shrink-0 items-center gap-1.5 pl-[3.25rem] sm:pl-0">
             @if($action && $actionLabel)
                 <a href="{{ $action }}" class="inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-xs font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 {{ $t['btn'] }}">
-                    {{ $actionLabel }} <i class="bi bi-arrow-right text-[0.7rem] transition group-hover:translate-x-0.5"></i>
+                    {{ $actionLabel }} <i class="bi bi-arrow-right text-[0.8rem] transition group-hover:translate-x-0.5"></i>
                 </a>
             @endif
             @if($dismissible)

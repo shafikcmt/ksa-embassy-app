@@ -97,11 +97,11 @@
                         <i class="bi bi-gem"></i> {{ $subscription->plan->name ?? 'Plan' }} · {{ $subscription->daysRemaining() }} days left
                     </span>
                     <div class="w-40">
-                        <div class="flex justify-between text-[0.7rem] text-white/70"><span>HR Profiles</span><span>{{ $stats['total_hr'] }}/{{ $hrLimit ?: '∞' }}</span></div>
+                        <div class="flex justify-between text-[0.8rem] text-white/70"><span>HR Profiles</span><span>{{ $stats['total_hr'] }}/{{ $hrLimit ?: '∞' }}</span></div>
                         <div class="mt-1 h-1.5 overflow-hidden rounded-full bg-white/20"><div class="h-full rounded-full bg-white" style="width: {{ $hrPct }}%"></div></div>
                     </div>
                     <div class="w-40">
-                        <div class="flex justify-between text-[0.7rem] text-white/70"><span>PDFs (month)</span><span>{{ $stats['pdf_downloads_month'] }}/{{ $pdfLimit ?: '∞' }}</span></div>
+                        <div class="flex justify-between text-[0.8rem] text-white/70"><span>PDFs (month)</span><span>{{ $stats['pdf_downloads_month'] }}/{{ $pdfLimit ?: '∞' }}</span></div>
                         <div class="mt-1 h-1.5 overflow-hidden rounded-full bg-white/20"><div class="h-full rounded-full bg-white" style="width: {{ $pdfPct }}%"></div></div>
                     </div>
                 </div>
@@ -241,7 +241,7 @@
                     <div class="min-w-0 flex-1">
                         <div class="text-sm font-semibold text-slate-800">{{ $n->title }}</div>
                         <div class="mt-0.5 line-clamp-2 text-xs leading-snug text-slate-500">{{ $n->body }}</div>
-                        <div class="mt-1 text-[0.68rem] text-slate-400">{{ $n->created_at?->format('d M Y') }}</div>
+                        <div class="mt-1 text-[0.78rem] text-slate-400">{{ $n->created_at?->format('d M Y') }}</div>
                     </div>
                 </div>
             @empty
@@ -274,7 +274,7 @@
                                     <span class="block text-xs text-slate-400">{{ $r['date']->format('d M Y') }}</span>
                                 </span>
                                 <span @class([
-                                    'shrink-0 rounded-full px-2 py-0.5 text-[0.68rem] font-semibold',
+                                    'shrink-0 rounded-full px-2 py-0.5 text-[0.78rem] font-semibold',
                                     'bg-rose-50 text-rose-600'    => $r['days'] < 0 || $r['days'] <= 7,
                                     'bg-amber-50 text-amber-600'  => $r['days'] > 7 && $r['days'] <= 30,
                                     'bg-slate-100 text-slate-500' => $r['days'] > 30,

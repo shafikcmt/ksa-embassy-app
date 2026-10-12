@@ -101,13 +101,13 @@
             <div class="rounded-2xl border border-slate-200 bg-white p-4">
                 <div class="mb-4 flex items-center justify-between">
                     <div>
-                        <div class="text-[0.7rem] font-bold uppercase tracking-wide text-{{ $mc['accent'] }}-600">{{ $mc['tag'] }}</div>
+                        <div class="text-[0.8rem] font-bold uppercase tracking-wide text-{{ $mc['accent'] }}-600">{{ $mc['tag'] }}</div>
                         <h3 class="text-sm font-bold text-slate-900"><i class="bi bi-calendar-month mr-1 text-slate-400"></i>{{ $card['label'] }}</h3>
                     </div>
                 </div>
 
                 {{-- Operational counts --}}
-                <div class="grid grid-cols-3 gap-2 sm:grid-cols-6">
+                <div class="grid grid-cols-3 gap-2 2xl:grid-cols-6">
                     @php
                         $opTiles = [
                             ['label' => 'MOFA',     'value' => $ops['mofa']],
@@ -120,7 +120,7 @@
                     @endphp
                     @foreach($opTiles as $t)
                         <div class="rounded-lg border border-slate-100 bg-slate-50 px-2 py-2 text-center">
-                            <div class="text-[0.6rem] font-semibold uppercase tracking-wide text-slate-400">{{ $t['label'] }}</div>
+                            <div class="text-[0.75rem] font-semibold uppercase tracking-wide text-slate-400">{{ $t['label'] }}</div>
                             <div class="mt-0.5 text-base font-bold text-slate-900">{{ number_format($t['value']) }}</div>
                         </div>
                     @endforeach
@@ -129,15 +129,15 @@
                 {{-- Money row (visible to all) --}}
                 <div class="mt-4 grid grid-cols-3 gap-3">
                     <div class="rounded-lg bg-emerald-50 px-3 py-2.5">
-                        <div class="text-[0.62rem] font-semibold uppercase tracking-wide text-emerald-600">Income</div>
+                        <div class="text-[0.75rem] font-semibold uppercase tracking-wide text-emerald-600">Income</div>
                         <div class="mt-0.5 text-sm font-bold text-emerald-700">{{ $money($ops['income']) }}</div>
                     </div>
                     <div class="rounded-lg bg-amber-50 px-3 py-2.5">
-                        <div class="text-[0.62rem] font-semibold uppercase tracking-wide text-amber-600">Expense</div>
+                        <div class="text-[0.75rem] font-semibold uppercase tracking-wide text-amber-600">Expense</div>
                         <div class="mt-0.5 text-sm font-bold text-amber-700">{{ $money($ops['expense']) }}</div>
                     </div>
                     <div class="rounded-lg bg-rose-50 px-3 py-2.5">
-                        <div class="text-[0.62rem] font-semibold uppercase tracking-wide text-rose-600">Due</div>
+                        <div class="text-[0.75rem] font-semibold uppercase tracking-wide text-rose-600">Due</div>
                         <div class="mt-0.5 text-sm font-bold text-rose-700">{{ $money($ops['due']) }}</div>
                     </div>
                 </div>
@@ -146,15 +146,15 @@
                 @if($canSeeProfit)
                     <div class="mt-3 grid grid-cols-3 gap-3">
                         <div class="rounded-lg border border-slate-200 px-3 py-2.5">
-                            <div class="text-[0.62rem] font-semibold uppercase tracking-wide text-slate-400">Profit / Loss</div>
+                            <div class="text-[0.75rem] font-semibold uppercase tracking-wide text-slate-400">Profit / Loss</div>
                             <div class="mt-0.5 text-sm font-bold {{ $card['profit'] < 0 ? 'text-rose-600' : 'text-emerald-700' }}">{{ $money($card['profit']) }}</div>
                         </div>
                         <div class="rounded-lg border border-slate-200 px-3 py-2.5">
-                            <div class="text-[0.62rem] font-semibold uppercase tracking-wide text-slate-400">Starting Bal.</div>
+                            <div class="text-[0.75rem] font-semibold uppercase tracking-wide text-slate-400">Starting Bal.</div>
                             <div class="mt-0.5 text-sm font-bold text-slate-900">{{ $money($card['starting']) }}</div>
                         </div>
                         <div class="rounded-lg border border-slate-200 px-3 py-2.5">
-                            <div class="text-[0.62rem] font-semibold uppercase tracking-wide text-slate-400">Ending Bal.</div>
+                            <div class="text-[0.75rem] font-semibold uppercase tracking-wide text-slate-400">Ending Bal.</div>
                             <div class="mt-0.5 text-sm font-bold text-slate-900">{{ $money($card['ending']) }}</div>
                         </div>
                     </div>
@@ -185,7 +185,7 @@
             <div class="rounded-2xl border border-slate-200 bg-white p-4">
                 <div class="mb-3 flex items-center justify-between">
                     <h3 class="text-sm font-bold text-slate-900"><i class="bi {{ $cc['icon'] }} mr-1 {{ $cc['tone'] }}"></i>{{ $cc['title'] }}</h3>
-                    <span class="text-[0.7rem] font-semibold uppercase tracking-wide text-slate-400">Last 12 months</span>
+                    <span class="text-[0.8rem] font-semibold uppercase tracking-wide text-slate-400">Last 12 months</span>
                 </div>
                 <div class="relative" style="height: 13rem">
                     <canvas id="{{ $cc['id'] }}"></canvas>
@@ -390,9 +390,9 @@
                                 <div class="min-w-0">
                                     <div class="truncate font-medium text-slate-800">{{ $note->title ?: \Illuminate\Support\Str::limit(strip_tags($note->body), 40) ?: 'Untitled' }}</div>
                                     @if($col['key'] === 'reminders' && $note->reminder_at)
-                                        <div class="text-[0.7rem] text-rose-500">{{ $note->reminder_at->format('d M, h:i A') }}</div>
+                                        <div class="text-[0.8rem] text-rose-500">{{ $note->reminder_at->format('d M, h:i A') }}</div>
                                     @else
-                                        <div class="text-[0.7rem] text-slate-400">{{ $note->categoryLabel() }}</div>
+                                        <div class="text-[0.8rem] text-slate-400">{{ $note->categoryLabel() }}</div>
                                     @endif
                                 </div>
                             </li>

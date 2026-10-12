@@ -30,7 +30,7 @@
             </button>
         </form>
 
-        <p class="mt-4 text-center text-[0.7rem] text-slate-400">
+        <p class="mt-4 text-center text-[0.8rem] text-slate-400">
             <i class="bi bi-info-circle"></i>
             The code is set by the agency admin in ERP Settings. Repeated wrong attempts are rate-limited.
         </p>

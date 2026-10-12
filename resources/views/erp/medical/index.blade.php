@@ -16,7 +16,7 @@
     $d = fn ($date) => $date?->format('d-M-Y') ?? '—';
 
     $ctl   = 'block w-full rounded-md border border-gray-300 bg-white py-2.5 text-sm text-gray-800 shadow-sm transition duration-150 focus:border-blue-500 focus:outline-none focus:ring-[3px] focus:ring-blue-500/10';
-    $lbl   = 'mb-1.5 block text-[13px] font-semibold text-gray-700';
+    $lbl   = 'mb-1.5 block text-sm font-semibold text-gray-700';
     $ghost = 'inline-flex items-center justify-center gap-1.5 rounded-md border border-gray-300 bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition duration-200 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500';
     $icon  = 'grid h-7 w-7 place-items-center rounded-md transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500';
 
@@ -52,7 +52,7 @@
            class="group flex items-center gap-4 rounded-xl border bg-white p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 {{ $active ? 'ring-2 ring-blue-500' : '' }} {{ $border }}">
             <span class="grid h-12 w-12 shrink-0 place-items-center rounded-xl text-xl {{ $chip }}" aria-hidden="true"><i class="bi {{ $ico }}"></i></span>
             <span>
-                <span class="block text-[13px] font-semibold text-gray-500">{{ $label }}</span>
+                <span class="block text-sm font-semibold text-gray-500">{{ $label }}</span>
                 <span class="block text-2xl font-bold {{ $num }}">{{ number_format($count) }}</span>
             </span>
         </a>
@@ -169,7 +169,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-xs leading-snug text-gray-800">
                 <caption class="sr-only">Medical entries</caption>
-                <thead class="border-b border-gray-200 bg-gray-50 text-left text-[11px] font-semibold text-gray-700">
+                <thead class="border-b border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-700">
                     <tr class="whitespace-nowrap">
                         <th scope="col" class="px-2 py-1.5">SL</th>
                         <th scope="col" class="px-2 py-1.5">Name</th>

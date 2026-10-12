@@ -16,7 +16,7 @@
     $serverError = $name && $errors->has($name);
 @endphp
 <div class="col-span-full">
-    <label @if($attributes->has('id')) for="{{ $attributes->get('id') }}" @endif class="mb-1.5 block text-[13px] font-medium text-slate-700">{{ $label }}</label>
+    <label @if($attributes->has('id')) for="{{ $attributes->get('id') }}" @endif class="mb-1.5 block text-sm font-medium text-slate-700">{{ $label }}</label>
     <textarea rows="{{ $rows }}" @if($name) name="{{ $name }}" @endif
         @if($error)
             x-bind:class="({{ $error }}) ? '{{ \App\Support\ErpForm::BORDER_ERROR }}' : '{{ \App\Support\ErpForm::BORDER_OK }}'"

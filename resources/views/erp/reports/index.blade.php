@@ -56,22 +56,22 @@
     <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
         <div class="text-xs font-semibold uppercase tracking-wide text-emerald-600">Collected (in range)</div>
         <div class="mt-1 text-xl font-bold text-emerald-700">{{ $money($collectedInRange) }}</div>
-        <div class="mt-0.5 text-[0.7rem] text-emerald-600/70">All-time: {{ $money($summary['collected']) }}</div>
+        <div class="mt-0.5 text-[0.8rem] text-emerald-600/70">All-time: {{ $money($summary['collected']) }}</div>
     </div>
     <div class="rounded-2xl border border-rose-200 bg-rose-50 p-4">
         <div class="text-xs font-semibold uppercase tracking-wide text-rose-600">Outstanding Due</div>
         <div class="mt-1 text-xl font-bold text-rose-700">{{ $money($summary['outstandingDue']) }}</div>
-        <div class="mt-0.5 text-[0.7rem] text-rose-600/70">{{ $dues['count'] }} item(s)</div>
+        <div class="mt-0.5 text-[0.8rem] text-rose-600/70">{{ $dues['count'] }} item(s)</div>
     </div>
     <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4">
         <div class="text-xs font-semibold uppercase tracking-wide text-amber-600">Expenses (in range)</div>
         <div class="mt-1 text-xl font-bold text-amber-700">{{ $money($expenses['rangeTotal']) }}</div>
-        <div class="mt-0.5 text-[0.7rem] text-amber-600/70">All-time: {{ $money($expenses['allTime']) }}</div>
+        <div class="mt-0.5 text-[0.8rem] text-amber-600/70">All-time: {{ $money($expenses['allTime']) }}</div>
     </div>
     <div class="rounded-2xl border border-slate-200 bg-white p-4">
         <div class="text-xs font-semibold uppercase tracking-wide text-slate-400">Agent Net</div>
         <div class="mt-1 text-xl font-bold text-slate-900">{{ $money($summary['agentNet']) }}</div>
-        <div class="mt-0.5 text-[0.7rem] text-slate-400">Recv {{ $money($summary['agentReceivable']) }} · Pay {{ $money($summary['agentPayable']) }}</div>
+        <div class="mt-0.5 text-[0.8rem] text-slate-400">Recv {{ $money($summary['agentReceivable']) }} · Pay {{ $money($summary['agentPayable']) }}</div>
     </div>
 </div>
 

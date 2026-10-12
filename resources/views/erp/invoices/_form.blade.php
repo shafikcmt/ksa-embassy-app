@@ -87,7 +87,7 @@
                         <i class="bi" x-bind:class="step > {{ $n }} ? 'bi-check-lg' : '{{ $icon }}'"></i>
                     </span>
                     <span class="min-w-0">
-                        <span class="block text-[0.65rem] font-semibold uppercase tracking-wide text-slate-400">Step {{ $n }}</span>
+                        <span class="block text-[0.78rem] font-semibold uppercase tracking-wide text-slate-400">Step {{ $n }}</span>
                         <span class="block truncate text-sm font-semibold text-slate-800">{{ $label }}</span>
                     </span>
                 </button>
@@ -105,7 +105,7 @@
                     <div>
                         <label class="{{ $lbl }}">Invoice no.</label>
                         <div class="flex h-[38px] items-center rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 font-mono text-sm font-semibold text-slate-700">{{ $nextNumber }}</div>
-                        @if(! $invoice->exists)<p class="mt-1 text-[0.7rem] text-slate-400">Assigned automatically on save.</p>@endif
+                        @if(! $invoice->exists)<p class="mt-1 text-[0.8rem] text-slate-400">Assigned automatically on save.</p>@endif
                     </div>
                     <div>
                         <label class="{{ $lbl }}">Invoice date <span class="text-rose-500">*</span></label>
@@ -383,7 +383,7 @@
         <aside class="lg:sticky lg:top-24 lg:self-start">
             <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                 <div class="bg-gradient-to-br from-[#1a1f2e] via-slate-800 to-brand-900 px-5 py-4 text-white">
-                    <div class="text-[0.65rem] font-semibold uppercase tracking-widest text-white/60">Invoice total</div>
+                    <div class="text-[0.78rem] font-semibold uppercase tracking-widest text-white/60">Invoice total</div>
                     <div class="mt-1 text-2xl font-bold" x-text="fmt(totals().total)"></div>
                     <div class="mt-1 font-mono text-xs text-white/60">{{ $nextNumber }}</div>
                 </div>
@@ -394,7 +394,7 @@
                     <div class="flex justify-between border-t border-slate-100 pt-2 text-base"><dt class="font-bold text-slate-900">Total</dt><dd class="font-bold text-slate-900" x-text="fmt(totals().total)"></dd></div>
                 </dl>
                 <div x-show="totals().total < 0n" class="border-t border-rose-100 bg-rose-50 px-5 py-2 text-xs font-semibold text-rose-700">Discount exceeds subtotal + tax.</div>
-                <div class="border-t border-slate-100 bg-slate-50 px-5 py-3 text-[0.7rem] text-slate-500"><i class="bi bi-shield-check text-emerald-600"></i> Totals are re-calculated on the server when you save.</div>
+                <div class="border-t border-slate-100 bg-slate-50 px-5 py-3 text-[0.8rem] text-slate-500"><i class="bi bi-shield-check text-emerald-600"></i> Totals are re-calculated on the server when you save.</div>
             </div>
         </aside>
     </div>

@@ -88,7 +88,7 @@
                     <button @click="open = !open" class="relative grid h-9 w-9 place-items-center rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200">
                         <i class="bi bi-bell text-lg"></i>
                         <span x-show="unread > 0" x-cloak
-                              class="absolute -right-0.5 -top-0.5 grid h-4 min-w-[1rem] place-items-center rounded-full bg-rose-500 px-1 text-[0.6rem] font-bold text-white"
+                              class="absolute -right-0.5 -top-0.5 grid h-4 min-w-[1rem] place-items-center rounded-full bg-rose-500 px-1 text-[0.75rem] font-bold text-white"
                               x-text="unread > 9 ? '9+' : unread"></span>
                     </button>
 
@@ -120,8 +120,8 @@
                                         <div class="text-sm font-semibold text-slate-800">{{ $n['title'] ?? 'Notification' }}</div>
                                         <div class="mt-0.5 text-xs leading-snug text-slate-500">{!! $n['message'] !!}</div>
                                         <div class="mt-1 flex items-center gap-2">
-                                            @if(!empty($n['time']))<span class="text-[0.68rem] text-slate-400">{{ $n['time'] }}</span>@endif
-                                            @if(!empty($n['action_label']))<span class="text-[0.68rem] font-semibold text-brand-600">{{ $n['action_label'] }} →</span>@endif
+                                            @if(!empty($n['time']))<span class="text-[0.78rem] text-slate-400">{{ $n['time'] }}</span>@endif
+                                            @if(!empty($n['action_label']))<span class="text-[0.78rem] font-semibold text-brand-600">{{ $n['action_label'] }} →</span>@endif
                                         </div>
                                     </div>
                                 </a>
@@ -145,7 +145,7 @@
                             <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-brand-600 to-indigo-600 text-sm font-bold text-white">{{ strtoupper($initials ?: 'U') }}</span>
                             <span class="hidden text-left sm:block">
                                 <span class="block text-sm font-semibold leading-tight text-slate-900">{{ $authUser->name }}</span>
-                                <span class="block text-[0.68rem] {{ $isAdmin ? 'text-brand-600' : 'text-violet-600' }}">{{ $isAdmin ? 'Agency Admin' : 'Agency Staff' }}</span>
+                                <span class="block text-[0.78rem] {{ $isAdmin ? 'text-brand-600' : 'text-violet-600' }}">{{ $isAdmin ? 'Agency Admin' : 'Agency Staff' }}</span>
                             </span>
                             <i class="bi bi-chevron-down hidden text-xs text-slate-400 sm:block"></i>
                         </button>
@@ -215,7 +215,7 @@
 
             @if($isAdmin)
                 <div class="my-2 border-t border-slate-100"></div>
-                <div class="px-3 pb-1 text-[0.65rem] font-semibold uppercase tracking-wider text-slate-400">Admin</div>
+                <div class="px-3 pb-1 text-[0.78rem] font-semibold uppercase tracking-wider text-slate-400">Admin</div>
                 <a href="{{ route('settings.index') }}" @click="mobileNav = false" @class([$drawerItem, $drawerOn => request()->routeIs('settings.*'), $drawerOff => ! request()->routeIs('settings.*')])>
                     <i class="bi bi-gear w-5 text-center text-base {{ request()->routeIs('settings.*') ? 'text-indigo-600' : 'text-slate-400' }}"></i><span>Settings</span>
                 </a>

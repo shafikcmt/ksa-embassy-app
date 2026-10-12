@@ -74,9 +74,9 @@
                         <label for="pl_security_code" class="mb-1 block text-sm font-semibold text-slate-700">
                             Security Code
                             @if($settings->hasSecurityCode())
-                                <span class="ml-1 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[0.65rem] font-semibold text-emerald-700"><i class="bi bi-check-circle-fill"></i> Set</span>
+                                <span class="ml-1 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[0.78rem] font-semibold text-emerald-700"><i class="bi bi-check-circle-fill"></i> Set</span>
                             @else
-                                <span class="ml-1 inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[0.65rem] font-semibold text-slate-500">Not set</span>
+                                <span class="ml-1 inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[0.78rem] font-semibold text-slate-500">Not set</span>
                             @endif
                         </label>
                         <input type="password" id="pl_security_code" name="pl_security_code" autocomplete="new-password"

@@ -90,11 +90,11 @@
                     {{-- License info (read-only, from subscription/license system) --}}
                     <div class="mb-4 flex flex-wrap gap-8 rounded-lg bg-slate-100 px-4 py-3">
                         <div>
-                            <div class="text-[0.68rem] uppercase tracking-wide text-slate-400">License No.</div>
+                            <div class="text-[0.78rem] uppercase tracking-wide text-slate-400">License No.</div>
                             <div class="text-sm text-slate-700">{{ $agency->license_number ?: '—' }}</div>
                         </div>
                         <div>
-                            <div class="text-[0.68rem] uppercase tracking-wide text-slate-400">License Expiry</div>
+                            <div class="text-[0.78rem] uppercase tracking-wide text-slate-400">License Expiry</div>
                             <div class="text-sm text-slate-700">{{ $agency->license_expiry_date?->format('d M Y') ?? '—' }}</div>
                         </div>
                     </div>
@@ -148,7 +148,7 @@
                     </x-ui.field>
 
                     <hr class="my-5 border-slate-100">
-                    <div class="mb-3 text-[0.68rem] font-semibold uppercase tracking-[0.04em] text-slate-400">Login &amp; Security</div>
+                    <div class="mb-3 text-[0.78rem] font-semibold uppercase tracking-[0.04em] text-slate-400">Login &amp; Security</div>
 
                     {{-- Login Email + Current Password --}}
                     <div class="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -276,7 +276,7 @@
 
                     @foreach($hrFieldGroups as $section => $fields)
                         <div class="mb-5">
-                            <div class="mb-2 text-[0.68rem] font-semibold uppercase tracking-[0.04em] text-slate-400">{{ $section }}</div>
+                            <div class="mb-2 text-[0.78rem] font-semibold uppercase tracking-[0.04em] text-slate-400">{{ $section }}</div>
                             <div class="overflow-hidden rounded-lg border border-slate-200">
                                 <table class="w-full text-sm">
                                     <thead>

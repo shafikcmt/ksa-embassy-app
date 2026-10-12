@@ -66,7 +66,7 @@
 
         @foreach($sections as [$title, $ico, $rows])
             <section class="rounded-xl border border-gray-200 bg-white shadow-sm" aria-labelledby="sec-{{ $loop->index }}">
-                <h2 id="sec-{{ $loop->index }}" class="flex items-center gap-2 border-b border-gray-100 px-5 py-3 text-[13px] font-bold uppercase tracking-wide text-gray-500">
+                <h2 id="sec-{{ $loop->index }}" class="flex items-center gap-2 border-b border-gray-100 px-5 py-3 text-sm font-bold uppercase tracking-wide text-gray-500">
                     <i class="bi {{ $ico }} text-blue-500" aria-hidden="true"></i> {{ $title }}
                 </h2>
                 <dl class="grid gap-x-6 gap-y-4 px-5 py-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -82,7 +82,7 @@
 
         @if($entry->remarks)
             <section class="rounded-xl border border-gray-200 bg-white px-5 py-4 shadow-sm">
-                <h2 class="text-[13px] font-bold uppercase tracking-wide text-gray-500">Remarks</h2>
+                <h2 class="text-sm font-bold uppercase tracking-wide text-gray-500">Remarks</h2>
                 <p class="mt-1 whitespace-pre-line text-sm text-gray-800">{{ $entry->remarks }}</p>
             </section>
         @endif
