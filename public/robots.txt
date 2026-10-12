@@ -1,2 +1,13 @@
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /dashboard
+Disallow: /super-admin
+Disallow: /erp
+Disallow: /hr
+Disallow: /embassy-lists
+Disallow: /agents
+Disallow: /settings
+Disallow: /profile
+Disallow: /api
+
+Sitemap: https://ksa.shafiqul.dev/sitemap.xml

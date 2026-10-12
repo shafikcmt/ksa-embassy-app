@@ -2,7 +2,7 @@
      @include('landing._hero-scenes', ['scene' => 'riyadh'|'haram'|'desert'|'flight']) --}}
 @switch($scene)
 @case('riyadh')
-<svg viewBox="0 0 1200 360" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+<svg viewBox="0 0 1200 360" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
   <defs><linearGradient id="gRy" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b3a63" stop-opacity=".0"/><stop offset="1" stop-color="#06233f" stop-opacity=".9"/></linearGradient></defs>
   <g fill="#0a2f52" opacity=".55">
     <rect x="40" y="230" width="60" height="130"/><rect x="110" y="200" width="46" height="160"/><rect x="170" y="250" width="70" height="110"/>
@@ -21,7 +21,7 @@
 </svg>
 @break
 @case('haram')
-<svg viewBox="0 0 1200 360" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+<svg viewBox="0 0 1200 360" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
   <g fill="#064e3b" opacity=".85">
     {{-- Minarets --}}
     <g><rect x="520" y="90" width="12" height="270"/><rect x="514" y="130" width="24" height="10"/><rect x="514" y="190" width="24" height="10"/><path d="M518 90l8-34 8 34z"/></g>
@@ -40,7 +40,7 @@
 </svg>
 @break
 @case('desert')
-<svg viewBox="0 0 1200 360" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+<svg viewBox="0 0 1200 360" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
   <circle cx="930" cy="120" r="64" fill="#fde68a" opacity=".85"/><circle cx="930" cy="120" r="92" fill="#fde68a" opacity=".18"/>
   <path d="M0 270c140-60 280-70 420-30s260 40 380-10 260-50 400 10v120H0z" fill="#92400e" opacity=".55"/>
   <path d="M0 310c180-50 330-40 480-5s330 30 720-25v80H0z" fill="#78350f" opacity=".8"/>
@@ -57,7 +57,7 @@
 </svg>
 @break
 @default
-<svg viewBox="0 0 1200 360" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+<svg viewBox="0 0 1200 360" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
   <g fill="#fff" opacity=".85">
     <ellipse cx="180" cy="300" rx="190" ry="46"/><ellipse cx="330" cy="318" rx="170" ry="40"/><ellipse cx="700" cy="320" rx="240" ry="48"/>
     <ellipse cx="1000" cy="300" rx="210" ry="50"/><ellipse cx="1130" cy="322" rx="140" ry="36"/>

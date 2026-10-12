@@ -3,8 +3,41 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="VisaDeskPro — a secure SaaS platform to manage HR records, agency applications, visa/application documents, payment requests and print-ready PDFs from one dashboard.">
-<title>{{ config('app.name', 'VisaDeskPro') }} — Smart Agency &amp; Visa Document Management Platform</title>
+@php
+  $seoTitle = 'VisaDeskPro — KSA Visa & Embassy File Management Software';
+  $seoDesc  = 'Manage HR records, KSA embassy lists, MOFA, medical, visa stamping, BMET, invoices and agent accounts in one secure dashboard. Print-ready A4 PDFs for manpower agencies.';
+  $seoImage = asset('images/og-cover.jpg');
+  $seoUrl   = url('/');
+@endphp
+<title>{{ $seoTitle }}</title>
+<meta name="description" content="{{ $seoDesc }}">
+<meta name="keywords" content="KSA visa software, embassy list, MOFA, visa stamping, BMET clearance, manpower agency software, recruiting agency ERP, Saudi visa processing, agent khata, invoice, Bangladesh">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta name="theme-color" content="#15497E">
+<link rel="canonical" href="{{ $seoUrl }}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="VisaDeskPro">
+<meta property="og:title" content="{{ $seoTitle }}">
+<meta property="og:description" content="{{ $seoDesc }}">
+<meta property="og:url" content="{{ $seoUrl }}">
+<meta property="og:image" content="{{ $seoImage }}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="VisaDeskPro — visa and embassy file management for Saudi recruiting agencies">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ $seoTitle }}">
+<meta name="twitter:description" content="{{ $seoDesc }}">
+<meta name="twitter:image" content="{{ $seoImage }}">
+<script type="application/ld+json">{!! json_encode([
+  '@context' => 'https://schema.org',
+  '@graph' => [
+    ['@type' => 'Organization', 'name' => 'VisaDeskPro', 'url' => $seoUrl, 'logo' => asset('favicon.ico')],
+    ['@type' => 'WebSite', 'name' => 'VisaDeskPro', 'url' => $seoUrl],
+    ['@type' => 'SoftwareApplication', 'name' => 'VisaDeskPro', 'applicationCategory' => 'BusinessApplication', 'operatingSystem' => 'Web',
+     'description' => $seoDesc, 'url' => $seoUrl, 'inLanguage' => 'en',
+     'featureList' => ['HR record management', 'KSA embassy list', 'MOFA and medical tracking', 'Visa stamping', 'Invoices and payment vouchers', 'Agent khata', 'Print-ready A4 PDF']],
+  ],
+], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
 <link rel="preconnect" href="https://fonts.bunny.net">
 <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800" rel="stylesheet" />
 <style>
@@ -234,7 +267,8 @@
   .slide.theme-haram{background:linear-gradient(160deg,#052e22 0%,#065f46 60%,#0e9f6e 130%)}
   .slide.theme-desert{background:linear-gradient(170deg,#3b1d0a 0%,#9a4a12 55%,#f59e0b 140%)}
   .slide.theme-flight{background:linear-gradient(170deg,#0b3a73 0%,#1d78c9 60%,#8ccbf5 130%)}
-  .slide-photo{position:absolute;inset:0;background-size:cover;background-position:center}
+  .slide-photo{position:absolute;inset:0}
+  .slide-photo img{width:100%;height:100%;object-fit:cover;object-position:center}
   .slide-photo::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(6,20,36,.82),rgba(6,20,36,.35) 70%,rgba(6,20,36,.2))}
   .slide-scene{position:absolute;left:0;right:0;bottom:0;height:62%;pointer-events:none;opacity:.95}
   .slide-scene svg{width:100%;height:100%}
@@ -404,19 +438,19 @@
 @php
   // Optional real photos: drop files into public/images/hero/ (slide-1.jpg … slide-4.jpg) and they replace the illustrations.
   $slides = [
-    ['scene' => 'riyadh', 'theme' => 'riyadh', 'eyebrow' => 'Built for recruiting & manpower agencies', 'photo' => 'slide-1.jpg',
+    ['scene' => 'riyadh', 'alt' => 'Riyadh skyline with Kingdom Centre and Al Faisaliyah towers, Saudi Arabia', 'theme' => 'riyadh', 'eyebrow' => 'Built for recruiting & manpower agencies', 'photo' => 'slide-1.jpg',
      'title' => '<span class="grad">VisaDeskPro</span> — Smart Agency & Visa Document Management',
      'lead' => 'Manage HR records, agency applications, embassy/application formats, payment requests, and print-ready documents from one secure SaaS dashboard.',
      'tags' => ['4 documents, one input', 'Auto barcode', 'A4 print-ready PDF'], 'mock' => true],
-    ['scene' => 'haram', 'theme' => 'haram', 'eyebrow' => 'Makkah · Madinah · Kingdom of Saudi Arabia', 'photo' => 'slide-2.jpg',
+    ['scene' => 'haram', 'alt' => 'Mosque domes and minarets in Makkah and Madinah, Saudi Arabia', 'theme' => 'haram', 'eyebrow' => 'Makkah · Madinah · Kingdom of Saudi Arabia', 'photo' => 'slide-2.jpg',
      'title' => 'Embassy-format applications, <span class="grad">exactly as required</span>',
      'lead' => 'Application, Forwarding, Agreement and Checklist generated in the official KSA layout — A4, barcode and photo placed correctly every time.',
      'tags' => ['Official KSA format', 'Barcode & photo', 'Preview before print']],
-    ['scene' => 'desert', 'theme' => 'desert', 'eyebrow' => 'Riyadh · AlUla · Jeddah', 'photo' => 'slide-3.jpg',
+    ['scene' => 'desert', 'alt' => 'Saudi desert at sunset with dunes, palm tree, camels and AlUla rock arch', 'theme' => 'desert', 'eyebrow' => 'Riyadh · AlUla · Jeddah', 'photo' => 'slide-3.jpg',
      'title' => 'MOFA, Medical, Stamping &amp; Delivery — <span class="grad">in one place</span>',
      'lead' => 'Type a passport number once. Name, DOB, visa and agent details fill in everywhere, so your team never retypes the same data.',
      'tags' => ['Auto-fill from passport', 'Agent-wise filters', 'Invoices & vouchers']],
-    ['scene' => 'flight', 'theme' => 'flight', 'eyebrow' => 'From file to flight', 'photo' => 'slide-4.jpg',
+    ['scene' => 'flight', 'alt' => 'Airplane flying above clouds, travel to the Kingdom of Saudi Arabia', 'theme' => 'flight', 'eyebrow' => 'From file to flight', 'photo' => 'slide-4.jpg',
      'title' => 'Secure, multi-agency and <span class="grad">ready to grow</span>',
      'lead' => 'Every agency sees only its own records. Role-based access, subscription control and secure backups keep your business safe.',
      'tags' => ['Multi-agency isolation', 'Role-based access', 'Secure backup']],
@@ -431,8 +465,8 @@
         $hasPhoto = (bool) $photoFile;
       @endphp
       <div class="slide theme-{{ $s['theme'] }} {{ $i === 0 ? 'is-active' : '' }}" data-slide role="group" aria-roledescription="slide" aria-label="{{ $i + 1 }} of {{ count($slides) }}" @if($i) aria-hidden="true" @endif>
-        @if($hasPhoto)<div class="slide-photo" style="background-image:url('{{ asset($photoFile) }}')"></div>@endif
-        <div class="slide-scene">@include('landing._hero-scenes', ['scene' => $s['scene']])</div>
+        @if($hasPhoto)<div class="slide-photo"><img src="{{ asset($photoFile) }}" alt="{{ $s['alt'] }}" width="1920" height="900" decoding="async" @if($i === 0) fetchpriority="high" @else loading="lazy" @endif></div>@endif
+        <div class="slide-scene" role="img" aria-label="{{ $s['alt'] }}">@include('landing._hero-scenes', ['scene' => $s['scene']])</div>
         <div class="wrap slide-grid {{ ($s['mock'] ?? false) ? 'has-mock' : '' }}">
           <div class="slide-copy">
             <span class="eyebrow"><span class="dot"></span> {{ $s['eyebrow'] }}</span>
