@@ -278,6 +278,23 @@
   @media(max-width:560px){.slide{min-height:620px}.hero-slider .hero-cta .btn{flex:1 1 100%}}
   @media (prefers-reduced-motion:reduce){.slide,.slide.is-active{transition:none}.slide.is-active .slide-copy>*,.slide.is-active .slide-scene svg{animation:none}}
 
+  /* ERP section */
+  .erp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .erp-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:26px;transition:transform .2s ease,box-shadow .2s ease}
+  .erp-card:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
+  .erp-card .ic{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;color:#fff;margin-bottom:14px}
+  .erp-card h3{font-size:18px;font-weight:800;margin-bottom:4px}
+  .erp-card>p{color:var(--muted);font-size:14px;margin-bottom:14px}
+  .erp-card ul{list-style:none;display:grid;gap:10px}
+  .erp-card li{display:flex;gap:10px;align-items:flex-start;font-size:15px;color:var(--ink)}
+  .erp-card li small{display:block;color:var(--slate);font-size:13.5px;font-weight:400;line-height:1.45}
+  .erp-card li b{font-weight:600}
+  .erp-card li .v{margin-top:3px}
+  .erp-strip{display:flex;flex-wrap:wrap;justify-content:center;gap:12px 28px;margin-top:34px;color:var(--navy-d);font-weight:600;font-size:15px}
+  .erp-strip span{display:inline-flex;align-items:center;gap:8px}
+  @media(max-width:1000px){.erp-grid{grid-template-columns:1fr 1fr}}
+  @media(max-width:700px){.erp-grid{grid-template-columns:1fr}}
+
   /* Important links */
   .links-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;max-width:1100px;margin:0 auto}
   .link-btn{display:flex;align-items:center;justify-content:center;gap:10px;height:56px;padding:0 18px;border-radius:999px;background:var(--navy);color:#fff;font-weight:700;font-size:16px;box-shadow:0 8px 18px -10px rgba(21,73,126,.6);transition:transform .18s ease,background .18s ease,box-shadow .18s ease}
@@ -339,6 +356,7 @@
     <nav class="nav-links">
       <a href="#features">Features</a>
       <a href="#how">How It Works</a>
+      <a href="#erp">ERP</a>
       <a href="#documents">Documents</a>
       <a href="#links">Links</a>
       <a href="#get-app">Get App</a>
@@ -361,6 +379,7 @@
     <div class="mobile-menu">
       <a href="#features">Features</a>
       <a href="#how">How It Works</a>
+      <a href="#erp">ERP</a>
       <a href="#documents">Documents</a>
       <a href="#links">Links</a>
       <a href="#get-app">Get App</a>
@@ -538,6 +557,63 @@
 </section>
 
 {{-- ===================== DOCUMENTS ===================== --}}
+{{-- ===================== ERP ===================== --}}
+@php
+  $erpTick = '<svg class="v" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+  $erpGroups = [
+    ['ic-indigo', 'M3 7h18M3 12h18M3 17h12', 'Processing', 'Track every passenger through each stage', [
+      ['Medical', 'Centre, status, issue &amp; expiry dates'],
+      ['MOFA &amp; Double MOFA', 'Visa entries with auto-filled passport data'],
+      ['Visa Stamping', 'Visa no., issue date, 90-day expiry auto-counted'],
+      ['BMET Clearance', 'Manpower clearance records and filters'],
+      ['Delivery', 'Handover tracking with amounts and status'],
+    ]],
+    ['ic-emerald', 'M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6', 'Accounts', 'Know exactly who owes what', [
+      ['Agent Khata', 'Agent-wise ledger, balance and statements'],
+      ['Invoices', 'Print one or many — 2 per A4 page'],
+      ['Payment Vouchers', 'Multi-select print, ready for signature'],
+      ['Expenses &amp; Due List', 'Daily expenses and outstanding dues'],
+    ]],
+    ['ic-indigo', 'M3 3v18h18|M7 15l4-4 3 3 5-6', 'Insights', 'Decide with live numbers', [
+      ['Profit / Loss', 'Income vs expense, per period'],
+      ['Reports', 'Filter by date and agent, print or export'],
+      ['Smart Notes', 'Reminders and notes beside your work'],
+      ['ERP Settings', 'Expense heads, defaults and preferences'],
+    ]],
+  ];
+@endphp
+<section id="erp">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="sec-tag">ERP</span>
+      <h2>Run the whole agency desk, not just the paperwork</h2>
+      <p>Medical, MOFA, stamping, delivery, agent accounts and invoices in one ERP — type a passport number once and it fills in everywhere.</p>
+    </div>
+    <div class="erp-grid">
+      @foreach($erpGroups as $g)
+        <div class="erp-card reveal-up">
+          <span class="ic {{ $g[0] }}">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">@foreach(explode('|',$g[1]) as $d)<path d="{{ $d }}"/>@endforeach</svg>
+          </span>
+          <h3>{{ $g[2] }}</h3>
+          <p>{{ $g[3] }}</p>
+          <ul>
+            @foreach($g[4] as $m)
+              <li>{!! $erpTick !!}<span><b>{!! $m[0] !!}</b><small>{!! $m[1] !!}</small></span></li>
+            @endforeach
+          </ul>
+        </div>
+      @endforeach
+    </div>
+    <div class="erp-strip">
+      <span>{!! $erpTick !!} Auto-fill from passport</span>
+      <span>{!! $erpTick !!} Agent-wise filters everywhere</span>
+      <span>{!! $erpTick !!} Instant list filtering, no page reload</span>
+      <span>{!! $erpTick !!} Each agency sees only its own data</span>
+    </div>
+  </div>
+</section>
+
 <section id="documents" class="soft">
   <div class="wrap">
     <div class="sec-head">

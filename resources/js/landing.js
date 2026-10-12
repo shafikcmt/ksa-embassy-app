@@ -25,7 +25,7 @@ function initReveals() {
     gsap.registerPlugin(ScrollTrigger);
 
     // Containers listed top-to-bottom in page order so ScrollTriggers refresh correctly.
-    const groups = ['.stats-grid', '.feat-grid', '.doc-grid', '.steps'];
+    const groups = ['.stats-grid', '.feat-grid', '.erp-grid', '.doc-grid', '.steps'];
 
     groups.forEach((selector) => {
         const container = document.querySelector(selector);
