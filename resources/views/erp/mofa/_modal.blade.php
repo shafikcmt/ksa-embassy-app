@@ -89,7 +89,7 @@ function mofaModal() {
             this.returnFocus=document.activeElement;this.id=id;this.f=Object.fromEntries(cfg.fields.map(k=>[k,'']));if(!id)this.f.mofa_date=cfg.today; /* new entry: MOFA Date starts as today (editable) */ this.validity=cfg.validity;this.passportCount=0;this.countVersion++;this.touched={};this.server={};this.message='';this.suggestions=[];this.failedLoad=false;this.lookupVersion++;const version=++this.openVersion;
             this.$refs.dialog.showModal();document.body.style.overflow='hidden';
             if(id){this.loading=true;try{const r=await fetch(cfg.base+'/'+id,{headers:{Accept:'application/json'}});if(!r.ok)throw Error('Unable to load this entry. Close and try again.');const data=await r.json();if(version===this.openVersion){this.f=Object.fromEntries(cfg.fields.map(k=>[k,data[k]??'']));this.checkPassport();}}catch(e){if(version===this.openVersion){this.message=e.message;this.failedLoad=true;}}finally{if(version===this.openVersion)this.loading=false;}}
-            this.$nextTick(()=>this.$refs.dialog.querySelector('[name="full_name"]')?.focus());
+            this.$nextTick(()=>this.$refs.dialog.querySelector(this.id?'[name="full_name"]':'[name="passport_number"]')?.focus());
         },
         close(){if(this.saving)return;this.openVersion++;this.lookupVersion++;clearTimeout(this.timer);this.loading=false;this.looking=false;this.$refs.dialog.close();document.body.style.overflow='';this.returnFocus?.focus();},
         changed(k){this.touched[k]=true;delete this.server[k];},

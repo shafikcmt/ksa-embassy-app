@@ -232,7 +232,8 @@
             openAdd() {
                 this.mode = 'add'; this.editId = null; this.reset();
                 this.show();
-                this.$nextTick(() => setTimeout(() => document.getElementById('md_full_name')?.focus(), 60));
+                // New entry: start on Passport — typing it fills the rest from the ERP/HR.
+                this.$nextTick(() => setTimeout(() => document.getElementById('md_passport_no')?.focus(), 60));
             },
             openEdit(id) {
                 this.mode = 'edit'; this.editId = id; this.reset();

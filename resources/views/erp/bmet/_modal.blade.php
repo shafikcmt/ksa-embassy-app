@@ -120,7 +120,7 @@ function bmetModal() {
             this.lookupVersion++;const version=++this.openVersion;
             this.$refs.dialog.showModal();document.body.style.overflow='hidden';
             if(id){this.loading=true;try{const r=await fetch(cfg.base+'/'+id,{headers:{Accept:'application/json'}});if(!r.ok)throw Error('Unable to load this entry. Close and try again.');const data=await r.json();if(version===this.openVersion){this.f=Object.assign(this.f,data);this.f.agent_id=this.f.agent_id??'';this.lastReference=this.selectedAgent()?.name||'';}}catch(e){if(version===this.openVersion){this.message=e.message;this.failedLoad=true;}}finally{if(version===this.openVersion)this.loading=false;}}
-            if(version===this.openVersion)this.$nextTick(()=>this.$refs.dialog.querySelector('[name="full_name"]')?.focus());
+            if(version===this.openVersion)this.$nextTick(()=>this.$refs.dialog.querySelector(this.id?'[name="full_name"]':'[name="passport_number"]')?.focus());
         },
         close(){if(this.saving||this.closing)return;this.openVersion++;this.lookupVersion++;clearTimeout(this.timer);this.loading=false;this.looking=false;this.closing=true;
             setTimeout(()=>{this.$refs.dialog.close();this.closing=false;document.body.style.overflow=this.previousOverflow;this.returnFocus?.focus();},window.matchMedia('(prefers-reduced-motion: reduce)').matches?0:150);},

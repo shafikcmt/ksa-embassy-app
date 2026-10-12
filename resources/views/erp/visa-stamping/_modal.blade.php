@@ -6,7 +6,7 @@
     Saves over fetch (JSON): 422 → inline errors, 200 → the server flashes the
     toast + row highlight and the list reloads. Passport → HR-profile dropdown
     (name / father / mother / DOB) and → latest MOFA entry (MOFA no/date, visa,
-    ID, issue/expiry). The auto-filled card is read-only until "Edit manually".
+    ID, issue date). Everything stays editable: known data is filled in, the rest is typed. Expiry is Issued + 90 days (not shown).
     Validation mirrors VisaStampingRequest; the server stays the authority.
 
     Expects: $statuses, $agentOptions.
@@ -24,15 +24,8 @@
     ], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE);
 
     $inp = \App\Support\ErpForm::INPUT;
-    // Auto-filled inputs: locked (gray) until "Edit manually"; no bg here so the binding decides.
-    $ro  = 'block w-full rounded-lg border px-3 py-2 text-sm shadow-sm transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20';
-
     // Field border/aria state keyed by field name (error lines come from x-erp.field).
     $state = fn (string $k) => 'x-bind:class="fieldError(\'' . $k . '\') ? \'' . \App\Support\ErpForm::BORDER_ERROR . '\' : \'' . \App\Support\ErpForm::BORDER_OK . '\'"'
-        . ' x-bind:aria-invalid="fieldError(\'' . $k . '\') ? \'true\' : \'false\'" aria-describedby="vs-err-' . $k . '"';
-    // Auto-filled (read-only until "Edit manually") input state.
-    $auto = fn (string $k) => 'x-bind:readonly="!manual" x-bind:tabindex="manual ? 0 : -1"'
-        . ' x-bind:class="[manual ? \'bg-white text-slate-800\' : \'cursor-not-allowed bg-slate-100 text-slate-500\', fieldError(\'' . $k . '\') ? \'' . \App\Support\ErpForm::BORDER_ERROR . '\' : \'' . \App\Support\ErpForm::BORDER_OK . '\']"'
         . ' x-bind:aria-invalid="fieldError(\'' . $k . '\') ? \'true\' : \'false\'" aria-describedby="vs-err-' . $k . '"';
 @endphp
 <script type="application/json" id="stamping-modal-config">{!! $cfgJson !!}</script>
@@ -89,52 +82,39 @@
             </x-erp.field>
         </x-erp.section>
 
-        {{-- Section 2 — Auto-filled details (read-only until "Edit manually") --}}
-        <x-erp.section id="vs-sec-auto" icon="bi-magic" title="Auto-filled Details">
+        {{-- Section 2 — Passport & visa details: filled automatically when the ERP/HR already knows the passport, otherwise typed --}}
+        <x-erp.section id="vs-sec-auto" icon="bi-card-checklist" title="Passport & Visa Details">
             <x-slot:actions>
                 <span x-show="mofa.linked" x-cloak class="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700 ring-1 ring-inset ring-brand-200">
                     <i class="bi bi-link-45deg" aria-hidden="true"></i> <span x-text="'Linked to MOFA ' + (mofa.number || '')"></span>
                 </span>
                 <span x-show="mofa.checked && !mofa.linked" x-cloak class="text-xs text-slate-500">No MOFA entry for this passport</span>
-                <button type="button" x-on:click="manual = !manual" x-bind:aria-pressed="manual ? 'true' : 'false'"
-                        class="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-semibold ring-1 ring-inset transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-                        x-bind:class="manual ? 'bg-amber-50 text-amber-800 ring-amber-200' : 'bg-white text-slate-600 ring-slate-300 hover:bg-slate-50'">
-                    <i class="bi" x-bind:class="manual ? 'bi-unlock' : 'bi-lock'" aria-hidden="true"></i>
-                    <span x-text="manual ? 'Editing manually' : 'Edit manually'"></span>
-                </button>
             </x-slot:actions>
 
             <x-erp.field label="Father's Name" for="vs_father" error="fieldError('father_name')" error-id="vs-err-father_name">
-                <input id="vs_father" type="text" maxlength="100" x-model="f.father_name" class="{{ $ro }}" {!! $auto('father_name') !!}>
+                <input id="vs_father" type="text" maxlength="100" x-model="f.father_name" class="{{ $inp }}" {!! $state('father_name') !!}>
             </x-erp.field>
             <x-erp.field label="Mother's Name" for="vs_mother" error="fieldError('mother_name')" error-id="vs-err-mother_name">
-                <input id="vs_mother" type="text" maxlength="100" x-model="f.mother_name" class="{{ $ro }}" {!! $auto('mother_name') !!}>
+                <input id="vs_mother" type="text" maxlength="100" x-model="f.mother_name" class="{{ $inp }}" {!! $state('mother_name') !!}>
             </x-erp.field>
             <x-erp.field label="Date of Birth" for="vs_dob" error="fieldError('date_of_birth')" error-id="vs-err-date_of_birth">
-                <input id="vs_dob" type="date" x-model="f.date_of_birth" x-on:change="touch('date_of_birth')" class="{{ $ro }}" {!! $auto('date_of_birth') !!}>
+                <input id="vs_dob" type="date" x-model="f.date_of_birth" x-on:change="touch('date_of_birth')" class="{{ $inp }}" {!! $state('date_of_birth') !!}>
             </x-erp.field>
             <x-erp.field label="Age" for="vs_age" auto>
                 <input id="vs_age" type="text" readonly tabindex="-1" x-bind:value="age()" placeholder="—" class="{{ \App\Support\ErpForm::READONLY }}">
             </x-erp.field>
             <x-erp.field label="MOFA Number" for="vs_mofa_no" error="fieldError('mofa_number')" error-id="vs-err-mofa_number">
-                <input id="vs_mofa_no" type="text" maxlength="100" x-model="f.mofa_number" class="{{ $ro }}" {!! $auto('mofa_number') !!}>
+                <input id="vs_mofa_no" type="text" maxlength="100" x-model="f.mofa_number" class="{{ $inp }}" {!! $state('mofa_number') !!}>
             </x-erp.field>
             <x-erp.field label="MOFA Date" for="vs_mofa_date" error="fieldError('mofa_date')" error-id="vs-err-mofa_date">
-                <input id="vs_mofa_date" type="date" x-model="f.mofa_date" class="{{ $ro }}" {!! $auto('mofa_date') !!}>
+                <input id="vs_mofa_date" type="date" x-model="f.mofa_date" class="{{ $inp }}" {!! $state('mofa_date') !!}>
             </x-erp.field>
             <x-erp.field label="Issued Visa Number" for="vs_issued_visa" error="fieldError('issued_visa_number')" error-id="vs-err-issued_visa_number">
-                <input id="vs_issued_visa" type="text" maxlength="100" x-model="f.issued_visa_number" class="{{ $ro }}" {!! $auto('issued_visa_number') !!}>
+                <input id="vs_issued_visa" type="text" maxlength="100" x-model="f.issued_visa_number" class="{{ $inp }}" {!! $state('issued_visa_number') !!}>
             </x-erp.field>
-            <x-erp.field label="Issued Date" for="vs_issued_date" error="fieldError('issued_date')" error-id="vs-err-issued_date">
-                <input id="vs_issued_date" type="date" x-model="f.issued_date" x-on:change="touch('expiry_date')" class="{{ $ro }}" {!! $auto('issued_date') !!}>
-            </x-erp.field>
-            <x-erp.field label="Expiry Date" for="vs_expiry" error="fieldError('expiry_date')" error-id="vs-err-expiry_date">
-                <input id="vs_expiry" type="date" x-model="f.expiry_date" x-bind:min="f.issued_date || null" x-on:change="touch('expiry_date')" class="{{ $ro }}" {!! $auto('expiry_date') !!}>
-            </x-erp.field>
-            {{-- Left Day: red input when under the warning threshold (no helper text). --}}
-            <x-erp.field label="Left Day" for="vs_left" auto>
-                <input id="vs_left" type="text" readonly tabindex="-1" x-bind:value="leftDay() === '' ? '' : leftDay() + ' days'" placeholder="—"
-                       x-bind:class="leftLow() ? '{{ \App\Support\ErpForm::READONLY_ALERT }}' : '{{ \App\Support\ErpForm::READONLY }}'">
+            {{-- Expiry (= Issued + 90 days) and Left Day are worked out for you — no fields to fill. --}}
+            <x-erp.field label="Issued Date" for="vs_issued_date" error="fieldError('issued_date') || fieldError('expiry_date')" error-id="vs-err-issued_date">
+                <input id="vs_issued_date" type="date" x-model="f.issued_date" class="{{ $inp }}" {!! $state('issued_date') !!}>
             </x-erp.field>
         </x-erp.section>
 
@@ -195,7 +175,7 @@
 
         return {
             cfg,
-            open: false, mode: 'add', editId: null, loadingEntry: false, submitting: false, manual: false,
+            open: false, mode: 'add', editId: null, loadingEntry: false, submitting: false,
             f: blank(), touched: {}, server: {}, serverSnapshot: {}, returnFocus: null,
             mofa: { checked: false, linked: false, number: '' },
 
@@ -206,10 +186,9 @@
                 // Visa validity: Expiry Date follows Issued Date + 90 days. A value the user typed (or one that
                 // was saved) is never overwritten; only an empty or still-automatic expiry moves with the issue date.
                 this.$watch('f.issued_date', (value, previous) => {
-                    if (!value) return;
-                    const auto = this.addDays(value, cfg.validDays);
                     const before = previous ? this.addDays(previous, cfg.validDays) : '';
-                    if (!this.f.expiry_date || this.f.expiry_date === before) this.f.expiry_date = auto;
+                    if (!value) { if (before && this.f.expiry_date === before) this.f.expiry_date = ''; return; }
+                    if (!this.f.expiry_date || this.f.expiry_date === before) this.f.expiry_date = this.addDays(value, cfg.validDays);
                 });
                 if (cfg.openAdd) this.$nextTick(() => this.openAdd());
                 else if (cfg.openEdit) this.$nextTick(() => this.openEdit(cfg.openEdit));
@@ -219,7 +198,7 @@
             reset(data) {
                 this.f = Object.assign(blank(), data || {});
                 for (const k in this.f) if (this.f[k] === null) this.f[k] = '';
-                this.touched = {}; this.server = {}; this.manual = false;
+                this.touched = {}; this.server = {};
                 this.mofa = { checked: false, linked: !!this.f.mofa_number, number: this.f.mofa_number };
             },
             show() {
@@ -229,7 +208,8 @@
             },
             openAdd() {
                 this.mode = 'add'; this.editId = null; this.reset(); this.show();
-                this.$nextTick(() => setTimeout(() => document.getElementById('vs_full_name')?.focus(), 60));
+                // New entry: start on Passport — typing it fills the rest from the ERP/HR.
+                this.$nextTick(() => setTimeout(() => document.getElementById('vs_passport')?.focus(), 60));
             },
             openEdit(id) {
                 this.mode = 'edit'; this.editId = id; this.reset();
@@ -321,7 +301,6 @@
                 if (!this.isValid() || this.submitting) {
                     const first = Object.keys(this.clientErrors())[0];
                     if (first) {
-                        if (!['full_name', 'passport_number', 'stamping_date', 'status'].includes(first)) this.manual = true;
                         this.$nextTick(() => this.$refs.panel.querySelector('[x-model="f.' + first + '"]')?.focus());
                     }
                     return;
@@ -347,9 +326,6 @@
                         if (status === 422 && data.errors) {
                             this.serverSnapshot = Object.assign({}, this.f);
                             this.server = data.errors;
-                            // An error in a locked auto-filled field needs it unlocked to fix.
-                            const autoKeys = ['father_name', 'mother_name', 'date_of_birth', 'mofa_number', 'mofa_date', 'issued_visa_number', 'issued_date', 'expiry_date'];
-                            if (Object.keys(data.errors).some(k => autoKeys.includes(k))) this.manual = true;
                             this.toast('error', data.errors.passport_number?.[0] === 'Passport number already exists'
                                 ? 'Passport number already exists' : 'Please fix the highlighted fields.');
                             return;
