@@ -1,5 +1,5 @@
 @php
-$config = ['base'=>url('erp/bmet'), 'search'=>route('erp.bmet.hr-search'), 'today'=>today()->toDateString(), 'csrf'=>csrf_token(), 'add'=>request()->boolean('add'), 'edit'=>(int)request('edit'), 'agents'=>$agents->values(), 'fields'=>array_merge(\App\Http\Controllers\Erp\BmetController::FIELDS,['agent_id','status'])];
+$config = ['base'=>url('erp/bmet'), 'search'=>route('erp.bmet.hr-search'), 'today'=>today()->toDateString(), 'validityDays'=>\App\Models\ManpowerCompletion::EC_VALIDITY_DAYS, 'csrf'=>csrf_token(), 'add'=>request()->boolean('add'), 'edit'=>(int)request('edit'), 'agents'=>$agents->values(), 'fields'=>array_merge(\App\Http\Controllers\Erp\BmetController::FIELDS,['agent_id','status'])];
 $inp = \App\Support\ErpForm::INPUT;
 // Border/aria state for a field key; bmetModal() focuses the first error by [name] / [aria-invalid].
 $state = fn (string $k) => 'x-bind:class="error(\'' . $k . '\') ? \'' . \App\Support\ErpForm::BORDER_ERROR . '\' : \'' . \App\Support\ErpForm::BORDER_OK . '\'"'
@@ -116,7 +116,7 @@ function bmetModal() {
         async open(id=null){
             if(this.$refs.dialog.open||this.closing)return;
             this.returnFocus=document.activeElement;this.previousOverflow=document.body.style.overflow;
-            this.id=id;this.f=Object.fromEntries(cfg.fields.map(k=>[k,'']));this.f.status='auto';this.touched={};this.server={};this.message='';this.suggestions=[];this.lookupMessage='';this.failedLoad=false;this.manualVisa=true;this.lastReference='';
+            this.id=id;this.f=Object.fromEntries(cfg.fields.map(k=>[k,'']));this.f.status='auto';if(!id)this.f.ec_date=cfg.today;this.touched={};this.server={};this.message='';this.suggestions=[];this.lookupMessage='';this.failedLoad=false;this.manualVisa=true;this.lastReference='';
             this.lookupVersion++;const version=++this.openVersion;
             this.$refs.dialog.showModal();document.body.style.overflow='hidden';
             if(id){this.loading=true;try{const r=await fetch(cfg.base+'/'+id,{headers:{Accept:'application/json'}});if(!r.ok)throw Error('Unable to load this entry. Close and try again.');const data=await r.json();if(version===this.openVersion){this.f=Object.assign(this.f,data);this.f.agent_id=this.f.agent_id??'';this.lastReference=this.selectedAgent()?.name||'';}}catch(e){if(version===this.openVersion){this.message=e.message;this.failedLoad=true;}}finally{if(version===this.openVersion)this.loading=false;}}
@@ -130,7 +130,7 @@ function bmetModal() {
             for(const k of ['full_name','father_name','passport_number','visa_number','id_number','ec_number'])if(String(this.f[k]??'').length>100)e[k]='Use no more than 100 characters';
             return e;},
         error(k){return this.server[k]?.[0]||(this.touched[k]?this.errors()[k]:'')||'';},
-        expiry(){if(!this.f.ec_date)return '';const [y,m,d]=this.f.ec_date.split('-').map(Number);const lastDay=new Date(Date.UTC(y+1,m,0)).getUTCDate();return new Date(Date.UTC(y+1,m-1,Math.min(d,lastDay))).toISOString().slice(0,10);},
+        expiry(){if(!this.f.ec_date)return '';const [y,m,d]=this.f.ec_date.split('-').map(Number);return new Date(Date.UTC(y,m-1,d+cfg.validityDays)).toISOString().slice(0,10);},
         statusPreview(){let status=this.f.status||'auto';if(status==='auto')status=String(this.f.ec_number||'').trim()?'cleared':'pending';return status==='cleared'&&this.expiry()&&this.expiry()<cfg.today?'expired':status;},
         expiringSoon(){const days=(Date.parse(this.expiry())-Date.parse(cfg.today))/86400000;return this.statusPreview()==='cleared'&&days>=0&&days<30;},
         selectedAgent(){return cfg.agents.find(a=>String(a.id)===String(this.f.agent_id));},

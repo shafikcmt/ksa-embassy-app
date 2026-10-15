@@ -26,10 +26,13 @@ class ManpowerCompletion extends Model
         'ec_expiry_date' => 'date',
     ];
 
+    /** An EC / BMET clearance is valid for this many calendar days from its date (never longer). */
+    public const EC_VALIDITY_DAYS = 90;
+
     protected static function booted(): void
     {
         static::saving(function (self $entry) {
-            $entry->ec_expiry_date = $entry->completed_date?->copy()->addYearNoOverflow();
+            $entry->ec_expiry_date = $entry->completed_date?->copy()->addDays(self::EC_VALIDITY_DAYS);
             if (! $entry->status) {
                 $entry->status = filled($entry->ec_number) ? 'cleared' : 'pending';
             }

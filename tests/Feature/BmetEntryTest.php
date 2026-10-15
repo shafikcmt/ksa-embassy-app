@@ -139,21 +139,30 @@ class BmetEntryTest extends TestCase
         $this->assertStringNotContainsString('BMET Passenger', $this->get(route('erp.bmet.export'))->streamedContent());
     }
 
-    public function test_status_boundaries_and_leap_year_expiry(): void
+    public function test_status_boundaries_and_ninety_day_expiry(): void
     {
-        $e = $this->entry(['ec_date' => '2025-09-24']);
+        // Expiry is exactly 90 days after the EC date; "cleared" turns "expired" the day after.
+        $e = $this->entry(['ec_date' => today()->subDays(91)->toDateString()]);
         $this->assertSame('expired', $e->effective_status);
-        $e->update(['ec_date' => '2025-09-25']);
+        $e->update(['ec_date' => today()->subDays(90)->toDateString()]);
         $this->assertSame('cleared', $e->effective_status);
+        $this->assertSame(today()->toDateString(), $e->ec_expiry_date->toDateString());
         $this->assertTrue($e->expiring_soon);
-        $e->update(['ec_date' => '2025-10-25']);
+        $e->update(['ec_date' => today()->subDays(59)->toDateString()]);
         $this->assertFalse($e->expiring_soon);
         $e->update(['status' => 'hold', 'ec_date' => '2020-01-01']);
         $this->assertSame('hold', $e->effective_status);
         $e->update(['status' => 'pending']);
         $this->assertSame('pending', $e->effective_status);
         $e->update(['ec_date' => '2024-02-29']);
-        $this->assertSame('2025-02-28', $e->ec_expiry_date->toDateString());
+        $this->assertSame('2024-05-29', $e->ec_expiry_date->toDateString());
+    }
+
+    public function test_modal_defaults_ec_date_to_today_and_shows_ninety_day_expiry(): void
+    {
+        $html = $this->actingAs($this->admin)->get(route('erp.bmet.index'))->assertOk()->getContent();
+        $this->assertStringContainsString('"validityDays":90', $html);
+        $this->assertStringContainsString('this.f.ec_date=cfg.today', $html);
     }
 
     public function test_automatic_pending_and_manual_hold_are_supported(): void
