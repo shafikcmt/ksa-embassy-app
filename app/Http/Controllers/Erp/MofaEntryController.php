@@ -218,8 +218,7 @@ class MofaEntryController extends Controller
                     continue;
                 }
                 // CSV rows often lack candidate details: fill blanks from the passport's other ERP / HR records.
-                $attrs = app(\App\Services\ErpPassportDataService::class)->fillMissing(
-                    $row['attrs'], $agencyId, $row['attrs']['passport_number'] ?? $row['attrs']['passport_no'] ?? null, MofaController::AUTOFILL_MAP);
+                $attrs = app(\App\Services\ErpPassportDataService::class)->fillForModule('mofa', $row['attrs'], $agencyId, (string) ($row['attrs']['passport_number'] ?? $row['attrs']['passport_no'] ?? ''));
                 $entry = MofaEntry::create($attrs + [
                     'agency_id'  => $agencyId,
                     'created_by' => auth()->id(),

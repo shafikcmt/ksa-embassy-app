@@ -402,7 +402,9 @@ class DeliveryController extends Controller
         // no ErpPaymentService call, so payment_receipts is never written.
         DB::transaction(function () use ($result, $agencyId) {
             foreach ($result['rows'] as $row) {
-                Delivery::create($row['attrs'] + [
+                // CSV rows often lack the visa no.: fill it from the passport's other ERP / HR records.
+                $attrs = app(\App\Services\ErpPassportDataService::class)->fillForModule('delivery', $row['attrs'], $agencyId, (string) ($row['attrs']['passport_no'] ?? ''));
+                Delivery::create($attrs + [
                     'agency_id'  => $agencyId,
                     'created_by' => auth()->id(),
                     'updated_by' => auth()->id(),

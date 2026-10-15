@@ -47,6 +47,20 @@ class ErpPassportDataService
         'hr'       => 'HR Profile',
     ];
 
+    /**
+     * Per module: model, its passport column, and the candidate fields that may be auto-filled when
+     * blank (canonical field => model attribute). Entry-specific values (MOFA no/date, money, status,
+     * dates of the module's own process, reference/agent) are deliberately never listed.
+     */
+    public const AUTOFILL = [
+        'medical'     => ['model' => Medical::class,      'passport' => 'passport_no',     'map' => ['father_name' => 'father_name', 'date_of_birth' => 'date_of_birth', 'mobile_no' => 'mobile_no']],
+        'mofa'        => ['model' => MofaEntry::class,    'passport' => 'passport_no',     'map' => ['father_name' => 'father_name', 'mother_name' => 'mother_name', 'date_of_birth' => 'date_of_birth', 'passport_issue_date' => 'issue_date', 'passport_expiry_date' => 'expiry_date', 'visa_number' => 'visa_number', 'id_number' => 'id_number']],
+        'stamping'    => ['model' => VisaStamping::class, 'passport' => 'passport_number', 'map' => ['father_name' => 'father_name', 'mother_name' => 'mother_name', 'date_of_birth' => 'date_of_birth', 'visa_number' => 'visa_number', 'id_number' => 'id_number']],
+        'bmet'        => ['model' => BmetEntry::class,    'passport' => 'passport_number', 'map' => ['father_name' => 'father_name', 'visa_number' => 'visa_number', 'id_number' => 'id_number']],
+        'delivery'    => ['model' => Delivery::class,     'passport' => 'passport_no',     'map' => ['visa_number' => 'visa_serial']],
+        'double_mofa' => ['model' => DoubleMofa::class,   'passport' => 'passport_no',     'map' => ['visa_number' => 'visa_serial']],
+    ];
+
     /** Which sources may supply each canonical field, highest priority first. */
     public const FIELD_PRIORITY = [
         'full_name'            => ['medical', 'mofa', 'stamping', 'bmet', 'delivery', 'double_mofa', 'hr'],
@@ -112,6 +126,12 @@ class ErpPassportDataService
         }
 
         return $data;
+    }
+
+    /** fillMissing() with a module's own field map (see AUTOFILL); $excludeId = the record being saved. */
+    public function fillForModule(string $module, array $attrs, int $agencyId, string $passport, ?int $excludeId = null): array
+    {
+        return $this->fillMissing($attrs, $agencyId, $passport, self::AUTOFILL[$module]['map'], $excludeId ? [$module, $excludeId] : null);
     }
 
     private function merge(array $sources): array

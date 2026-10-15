@@ -92,4 +92,30 @@ class MofaAutofillOnSaveTest extends TestCase
         $this->assertSame('1306344922', $blank->visa_number);
         $this->assertSame('E824469156', $blank->mofa_number);
     }
+
+    public function test_backfill_covers_every_module_from_the_same_passport(): void
+    {
+        $this->existing($this->agency); // MOFA holds father / mother / DOB / visa / ID
+        $a = $this->agency->id;
+        $stamp = \App\Models\VisaStamping::create(['agency_id' => $a, 'stamping_date' => '2026-09-01', 'full_name' => 'S', 'passport_number' => 'A04886630', 'status' => 'pending']);
+        $bmet = \App\Models\BmetEntry::forceCreate(['agency_id' => $a, 'completed_date' => '2026-09-01', 'full_name' => 'S', 'passport_number' => 'A04886630', 'status' => 'pending']);
+        $del = \App\Models\Delivery::create(['agency_id' => $a, 'delivery_date' => '2026-09-01', 'full_name' => 'S', 'passport_no' => 'A04886630', 'total_amount' => 0, 'status' => 'pending']);
+        $dbl = \App\Models\DoubleMofa::create(['agency_id' => $a, 'mofa_date' => '2026-09-01', 'full_name' => 'S', 'passport_no' => 'A04886630']);
+
+        $this->artisan('erp:backfill-blanks')->assertSuccessful();
+
+        $stamp = $stamp->fresh();
+        $this->assertSame('SUSHIL', $stamp->father_name);
+        $this->assertSame('DIPA', $stamp->mother_name);
+        $this->assertSame('1306344922', $stamp->visa_number);
+        $this->assertSame('SUSHIL', $bmet->fresh()->father_name);
+        $this->assertSame('7023490084', $bmet->fresh()->id_number);
+        $this->assertSame('1306344922', $del->fresh()->visa_serial);
+        $this->assertSame('1306344922', $dbl->fresh()->visa_serial);
+    }
+
+    public function test_backfill_rejects_an_unknown_module(): void
+    {
+        $this->artisan('erp:backfill-blanks', ['--module' => 'nope'])->assertFailed();
+    }
 }
