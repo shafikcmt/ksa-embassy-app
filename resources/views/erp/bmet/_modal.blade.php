@@ -12,15 +12,16 @@ $ro = 'block w-full rounded-lg border px-3 py-2 text-sm shadow-sm transition foc
 @endphp
 <script type="application/json" id="bmet-config">{!! json_encode($config,JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT) !!}</script>
 <div x-data="bmetModal()" @bmet-add.window="open()" @bmet-edit.window="open($event.detail.id)"
-     @erp-autofilled="if ($event.detail.keys.some(k => ['visa_number', 'id_number'].includes(k))) manualVisa = false">
-    <x-erp.modal kind="dialog" icon="bi-person-check" title-id="bm-dialog-title"
+    >
+    <x-erp.modal kind="dialog" size="wide" dense icon="bi-person-check" title-id="bm-dialog-title"
                  title="id ? 'Edit BMET Clearance Entry' : 'Add BMET Clearance Entry'"
                  submit="save()" close="close()" busy="saving" disabled="saving || failedLoad" edit="!!id" loading="loading"
                  class="transition duration-150" x-bind:class="closing ? 'opacity-0 scale-95' : ''">
         <p x-show="message" x-text="message" role="alert" class="rounded-lg bg-red-50 p-3 text-sm font-medium text-red-700"></p>
 
         {{-- Section 1 — Candidate --}}
-        <x-erp.section icon="bi-person-vcard" title="Candidate Information">
+        {{-- One compact card, 3 columns: candidate · EC/visa numbers · dates/status · reference + remarks --}}
+        <x-erp.section dense icon="bi-person-vcard" title="BMET Clearance Details">
             <x-erp.field label="Passenger Name" for="bm-full_name" required error="error('full_name')" error-id="bm-error-full_name">
                 <input id="bm-full_name" name="full_name" type="text" maxlength="100" class="{{ $inp }}" x-model="f.full_name" @input="changed('full_name')" @blur="touched.full_name=true" required {!! $state('full_name') !!}>
             </x-erp.field>
@@ -45,56 +46,35 @@ $ro = 'block w-full rounded-lg border px-3 py-2 text-sm shadow-sm transition foc
             <x-erp.field label="Father’s Name" for="bm-father_name" error="error('father_name')" error-id="bm-error-father_name">
                 <input id="bm-father_name" name="father_name" type="text" maxlength="100" class="{{ $inp }}" x-model="f.father_name" @input="changed('father_name')" @blur="touched.father_name=true" {!! $state('father_name') !!}>
             </x-erp.field>
-        </x-erp.section>
-
-        {{-- Section 2 — BMET details --}}
-        <x-erp.section icon="bi-patch-check" title="BMET Details">
             <x-erp.field label="EC Number" for="bm-ec_number" error="error('ec_number')" error-id="bm-error-ec_number">
                 <input id="bm-ec_number" name="ec_number" type="text" maxlength="100" class="{{ $inp }}" x-model="f.ec_number" @input="changed('ec_number')" @blur="touched.ec_number=true" {!! $state('ec_number') !!}>
             </x-erp.field>
-            {{-- Reference = the agent (single field); the agent link is derived from the name on save. --}}
-            <x-erp.field label="Reference" for="bm_reference" error="error('reference')" error-id="bm-error-reference">
-                <x-erp.select-search id="bm_reference" :agents="$agentOptions ?? []" x-model="f.reference" @input="changed('reference')" />
-            </x-erp.field>
-        </x-erp.section>
-
-        {{-- Section 3 — Visa details (read-only after auto-fill unless edited manually) --}}
-        <x-erp.section icon="bi-postage" title="Visa Details">
-            <x-slot:actions>
-                <label class="flex items-center gap-2 text-xs font-medium text-slate-600"><input type="checkbox" x-model="manualVisa" class="rounded border-slate-300 text-brand-600 focus:ring-brand-500"> Enter or edit manually</label>
-            </x-slot:actions>
             <x-erp.field label="Visa Number" for="bm-visa_number" error="error('visa_number')" error-id="bm-error-visa_number">
-                <input id="bm-visa_number" name="visa_number" type="text" maxlength="100" class="{{ $ro }}" x-model="f.visa_number" @input="changed('visa_number')" @blur="touched.visa_number=true" {!! $visaState('visa_number') !!}>
+                <input id="bm-visa_number" name="visa_number" type="text" maxlength="100" class="{{ $inp }}" x-model="f.visa_number" @input="changed('visa_number')" @blur="touched.visa_number=true" {!! $state('visa_number') !!}>
             </x-erp.field>
             <x-erp.field label="ID Number" for="bm-id_number" error="error('id_number')" error-id="bm-error-id_number">
-                <input id="bm-id_number" name="id_number" type="text" maxlength="100" class="{{ $ro }}" x-model="f.id_number" @input="changed('id_number')" @blur="touched.id_number=true" {!! $visaState('id_number') !!}>
+                <input id="bm-id_number" name="id_number" type="text" maxlength="100" class="{{ $inp }}" x-model="f.id_number" @input="changed('id_number')" @blur="touched.id_number=true" {!! $state('id_number') !!}>
             </x-erp.field>
-        </x-erp.section>
-
-        {{-- Section 4 — Dates & status --}}
-        <x-erp.section icon="bi-calendar2-check" title="Dates & Status">
             <x-erp.field label="BMET Date (EC Date)" for="bm-ec_date" required error="error('ec_date')" error-id="bm-error-ec_date">
                 <input id="bm-ec_date" name="ec_date" type="date" max="{{ today()->toDateString() }}" class="{{ $inp }}" x-model="f.ec_date" @input="changed('ec_date')" @blur="touched.ec_date=true" required {!! $state('ec_date') !!}>
             </x-erp.field>
             <x-erp.field label="Status" for="bm-status" error="error('status')" error-id="bm-error-status">
                 <select id="bm-status" name="status" class="{{ $inp }}" x-model="f.status" @change="changed('status')" {!! $state('status') !!}>
-                    <option value="auto">Automatic from EC details</option>
+                    <option value="auto" x-text="'Automatic → ' + statusPreview().charAt(0).toUpperCase() + statusPreview().slice(1)">Automatic</option>
                     @foreach(\App\Models\BmetEntry::STATUSES as $keyStatus=>$labelStatus)<option value="{{ $keyStatus }}">{{ $labelStatus }}</option>@endforeach
                 </select>
-                {{-- Only for "Automatic": show what it resolves to. --}}
-                <p x-show="f.status === 'auto'" x-cloak class="mt-1 text-xs text-slate-500">Resolves to: <strong class="font-semibold text-slate-700" x-text="statusPreview().charAt(0).toUpperCase() + statusPreview().slice(1)"></strong></p>
             </x-erp.field>
-            {{-- Tracked one-year validity (display only, not saved); red when within 30 days. --}}
+            {{-- EC validity (display only, not saved); red when within 30 days of expiry. --}}
             <x-erp.field label="Valid Until" for="bm-valid_until" auto>
                 <input id="bm-valid_until" type="date" readonly tabindex="-1" x-bind:value="expiry()"
                        x-bind:class="expiringSoon() ? '{{ \App\Support\ErpForm::READONLY_ALERT }}' : '{{ \App\Support\ErpForm::READONLY }}'">
             </x-erp.field>
-        </x-erp.section>
-
-        {{-- Section 5 — Additional --}}
-        <x-erp.section icon="bi-journal-text" title="Additional Info">
-            <x-erp.textarea label="Remarks" id="bm-remarks" name="remarks" maxlength="2000" x-model="f.remarks" x-on:input="changed('remarks')"
-                            error="error('remarks')" error-id="bm-error-remarks" />
+            <x-erp.field label="Reference" for="bm_reference" error="error('reference')" error-id="bm-error-reference">
+                <x-erp.select-search id="bm_reference" :agents="$agentOptions ?? []" x-model="f.reference" @input="changed('reference')" />
+            </x-erp.field>
+            <x-erp.field label="Remarks" for="bm-remarks" class="sm:col-span-2 lg:col-span-2" error="error('remarks')" error-id="bm-error-remarks">
+                <textarea id="bm-remarks" name="remarks" rows="2" maxlength="2000" x-model="f.remarks" x-on:input="changed('remarks')" placeholder="Optional note" class="{{ \App\Support\ErpForm::TEXTAREA }} {{ \App\Support\ErpForm::BORDER_OK }}"></textarea>
+            </x-erp.field>
         </x-erp.section>
     </x-erp.modal>
 </div>
