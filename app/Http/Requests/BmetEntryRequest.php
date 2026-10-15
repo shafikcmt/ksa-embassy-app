@@ -51,6 +51,8 @@ class BmetEntryRequest extends FormRequest
             'passport_number' => ['required', 'string', 'max:100', Rule::unique('manpower_completions', 'passport_no')->where('agency_id', $this->user()->agency_id)->whereNull('deleted_at')->ignore($this->route('bmetEntry')?->id)],
             'visa_number' => ['nullable', 'string', 'max:100'],
             'id_number' => ['nullable', 'string', 'max:100'],
+            'mofa_number' => ['nullable', 'string', 'max:100'],
+            'mofa_date' => ['nullable', 'date_format:Y-m-d'],
             'ec_number' => ['nullable', 'string', 'max:100'],
             'ec_date' => ['required', 'date_format:Y-m-d', 'before_or_equal:today'],
             'agent_id' => ['nullable', 'integer', Rule::exists('agents', 'id')->where('agency_id', $this->user()->agency_id)],

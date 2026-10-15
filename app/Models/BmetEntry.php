@@ -12,7 +12,7 @@ class BmetEntry extends ManpowerCompletion
 
     protected $fillable = [
         'agency_id', 'mofa_entry_id', 'hr_profile_id', 'full_name', 'father_name', 'passport_number',
-        'visa_number', 'id_number', 'ec_number', 'ec_date', 'reference', 'remarks',
+        'visa_number', 'id_number', 'mofa_number', 'mofa_date', 'ec_number', 'ec_date', 'reference', 'remarks',
         'agent_id', 'status', 'created_by', 'updated_by',
     ];
 

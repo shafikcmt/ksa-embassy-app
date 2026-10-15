@@ -24,6 +24,7 @@ class ManpowerCompletion extends Model
     protected $casts = [
         'completed_date' => 'date',
         'ec_expiry_date' => 'date',
+        'mofa_date' => 'date',
     ];
 
     /** An EC / BMET clearance is valid for this many calendar days from its date (never longer). */

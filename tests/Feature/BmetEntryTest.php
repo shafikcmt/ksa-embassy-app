@@ -274,4 +274,14 @@ class BmetEntryTest extends TestCase
         $this->putJson(route('erp.bmet.update', $entry), $this->payload(['reference' => 'Walk-in']))->assertOk();
         $this->assertNull($entry->fresh()->agent_id, 'a free-text reference has no agent');
     }
+
+    public function test_mofa_number_and_date_are_saved_and_returned(): void
+    {
+        $this->actingAs($this->admin)->postJson(route('erp.bmet.store'), $this->payload(['mofa_number' => 'E825125229', 'mofa_date' => '2026-09-12']))->assertOk();
+        $entry = BmetEntry::firstOrFail();
+        $this->assertSame('E825125229', $entry->mofa_number);
+        $this->assertSame('2026-09-12', $entry->mofa_date->format('Y-m-d'));
+        $this->getJson(route('erp.bmet.show', $entry))->assertOk()->assertJsonPath('mofa_number', 'E825125229')->assertJsonPath('mofa_date', '2026-09-12');
+        $this->postJson(route('erp.bmet.store'), $this->payload(['passport_number' => 'ZZ9999999', 'mofa_date' => 'not-a-date']))->assertJsonValidationErrors('mofa_date');
+    }
 }

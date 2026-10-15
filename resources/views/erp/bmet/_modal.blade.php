@@ -1,5 +1,5 @@
 @php
-$config = ['base'=>url('erp/bmet'), 'search'=>route('erp.bmet.hr-search'), 'today'=>today()->toDateString(), 'validityDays'=>\App\Models\ManpowerCompletion::EC_VALIDITY_DAYS, 'csrf'=>csrf_token(), 'add'=>request()->boolean('add'), 'edit'=>(int)request('edit'), 'agents'=>$agents->values(), 'fields'=>array_merge(\App\Http\Controllers\Erp\BmetController::FIELDS,['agent_id','status'])];
+$config = ['base'=>url('erp/bmet'), 'search'=>route('erp.bmet.hr-search'), 'today'=>today()->toDateString(), 'validityDays'=>\App\Models\ManpowerCompletion::EC_VALIDITY_DAYS, 'csrf'=>csrf_token(), 'add'=>request()->boolean('add'), 'edit'=>(int)request('edit'), 'agents'=>$agents->values(), 'fields'=>array_merge(\App\Http\Controllers\Erp\BmetController::FIELDS,['agent_id','status','mofa_number','mofa_date'])];
 $inp = \App\Support\ErpForm::INPUT;
 // Border/aria state for a field key; bmetModal() focuses the first error by [name] / [aria-invalid].
 $state = fn (string $k) => 'x-bind:class="error(\'' . $k . '\') ? \'' . \App\Support\ErpForm::BORDER_ERROR . '\' : \'' . \App\Support\ErpForm::BORDER_OK . '\'"'
@@ -20,11 +20,8 @@ $ro = 'block w-full rounded-lg border px-3 py-2 text-sm shadow-sm transition foc
         <p x-show="message" x-text="message" role="alert" class="rounded-lg bg-red-50 p-3 text-sm font-medium text-red-700"></p>
 
         {{-- Section 1 — Candidate --}}
-        {{-- One compact card, 3 columns: candidate · EC/visa numbers · dates/status · reference + remarks --}}
-        <x-erp.section dense icon="bi-person-vcard" title="BMET Clearance Details">
-            <x-erp.field label="Passenger Name" for="bm-full_name" required error="error('full_name')" error-id="bm-error-full_name">
-                <input id="bm-full_name" name="full_name" type="text" maxlength="100" class="{{ $inp }}" x-model="f.full_name" @input="changed('full_name')" @blur="touched.full_name=true" required {!! $state('full_name') !!}>
-            </x-erp.field>
+        {{-- Section 1 — Candidate (passport first: it auto-fills the rest) --}}
+        <x-erp.section dense icon="bi-person-vcard" title="Candidate Information">
             <x-erp.field label="Passport Number" for="bm-passport_number" required error="error('passport_number')" error-id="bm-error-passport_number">
                 <div class="relative">
                     <input id="bm-passport_number" name="passport_number" type="text" maxlength="100" autocomplete="off" spellcheck="false" class="{{ $inp }} pr-9" x-model="f.passport_number" @input="changed('passport_number')" @blur="touched.passport_number=true" required
@@ -38,22 +35,23 @@ $ro = 'block w-full rounded-lg border px-3 py-2 text-sm shadow-sm transition foc
                     'inputId'     => 'bm-passport_number',
                     'idKey'       => 'id',
                     'map'         => [
-                        'full_name' => 'full_name', 'father_name' => 'father_name',
+                        'full_name' => 'full_name', 'father_name' => 'father_name', 'mofa_number' => 'mofa_number', 'mofa_date' => 'mofa_date',
                         'visa_number' => 'visa_number', 'id_number' => 'id_number', 'reference' => 'reference',
                     ],
                 ])
             </x-erp.field>
+            <x-erp.field label="Passenger Name" for="bm-full_name" required error="error('full_name')" error-id="bm-error-full_name">
+                <input id="bm-full_name" name="full_name" type="text" maxlength="100" class="{{ $inp }}" x-model="f.full_name" @input="changed('full_name')" @blur="touched.full_name=true" required {!! $state('full_name') !!}>
+            </x-erp.field>
             <x-erp.field label="Father’s Name" for="bm-father_name" error="error('father_name')" error-id="bm-error-father_name">
                 <input id="bm-father_name" name="father_name" type="text" maxlength="100" class="{{ $inp }}" x-model="f.father_name" @input="changed('father_name')" @blur="touched.father_name=true" {!! $state('father_name') !!}>
             </x-erp.field>
+        </x-erp.section>
+
+        {{-- Section 2 — BMET details --}}
+        <x-erp.section dense icon="bi-patch-check" title="BMET Details" cols="4">
             <x-erp.field label="EC Number" for="bm-ec_number" error="error('ec_number')" error-id="bm-error-ec_number">
                 <input id="bm-ec_number" name="ec_number" type="text" maxlength="100" class="{{ $inp }}" x-model="f.ec_number" @input="changed('ec_number')" @blur="touched.ec_number=true" {!! $state('ec_number') !!}>
-            </x-erp.field>
-            <x-erp.field label="Visa Number" for="bm-visa_number" error="error('visa_number')" error-id="bm-error-visa_number">
-                <input id="bm-visa_number" name="visa_number" type="text" maxlength="100" class="{{ $inp }}" x-model="f.visa_number" @input="changed('visa_number')" @blur="touched.visa_number=true" {!! $state('visa_number') !!}>
-            </x-erp.field>
-            <x-erp.field label="ID Number" for="bm-id_number" error="error('id_number')" error-id="bm-error-id_number">
-                <input id="bm-id_number" name="id_number" type="text" maxlength="100" class="{{ $inp }}" x-model="f.id_number" @input="changed('id_number')" @blur="touched.id_number=true" {!! $state('id_number') !!}>
             </x-erp.field>
             <x-erp.field label="BMET Date (EC Date)" for="bm-ec_date" required error="error('ec_date')" error-id="bm-error-ec_date">
                 <input id="bm-ec_date" name="ec_date" type="date" max="{{ today()->toDateString() }}" class="{{ $inp }}" x-model="f.ec_date" @input="changed('ec_date')" @blur="touched.ec_date=true" required {!! $state('ec_date') !!}>
@@ -69,10 +67,30 @@ $ro = 'block w-full rounded-lg border px-3 py-2 text-sm shadow-sm transition foc
                 <input id="bm-valid_until" type="date" readonly tabindex="-1" x-bind:value="expiry()"
                        x-bind:class="expiringSoon() ? '{{ \App\Support\ErpForm::READONLY_ALERT }}' : '{{ \App\Support\ErpForm::READONLY }}'">
             </x-erp.field>
+        </x-erp.section>
+
+        {{-- Section 3 — Visa details --}}
+        <x-erp.section dense icon="bi-postage" title="Visa Details" cols="4">
+            <x-erp.field label="MOFA Number" for="bm-mofa_number" error="error('mofa_number')" error-id="bm-error-mofa_number">
+                <input id="bm-mofa_number" name="mofa_number" type="text" maxlength="100" class="{{ $inp }}" x-model="f.mofa_number" @input="changed('mofa_number')" {!! $state('mofa_number') !!}>
+            </x-erp.field>
+            <x-erp.field label="MOFA Date" for="bm-mofa_date" error="error('mofa_date')" error-id="bm-error-mofa_date">
+                <input id="bm-mofa_date" name="mofa_date" type="date" class="{{ $inp }}" x-model="f.mofa_date" @input="changed('mofa_date')" {!! $state('mofa_date') !!}>
+            </x-erp.field>
+            <x-erp.field label="Visa Number" for="bm-visa_number" error="error('visa_number')" error-id="bm-error-visa_number">
+                <input id="bm-visa_number" name="visa_number" type="text" maxlength="100" class="{{ $inp }}" x-model="f.visa_number" @input="changed('visa_number')" @blur="touched.visa_number=true" {!! $state('visa_number') !!}>
+            </x-erp.field>
+            <x-erp.field label="ID Number" for="bm-id_number" error="error('id_number')" error-id="bm-error-id_number">
+                <input id="bm-id_number" name="id_number" type="text" maxlength="100" class="{{ $inp }}" x-model="f.id_number" @input="changed('id_number')" @blur="touched.id_number=true" {!! $state('id_number') !!}>
+            </x-erp.field>
+        </x-erp.section>
+
+        {{-- Section 4 — Reference (the agent) + remarks --}}
+        <x-erp.section dense icon="bi-journal-text" title="Additional Info" cols="3">
             <x-erp.field label="Reference" for="bm_reference" error="error('reference')" error-id="bm-error-reference">
                 <x-erp.select-search id="bm_reference" :agents="$agentOptions ?? []" x-model="f.reference" @input="changed('reference')" />
             </x-erp.field>
-            <x-erp.field label="Remarks" for="bm-remarks" class="sm:col-span-2 lg:col-span-2" error="error('remarks')" error-id="bm-error-remarks">
+            <x-erp.field label="Remarks" for="bm-remarks" class="sm:col-span-2" error="error('remarks')" error-id="bm-error-remarks">
                 <textarea id="bm-remarks" name="remarks" rows="2" maxlength="2000" x-model="f.remarks" x-on:input="changed('remarks')" placeholder="Optional note" class="{{ \App\Support\ErpForm::TEXTAREA }} {{ \App\Support\ErpForm::BORDER_OK }}"></textarea>
             </x-erp.field>
         </x-erp.section>

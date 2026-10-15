@@ -166,6 +166,8 @@ class MofaSyncService
             'passport_no'   => $entry->passport_no,
             'visa_number'   => $entry->visa_serial,
             'id_number'     => $entry->id_number,
+            'mofa_number'   => $entry->mofa_number,
+            'mofa_date'     => $entry->mofa_date,
             'reference'     => $entry->reference_name,
             'agent_id'      => $this->agentIdFor($entry),
         ]);

@@ -96,6 +96,8 @@ class BmetController extends Controller
             foreach (self::FIELDS as $field) {
                 $data[$field] = self::value($bmetEntry, $field, 'Y-m-d');
             }
+            $data['mofa_number'] = $bmetEntry->mofa_number;
+            $data['mofa_date'] = $bmetEntry->mofa_date?->format('Y-m-d');
 
             return response()->json($data);
         }

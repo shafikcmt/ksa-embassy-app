@@ -56,7 +56,7 @@ class ErpPassportDataService
         'medical'     => ['model' => Medical::class,      'passport' => 'passport_no',     'map' => ['father_name' => 'father_name', 'date_of_birth' => 'date_of_birth', 'mobile_no' => 'mobile_no']],
         'mofa'        => ['model' => MofaEntry::class,    'passport' => 'passport_no',     'map' => ['father_name' => 'father_name', 'mother_name' => 'mother_name', 'date_of_birth' => 'date_of_birth', 'passport_issue_date' => 'issue_date', 'passport_expiry_date' => 'expiry_date', 'visa_number' => 'visa_number', 'id_number' => 'id_number']],
         'stamping'    => ['model' => VisaStamping::class, 'passport' => 'passport_number', 'map' => ['father_name' => 'father_name', 'mother_name' => 'mother_name', 'date_of_birth' => 'date_of_birth', 'visa_number' => 'visa_number', 'id_number' => 'id_number']],
-        'bmet'        => ['model' => BmetEntry::class,    'passport' => 'passport_number', 'map' => ['father_name' => 'father_name', 'visa_number' => 'visa_number', 'id_number' => 'id_number']],
+        'bmet'        => ['model' => BmetEntry::class,    'passport' => 'passport_number', 'map' => ['father_name' => 'father_name', 'visa_number' => 'visa_number', 'id_number' => 'id_number', 'mofa_number' => 'mofa_number', 'mofa_date' => 'mofa_date']],
         'delivery'    => ['model' => Delivery::class,     'passport' => 'passport_no',     'map' => ['visa_number' => 'visa_serial']],
         'double_mofa' => ['model' => DoubleMofa::class,   'passport' => 'passport_no',     'map' => ['visa_number' => 'visa_serial']],
     ];
