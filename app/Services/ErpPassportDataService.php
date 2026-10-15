@@ -94,6 +94,26 @@ class ErpPassportDataService
         ];
     }
 
+    /**
+     * Server-side auto-fill: returns $data with every BLANK key in $map (canonical field => data key)
+     * filled from the passport's other ERP/HR records. Never overwrites a value the user entered,
+     * and never reads the record being saved ($exclude).
+     */
+    public function fillMissing(array $data, int $agencyId, ?string $passport, array $map, ?array $exclude = null): array
+    {
+        if (blank($passport)) {
+            return $data;
+        }
+        $merged = $this->forPassport($agencyId, $passport, $exclude)['merged'];
+        foreach ($map as $field => $key) {
+            if (blank($data[$key] ?? null) && isset($merged[$field])) {
+                $data[$key] = $merged[$field]['value'];
+            }
+        }
+
+        return $data;
+    }
+
     private function merge(array $sources): array
     {
         $merged = [];

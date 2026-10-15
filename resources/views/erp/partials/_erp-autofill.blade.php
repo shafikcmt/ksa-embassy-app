@@ -7,8 +7,9 @@
     Medical → MOFA → Stamping → BMET → Delivery → Double MOFA (the HR profile ranks
     last for every field and only fills what the others lack), then:
       • fills the parent's EMPTY form fields listed in $map (never overwrites),
-        but only while the user is typing in the passport field — loading an
-        Edit shows the tags without silently changing the saved record;
+        while the user types the passport field AND when an existing record is
+        opened for edit (blank fields only; the "Auto-filled …" line says what
+        changed and nothing is saved until Save is pressed);
       • shows "Found in: Medical ✓ | MOFA ✓ | …" tags; clicking a tag expands
         the data that module holds, with a link to open that record.
     It emits `erp-autofill-result` (full payload) and `erp-autofilled`
@@ -112,7 +113,8 @@
 
             erpQueue(value) {
                 const p = String(value ?? '').trim().toUpperCase();
-                // Fill only when the change comes from the user typing in the passport field.
+                // Fill when the user types the passport, or when an existing record is opened for edit (blank fields only,
+                // announced by the "Auto-filled …" line; nothing is saved until the user presses Save).
                 const typing = document.activeElement && document.activeElement.id === cfg.inputId;
                 clearTimeout(this.erp.timer);
 
@@ -122,7 +124,7 @@
                     return;
                 }
                 if (p === this.erp.last && !typing) return;
-                this.erp.fillNext = this.erp.fillNext || typing;
+                this.erp.fillNext = this.erp.fillNext || typing || !!this.$data[cfg.idKey];
                 this.erp.timer = setTimeout(() => this.erpFetch(p), 400);
             },
 

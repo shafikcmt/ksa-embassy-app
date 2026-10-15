@@ -19,6 +19,13 @@ class MofaController extends Controller
 
     public const FIELDS = ['full_name', 'father_name', 'mother_name', 'passport_number', 'date_of_birth', 'age', 'issue_date', 'expiry_date', 'visa_number', 'id_number', 'mofa_issue_date', 'left_day', 'mofa_number', 'mofa_date', 'reference', 'remarks'];
 
+    /** Candidate fields auto-filled on save when left blank: canonical field => MOFA form key. */
+    public const AUTOFILL_MAP = [
+        'father_name' => 'father_name', 'mother_name' => 'mother_name', 'date_of_birth' => 'date_of_birth',
+        'passport_issue_date' => 'issue_date', 'passport_expiry_date' => 'expiry_date',
+        'visa_number' => 'visa_number', 'id_number' => 'id_number',
+    ];
+
     /** Summary PDF rows per table / mPDF WriteHTML() call; keeps each call far below the 1 MB PCRE limit. */
     public const PDF_CHUNK_ROWS = 150;
 
