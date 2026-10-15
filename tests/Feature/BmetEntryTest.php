@@ -262,4 +262,16 @@ class BmetEntryTest extends TestCase
         Subscription::where('agency_id',$this->agency->id)->update(['end_date' => today()->subDay()]);
         $this->actingAs($this->staff)->postJson(route('erp.bmet.store'),$this->payload())->assertForbidden();
     }
+
+    public function test_reference_name_sets_the_agent(): void
+    {
+        $agent = Agent::create(['agency_id' => $this->agency->id, 'name' => 'Habib Bhai', 'phone' => '01700000009', 'address' => 'Dhaka', 'status' => 'active']);
+        $this->actingAs($this->admin)->postJson(route('erp.bmet.store'), $this->payload(['reference' => 'Habib Bhai']))->assertOk();
+        $entry = BmetEntry::firstOrFail();
+        $this->assertSame('Habib Bhai', $entry->reference);
+        $this->assertSame($agent->id, $entry->agent_id);
+
+        $this->putJson(route('erp.bmet.update', $entry), $this->payload(['reference' => 'Walk-in']))->assertOk();
+        $this->assertNull($entry->fresh()->agent_id, 'a free-text reference has no agent');
+    }
 }

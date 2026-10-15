@@ -52,11 +52,9 @@ $ro = 'block w-full rounded-lg border px-3 py-2 text-sm shadow-sm transition foc
             <x-erp.field label="EC Number" for="bm-ec_number" error="error('ec_number')" error-id="bm-error-ec_number">
                 <input id="bm-ec_number" name="ec_number" type="text" maxlength="100" class="{{ $inp }}" x-model="f.ec_number" @input="changed('ec_number')" @blur="touched.ec_number=true" {!! $state('ec_number') !!}>
             </x-erp.field>
-            <x-erp.field label="Agent" for="bm-agent_id" error="error('agent_id')" error-id="bm-error-agent_id">
-                <select id="bm-agent_id" name="agent_id" class="{{ $inp }}" x-model="f.agent_id" @change="agentChanged(); changed('agent_id')" {!! $state('agent_id') !!}>
-                    <option value="">No agent selected</option>
-                    @foreach($agents as $agent)<option value="{{ $agent->id }}">{{ $agent->name }}{{ $agent->status==='active'?'':' (inactive)' }}</option>@endforeach
-                </select>
+            {{-- Reference = the agent (single field); the agent link is derived from the name on save. --}}
+            <x-erp.field label="Reference" for="bm_reference" error="error('reference')" error-id="bm-error-reference">
+                <x-erp.select-search id="bm_reference" :agents="$agentOptions ?? []" x-model="f.reference" @input="changed('reference')" />
             </x-erp.field>
         </x-erp.section>
 
@@ -94,11 +92,7 @@ $ro = 'block w-full rounded-lg border px-3 py-2 text-sm shadow-sm transition foc
         </x-erp.section>
 
         {{-- Section 5 — Additional --}}
-        <x-erp.section icon="bi-journal-text" title="Additional Info" cols="2">
-            {{-- Filled from the Agent select (single source); read-only so old values are kept as-is. --}}
-            <x-erp.field label="Reference" for="bm-reference" auto error="error('reference')" error-id="bm-error-reference">
-                <input id="bm-reference" name="reference" type="text" readonly tabindex="-1" x-model="f.reference" placeholder="—" class="{{ \App\Support\ErpForm::READONLY }}">
-            </x-erp.field>
+        <x-erp.section icon="bi-journal-text" title="Additional Info">
             <x-erp.textarea label="Remarks" id="bm-remarks" name="remarks" maxlength="2000" x-model="f.remarks" x-on:input="changed('remarks')"
                             error="error('remarks')" error-id="bm-error-remarks" />
         </x-erp.section>
@@ -137,7 +131,7 @@ function bmetModal() {
         agentChanged(){const agent=this.selectedAgent();if(!this.f.reference||this.f.reference===this.lastReference){this.f.reference=agent?.name||'';this.changed('reference');}this.lastReference=agent?.name||'';},
         // Passport auto-fill now comes from erp.partials._erp-autofill (all ERP modules, HR fallback).
         async save(){if(this.saving||this.failedLoad)return;Object.keys(required).forEach(k=>this.touched[k]=true);const first=Object.keys(this.errors())[0];if(first){this.$refs.dialog.querySelector('[name="'+first+'"]')?.focus();return;}this.saving=true;this.message='';this.server={};
-            try{const r=await fetch(cfg.base+(this.id?'/'+this.id:''),{method:this.id?'PUT':'POST',headers:{'Content-Type':'application/json',Accept:'application/json','X-CSRF-TOKEN':cfg.csrf},body:JSON.stringify(this.f)});let data;try{data=await r.json();}catch{throw Error('Unable to save. Refresh the page and try again.');}if(r.status===422){this.server=data.errors||{};this.message='Please fix the highlighted fields.';this.$nextTick(()=>this.$refs.dialog.querySelector('[aria-invalid="true"]')?.focus());return;}if(!r.ok)throw Error(data.message||'Unable to save. Please try again.');const url=new URL(window.location.href);url.searchParams.delete('add');url.searchParams.delete('edit');window.location.assign(url.href);}catch(e){this.message=e.message||'Unable to save. Please try again.';}finally{this.saving=false;}}
+            try{const r=await fetch(cfg.base+(this.id?'/'+this.id:''),{method:this.id?'PUT':'POST',headers:{'Content-Type':'application/json',Accept:'application/json','X-CSRF-TOKEN':cfg.csrf},body:JSON.stringify(Object.assign({},this.f,{agent_id:''}))});let data;try{data=await r.json();}catch{throw Error('Unable to save. Refresh the page and try again.');}if(r.status===422){this.server=data.errors||{};this.message='Please fix the highlighted fields.';this.$nextTick(()=>this.$refs.dialog.querySelector('[aria-invalid="true"]')?.focus());return;}if(!r.ok)throw Error(data.message||'Unable to save. Please try again.');const url=new URL(window.location.href);url.searchParams.delete('add');url.searchParams.delete('edit');window.location.assign(url.href);}catch(e){this.message=e.message||'Unable to save. Please try again.';}finally{this.saving=false;}}
     };
 }
 </script>

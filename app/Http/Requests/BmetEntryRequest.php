@@ -30,6 +30,16 @@ class BmetEntryRequest extends FormRequest
             }
         }
         $data['ec_date'] = $date;
+        // "Reference" is the single agent field: derive the agent from the chosen name (agency-scoped) so the
+        // agent filter keeps working. An explicit agent_id (API clients) is still honoured and validated.
+        if ($this->has('reference')) {
+            $reference = trim((string) $this->input('reference'));
+            $data['reference'] = $reference !== '' ? $reference : null;
+            if (! $this->filled('agent_id')) {
+                $data['agent_id'] = $reference === '' ? null
+                    : \App\Models\Agent::forAgency((int) $this->user()->agency_id)->where('name', $reference)->value('id');
+            }
+        }
         $this->merge($data);
     }
 
