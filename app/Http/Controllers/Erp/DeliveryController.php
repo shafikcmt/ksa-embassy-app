@@ -303,7 +303,25 @@ class DeliveryController extends Controller
 
     private function validated(Request $request): array
     {
-        return $request->validate($this->rules());
+        $data = $request->validate($this->rules() + [
+            'amount'     => ['nullable', 'numeric', 'min:0', 'max:9999999999.99'],
+            'extra_mofa' => ['nullable', 'numeric', 'min:0', 'max:9999999999.99'],
+        ]);
+
+        // The form posts Amount + Extra MOFA; Total is always computed here (never trusted from the client).
+        // A caller that only sends total_amount (CSV import, API) keeps working: it becomes the Amount.
+        if ($request->hasAny(['amount', 'extra_mofa'])) {
+            $amount = round((float) ($data['amount'] ?? 0), 2);
+            $extra  = round((float) ($data['extra_mofa'] ?? 0), 2);
+            $data['amount'] = $amount;
+            $data['extra_mofa'] = $extra;
+            $data['total_amount'] = number_format($amount + $extra, 2, '.', '');
+        } else {
+            $data['amount'] = $data['total_amount'];
+            $data['extra_mofa'] = 0;
+        }
+
+        return $data;
     }
 
     /** Single source of truth for validation — shared by manual Add and CSV import. */
@@ -315,7 +333,7 @@ class DeliveryController extends Controller
             'passport_no'   => ['required', 'string', 'max:100'],
             'visa_serial'   => ['nullable', 'string', 'max:100'],
             'reference'     => ['nullable', 'string', 'max:255'],
-            'total_amount'   => ['required', 'numeric', 'min:0', 'max:9999999999.99'],
+            'total_amount'   => ['required_without_all:amount,extra_mofa', 'nullable', 'numeric', 'min:0', 'max:9999999999.99'],
             'status'         => ['required', Rule::in(array_keys(Delivery::STATUSES))],
             'payment_method' => ['nullable', Rule::in(array_keys(Delivery::PAYMENT_METHODS))],
         ];

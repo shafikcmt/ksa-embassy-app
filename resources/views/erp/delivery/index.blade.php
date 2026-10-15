@@ -75,20 +75,27 @@
         $fi = \App\Support\ErpForm::INPUT;
         $bd = fn (string $k) => $addErr && $errors->has($k) ? \App\Support\ErpForm::BORDER_ERROR : \App\Support\ErpForm::BORDER_OK;
     @endphp
-    <form method="POST" action="{{ route('erp.delivery.store') }}" class="mb-6" id="erpAddForm" x-show="addOpen" x-cloak x-data="{ busy: false }" x-on:submit="busy = true">
+    <form method="POST" action="{{ route('erp.delivery.store') }}" class="mb-6" id="erpAddForm" x-show="addOpen" x-cloak x-data="{ busy: false, amount: @js((string) old('amount', old('total_amount', '0.00'))), extra: @js((string) old('extra_mofa', '0.00')),
+                 get total() { return (Math.round(((parseFloat(this.amount) || 0) + (parseFloat(this.extra) || 0)) * 100) / 100).toFixed(2); } }" x-on:submit="busy = true">
         @csrf
         <x-erp.section icon="bi-plus-circle" title="Add Delivery">
+            <x-erp.field label="Passport Number" for="deliveryPassport" required :name="$addErr ? 'passport_no' : null">
+                <input type="text" id="deliveryPassport" name="passport_no" value="{{ old('passport_no') }}" required autocomplete="off" class="{{ $fi }} {{ $bd('passport_no') }}">
+            </x-erp.field>
             <x-erp.field label="Full Name" for="dl_full_name" required :name="$addErr ? 'full_name' : null">
                 <input id="dl_full_name" type="text" name="full_name" value="{{ old('full_name') }}" required class="{{ $fi }} {{ $bd('full_name') }}">
-            </x-erp.field>
-            <x-erp.field label="Passport Number" for="deliveryPassport" required :name="$addErr ? 'passport_no' : null">
-                <input type="text" id="deliveryPassport" name="passport_no" value="{{ old('passport_no') }}" required class="{{ $fi }} {{ $bd('passport_no') }}">
             </x-erp.field>
             <x-erp.field label="Date" for="dl_delivery_date" required :name="$addErr ? 'delivery_date' : null">
                 <input id="dl_delivery_date" type="date" name="delivery_date" value="{{ old('delivery_date', now()->format('Y-m-d')) }}" required class="{{ $fi }} {{ $bd('delivery_date') }}">
             </x-erp.field>
-            <x-erp.field label="Total Amount (৳)" for="dl_total_amount" required :name="$addErr ? 'total_amount' : null">
-                <input id="dl_total_amount" type="number" step="0.01" min="0" name="total_amount" value="{{ old('total_amount', '0.00') }}" required class="{{ $fi }} {{ $bd('total_amount') }}">
+            <x-erp.field label="Amount (৳)" for="dl_amount" :name="$addErr ? 'amount' : null">
+                <input id="dl_amount" type="number" step="0.01" min="0" name="amount" x-model="amount" inputmode="decimal" class="{{ $fi }} {{ $bd('amount') }}">
+            </x-erp.field>
+            <x-erp.field label="Extra MOFA (৳)" for="dl_extra_mofa" :name="$addErr ? 'extra_mofa' : null">
+                <input id="dl_extra_mofa" type="number" step="0.01" min="0" name="extra_mofa" x-model="extra" inputmode="decimal" class="{{ $fi }} {{ $bd('extra_mofa') }}">
+            </x-erp.field>
+            <x-erp.field label="Total Amount (৳)" for="dl_total_amount" auto>
+                <input id="dl_total_amount" type="text" readonly tabindex="-1" x-bind:value="total" class="{{ \App\Support\ErpForm::READONLY }} font-semibold">
             </x-erp.field>
             <x-erp.field label="Status" for="dl_status" required :name="$addErr ? 'status' : null">
                 <select id="dl_status" name="status" class="{{ $fi }} {{ $bd('status') }}">
@@ -240,6 +247,8 @@
                                                 'passport_no' => $d->passport_no,
                                                 'payment_method' => $d->payment_method,
                                                 'reference' => $d->reference,
+                                                'amount' => number_format((float) $d->amount, 2, '.', ''),
+                                                'extra_mofa' => number_format((float) $d->extra_mofa, 2, '.', ''),
                                                 'total_amount' => number_format((float) $d->total_amount, 2, '.', ''),
                                                 'status' => $d->status,
                                             ]))"><i class="bi bi-pencil"></i> Edit</button>
@@ -336,8 +345,14 @@
             <x-erp.field label="Date" for="dle_delivery_date" required>
                 <input id="dle_delivery_date" type="date" name="delivery_date" x-model="form.delivery_date" required class="{{ $eb }}">
             </x-erp.field>
-            <x-erp.field label="Total Amount (৳)" for="dle_total_amount" required>
-                <input id="dle_total_amount" type="number" step="0.01" min="0" name="total_amount" x-model="form.total_amount" required class="{{ $eb }}">
+            <x-erp.field label="Amount (৳)" for="dle_amount">
+                <input id="dle_amount" type="number" step="0.01" min="0" name="amount" x-model="form.amount" inputmode="decimal" class="{{ $eb }}">
+            </x-erp.field>
+            <x-erp.field label="Extra MOFA (৳)" for="dle_extra_mofa">
+                <input id="dle_extra_mofa" type="number" step="0.01" min="0" name="extra_mofa" x-model="form.extra_mofa" inputmode="decimal" class="{{ $eb }}">
+            </x-erp.field>
+            <x-erp.field label="Total Amount (৳)" for="dle_total_amount" auto>
+                <input id="dle_total_amount" type="text" readonly tabindex="-1" x-bind:value="(Math.round(((parseFloat(form.amount) || 0) + (parseFloat(form.extra_mofa) || 0)) * 100) / 100).toFixed(2)" class="{{ \App\Support\ErpForm::READONLY }} font-semibold">
             </x-erp.field>
             <x-erp.field label="Status" for="dle_status" required>
                 <select id="dle_status" name="status" x-model="form.status" class="{{ $eb }}">

@@ -144,4 +144,30 @@ class ErpReferenceAgentTest extends TestCase
         $this->put(route('erp.delivery.update', $delivery), $this->deliveryPayload(['reference' => 'Sleeping Agent']))->assertRedirect();
         $this->assertSame('Sleeping Agent', $delivery->fresh()->reference);
     }
+
+    public function test_delivery_total_is_amount_plus_extra_mofa_computed_on_the_server(): void
+    {
+        $this->actingAs($this->admin)->post(route('erp.delivery.store'), $this->deliveryPayload(['total_amount' => null, 'amount' => '1500.50', 'extra_mofa' => '499.50']))->assertRedirect();
+        $d = \App\Models\Delivery::latest('id')->firstOrFail();
+        $this->assertSame('1500.50', (string) $d->amount);
+        $this->assertSame('499.50', (string) $d->extra_mofa);
+        $this->assertSame('2000.00', (string) $d->total_amount);
+
+        // A hostile / stale posted total is ignored once Amount / Extra MOFA are sent.
+        $this->put(route('erp.delivery.update', $d), $this->deliveryPayload(['total_amount' => '1', 'amount' => '100', 'extra_mofa' => '']))->assertRedirect();
+        $d = $d->fresh();
+        $this->assertSame('100.00', (string) $d->total_amount);
+        $this->assertSame('0.00', (string) $d->extra_mofa);
+    }
+
+    public function test_delivery_total_only_callers_still_work_and_set_the_amount(): void
+    {
+        $this->actingAs($this->admin)->post(route('erp.delivery.store'), $this->deliveryPayload(['total_amount' => '1500']))->assertRedirect();
+        $d = \App\Models\Delivery::latest('id')->firstOrFail();
+        $this->assertSame('1500.00', (string) $d->total_amount);
+        $this->assertSame('1500.00', (string) $d->amount);
+
+        $d->update(['total_amount' => 900]); // e.g. sync / import writing the total alone
+        $this->assertSame('900.00', (string) $d->fresh()->amount);
+    }
 }

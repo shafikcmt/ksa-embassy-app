@@ -17,16 +17,29 @@ class Delivery extends Model
 {
     protected $fillable = [
         'agency_id', 'mofa_entry_id', 'delivery_date', 'full_name', 'passport_no',
-        'visa_serial', 'reference', 'total_amount', 'status', 'payment_method',
+        'visa_serial', 'reference', 'amount', 'extra_mofa', 'total_amount', 'status', 'payment_method',
         'created_by', 'updated_by',
         // NOTE: paid_amount is deliberately NOT fillable.
     ];
 
     protected $casts = [
         'delivery_date' => 'date',
+        'amount'        => 'decimal:2',
+        'extra_mofa'    => 'decimal:2',
         'total_amount'  => 'decimal:2',
         'paid_amount'   => 'decimal:2',
     ];
+
+    protected static function booted(): void
+    {
+        // total_amount is the billed figure (reports / dues / payments read it). When it is written on its own
+        // (CSV import, MOFA sync, older code paths) keep Amount in step so Amount + Extra MOFA = Total.
+        static::saving(function (self $d) {
+            if ($d->isDirty('total_amount') && ! $d->isDirty('amount') && ! $d->isDirty('extra_mofa')) {
+                $d->amount = max(0, round((float) $d->total_amount - (float) $d->extra_mofa, 2));
+            }
+        });
+    }
 
     public const STATUSES = [
         'pending'   => 'Pending',
