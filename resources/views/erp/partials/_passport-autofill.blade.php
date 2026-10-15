@@ -39,34 +39,54 @@
     let timer = null;
 
     function fillIfEmpty(name, value) {
-        if (value === null || value === undefined || String(value).trim() === '') return;
+        if (value === null || value === undefined || String(value).trim() === '') return false;
         const el = form.querySelector('[name="' + name + '"]');
-        if (!el) return;
-        if (String(el.value).trim() !== '') return; // never overwrite user input
+        if (!el) return false;
+        if (String(el.value).trim() !== '') return false; // never overwrite user input
         el.value = value;
         el.dispatchEvent(new Event('input', { bubbles: true }));
         el.dispatchEvent(new Event('change', { bubbles: true }));
+        return true;
     }
+
+    // One-line status under the passport input: searching / filled / not found / unavailable.
+    const status = document.createElement('p');
+    status.className = 'mt-1.5 text-xs';
+    status.setAttribute('role', 'status');
+    status.setAttribute('aria-live', 'polite');
+    status.hidden = true;
+    (input.closest('div') || input.parentNode).appendChild(status);
+    function say(text, tone) {
+        status.hidden = !text;
+        status.textContent = text || '';
+        status.className = 'mt-1.5 text-xs ' + ({ ok: 'text-emerald-700', warn: 'text-amber-700', muted: 'text-gray-500' }[tone] || 'text-gray-500');
+    }
+    const SOURCE = { medical: 'Medical', mofa: 'MOFA', stamping: 'Stamping', bmet: 'BMET', delivery: 'Delivery', double_mofa: 'Double MOFA', hr: 'HR profile' };
 
     function runLookup() {
         clearTimeout(timer);
         const passportNo = input.value.trim().toUpperCase();
-        if (!PASSPORT.test(passportNo) || passportNo === lastLookup) return;
+        if (!PASSPORT.test(passportNo)) { lastLookup = ''; say(''); return; }
+        if (passportNo === lastLookup) return;
         lastLookup = passportNo;
+        say('Searching ERP records…', 'muted');
 
         fetch(endpoint + '/' + encodeURIComponent(passportNo), {
             headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
         })
-        .then(r => r.ok ? r.json() : null)
+        .then(r => { if (!r.ok) throw new Error('lookup failed'); return r.json(); })
         .then(data => {
             // A newer passport was typed while this request was in flight → ignore it.
-            if (!data || !data.found || input.value.trim().toUpperCase() !== passportNo) return;
+            if (input.value.trim().toUpperCase() !== passportNo) return;
+            if (!data || !data.found) { say('No existing records for this passport — enter details manually.', 'muted'); return; }
+            const used = new Set();
             Object.keys(map).forEach(function (key) {
                 const merged = data.merged && data.merged[ALIAS[key] || key];
-                fillIfEmpty(map[key], merged ? merged.value : null);
+                if (fillIfEmpty(map[key], merged ? merged.value : null) && merged) used.add(SOURCE[merged.source] || merged.source);
             });
+            say(used.size ? 'Auto-filled from ' + Array.from(used).join(', ') : 'Found in ' + Object.keys(data.sources || {}).map(k => SOURCE[k] || k).join(', ') + ' — nothing new to fill.', used.size ? 'ok' : 'muted');
         })
-        .catch(() => { /* silent — auto-fill is best-effort, form still works */ });
+        .catch(() => { lastLookup = ''; say('ERP search unavailable — enter details manually.', 'warn'); }); // form still works
     }
 
     // Look up while typing (debounced) so the user never has to tab out first.
