@@ -192,15 +192,16 @@
             <table class="min-w-full text-sm">
                 <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                     <tr>
-                        <th class="px-4 py-3">Date</th>
-                        <th class="px-4 py-3">Full Name</th>
-                        <th class="px-4 py-3">Passport</th>
-                        <th class="px-4 py-3 text-right">Total</th>
-                        <th class="px-4 py-3 text-right">Paid</th>
-                        <th class="px-4 py-3 text-right">Due</th>
-                        <th class="px-4 py-3">Status</th>
-                        <th class="px-4 py-3">Payment</th>
-                        <th class="px-4 py-3 text-right">Actions</th>
+                        <th class="px-2.5 py-3">Date</th>
+                        <th class="px-2.5 py-3">Full Name</th>
+                        <th class="px-2.5 py-3">Passport</th>
+                        <th class="px-2.5 py-3 text-right">Amount</th>
+                        <th class="px-2.5 py-3 text-right">Extra MOFA</th>
+                        <th class="px-2.5 py-3 text-right">Total</th>
+                        <th class="px-2.5 py-3 text-right">Paid</th>
+                        <th class="px-2.5 py-3 text-right">Due</th>
+                        <th class="px-2.5 py-3">Status</th>
+                        <th class="px-2.5 py-3 text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -221,18 +222,19 @@
                         @endphp
                         <tr class="hover:bg-slate-50" x-show="q === '' || $el.dataset.s.includes(q.toLowerCase())"
                             data-s="{{ \Illuminate\Support\Str::lower(trim(($d->full_name ?? '').' '.($d->passport_no ?? ''))) }}">
-                            <td class="px-4 py-3 whitespace-nowrap">{{ $d->delivery_date->format('d M Y') }}</td>
-                            <td class="px-4 py-3 font-medium text-slate-800">{{ $d->full_name }}</td>
-                            <td class="px-4 py-3">{{ $d->passport_no }}</td>
-                            <td class="px-4 py-3 text-right whitespace-nowrap">৳{{ number_format((float) $d->total_amount, 2) }}</td>
-                            <td class="px-4 py-3 text-right whitespace-nowrap text-emerald-700">৳{{ number_format((float) $d->paid_amount, 2) }}</td>
-                            <td class="px-4 py-3 text-right whitespace-nowrap {{ $due > 0 ? 'font-semibold text-rose-600' : 'text-slate-400' }}">৳{{ number_format($due, 2) }}</td>
-                            <td class="px-4 py-3"><span class="rounded-full px-2 py-0.5 text-xs font-semibold {{ $statusChip[$d->status] ?? 'bg-slate-100 text-slate-600' }}">{{ $d->statusLabel() }}</span></td>
-                            <td class="px-4 py-3">{{ $d->paymentMethodLabel() ?: '—' }}</td>
-                            <td class="px-4 py-3">
+                            <td class="px-2.5 py-3 whitespace-nowrap">{{ $d->delivery_date->format('d M Y') }}</td>
+                            <td class="px-2.5 py-3 font-medium text-slate-800">{{ $d->full_name }}</td>
+                            <td class="px-2.5 py-3">{{ $d->passport_no }}</td>
+                            <td class="px-2.5 py-3 text-right whitespace-nowrap text-slate-600">৳{{ number_format((float) $d->amount, 2) }}</td>
+                            <td class="px-2.5 py-3 text-right whitespace-nowrap text-slate-600">৳{{ number_format((float) $d->extra_mofa, 2) }}</td>
+                            <td class="px-2.5 py-3 text-right whitespace-nowrap font-semibold text-slate-800">৳{{ number_format((float) $d->total_amount, 2) }}</td>
+                            <td class="px-2.5 py-3 text-right whitespace-nowrap text-emerald-700">৳{{ number_format((float) $d->paid_amount, 2) }}</td>
+                            <td class="px-2.5 py-3 text-right whitespace-nowrap {{ $due > 0 ? 'font-semibold text-rose-600' : 'text-slate-400' }}">৳{{ number_format($due, 2) }}</td>
+                            <td class="px-2.5 py-3"><span class="rounded-full px-2 py-0.5 text-xs font-semibold {{ $statusChip[$d->status] ?? 'bg-slate-100 text-slate-600' }}">{{ $d->statusLabel() }}</span>@if($d->paymentMethodLabel())<div class="mt-1 text-xs text-slate-500">{{ $d->paymentMethodLabel() }}</div>@endif</td>
+                                                        <td class="px-2.5 py-3">
                                 @php $pill = 'inline-flex items-center gap-1 whitespace-nowrap rounded-lg px-2 py-1 text-xs font-semibold ring-1 ring-inset transition'; @endphp
                                 {{-- Buttons wrap inside a fixed width so every action stays visible (no sideways scroll). --}}
-                                <div class="ml-auto flex flex-wrap items-center justify-end gap-1" style="min-width: 10rem; max-width: 13.5rem">
+                                <div class="ml-auto flex flex-wrap items-center justify-end gap-1" style="min-width: 8.5rem; max-width: 10.5rem">
                                     @if($canReceive && $due > 0)
                                     <button type="button" class="{{ $pill }} bg-emerald-50 text-emerald-700 ring-emerald-200 hover:bg-emerald-100"
                                             x-on:click="openPay(@js(['id' => $d->id, 'name' => $d->full_name, 'due' => number_format($due, 2, '.', '')]))"><i class="bi bi-cash-coin"></i> Receive</button>
@@ -260,10 +262,10 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="9" class="px-4 py-12 text-center text-slate-400"><i class="bi bi-inbox mb-2 block text-2xl"></i>No deliveries yet.</td></tr>
+                        <tr><td colspan="10" class="px-4 py-12 text-center text-slate-400"><i class="bi bi-inbox mb-2 block text-2xl"></i>No deliveries yet.</td></tr>
                     @endforelse
                     <tr x-show="q !== '' && ![...$root.querySelectorAll('tr[data-s]')].some(r => r.dataset.s.includes(q.toLowerCase()))" x-cloak>
-                        <td colspan="9" class="px-4 py-12 text-center text-slate-400"><i class="bi bi-search mb-2 block text-2xl"></i>No records match “<span x-text="q"></span>”.</td>
+                        <td colspan="10" class="px-4 py-12 text-center text-slate-400"><i class="bi bi-search mb-2 block text-2xl"></i>No records match “<span x-text="q"></span>”.</td>
                     </tr>
                 </tbody>
             </table>

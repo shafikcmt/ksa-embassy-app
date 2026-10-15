@@ -21,7 +21,7 @@ class DeliveryPrintExportTest extends TestCase
 {
     use RefreshDatabase;
 
-    private const COLUMNS = ['Name', 'Date', 'Passport', 'Total', 'Paid', 'Due', 'Status', 'Payment', 'Reference'];
+    private const COLUMNS = ['Name', 'Date', 'Passport', 'Amount', 'Extra MOFA', 'Total', 'Paid', 'Due', 'Status', 'Payment', 'Reference'];
 
     private Agency $agency;
 
@@ -82,21 +82,21 @@ class DeliveryPrintExportTest extends TestCase
         [$pdfHead, $pdfRows, $pdfTotals] = $this->table($this->get(route('erp.delivery.print', ['download' => 1]))->assertOk()->getContent());
         $csv = $this->get(route('erp.delivery.export'))->assertOk()->streamedContent();
 
-        $this->assertSame(self::COLUMNS, array_map('ucfirst', array_map('strtolower', $previewHead)));
+        $this->assertSame(array_map('strtolower', self::COLUMNS), array_map('strtolower', $previewHead));
         $this->assertSame($previewHead, $pdfHead);
         $this->assertSame($previewRows, $pdfRows);
-        $this->assertSame(['Mohammad Hosen', '01 Sep 2026', 'A01234567', '৳ 15,000.00', '৳ 0.00', '৳ 15,000.00', 'Pending', 'Cash', 'Horizon'], $previewRows[0]);
-        $this->assertSame(['Totals', '', '', '৳ 17,500.50', '৳ 0.00', '৳ 17,500.50', '', '', ''], $previewTotals);
+        $this->assertSame(['Mohammad Hosen', '01 Sep 2026', 'A01234567', '৳ 15,000.00', '৳ 0.00', '৳ 15,000.00', '৳ 0.00', '৳ 15,000.00', 'Pending', 'Cash', 'Horizon'], $previewRows[0]);
+        $this->assertSame(['Totals', '', '', '৳ 17,500.50', '৳ 0.00', '৳ 17,500.50', '৳ 0.00', '৳ 17,500.50', '', '', ''], $previewTotals);
         $this->assertSame($previewTotals, $pdfTotals);
 
         // CSV: UTF-8 BOM, the same headers and order, plain numeric amounts, no totals row.
         $this->assertStringStartsWith("\xEF\xBB\xBF", $csv);
         $lines = array_map('str_getcsv', array_filter(explode("\n", trim(substr($csv, 3)))));
         $this->assertSame(self::COLUMNS, $lines[0]);
-        $this->assertSame(['Mohammad Hosen', '01 Sep 2026', 'A01234567', '15000.00', '0.00', '15000.00', 'Pending', 'Cash', 'Horizon'], $lines[1]);
-        $this->assertSame(['Rahim', '02 Sep 2026', 'B7654321', '2500.50', '0.00', '2500.50', 'Pending', '—', '—'], $lines[2]);
+        $this->assertSame(['Mohammad Hosen', '01 Sep 2026', 'A01234567', '15000.00', '0.00', '15000.00', '0.00', '15000.00', 'Pending', 'Cash', 'Horizon'], $lines[1]);
+        $this->assertSame(['Rahim', '02 Sep 2026', 'B7654321', '2500.50', '0.00', '2500.50', '0.00', '2500.50', 'Pending', '—', '—'], $lines[2]);
         $this->assertCount(3, $lines);
-        $this->assertTrue(is_numeric($lines[1][3]) && is_numeric($lines[1][4]) && is_numeric($lines[1][5]));
+        $this->assertTrue(is_numeric($lines[1][3]) && is_numeric($lines[1][5]) && is_numeric($lines[1][7]));
 
         // Visa Serial is gone from every output; another agency's rows never appear.
         foreach ([$this->get(route('erp.delivery.print'))->getContent(), $this->get(route('erp.delivery.print', ['download' => 1]))->getContent(), $csv] as $output) {

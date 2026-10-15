@@ -30,7 +30,8 @@ trait RendersPrintableList
     ): Response|View {
         // Explicit file download (toolbar "Download PDF" link) → real mPDF file.
         if (request()->boolean('download')) {
-            return $pdf->generateFromView('erp.print.list', $data, $filename);
+            // `landscape` => true (wide tables, e.g. Delivery with money columns) prints on A4 landscape.
+            return $pdf->generateFromView('erp.print.list', $data, $filename, false, ! empty($data['landscape']) ? ['format' => 'A4-L'] : []);
         }
 
         // Default → on-screen preview (Print button uses the browser print dialog).

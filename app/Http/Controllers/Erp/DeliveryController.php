@@ -87,8 +87,10 @@ class DeliveryController extends Controller
 
         $rows = $deliveries->map(fn (Delivery $d) => $this->listRow($d, $money))->all();
 
-        // Totals footer aligned to the money columns (Total/Paid/Due = indices 3/4/5).
-        $totals = ['Totals', '', '', $money($billed), $money($collected), $money($billed - $collected), '', '', ''];
+        // Totals footer aligned to the money columns (Amount/Extra MOFA/Total/Paid/Due = indices 3–7).
+        $amount = (float) $deliveries->sum(fn ($d) => (float) $d->amount);
+        $extra  = (float) $deliveries->sum(fn ($d) => (float) $d->extra_mofa);
+        $totals = ['Totals', '', '', $money($amount), $money($extra), $money($billed), $money($collected), $money($billed - $collected), '', '', ''];
 
         return $this->respondPrintableList($pdf, [
             'title'    => 'Delivery',
@@ -96,6 +98,7 @@ class DeliveryController extends Controller
             'generated'=> now(),
             'subtitle' => $deliveries->count() . ' deliver' . ($deliveries->count() === 1 ? 'y' : 'ies')
                           . ' · Billed ' . $money($billed) . ' · Collected ' . $money($collected),
+            'landscape' => true, // 11 columns incl. Amount / Extra MOFA — needs the wider page
             'columns'  => self::listColumns(),
             'rows'     => $rows,
             'totals'   => $totals,
@@ -109,15 +112,17 @@ class DeliveryController extends Controller
     private static function listColumns(): array
     {
         return [
-            ['label' => 'Name', 'width' => '22%'],
-            ['label' => 'Date', 'nowrap' => true, 'width' => '10.5%'],
-            ['label' => 'Passport', 'width' => '10%'],
+            ['label' => 'Name', 'width' => '16%'],
+            ['label' => 'Date', 'nowrap' => true, 'width' => '9.5%'],
+            ['label' => 'Passport', 'width' => '9%'],
+            ['label' => 'Amount', 'align' => 'right'],
+            ['label' => 'Extra MOFA', 'align' => 'right'],
             ['label' => 'Total', 'align' => 'right'],
             ['label' => 'Paid', 'align' => 'right'],
             ['label' => 'Due', 'align' => 'right'],
-            ['label' => 'Status', 'width' => '8%'],
-            ['label' => 'Payment', 'width' => '9%'],
-            ['label' => 'Reference', 'width' => '12%'],
+            ['label' => 'Status', 'width' => '7.5%'],
+            ['label' => 'Payment', 'width' => '7.5%'],
+            ['label' => 'Reference', 'width' => '10%'],
         ];
     }
 
@@ -126,7 +131,7 @@ class DeliveryController extends Controller
     {
         return [
             $d->full_name, $d->delivery_date?->format('d M Y') ?? '', $d->passport_no,
-            $money($d->total_amount), $money($d->paid_amount), $money($d->due),
+            $money($d->amount), $money($d->extra_mofa), $money($d->total_amount), $money($d->paid_amount), $money($d->due),
             $d->statusLabel(), $d->paymentMethodLabel() ?: '—', $d->reference ?: '—',
         ];
     }

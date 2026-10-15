@@ -46,15 +46,15 @@
              A4 + 10mm margins; feeding it an @page rule makes this mPDF version
              spray blank pages, so it must be hidden from the PDF render. --}}
         @if(empty($_pdf))
-        @page { size: A4; margin: 10mm; }
+        @page { size: {{ ! empty($landscape) ? 'A4 landscape' : 'A4' }}; margin: 10mm; }
         /* Browser preview: the same FreeSerif taka glyph as the PDF (5 KB subset, U+09F3 only). */
         @font-face { font-family: erp-taka; src: url('/fonts/FreeSerif-taka.ttf') format('truetype'); unicode-range: U+09F3; }
 
         @media screen {
             body { background: #e5e7eb; }
             .a4-page {
-                width: 210mm;
-                min-height: 297mm;
+                width: {{ ! empty($landscape) ? '297mm' : '210mm' }};
+                min-height: {{ ! empty($landscape) ? '210mm' : '297mm' }};
                 margin: 10mm auto;
                 background: #fff;
                 box-shadow: 0 0 12px rgba(0,0,0,.15);
