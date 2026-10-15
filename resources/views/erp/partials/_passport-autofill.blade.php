@@ -32,7 +32,7 @@
     if (!form) return;
 
     const map = @js($map);
-    const endpoint = @js(url('erp/autofill'));
+    const endpoint = @js(parse_url(url('erp/autofill'), PHP_URL_PATH));
     const ALIAS = { visa_serial: 'visa_number' };
     const PASSPORT = /^[A-Z0-9]{5,20}$/;
     let lastLookup = '';

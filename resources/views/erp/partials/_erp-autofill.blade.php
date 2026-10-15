@@ -29,7 +29,7 @@
         'inputId'     => $inputId,
         'idKey'       => $idKey,
         'map'         => $map,
-        'url'         => url('erp/autofill'),
+        'url'         => parse_url(url('erp/autofill'), PHP_URL_PATH), // same-origin path: never http:// on an https page
         'labels'      => \App\Services\ErpPassportDataService::LABELS,
         'fieldLabels' => collect(array_keys(\App\Services\ErpPassportDataService::FIELD_PRIORITY))
             ->mapWithKeys(fn ($k) => [$k => \App\Services\ErpPassportDataService::fieldLabel($k)]),

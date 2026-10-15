@@ -11,6 +11,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Behind a TLS-terminating reverse proxy (Docker / nginx / Cloudflare) the app must trust
+        // X-Forwarded-Proto/Host, otherwise url()/route() build http:// links and the browser blocks
+        // fetch() calls from the https page ("ERP search unavailable").
+        $middleware->trustProxies(at: '*');
         $middleware->alias([
             'super-admin'         => \App\Http\Middleware\EnsureSuperAdmin::class,
             'agency-access'       => \App\Http\Middleware\EnsureAgencyAccess::class,
