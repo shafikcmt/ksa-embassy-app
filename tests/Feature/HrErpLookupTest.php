@@ -167,6 +167,9 @@ class HrErpLookupTest extends TestCase
 
     public function test_add_hr_fetches_and_fills_automatically_without_search_or_apply_buttons(): void
     {
+        $plan = \App\Models\Plan::create(['name' => 'T', 'slug' => 't', 'price' => 0, 'duration_days' => 365, 'is_active' => true]);
+        \App\Models\Subscription::create(['agency_id' => $this->agency->id, 'plan_id' => $plan->id, 'start_date' => now()->subDay(), 'end_date' => now()->addYear(), 'status' => 'active', 'payment_status' => 'paid', 'amount' => 0]);
+
         $html = $this->actingAs($this->user)->get(route('hr.create'))->assertOk()->getContent();
 
         $this->assertStringNotContainsString('hrErpSearch', $html);
