@@ -28,7 +28,8 @@ class BmetController extends Controller
         return $request->validate([
             'q' => 'nullable|string|max:100', 'status' => ['nullable', Rule::in(array_keys(BmetEntry::STATUSES))],
             'agent_id' => ['nullable', 'integer', Rule::exists('agents', 'id')->where('agency_id', $request->user()->agency_id)],
-            'from' => 'nullable|date_format:Y-m-d', 'to' => 'nullable|date_format:Y-m-d'.($request->filled('from') ? '|after_or_equal:from' : ''),
+            'month' => 'nullable|date_format:Y-m',
+            'from' => 'nullable|date_format:Y-m-d', 'to' => 'nullable|date_format:Y-m-d'.($request->filled('from') && ! $request->filled('month') ? '|after_or_equal:from' : ''),
             'sort' => ['nullable', Rule::in(array_keys(self::SORTS))],
         ]);
     }
@@ -36,6 +37,10 @@ class BmetController extends Controller
     private function query(Request $request): Builder
     {
         $filters = $this->filters($request);
+        // A chosen month wins over From/To: the whole calendar month of the EC date.
+        if ($bounds = \App\Support\MonthRange::bounds($filters['month'] ?? null)) {
+            [$filters['from'], $filters['to']] = $bounds;
+        }
         $query = BmetEntry::forAgency((int) $request->user()->agency_id)->with('agent:id,name');
         if ($q = trim($filters['q'] ?? '')) {
             $like = '%'.addcslashes($q, '%_\\').'%';

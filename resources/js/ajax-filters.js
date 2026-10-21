@@ -141,7 +141,7 @@ document.addEventListener('compositionend', textInput);
 document.addEventListener('change', event => {
     const field = event.target;
     const form = field.closest(formSelector);
-    if (!form || !field.name || !field.matches('select, input[type="date"], input[type="checkbox"], input[type="radio"]')) return;
+    if (!form || !field.name || !field.matches('select, input[type="date"], input[type="month"], input[type="checkbox"], input[type="radio"]')) return;
     navigate(form.dataset.ajaxGroup, filterUrl(form.dataset.ajaxGroup, form));
 });
 

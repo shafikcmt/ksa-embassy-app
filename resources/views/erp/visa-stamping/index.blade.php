@@ -7,11 +7,11 @@
 @php
     $isAdmin   = auth()->user()->isAgencyAdmin();
     $highlight = (int) session('stamping_highlight');
-    $activeFilters = collect([$filters['q'] !== '', $filters['status'] !== '', (bool) $filters['agent_id'], $filters['from'] !== '', $filters['to'] !== ''])->filter()->count();
+    $activeFilters = collect([$filters['q'] !== '', $filters['status'] !== '', (bool) $filters['agent_id'], $filters['month'] !== '', $filters['month'] === '' && $filters['from'] !== '', $filters['month'] === '' && $filters['to'] !== ''])->filter()->count();
     $hasFilters = $activeFilters > 0 || $filters['trashed'];
     $listQuery = array_filter([
         'q' => $filters['q'], 'status' => $filters['status'], 'agent_id' => $filters['agent_id'],
-        'date_field' => $filters['date_field'], 'from' => $filters['from'], 'to' => $filters['to'],
+        'date_field' => $filters['date_field'], 'month' => $filters['month'], 'from' => $filters['month'] !== '' ? null : $filters['from'], 'to' => $filters['month'] !== '' ? null : $filters['to'],
         'sort' => $filters['sort'], 'dir' => $filters['dir'], 'trashed' => $filters['trashed'] ? 1 : null,
     ]);
     $d = fn ($date) => $date?->format('d-M-Y') ?? '—';
@@ -71,7 +71,7 @@
     <button type="submit" hidden tabindex="-1" aria-hidden="true"></button>
     @if($filters['trashed'])<input type="hidden" name="trashed" value="1">@endif
     <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12 xl:items-end">
-        <div class="xl:col-span-3">
+        <div class="xl:col-span-4">
             <label for="vf_q" class="{{ $lbl }}">Search</label>
             <div class="relative">
                 <i class="bi bi-search pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400" aria-hidden="true"></i>
@@ -86,21 +86,25 @@
                 @foreach($statuses as $key => $label)<option value="{{ $key }}" @selected($filters['status'] === $key)>{{ $label }}</option>@endforeach
             </select>
         </div>
-        <div class="xl:col-span-2">
+        <div class="xl:col-span-3">
             <label for="vf_agent" class="{{ $lbl }}">Agent</label>
             <select id="vf_agent" name="agent_id" class="{{ $ctl }} px-3">
                 <option value="">All agents</option>
                 @foreach($agents as $a)<option value="{{ $a->id }}" @selected($filters['agent_id'] === $a->id)>{{ $a->name }}</option>@endforeach
             </select>
         </div>
-        <div class="xl:col-span-5">
-            <span class="{{ $lbl }}" id="vf_range_lbl">Date range</span>
-            <div class="grid grid-cols-[minmax(8.5rem,1fr)_1.2fr_1.2fr] gap-2" role="group" aria-labelledby="vf_range_lbl">
+        <div class="xl:col-span-3">
+            <label for="vf_month" class="{{ $lbl }}">Month</label>
+            <input id="vf_month" type="month" name="month" value="{{ $filters['month'] }}" title="Show one whole month (overrides the dates)" class="{{ $ctl }} px-3">
+        </div>
+        <div class="xl:col-span-12">
+            <span class="{{ $lbl }}" id="vf_range_lbl">Or a date range</span>
+            <div class="grid max-w-2xl grid-cols-[minmax(8.5rem,1fr)_1.2fr_1.2fr] gap-2" role="group" aria-labelledby="vf_range_lbl">
                 <select name="date_field" aria-label="Date field" class="{{ $ctl }} px-2">
                     @foreach($dateFields as $key => $label)<option value="{{ $key }}" @selected($filters['date_field'] === $key)>{{ $label }}</option>@endforeach
                 </select>
-                <input type="date" name="from" value="{{ $filters['from'] }}" aria-label="From date" class="{{ $ctl }} px-2">
-                <input type="date" name="to" value="{{ $filters['to'] }}" aria-label="To date" class="{{ $ctl }} px-2">
+                <input type="date" name="from" value="{{ $filters['month'] === '' ? $filters['from'] : '' }}" aria-label="From date" class="{{ $ctl }} px-2">
+                <input type="date" name="to" value="{{ $filters['month'] === '' ? $filters['to'] : '' }}" aria-label="To date" class="{{ $ctl }} px-2">
             </div>
         </div>
     </div>

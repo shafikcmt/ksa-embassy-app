@@ -3,7 +3,7 @@
 @section('page-title', 'BMET Clearance')
 @section('content')
 @include('erp.bmet._styles')
-@php($listQuery = request()->only('q','status','agent_id','from','to','sort'))
+@php($listQuery = request()->only('q','status','agent_id','month','from','to','sort'))
 <div class="bmet" x-data="{allColumns:false}">
     <header class="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div><h1 class="text-3xl font-bold">BMET Clearance</h1><p class="mt-2 text-sm text-gray-500">Manage BMET clearance certificates and compliance</p></div>
@@ -22,6 +22,7 @@
             <div><label class="bm-label" for="bm-search">Search records</label><div class="relative"><input class="bm-input pr-9" id="bm-search" name="q" value="{{ request('q') }}" placeholder="Passenger, passport, EC or reference"></div></div>
             <div><label class="bm-label" for="bm-filter-status">Status</label><select class="bm-input" id="bm-filter-status" name="status"><option value="">All statuses ({{ $stats['total'] }})</option>@foreach(\App\Models\BmetEntry::STATUSES as $key=>$label)<option value="{{ $key }}" @selected(request('status')===$key)>{{ $label }} ({{ $stats[$key] }})</option>@endforeach</select></div>
             <div><label class="bm-label" for="bm-filter-agent">Agent</label><select class="bm-input" id="bm-filter-agent" name="agent_id"><option value="">All agents</option>@foreach($agents as $agent)<option value="{{ $agent->id }}" @selected((string)request('agent_id')===(string)$agent->id)>{{ $agent->name }}</option>@endforeach</select></div>
+            <div><label for="bm-filter-month" class="bm-label">Month</label><input id="bm-filter-month" class="bm-input" type="month" name="month" value="{{ request('month') }}" title="Show one whole month (overrides the dates)"></div>
             @foreach(['from'=>'EC date from','to'=>'EC date to'] as $key=>$label)<div><label for="bm-filter-{{ $key }}" class="bm-label">{{ $label }}</label><input id="bm-filter-{{ $key }}" class="bm-input" type="date" name="{{ $key }}" value="{{ request($key) }}"></div>@endforeach
             <div><label class="bm-label" for="bm-sort">Sort by</label><select class="bm-input" id="bm-sort" name="sort">@foreach(\App\Http\Controllers\Erp\BmetController::SORTS as $key=>$label)<option value="{{ $key }}" @selected(request('sort','date_desc')===$key)>{{ $label }}</option>@endforeach</select></div>
             <noscript><button class="bm-btn">Apply filters</button></noscript><a data-ajax-link data-ajax-group="erp-bmet" class="bm-btn" href="{{ route('erp.bmet.index') }}">Reset</a>

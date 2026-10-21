@@ -285,13 +285,18 @@ class VisaStampingController extends Controller
             return preg_match('/^\d{4}-\d{2}-\d{2}$/', $v) && strtotime($v) ? $v : '';
         };
 
+        // A chosen month wins over From/To: the whole calendar month of the selected date field.
+        $month  = (string) $request->query('month', '');
+        $bounds = \App\Support\MonthRange::bounds($month);
+
         return [
+            'month'      => $bounds ? $month : '',
             'q'          => trim((string) $request->query('q', '')),
             'status'     => array_key_exists($status, Stamping::STATUSES) ? $status : '',
             'agent_id'   => $agentId > 0 ? $agentId : null,
             'date_field' => array_key_exists($dateField, self::DATE_FIELDS) ? $dateField : 'stamping',
-            'from'       => $date('from'),
-            'to'         => $date('to'),
+            'from'       => $bounds ? $bounds[0] : $date('from'),
+            'to'         => $bounds ? $bounds[1] : $date('to'),
             'sort'       => array_key_exists($sort, self::SORTS) ? $sort : 'stamping_date',
             'dir'        => $request->query('dir') === 'asc' ? 'asc' : 'desc',
             'trashed'    => $request->boolean('trashed') && auth()->user()->isAgencyAdmin(),
