@@ -20,6 +20,9 @@
     .toolbar a, .toolbar button { color: #fff; background: #374151; border: 0; border-radius: 6px; padding: 6px 12px;
                                   font: inherit; text-decoration: none; cursor: pointer; }
     .toolbar .primary { background: #2563eb; }
+    .toolbar .pos { display: inline-flex; align-items: center; gap: 4px; }
+    .toolbar .pos a { background: #374151; padding: 5px 10px; }
+    .toolbar .pos a.on { background: #0e9f6e; font-weight: 600; }
     iframe { display: block; width: 100%; height: calc(100% - 44px); border: 0; }
 </style>
 </head>
@@ -27,6 +30,13 @@
     <div class="toolbar">
         <strong>{{ $title }}</strong>
         <span class="spacer"></span>
+        @if(! empty($positions))
+            {{-- Which half of the A4 sheet this print uses — lets one sheet carry two prints (feed it back in for the second). --}}
+            <span class="pos" title="Print on the top or bottom half of the A4 sheet">Print on:
+                <a href="{{ $positions['top'] }}" class="{{ $positions['current'] === 'top' ? 'on' : '' }}">Top half</a>
+                <a href="{{ $positions['bottom'] }}" class="{{ $positions['current'] === 'bottom' ? 'on' : '' }}">Bottom half</a>
+            </span>
+        @endif
         @isset($backUrl)<a href="{{ $backUrl }}">&larr; Back</a>@endisset
         @isset($downloadUrl)<a href="{{ $downloadUrl }}">Download PDF</a>@endisset
         <button type="button" class="primary" id="printBtn">Print</button>

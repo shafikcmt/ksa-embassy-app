@@ -28,11 +28,14 @@
 <body>
 <htmlpagefooter name="invoiceBatchFooter">
     <table class="foot"><tr>
-        <td style="width:60%; text-align:left;">Generated {{ now()->format('d-M-Y h:i A') }} | {{ count($sheets) }} {{ \Illuminate\Support\Str::plural('invoice', count($sheets)) }}</td>
+        <td style="width:60%; text-align:left;">Generated {{ now()->format('d-M-Y h:i A') }} | @if(count($sheets) === 1){{ $sheets[0]['invoice']->invoice_number }}@else{{ count($sheets) }} {{ \Illuminate\Support\Str::plural('invoice', count($sheets)) }}@endif</td>
         <td style="width:40%; text-align:right;">Page {PAGENO} of {nbpg}</td>
     </tr></table>
 </htmlpagefooter>
 <sethtmlpagefooter name="invoiceBatchFooter" value="on" />
+@if(count($sheets) === 1 && $sheets[0]['invoice']->status === 'draft')
+    <watermarktext content="DRAFT" alpha="0.06" />
+@endif
 
 @php
     // Agency logo — base64, gated by the agency's print_logo toggle; loaded once for the whole batch.
@@ -47,6 +50,15 @@
     // a long invoice (many passengers / notes) gets its own page(s) and flows normally.
     $slot = 0;
     $needBreak = false;
+
+    // A lone half-size invoice can sit on the lower half of a sheet that already carries one (?position=bottom).
+    $lone = count($sheets) === 1 && $sheets[0]['half'];
+    $position = $lone && ($position ?? 'top') === 'bottom' ? 'bottom' : 'top';
+    $cut = '<table class="cut" style="margin:0;"><tr><td>&nbsp;</td></tr></table>';
+    if ($lone && $position === 'bottom') {
+        echo view('components.print.slot', ['pos' => 'top', 'height' => 138, 'slot' => new \Illuminate\Support\HtmlString('&nbsp;')])->render() . $cut;
+        $slot = 1;
+    }
 @endphp
 @foreach($sheets as $sheet)
     @php
@@ -57,19 +69,31 @@
             $needBreak = false;
         }
     @endphp
-    @if($half && $slot === 1)
-        <table class="cut" style="margin:7pt 0 7pt;"><tr><td>&nbsp;</td></tr></table>
+    @if($half)
+        {{-- Half-page box: top slot hugs the top edge, bottom slot the bottom edge; the cut line sits at the centre. --}}
+        <x-print.slot :pos="$slot === 1 ? 'bottom' : 'top'">
+            @include('prints.partials.invoice-body', [
+                'invoice'       => $sheet['invoice'],
+                'barcodeSrc'    => $sheet['barcodeSrc'],
+                'amountInWords' => $sheet['amountInWords'],
+                'dueInWords'    => $sheet['dueInWords'],
+                'agency'        => $agency,
+                'logoSrc'       => $logoSrc,
+                'compact'       => true,
+            ])
+        </x-print.slot>
+        @if($slot === 0){!! $cut !!}@endif
+    @else
+        @include('prints.partials.invoice-body', [
+            'invoice'       => $sheet['invoice'],
+            'barcodeSrc'    => $sheet['barcodeSrc'],
+            'amountInWords' => $sheet['amountInWords'],
+            'dueInWords'    => $sheet['dueInWords'],
+            'agency'        => $agency,
+            'logoSrc'       => $logoSrc,
+            'compact'       => true,
+        ])
     @endif
-
-    @include('prints.partials.invoice-body', [
-        'invoice'       => $sheet['invoice'],
-        'barcodeSrc'    => $sheet['barcodeSrc'],
-        'amountInWords' => $sheet['amountInWords'],
-        'dueInWords'    => $sheet['dueInWords'],
-        'agency'        => $agency,
-        'logoSrc'       => $logoSrc,
-        'compact'       => true,
-    ])
 
     @php
         if ($half) {

@@ -211,4 +211,27 @@ class InvoiceBatchPrintTest extends TestCase
             ->assertSee('data-invoice-check', false)
             ->assertSee('Print selected');
     }
+
+    public function test_a_single_invoice_prints_on_half_a_sheet_top_or_bottom(): void
+    {
+        $inv = $this->invoice($this->admin)->load('items');
+        $this->actingAs($this->admin);
+
+        // The print wrapper offers both halves; the chosen one is carried into the PDF url.
+        $this->get(route('erp.invoices.preview-pdf', $inv))->assertOk()
+            ->assertSee('Print on:')->assertSee('Bottom half')
+            ->assertSee('position=top', false);
+        $this->get(route('erp.invoices.preview-pdf', [$inv, 'position' => 'bottom']))->assertOk()
+            ->assertSee('position=bottom', false);
+
+        foreach (['top', 'bottom'] as $position) {
+            $pdf = $this->pdf($this->get(route('erp.invoices.preview-pdf', [$inv, 'raw' => 1, 'position' => $position])));
+            $this->assertCount(1, $pdf->getPages());
+            $this->assertStringContainsString($inv->invoice_number, $pdf->getText());
+        }
+
+        // A long invoice keeps the full page and shows no half-sheet choice.
+        $long = $this->invoice($this->admin, \App\Http\Controllers\Erp\InvoiceController::HALF_PAGE_MAX_ROWS + 1);
+        $this->get(route('erp.invoices.preview-pdf', $long))->assertOk()->assertDontSee('Print on:');
+    }
 }

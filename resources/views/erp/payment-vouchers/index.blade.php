@@ -81,8 +81,9 @@
                 @foreach($statuses as $key => $label)<option value="{{ $key }}" @selected($filters['status'] === $key)>{{ $label }}</option>@endforeach
             </select>
         </div>
-        <div class="lg:col-span-2"><label class="{{ $lbl }}">From</label><input type="date" name="from" value="{{ $filters['from'] }}" class="{{ $inp }}"></div>
-        <div class="lg:col-span-2"><label class="{{ $lbl }}">To</label><input type="date" name="to" value="{{ $filters['to'] }}" class="{{ $inp }}"></div>
+        <div class="lg:col-span-2"><label class="{{ $lbl }}">Month</label><input type="month" name="month" value="{{ $filters['month'] }}" title="Show one whole month (overrides From / To)" class="{{ $inp }}"></div>
+        <div class="lg:col-span-2"><label class="{{ $lbl }}">From</label><input type="date" name="from" value="{{ $filters['month'] !== '' ? '' : $filters['from'] }}" class="{{ $inp }}"></div>
+        <div class="lg:col-span-2"><label class="{{ $lbl }}">To</label><input type="date" name="to" value="{{ $filters['month'] !== '' ? '' : $filters['to'] }}" class="{{ $inp }}"></div>
         <div class="lg:col-span-2">
             <label class="{{ $lbl }}">Sort</label>
             <select name="sort" class="{{ $inp }}">
@@ -98,6 +99,25 @@
     </div>
 </form>
 <div data-ajax-region="results" data-ajax-group="erp-payment-vouchers">
+    {{-- Whole-month print: every voucher of the chosen month in one go (2 per A4 page). --}}
+    @if(($filters['month'] ?? '') !== '' && count($printIds))
+        <div class="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-brand-200 bg-brand-50 px-4 py-2.5 text-sm">
+            <span class="font-medium text-slate-700">
+                <i class="bi bi-calendar-month text-brand-600"></i>
+                <strong>{{ \Carbon\Carbon::createFromFormat('!Y-m', $filters['month'])->format('F Y') }}</strong>
+                · {{ count($printIds) > 50 ? 'more than 50' : count($printIds) }} voucher{{ count($printIds) === 1 ? '' : 's' }}
+            </span>
+            @if(count($printIds) <= 50)
+                <button type="button" x-on:click="window.open(url + '?ids=' + @js(implode(',', $printIds)), '_blank')"
+                        class="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3.5 py-1.5 font-semibold text-white transition hover:bg-brand-700">
+                    <i class="bi bi-printer"></i> Print all {{ count($printIds) }}
+                </button>
+            @else
+                <span class="text-xs text-slate-500">Up to 50 can be printed at once — narrow it with Search / Status, or tick rows.</span>
+            @endif
+        </div>
+    @endif
+
 
 @if($vouchers->isEmpty())
     <div class="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">

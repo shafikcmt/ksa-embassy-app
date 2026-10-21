@@ -28,7 +28,7 @@
 <body>
 <htmlpagefooter name="voucherBatchFooter">
     <table class="foot"><tr>
-        <td style="width:60%; text-align:left;">Generated {{ now()->format('d-M-Y h:i A') }} | {{ count($sheets) }} {{ \Illuminate\Support\Str::plural('voucher', count($sheets)) }}</td>
+        <td style="width:60%; text-align:left;">Generated {{ now()->format('d-M-Y h:i A') }} | @if(count($sheets) === 1){{ $sheets[0]['voucher']->voucher_number }}@else{{ count($sheets) }} {{ \Illuminate\Support\Str::plural('voucher', count($sheets)) }}@endif</td>
         <td style="width:40%; text-align:right;">Page {PAGENO} of {nbpg}</td>
     </tr></table>
 </htmlpagefooter>
@@ -47,6 +47,15 @@
     // a heavy one (long remarks, tax/discount rows …) gets a page of its own.
     $slot = 0;
     $needBreak = false;
+
+    // A lone half-size voucher can sit on the lower half of a sheet that already carries one (?position=bottom).
+    $lone = count($sheets) === 1 && $sheets[0]['half'];
+    $position = $lone && ($position ?? 'top') === 'bottom' ? 'bottom' : 'top';
+    $cut = '<table class="cut" style="margin:0;"><tr><td>&nbsp;</td></tr></table>';
+    if ($lone && $position === 'bottom') {
+        echo view('components.print.slot', ['pos' => 'top', 'height' => 138, 'slot' => new \Illuminate\Support\HtmlString('&nbsp;')])->render() . $cut;
+        $slot = 1;
+    }
 @endphp
 @foreach($sheets as $sheet)
     @php
@@ -57,17 +66,27 @@
             $needBreak = false;
         }
     @endphp
-    @if($half && $slot === 1)
-        <table class="cut" style="margin:6pt 0 6pt;"><tr><td>&nbsp;</td></tr></table>
+    @if($half)
+        {{-- Half-page box: top slot hugs the top edge, bottom slot the bottom edge; the cut line sits at the centre. --}}
+        <x-print.slot :pos="$slot === 1 ? 'bottom' : 'top'">
+            @include('prints.partials.payment-voucher-body', [
+                'voucher'       => $sheet['voucher'],
+                'amountInWords' => $sheet['amountInWords'],
+                'agency'        => $agency,
+                'logoSrc'       => $logoSrc,
+                'compact'       => true,
+            ])
+        </x-print.slot>
+        @if($slot === 0){!! $cut !!}@endif
+    @else
+        @include('prints.partials.payment-voucher-body', [
+            'voucher'       => $sheet['voucher'],
+            'amountInWords' => $sheet['amountInWords'],
+            'agency'        => $agency,
+            'logoSrc'       => $logoSrc,
+            'compact'       => true,
+        ])
     @endif
-
-    @include('prints.partials.payment-voucher-body', [
-        'voucher'       => $sheet['voucher'],
-        'amountInWords' => $sheet['amountInWords'],
-        'agency'        => $agency,
-        'logoSrc'       => $logoSrc,
-        'compact'       => true,
-    ])
 
     @php
         if ($half) {

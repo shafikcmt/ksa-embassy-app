@@ -77,8 +77,13 @@ class InvoiceController extends Controller
             'agent'  => (int) $request->query('agent_id', 0),
             'from'   => (string) $request->query('from', ''),
             'to'     => (string) $request->query('to', ''),
+            'month'  => '',
             'sort'   => array_key_exists($request->query('sort'), self::SORTS) ? $request->query('sort') : 'date_desc',
         ];
+        // A chosen month wins over From/To: the whole calendar month of the invoice date.
+        if ($bounds = \App\Support\MonthRange::bounds((string) $request->query('month', ''))) {
+            [$filters['month'], $filters['from'], $filters['to']] = [(string) $request->query('month'), $bounds[0], $bounds[1]];
+        }
 
         $query = Invoice::forAgency($agencyId)->withCount('items');
 
@@ -122,6 +127,9 @@ class InvoiceController extends Controller
             default       => $query->orderByDesc('invoice_date')->orderByDesc('id'),
         };
 
+        // "Print all" for a filtered month: the ids of every match (capped at the print limit + 1 to detect overflow).
+        $printIds = $filters['month'] !== '' ? (clone $query)->limit(self::BATCH_LIMIT + 1)->pluck('id')->all() : [];
+
         $invoices = $query->with('agent:id,name')->paginate(15)->withQueryString();
 
         // Summary strip — whole agency (unfiltered), grouped per currency so
@@ -133,6 +141,7 @@ class InvoiceController extends Controller
 
         return view('erp.invoices.index', [
             'invoices' => $invoices,
+            'printIds' => $printIds,
             'filters'  => $filters,
             'sorts'    => self::SORTS,
             'statuses' => Invoice::STATUSES,
@@ -327,11 +336,16 @@ class InvoiceController extends Controller
         }
         $this->authorizeAgency($invoice);
 
+        $position = $this->position();
+        $half = $this->isHalfSize($invoice);
+
         return view('prints.pdf-print', [
             'title'       => 'Invoice ' . $invoice->invoice_number,
-            'pdfUrl'      => route('erp.invoices.preview-pdf', [$invoice, 'raw' => 1]),
-            'downloadUrl' => route('erp.invoices.download-pdf', $invoice),
+            'pdfUrl'      => route('erp.invoices.preview-pdf', [$invoice, 'raw' => 1, 'position' => $position]),
+            'downloadUrl' => route('erp.invoices.download-pdf', [$invoice, 'position' => $position]),
             'backUrl'     => route('erp.invoices.show', $invoice),
+            // Half-sheet invoices can go on the top or the bottom half, so one sheet carries two prints.
+            'positions'   => $half ? ['current' => $position, 'top' => route('erp.invoices.preview-pdf', [$invoice, 'position' => 'top']), 'bottom' => route('erp.invoices.preview-pdf', [$invoice, 'position' => 'bottom'])] : null,
         ]);
     }
 
@@ -362,13 +376,17 @@ class InvoiceController extends Controller
         abort_if($invoices->isEmpty(), 404);
 
         $query = ['ids' => implode(',', $invoices->pluck('id')->all())];
+        $position = $this->position();
+        $lone = $invoices->count() === 1 && $this->isHalfSize($invoices->first());
+        $posQuery = $lone ? ['position' => $position] : [];
 
         if (! $request->boolean('raw') && ! $request->boolean('download')) {
             return view('prints.pdf-print', [
                 'title'       => 'Print ' . $invoices->count() . ' ' . \Illuminate\Support\Str::plural('invoice', $invoices->count()),
-                'pdfUrl'      => route('erp.invoices.print-selected', $query + ['raw' => 1]),
-                'downloadUrl' => route('erp.invoices.print-selected', $query + ['download' => 1]),
+                'pdfUrl'      => route('erp.invoices.print-selected', $query + $posQuery + ['raw' => 1]),
+                'downloadUrl' => route('erp.invoices.print-selected', $query + $posQuery + ['download' => 1]),
                 'backUrl'     => route('erp.invoices.index'),
+                'positions'   => $lone ? ['current' => $position, 'top' => route('erp.invoices.print-selected', $query + ['position' => 'top']), 'bottom' => route('erp.invoices.print-selected', $query + ['position' => 'bottom'])] : null,
             ]);
         }
 
@@ -382,8 +400,9 @@ class InvoiceController extends Controller
         ])->all();
 
         return $pdf->generateFromView('prints.invoice-batch', [
-            'sheets' => $sheets,
-            'agency' => auth()->user()->agency,
+            'sheets'   => $sheets,
+            'agency'   => auth()->user()->agency,
+            'position' => $position,
         ], 'invoices-' . now()->format('Ymd-His'), $request->boolean('raw'), self::PRINT_OPTIONS);
     }
 
@@ -394,13 +413,37 @@ class InvoiceController extends Controller
         $this->authorizeAgency($invoice);
         $invoice->load(['items.hrProfile.passport', 'agent']);
 
-        return $pdf->generateFromView('prints.invoice', [
-            'invoice'       => $invoice,
-            'agency'        => auth()->user()->agency,
+        $common = [
             'barcodeSrc'    => $barcode->make($invoice->invoice_number),
             'amountInWords' => NumberToWords::currency((string) $invoice->total_amount, $invoice->currency),
             'dueInWords'    => NumberToWords::currency($this->balanceDue($invoice), $invoice->currency),
-        ], $invoice->invoice_number, $inline, ['showWatermarkText' => true] + self::PRINT_OPTIONS);
+        ];
+
+        // A normal invoice prints on HALF an A4 sheet (top by default, ?position=bottom for the lower half),
+        // so the same sheet can go back into the printer for the next one. Long invoices keep the full page.
+        if ($this->isHalfSize($invoice)) {
+            return $pdf->generateFromView('prints.invoice-batch', [
+                'sheets'   => [['invoice' => $invoice, 'half' => true] + $common],
+                'agency'   => auth()->user()->agency,
+                'position' => $this->position(),
+            ], $invoice->invoice_number, $inline, self::PRINT_OPTIONS);
+        }
+
+        return $pdf->generateFromView('prints.invoice', [
+            'invoice' => $invoice,
+            'agency'  => auth()->user()->agency,
+        ] + $common, $invoice->invoice_number, $inline, ['showWatermarkText' => true] + self::PRINT_OPTIONS);
+    }
+
+    private function isHalfSize(Invoice $invoice): bool
+    {
+        return $this->rowWeight($invoice->loadMissing('items')) <= self::HALF_PAGE_MAX_ROWS;
+    }
+
+    /** Which half of the sheet a lone invoice prints on: top (default) or bottom. */
+    private function position(): string
+    {
+        return request()->query('position') === 'bottom' ? 'bottom' : 'top';
     }
 
     /** Passenger rows + wrapped notes lines — how much vertical room an invoice needs. */

@@ -94,4 +94,32 @@ class MonthFilterTest extends TestCase
         $this->actingAs($this->admin)->get(route('erp.mofa', ['month' => '2026-13']))->assertSessionHasErrors('month');
         $this->get(route('erp.visa-stamping.index', ['month' => 'nope']))->assertOk();
     }
+
+    public function test_invoice_and_voucher_lists_filter_by_month_and_offer_print_all(): void
+    {
+        $this->actingAs($this->admin);
+        foreach ([['2026-09-30', 'SEPT BILL'], ['2026-10-05', 'OCT BILL ONE'], ['2026-10-20', 'OCT BILL TWO']] as $i => [$date, $name]) {
+            $this->post(route('erp.invoices.store'), [
+                'invoice_date' => $date, 'bill_to_name' => $name, 'status' => 'pending', 'currency' => 'BDT', 'tax_type' => 'none', 'discount_type' => 'none',
+                'items' => [['passenger_name' => 'P'.$i, 'passport_no' => 'A00000'.$i, 'processing_fee' => '1000', 'mofa_fee' => '0']],
+            ])->assertRedirect();
+        }
+        $res = $this->get(route('erp.invoices.index', ['month' => '2026-10']))->assertOk()
+            ->assertSee('OCT BILL ONE')->assertSee('OCT BILL TWO')->assertDontSee('SEPT BILL')
+            ->assertSee('Print all 2');
+        $this->assertCount(2, $res->viewData('printIds'));
+        // No month → no print-all bar.
+        $this->get(route('erp.invoices.index'))->assertOk()->assertDontSee('Print all');
+
+        foreach ([['2026-09-30', 'SEPT PAYEE'], ['2026-10-12', 'OCT PAYEE']] as [$date, $payee]) {
+            $this->post(route('erp.payment-vouchers.store'), [
+                'voucher_date' => $date, 'payee_type' => 'party', 'payee_name' => $payee, 'payment_method' => 'cash',
+                'tax_type' => 'none', 'discount_type' => 'none', 'description' => 'Cost',
+                'expense_head_id' => \App\Models\ExpenseHead::forAgency($this->agency->id)->value('id'),
+                'items' => [['description' => 'Cost', 'quantity' => 1, 'unit_price' => '500']],
+            ])->assertSessionHasNoErrors();
+        }
+        $this->get(route('erp.payment-vouchers.index', ['month' => '2026-10']))->assertOk()
+            ->assertSee('OCT PAYEE')->assertDontSee('SEPT PAYEE');
+    }
 }

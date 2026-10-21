@@ -54,8 +54,13 @@ class PaymentVoucherController extends Controller
             'status' => (string) $request->query('status', ''),
             'from'   => (string) $request->query('from', ''),
             'to'     => (string) $request->query('to', ''),
+            'month'  => '',
             'sort'   => array_key_exists($request->query('sort'), self::SORTS) ? $request->query('sort') : 'date_desc',
         ];
+        // A chosen month wins over From/To: the whole calendar month of the voucher date.
+        if ($bounds = \App\Support\MonthRange::bounds((string) $request->query('month', ''))) {
+            [$filters['month'], $filters['from'], $filters['to']] = [(string) $request->query('month'), $bounds[0], $bounds[1]];
+        }
 
         $query = PaymentVoucher::forAgency($agencyId)->with('expenseHead');
 
@@ -89,8 +94,12 @@ class PaymentVoucherController extends Controller
             ->selectRaw('status, COUNT(*) as cnt, SUM(total_amount) as total')
             ->groupBy('status')->get()->keyBy('status');
 
+        // "Print all" for a filtered month: the ids of every match (capped at the print limit + 1 to detect overflow).
+        $printIds = $filters['month'] !== '' ? (clone $query)->limit(self::BATCH_LIMIT + 1)->pluck('id')->all() : [];
+
         return view('erp.payment-vouchers.index', [
             'vouchers' => $query->paginate(15)->withQueryString(),
+            'printIds' => $printIds,
             'filters'  => $filters,
             'sorts'    => self::SORTS,
             'statuses' => PaymentVoucher::STATUSES,
@@ -224,11 +233,16 @@ class PaymentVoucherController extends Controller
         }
         $this->authorize('view', $paymentVoucher);
 
+        $position = $this->position();
+        $half = $this->isHalfSize($paymentVoucher);
+
         return view('prints.pdf-print', [
             'title'       => 'Payment Voucher ' . $paymentVoucher->voucher_number,
-            'pdfUrl'      => route('erp.payment-vouchers.preview-pdf', [$paymentVoucher, 'raw' => 1]),
-            'downloadUrl' => route('erp.payment-vouchers.download-pdf', $paymentVoucher),
+            'pdfUrl'      => route('erp.payment-vouchers.preview-pdf', [$paymentVoucher, 'raw' => 1, 'position' => $position]),
+            'downloadUrl' => route('erp.payment-vouchers.download-pdf', [$paymentVoucher, 'position' => $position]),
             'backUrl'     => route('erp.payment-vouchers.show', $paymentVoucher),
+            // Half-sheet vouchers can go on the top or the bottom half, so one sheet carries two prints.
+            'positions'   => $half ? ['current' => $position, 'top' => route('erp.payment-vouchers.preview-pdf', [$paymentVoucher, 'position' => 'top']), 'bottom' => route('erp.payment-vouchers.preview-pdf', [$paymentVoucher, 'position' => 'bottom'])] : null,
         ]);
     }
 
@@ -259,13 +273,17 @@ class PaymentVoucherController extends Controller
         abort_if($vouchers->isEmpty(), 404);
 
         $query = ['ids' => implode(',', $vouchers->pluck('id')->all())];
+        $position = $this->position();
+        $lone = $vouchers->count() === 1 && $this->isHalfSize($vouchers->first());
+        $posQuery = $lone ? ['position' => $position] : [];
 
         if (! $request->boolean('raw') && ! $request->boolean('download')) {
             return view('prints.pdf-print', [
                 'title'       => 'Print ' . $vouchers->count() . ' ' . \Illuminate\Support\Str::plural('voucher', $vouchers->count()),
-                'pdfUrl'      => route('erp.payment-vouchers.print-selected', $query + ['raw' => 1]),
-                'downloadUrl' => route('erp.payment-vouchers.print-selected', $query + ['download' => 1]),
+                'pdfUrl'      => route('erp.payment-vouchers.print-selected', $query + $posQuery + ['raw' => 1]),
+                'downloadUrl' => route('erp.payment-vouchers.print-selected', $query + $posQuery + ['download' => 1]),
                 'backUrl'     => route('erp.payment-vouchers.index'),
+                'positions'   => $lone ? ['current' => $position, 'top' => route('erp.payment-vouchers.print-selected', $query + ['position' => 'top']), 'bottom' => route('erp.payment-vouchers.print-selected', $query + ['position' => 'bottom'])] : null,
             ]);
         }
 
@@ -276,8 +294,9 @@ class PaymentVoucherController extends Controller
         ])->all();
 
         return $pdf->generateFromView('prints.payment-voucher-batch', [
-            'sheets' => $sheets,
-            'agency' => auth()->user()->agency,
+            'sheets'   => $sheets,
+            'agency'   => auth()->user()->agency,
+            'position' => $position,
         ], 'payment-vouchers-' . now()->format('Ymd-His'), $request->boolean('raw'), self::PRINT_OPTIONS);
     }
 
@@ -297,12 +316,34 @@ class PaymentVoucherController extends Controller
     {
         $this->authorize('view', $voucher);
         $voucher->load(['items', 'expenseHead', 'createdBy:id,name', 'approvedBy:id,name', 'paidBy:id,name']);
+        $words = NumberToWords::currency((string) $voucher->total_amount, 'BDT');
+
+        // A normal voucher prints on HALF an A4 sheet (top by default, ?position=bottom for the lower half),
+        // so the same sheet can go back into the printer for the next one. Heavy vouchers keep the full page.
+        if ($this->isHalfSize($voucher)) {
+            return $pdf->generateFromView('prints.payment-voucher-batch', [
+                'sheets'   => [['voucher' => $voucher, 'amountInWords' => $words, 'half' => true]],
+                'agency'   => auth()->user()->agency,
+                'position' => $this->position(),
+            ], 'Payment-Voucher-' . $voucher->voucher_number, $inline, self::PRINT_OPTIONS);
+        }
 
         return $pdf->generateFromView('prints.payment-voucher', [
             'voucher'       => $voucher,
             'agency'        => auth()->user()->agency,
-            'amountInWords' => NumberToWords::currency((string) $voucher->total_amount, 'BDT'),
+            'amountInWords' => $words,
         ], 'Payment-Voucher-' . $voucher->voucher_number, $inline, self::PRINT_OPTIONS);
+    }
+
+    private function isHalfSize(PaymentVoucher $voucher): bool
+    {
+        return $this->rowWeight($voucher->loadMissing('items', 'expenseHead')) <= self::HALF_PAGE_MAX_ROWS;
+    }
+
+    /** Which half of the sheet a lone voucher prints on: top (default) or bottom. */
+    private function position(): string
+    {
+        return request()->query('position') === 'bottom' ? 'bottom' : 'top';
     }
 
     private function formData(?PaymentVoucher $voucher = null): array
