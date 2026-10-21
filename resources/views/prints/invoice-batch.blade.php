@@ -54,9 +54,9 @@
     // A lone half-size invoice can sit on the lower half of a sheet that already carries one (?position=bottom).
     $lone = count($sheets) === 1 && $sheets[0]['half'];
     $position = $lone && ($position ?? 'top') === 'bottom' ? 'bottom' : 'top';
-    $cut = '<table class="cut" style="margin:0;"><tr><td>&nbsp;</td></tr></table>';
+    $cut = ''; // the cut line is the bottom border of the top box (see components/print/slot)
     if ($lone && $position === 'bottom') {
-        echo view('components.print.slot', ['pos' => 'top', 'height' => 138, 'slot' => new \Illuminate\Support\HtmlString('&nbsp;')])->render() . $cut;
+        echo view('components.print.slot', ['pos' => 'top', 'slot' => new \Illuminate\Support\HtmlString('&nbsp;')])->render();
         $slot = 1;
     }
 @endphp
