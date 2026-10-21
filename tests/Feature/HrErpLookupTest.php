@@ -165,7 +165,7 @@ class HrErpLookupTest extends TestCase
             ->assertJsonCount(1, 'candidates.0.records')->assertDontSee('Another Person');
     }
 
-    public function test_add_hr_fetches_and_fills_automatically_without_search_or_apply_buttons(): void
+    public function test_add_hr_fetches_and_fills_automatically_from_the_form_fields(): void
     {
         $plan = \App\Models\Plan::create(['name' => 'T', 'slug' => 't', 'price' => 0, 'duration_days' => 365, 'is_active' => true]);
         \App\Models\Subscription::create(['agency_id' => $this->agency->id, 'plan_id' => $plan->id, 'start_date' => now()->subDay(), 'end_date' => now()->addYear(), 'status' => 'active', 'payment_status' => 'paid', 'amount' => 0]);
@@ -175,7 +175,10 @@ class HrErpLookupTest extends TestCase
         $this->assertStringNotContainsString('hrErpSearch', $html);
         $this->assertStringNotContainsString('hrErpApply', $html);
         $this->assertStringNotContainsString('Apply to form', $html);
-        $this->assertStringContainsString('filled in automatically', $html);
-        $this->assertStringContainsString('hrErp-passport', $html);
+        // No separate search box either: the form's own Passport / Visa / MOFA fields drive the lookup.
+        $this->assertStringNotContainsString('hrErp-passport', $html);
+        $this->assertStringNotContainsString('Find in ERP', $html);
+        $this->assertStringContainsString("['passport_number', 'passport', 5]", $html);
+        $this->assertStringContainsString(route('hr.erp-lookup'), str_replace('\\/', '/', $html));
     }
 }
