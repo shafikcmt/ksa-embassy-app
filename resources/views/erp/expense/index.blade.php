@@ -14,7 +14,7 @@
     <x-ui.page-header title="Expenses" subtitle="Track agency expenses" icon="bi-cash-coin" />
 
     {{-- Summary --}}
-    <div class="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <div class="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div class="rounded-2xl border border-rose-200 bg-rose-50 p-4">
             <div class="text-xs font-semibold uppercase tracking-wide text-rose-600">This Month</div>
             <div class="mt-1 text-xl font-bold text-rose-700">৳{{ number_format($monthTotal, 2) }}</div>
@@ -22,6 +22,16 @@
         <div class="rounded-2xl border border-slate-200 bg-white p-4">
             <div class="text-xs font-semibold uppercase tracking-wide text-slate-400">All-Time Total</div>
             <div class="mt-1 text-xl font-bold text-slate-900">৳{{ number_format($allTimeTotal, 2) }}</div>
+        </div>
+        {{-- Enjaz Dollar: dollars bought next to the taka spent on them --}}
+        <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+            <div class="text-xs font-semibold uppercase tracking-wide text-emerald-700"><i class="bi bi-currency-dollar"></i> Dollar Purchased</div>
+            <div class="mt-1 text-xl font-bold text-emerald-800">$ {{ number_format($dollar['usd_total'], 2) }}</div>
+            <div class="text-xs text-emerald-800/80">
+                ৳{{ number_format($dollar['bdt_total'], 2) }} spent
+                @if($dollar['rate']) · avg ৳{{ number_format($dollar['rate'], 2) }} / $ @endif
+            </div>
+            <div class="text-xs text-emerald-800/80">This month: $ {{ number_format($dollar['usd_month'], 2) }}</div>
         </div>
         <div class="rounded-2xl border border-slate-200 bg-white p-4">
             <div class="text-xs font-semibold uppercase tracking-wide text-slate-400">Top Category</div>
@@ -73,20 +83,25 @@
         $fi = \App\Support\ErpForm::INPUT;
         $bd = fn (string $k) => $addErr && $errors->has($k) ? \App\Support\ErpForm::BORDER_ERROR : \App\Support\ErpForm::BORDER_OK;
     @endphp
-    <form method="POST" action="{{ route('erp.expenses.store') }}" class="mb-6" id="erpAddForm" x-show="addOpen" x-cloak x-data="{ busy: false }" x-on:submit="busy = true">
+    <form method="POST" action="{{ route('erp.expenses.store') }}" class="mb-6" id="erpAddForm" x-show="addOpen" x-cloak x-data="{ busy: false, dollar: @js(in_array((string) old('expense_head_id'), $dollarHeadIds, true)) }" x-on:submit="busy = true">
         @csrf
         <x-erp.section icon="bi-plus-circle" title="Add Expense">
             <x-erp.field label="Date" for="ex_expense_date" required :name="$addErr ? 'expense_date' : null">
                 <input id="ex_expense_date" type="date" name="expense_date" value="{{ old('expense_date', now()->format('Y-m-d')) }}" required class="{{ $fi }} {{ $bd('expense_date') }}">
             </x-erp.field>
             <x-erp.field label="Expense Head" for="ex_category" required :name="$addErr ? 'expense_head_id' : null">
-                <select id="ex_category" name="expense_head_id" required class="{{ $fi }} {{ $bd('expense_head_id') }}">
+                <select id="ex_category" name="expense_head_id" required class="{{ $fi }} {{ $bd('expense_head_id') }}" x-on:change="dollar = @js($dollarHeadIds).includes($event.target.value)">
                     <option value="">—</option>
                     @foreach($heads->where('is_active', true) as $head)<option value="{{ $head->id }}" @selected((string) old('expense_head_id') === (string) $head->id)>{{ $head->name }}</option>@endforeach
                 </select>
             </x-erp.field>
             <x-erp.field label="Amount (৳)" for="ex_amount" required :name="$addErr ? 'amount' : null">
                 <input id="ex_amount" type="number" step="0.01" min="0.01" name="amount" value="{{ old('amount') }}" required class="{{ $fi }} {{ $bd('amount') }}">
+            </x-erp.field>
+            {{-- Only for Enjaz Dollar (dollar) heads: the dollar amount bought. --}}
+            <x-erp.field label="Dollar Amount ($)" for="ex_usd_amount" required x-show="dollar" x-cloak :name="$addErr ? 'usd_amount' : null">
+                <input id="ex_usd_amount" type="number" step="0.01" min="0.01" name="usd_amount" value="{{ old('usd_amount') }}" inputmode="decimal"
+                       x-bind:required="dollar" x-bind:disabled="!dollar" placeholder="e.g. 420" class="{{ $fi }} {{ $bd('usd_amount') }}">
             </x-erp.field>
             <x-erp.field label="Paid via" for="ex_paid_via" :name="$addErr ? 'paid_via' : null">
                 <select id="ex_paid_via" name="paid_via" class="{{ $fi }} {{ $bd('paid_via') }}">
@@ -141,6 +156,7 @@
                         <th class="px-4 py-3">Date</th>
                         <th class="px-4 py-3">Category</th>
                         <th class="px-4 py-3 text-right">Amount</th>
+                        <th class="px-4 py-3 text-right">USD</th>
                         <th class="px-4 py-3">Paid via</th>
                         <th class="px-4 py-3">Note</th>
                         <th class="px-4 py-3 text-right">Actions</th>
@@ -153,6 +169,7 @@
                             <td class="px-4 py-3 whitespace-nowrap">{{ $e->expense_date->format('d M Y') }}</td>
                             <td class="px-4 py-3"><span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">{{ $e->categoryLabel() }}</span></td>
                             <td class="px-4 py-3 text-right whitespace-nowrap font-semibold text-rose-600">৳{{ number_format((float) $e->amount, 2) }}</td>
+                            <td class="px-4 py-3 text-right whitespace-nowrap font-semibold text-emerald-700">{{ $e->usd_amount !== null ? '$ '.number_format((float) $e->usd_amount, 2) : '' }}</td>
                             <td class="px-4 py-3">{{ $e->paidViaLabel() ?: '—' }}</td>
                             <td class="px-4 py-3 text-slate-600">{{ $e->note ?: '—' }}</td>
                             <td class="px-4 py-3">
@@ -171,6 +188,7 @@
                                                 'expense_head_id' => $e->expense_head_id,
                                                 'head_label' => $e->categoryLabel(),
                                                 'amount' => number_format((float) $e->amount, 2, '.', ''),
+                                                'usd_amount' => $e->usd_amount !== null ? number_format((float) $e->usd_amount, 2, '.', '') : '',
                                                 'paid_via' => $e->paid_via,
                                                 'note' => $e->note,
                                             ]))"><i class="bi bi-pencil"></i> Edit</button>
@@ -183,10 +201,10 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6" class="px-4 py-12 text-center text-slate-400"><i class="bi bi-inbox mb-2 block text-2xl"></i>No expenses yet.</td></tr>
+                        <tr><td colspan="7" class="px-4 py-12 text-center text-slate-400"><i class="bi bi-inbox mb-2 block text-2xl"></i>No expenses yet.</td></tr>
                     @endforelse
                     <tr x-show="q !== '' && ![...$root.querySelectorAll('tr[data-s]')].some(r => r.dataset.s.includes(q.toLowerCase()))" x-cloak>
-                        <td colspan="6" class="px-4 py-12 text-center text-slate-400"><i class="bi bi-search mb-2 block text-2xl"></i>No records match “<span x-text="q"></span>”.</td>
+                        <td colspan="7" class="px-4 py-12 text-center text-slate-400"><i class="bi bi-search mb-2 block text-2xl"></i>No records match “<span x-text="q"></span>”.</td>
                     </tr>
                 </tbody>
             </table>
@@ -211,6 +229,10 @@
             <x-erp.field label="Amount (৳)" for="exe_amount" required>
                 <input id="exe_amount" type="number" step="0.01" min="0.01" name="amount" x-model="form.amount" required class="{{ $eb }}">
             </x-erp.field>
+            <x-erp.field label="Dollar Amount ($)" for="exe_usd_amount" x-show="dollarIds.includes(String(form.expense_head_id))" x-cloak>
+                <input id="exe_usd_amount" type="number" step="0.01" min="0.01" name="usd_amount" x-model="form.usd_amount" inputmode="decimal"
+                       x-bind:disabled="!dollarIds.includes(String(form.expense_head_id))" class="{{ $eb }}">
+            </x-erp.field>
             <x-erp.field label="Paid via" for="exe_paid_via">
                 <select id="exe_paid_via" name="paid_via" x-model="form.paid_via" class="{{ $eb }}">
                     <option value="">—</option>
@@ -233,6 +255,7 @@
             q: '',
             editing: false,
             updateBase: '{{ url('erp/expenses') }}',
+            dollarIds: @js($dollarHeadIds),
             form: {},
             openEdit(row) {
                 this.form = Object.assign({}, row);

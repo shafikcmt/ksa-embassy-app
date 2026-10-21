@@ -53,7 +53,19 @@ class ExpenseController extends Controller
             ->map(fn ($rows) => (float) $rows->sum(fn ($e) => (float) $e->amount))
             ->sortDesc();
 
+        // Dollar purchases (Enjaz Dollar): dollars bought next to the taka spent on them.
+        $dollarRows = $allExpenses->filter(fn ($e) => $e->usd_amount !== null);
+        $dollar = [
+            'usd_total'  => (float) $dollarRows->sum(fn ($e) => (float) $e->usd_amount),
+            'usd_month'  => (float) $dollarRows->filter(fn ($e) => $e->expense_date->year === $now->year && $e->expense_date->month === $now->month)->sum(fn ($e) => (float) $e->usd_amount),
+            'bdt_total'  => (float) $dollarRows->sum(fn ($e) => (float) $e->amount),
+            'count'      => $dollarRows->count(),
+        ];
+        $dollar['rate'] = $dollar['usd_total'] > 0 ? $dollar['bdt_total'] / $dollar['usd_total'] : null;
+
         return view('erp.expense.index', [
+            'dollar'       => $dollar,
+            'dollarHeadIds' => ExpenseHead::forAgency($agencyId)->get()->filter->tracksDollar()->pluck('id')->map(fn ($id) => (string) $id)->values()->all(),
             'expenses'     => $expenses,
             'heads'        => ExpenseHead::forAgency($agencyId)->ordered()->get(),
             'selectedHead' => (string) $request->query('expense_head_id', ''),
@@ -75,14 +87,15 @@ class ExpenseController extends Controller
 
         $columns = [
             ['label' => 'Date'], ['label' => 'Category'], ['label' => 'Paid Via'],
-            ['label' => 'Amount', 'align' => 'right'], ['label' => 'Note'],
+            ['label' => 'Amount', 'align' => 'right'], ['label' => 'USD', 'align' => 'right'], ['label' => 'Note'],
         ];
         $rows = $expenses->map(fn (Expense $e) => [
             $e->expense_date->format('d M Y'), $e->categoryLabel(), $e->paidViaLabel() ?: '—',
-            $money($e->amount), $e->note ?: '—',
+            $money($e->amount), $e->usd_amount !== null ? '$ ' . number_format((float) $e->usd_amount, 2) : '', $e->note ?: '—',
         ])->all();
 
-        $totals = ['Total', '', '', $money($total), ''];
+        $usdTotal = (float) $expenses->sum(fn ($e) => (float) $e->usd_amount);
+        $totals = ['Total', '', '', $money($total), $usdTotal > 0 ? '$ ' . number_format($usdTotal, 2) : '', ''];
 
         return $this->respondPrintableList($pdf, [
             'title'    => 'Expenses',
@@ -171,7 +184,15 @@ class ExpenseController extends Controller
         if ($head) {
             $request->merge(['expense_head_id' => $head->id, 'category' => $head->code]);
         }
-        return $request->validate($this->rules($expense));
+        $data = $request->validate($this->rules($expense));
+        // The dollar amount belongs to dollar heads only; other heads never keep one. A NEW dollar expense must state it.
+        $isDollar = $head ? $head->tracksDollar() : ($expense?->isDollar() ?? false);
+        if ($isDollar && ! $expense && blank($data['usd_amount'] ?? null)) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['usd_amount' => 'Enter the dollar amount for this expense head.']);
+        }
+        $data['usd_amount'] = $isDollar ? ($data['usd_amount'] ?? null) : null;
+
+        return $data;
     }
 
     /** Single source of truth for validation — shared by manual Add and CSV import. */
@@ -189,6 +210,7 @@ class ExpenseController extends Controller
             'category'     => ['required', Rule::in($codes)],
             'expense_head_id' => [$expense && ! $expense->expense_head_id ? 'nullable' : 'required', 'integer', Rule::in($ids)],
             'amount'       => ['required', 'numeric', 'gt:0', 'max:9999999999.99'],
+            'usd_amount'   => ['nullable', 'numeric', 'gt:0', 'max:9999999999.99'],
             'paid_via'     => ['nullable', Rule::in(array_keys(Expense::PAID_VIA))],
             'note'         => ['nullable', 'string', 'max:255'],
         ];

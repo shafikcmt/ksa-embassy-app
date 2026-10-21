@@ -12,6 +12,9 @@ class ExpenseHead extends Model
 
     protected $casts = ['is_active' => 'boolean', 'is_system' => 'boolean', 'sort_order' => 'integer'];
 
+    /** Code of the default head whose expenses also record a dollar amount. */
+    public const DOLLAR_CODE = 'enjaz_dollar';
+
     // Stable legacy keys retain CSV compatibility. Agent payouts belong to Agent Khata.
     public const DEFAULTS = [
         'manpower' => 'Manpower Cost',
@@ -49,6 +52,12 @@ class ExpenseHead extends Model
             $archive->is_system = true;
             $archive->save();
         }
+    }
+
+    /** Heads that buy dollars (Enjaz Dollar, or a custom head with "dollar" in its name) ask for the dollar amount too. */
+    public function tracksDollar(): bool
+    {
+        return $this->code === self::DOLLAR_CODE || stripos((string) $this->name, 'dollar') !== false;
     }
 
     public function agency(): BelongsTo

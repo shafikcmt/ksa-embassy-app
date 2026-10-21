@@ -19,13 +19,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Expense extends Model
 {
     protected $fillable = [
-        'agency_id', 'expense_date', 'category', 'expense_head_id', 'amount',
+        'agency_id', 'expense_date', 'category', 'expense_head_id', 'amount', 'usd_amount',
         'paid_via', 'note', 'created_by', 'updated_by',
     ];
 
     protected $casts = [
         'expense_date' => 'date',
         'amount'       => 'decimal:2',
+        'usd_amount'   => 'decimal:2',
     ];
 
     public const CATEGORIES = [
@@ -55,6 +56,12 @@ class Expense extends Model
         'nagad' => 'Nagad',
         'card'  => 'Card',
     ];
+
+    /** An Enjaz Dollar (or any "…dollar…" head) expense: the dollar amount bought is tracked next to the taka. */
+    public function isDollar(): bool
+    {
+        return $this->category === ExpenseHead::DOLLAR_CODE || (bool) $this->expenseHead?->tracksDollar();
+    }
 
     public function agency(): BelongsTo
     {
