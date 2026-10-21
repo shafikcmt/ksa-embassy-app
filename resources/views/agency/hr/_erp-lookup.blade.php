@@ -1,6 +1,6 @@
 <fieldset id="hrErpLookup" class="hr-sec" aria-labelledby="hrErpTitle">
     <legend id="hrErpTitle" class="hr-legend">Find in ERP</legend>
-    <p class="hr-note">Just type the Passport, Visa or MOFA number in the form below — matching ERP details are filled in automatically. Or search here by hand; when you enter more than one value, all must match the same person.</p>
+    <p class="hr-note">Type the Passport, Visa or MOFA number here or in the form below — matching ERP details are fetched and filled in automatically (only empty fields; you can edit everything afterwards). When you enter more than one value, all must match the same person.</p>
     <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:end">
         @foreach(['passport' => 'Passport No', 'visa' => 'Visa No / Serial', 'mofa' => 'MOFA No'] as $key => $label)
             <div style="flex:1 1 220px;min-width:0">
@@ -8,11 +8,9 @@
                 <input id="hrErp-{{ $key }}" data-erp-key="{{ $key }}" type="text" maxlength="100" autocomplete="off" class="{{ $inp }}">
             </div>
         @endforeach
-        <button id="hrErpSearch" type="button" class="h-9 rounded-lg bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700">Search ERP</button>
     </div>
     <p id="hrErpMessage" class="mt-2 text-sm text-slate-600" role="status" aria-live="polite"></p>
     <div id="hrErpResults" class="mt-2 space-y-2 text-sm text-slate-700"></div>
-    <button id="hrErpApply" type="button" hidden class="mt-2 h-9 rounded-lg bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700">Apply to form</button>
 </fieldset>
 
 @push('scripts')
@@ -21,23 +19,19 @@
     const root = document.getElementById('hrErpLookup');
     const form = document.getElementById('hrForm');
     const inputs = Array.from(root.querySelectorAll('[data-erp-key]'));
-    const search = document.getElementById('hrErpSearch');
-    const apply = document.getElementById('hrErpApply');
     const message = document.getElementById('hrErpMessage');
     const results = document.getElementById('hrErpResults');
     const currentHr = @json($hr?->id);
     const labels = {passport_number:'Passport Number', full_name_en:'Name', father_name:'Father', mother_name:'Mother',
         date_of_birth:'Date of Birth', mofa_new:'New MOFA', mofa_old:'Old MOFA', passport_issue_date:'Passport Issue Date',
         passport_expiry_date:'Passport Expiry Date', visa_number:'Visa Number', sponsor_id:'Sponsor ID'};
-    let selected = null, sequence = 0, pending = null;
+    let selected = null, sequence = 0, pending = null, applying = false;
     const normalize = value => String(value || '').trim().toUpperCase();
     function reset() {
         sequence++;
         if (pending) pending.abort();
         selected = null;
-        apply.hidden = true;
         results.replaceChildren();
-        search.disabled = false;
     }
     function showCandidate(candidate, container) {
         candidate.records.forEach(record => {
@@ -68,7 +62,6 @@
         }
         const requestId = sequence;
         pending = new AbortController();
-        search.disabled = true;
         message.textContent = 'Searching ERP…';
         try {
             const response = await fetch(@json(route('hr.erp-lookup')) + '?' + params.toString(), {
@@ -80,7 +73,7 @@
             const data = await response.json();
             if (requestId !== sequence) return;
             const candidates = data.candidates;
-            message.textContent = candidates.length ? (candidates.length === 1 ? 'One person found. Review before applying.' : 'More than one person found. Choose one passport.') : 'No ERP record found for these search values.';
+            message.textContent = candidates.length ? (candidates.length === 1 ? 'One person found — filling the form…' : 'More than one person found. Choose one passport to fill the form.') : 'No ERP record found for these search values.';
             candidates.forEach(candidate => {
                 const container = document.createElement('div');
                 container.style.cssText = 'border:1px solid #e2e8f0;border-radius:8px;padding:12px;overflow-wrap:anywhere';
@@ -91,7 +84,7 @@
                     radio.name = 'hr_erp_candidate';
                     radio.setAttribute('form', 'hrErpNoSubmit'); // detach from #hrForm so it is never submitted
                     radio.value = candidate.passport;
-                    radio.addEventListener('change', () => { selected = candidate; apply.hidden = false; });
+                    radio.addEventListener('change', () => { selected = candidate; applySelected(); });
                     heading.append(radio, ' ');
                 }
                 heading.append('Passport: ' + candidate.passport);
@@ -99,28 +92,33 @@
                 showCandidate(candidate, container);
                 results.append(container);
             });
-            if (candidates.length === 1) { selected = candidates[0]; apply.hidden = false; }
+            if (candidates.length === 1) { selected = candidates[0]; applySelected(); } // exactly one person: fill straight away
         } catch (error) {
             if (requestId === sequence && error.name !== 'AbortError') message.textContent = 'Lookup failed. Please try again; you can still complete the form manually.';
-        } finally {
-            if (requestId === sequence) search.disabled = false;
         }
     }
+    // The box above searches by itself: a short pause after typing (Enter searches at once).
+    const MIN = {passport: 5, visa: 6, mofa: 6};
+    let boxTimer = null;
     inputs.forEach(input => {
-        input.addEventListener('input', () => { reset(); message.textContent = ''; });
+        input.addEventListener('input', () => {
+            reset(); message.textContent = '';
+            clearTimeout(boxTimer);
+            boxTimer = setTimeout(() => {
+                if (inputs.some(box => box.value.trim().length >= MIN[box.dataset.erpKey])) runSearch();
+            }, 500);
+        });
         input.addEventListener('keydown', event => {
-            if (event.key === 'Enter') { event.preventDefault(); event.stopPropagation(); runSearch(); }
+            if (event.key === 'Enter') { event.preventDefault(); event.stopPropagation(); clearTimeout(boxTimer); runSearch(); }
         });
     });
-    search.addEventListener('click', runSearch);
 
     // ── Automatic mode ────────────────────────────────────────────────────────
     // Typing the form's OWN Passport / Visa / MOFA field is enough: after a short pause the ERP is
     // searched and, when exactly one person matches, the EMPTY fields are filled (never overwritten).
     // Several matches still wait for the user to pick one. The box above stays as a manual fallback.
     const AUTO = [['passport_number', 'passport', 5], ['visa_number', 'visa', 6], ['mofa_new', 'mofa', 6]];
-    let autoTimer = null, autoLast = '', applying = false;
-    apply.addEventListener('click', () => { applying = true; setTimeout(() => { applying = false; }, 0); }, true);
+    let autoTimer = null, autoLast = '';
 
     AUTO.forEach(([fieldName, key, min]) => {
         const field = form.elements.namedItem(fieldName);
@@ -134,15 +132,15 @@
                 autoLast = key + ':' + value;
                 inputs.forEach(box => { box.value = box.dataset.erpKey === key ? value : ''; });
                 await runSearch();
-                if (selected) apply.click(); // exactly one person found
             }, 600);
         });
     });
-    apply.addEventListener('click', () => {
+    function applySelected() {
         if (!selected) return;
+        applying = true; setTimeout(() => { applying = false; }, 0); // the fill itself must not trigger another search
         const passport = form.elements.namedItem('passport_number');
         if (passport && normalize(passport.value) && normalize(passport.value) !== selected.passport) {
-            message.textContent = 'The form passport differs from the selected person. Review and change or clear it manually before applying.';
+            message.textContent = 'The form passport differs from the selected person. Change or clear it in the form to fill from this person.';
             return;
         }
         const filled = [], skipped = [];
@@ -158,7 +156,7 @@
         });
         message.textContent = (filled.length ? 'Filled: ' + filled.join('; ') + '.' : 'No empty matching fields to fill.')
             + (skipped.length ? ' Skipped (already filled): ' + skipped.join(', ') + '.' : '');
-    });
+    }
 })();
 </script>
 @endpush

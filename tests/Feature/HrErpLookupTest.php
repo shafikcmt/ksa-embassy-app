@@ -164,4 +164,15 @@ class HrErpLookupTest extends TestCase
         $this->lookup(['passport' => '1234567'])->assertOk()->assertJsonCount(1, 'candidates')
             ->assertJsonCount(1, 'candidates.0.records')->assertDontSee('Another Person');
     }
+
+    public function test_add_hr_fetches_and_fills_automatically_without_search_or_apply_buttons(): void
+    {
+        $html = $this->actingAs($this->user)->get(route('hr.create'))->assertOk()->getContent();
+
+        $this->assertStringNotContainsString('hrErpSearch', $html);
+        $this->assertStringNotContainsString('hrErpApply', $html);
+        $this->assertStringNotContainsString('Apply to form', $html);
+        $this->assertStringContainsString('filled in automatically', $html);
+        $this->assertStringContainsString('hrErp-passport', $html);
+    }
 }
