@@ -388,11 +388,13 @@
 {{-- ── MODE OF PAYMENT (HANI.pdf reference) ──────────────────────────────────
      One merged group: Arabic row over English row, outer frame + horizontal
      rules only. Column starts follow the reference: Free 16.8% · Cash 22.5% ·
-     Cheque No. 29% · Date 51% · No. 67.7% · Date 84.6%. --}}
+     Cheque No. 29% · Date 51% · No. 67.7% · Date 84.6%. The frame's side rules
+     are inline: mPDF does not apply the .hrows :first-child/:last-child rules
+     to this single-cell block, which left a gap in the printed border. --}}
 <table class="bdr hrows" style="margin-top:0;table-layout:fixed;">
   <tbody>
     <tr class="mrow-ar">
-      <td style="padding-left:7.5pt;padding-right:7.5pt;">
+      <td style="padding-left:7.5pt;padding-right:7.5pt;border-left:0.7pt solid #212529;border-right:0.7pt solid #212529;">
         <table class="inner" dir="ltr" style="width:100%;table-layout:fixed;"><tr>
           <td class="ar" style="width:11%;text-align:left;">تاريخ :</td>
           <td class="ar" style="width:15.4%;">ايصال رقم ( ) :</td>
@@ -403,7 +405,7 @@
       </td>
     </tr>
     <tr class="mrow-en seam-merge">
-      <td style="padding-left:7.5pt;padding-right:7.5pt;">
+      <td style="padding-left:7.5pt;padding-right:7.5pt;border-left:0.7pt solid #212529;border-right:0.7pt solid #212529;">
         <table class="inner" dir="ltr" style="width:100%;table-layout:fixed;"><tr>
           <td class="lbl" style="width:16.8%;">Mode of payment:</td>
           <td class="lbl" style="width:5.7%;">Free</td>
