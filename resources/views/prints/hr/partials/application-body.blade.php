@@ -146,11 +146,11 @@
         </td>
       </tr></table>
     </td>
-    <td style="width:36%;text-align:center;vertical-align:top;padding:13.9pt 0 0 0;">
+    <td style="width:36%;text-align:center;vertical-align:top;padding:36pt 0 0 0;">
       {{-- Nested table: row-1 fixed height reliably places "New Application"
            (mPDF ignores margin/padding between sibling divs inside a cell). --}}
       <table style="width:100%;border-collapse:collapse;">
-        <tr><td style="height:70.2pt;text-align:center;vertical-align:top;border:0;padding:0;">
+        <tr><td style="height:48pt;text-align:center;vertical-align:top;border:0;padding:0;">
           @if(!empty($topBarcodeSrc))
             <img src="{{ $topBarcodeSrc }}" style="width:44mm;height:9.7mm;display:block;margin:0 auto;">
           @elseif(!empty($topBarcodeText))
@@ -167,10 +167,13 @@
       {{-- Nested table (same reason as the barcode column): row heights/padding
            place EMBASSY / CONSULAR identically in browser print and mPDF. --}}
       <table style="width:100%;border-collapse:collapse;">
-        <tr><td style="height:43.6pt;text-align:right;vertical-align:top;border:0;padding:0;">
+        <tr><td style="text-align:right;vertical-align:top;border:0;padding:0;">
           <div class="blk" style="font-size:20.4pt;line-height:1.2;text-align:right;">{{ $application_no ?: "\u{00A0}" }}</div>
         </td></tr>
-        <tr><td style="text-align:right;border:0;padding:0;font-size:11.7pt;font-weight:bold;white-space:nowrap;">EMBASSY OF SAUDI ARABIA</td></tr>
+        {{-- Arabic embassy heading (HANI.pdf reference), above the English one. --}}
+        <tr><td class="ar" style="text-align:right;border:0;padding:1.5pt 0 0 0;font-size:11pt;"><strong>سفارة المملكة العربية السعودية</strong></td></tr>
+        <tr><td class="ar" style="text-align:right;border:0;padding:2pt 0 0 0;font-size:11pt;"><strong>القسم القنصلي</strong></td></tr>
+        <tr><td style="text-align:right;border:0;padding:4pt 0 0 0;font-size:11.7pt;font-weight:bold;white-space:nowrap;">EMBASSY OF SAUDI ARABIA</td></tr>
         <tr><td style="text-align:right;border:0;padding:3.5pt 0 0 0;font-size:11.7pt;font-weight:bold;white-space:nowrap;">CONSULAR SECTION</td></tr>
       </table>
     </td>
@@ -193,7 +196,14 @@
     {{-- Full Name (incl. "S/O. <father>") — Roboto Black 9.7pt --}}
     <tr>
       <td class="lbl">Full Name:</td>
-      <td colspan="4" class="val"><span class="blk">{{ $fullNameDisplay }}</span></td>
+      @if($father_name)
+        {{-- Reference: name centred over cols 2-3, "S/O:" label, father centred over cols 4-5, no inner rules. --}}
+        <td colspan="2" class="val" style="border-right:0;"><span class="blk">{{ $U($full_name_en) }}</span></td>
+        {{-- Plain cell (no nested table: it would upset mPDF's column sizing). --}}
+        <td colspan="2" class="lbl" style="border-left:0;padding-left:0;">S/O:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="blk" style="font-weight:bold;">{{ $U($father_name) }}</span></td>
+      @else
+        <td colspan="4" class="val"><span class="blk">{{ $U($full_name_en) }}</span></td>
+      @endif
       <td class="ar">اسم الكامل :</td>
     </tr>
     {{-- Mother's Name — Roboto Bold 9.7pt (not Black, per the reference) --}}
@@ -273,7 +283,7 @@
       <td colspan="6">
         <table class="inner" dir="ltr" style="width:100%;">
           <tr>
-            <td class="lbl" style="width:26.4%;">Place of Issue:</td>
+            <td class="lbl" style="width:26.4%;">Place of Issue: <strong style="padding-left:14pt;">{{ $T($passport_issue_place) }}</strong></td>
             <td class="lbl" style="width:22.1%;">Qualification:@if($qualification_en) {{ $qualification_en }}@endif</td>
             <td class="lbl" style="width:22.8%;">Profession:</td>
             <td class="val big" style="width:28.7%;text-align:left;">{{ $profession_en ?: ($occupation ?: '') }}</td>
@@ -368,19 +378,45 @@
     </tr>
     <tr class="mrow-en seam-merge">
       <td class="lbl">Duration of stay in the kingdom:</td>
-      <td class="val">{{ $duration_stay_en ?: '' }}@if(!empty($duration_stay_ar)) <span class="ar">({{ $duration_stay_ar }})</span>@endif</td>
+      <td class="val">{{ $duration_stay_en ?: '02 Years' }}@if(!empty($duration_stay_ar)) <span class="ar">({{ $duration_stay_ar }})</span>@endif</td>
       <td class="lbl">Date of arrival: <strong>{{ $arrival_date ?: ($arrival_date_ar ?: '') }}</strong></td>
       <td class="lbl">Date of departure: <strong>{{ $departure_date ?: ($departure_date_ar ?: '') }}</strong></td>
     </tr>
   </tbody>
 </table>
 
-{{-- Empty framed band (no content): occupies the vertical slot the reference
-     uses for its rows between Duration and Mahram, so every block below sits at
-     the reference's position. Side rules continue the frame; its top rule is
-     the seam with the Duration table (whose last row drops its bottom border)
-     and the Mahram table's top rule closes it. --}}
-<div class="gap-band" style="height:28.3pt;border-top:0.7pt solid #212529;border-left:0.7pt solid #212529;border-right:0.7pt solid #212529;"></div>
+{{-- ── MODE OF PAYMENT (HANI.pdf reference) ──────────────────────────────────
+     One merged group: Arabic row over English row, outer frame + horizontal
+     rules only. Column starts follow the reference: Free 16.8% · Cash 22.5% ·
+     Cheque No. 29% · Date 51% · No. 67.7% · Date 84.6%. --}}
+<table class="bdr hrows" style="margin-top:0;table-layout:fixed;">
+  <tbody>
+    <tr class="mrow-ar">
+      <td style="padding-left:7.5pt;padding-right:7.5pt;">
+        <table class="inner" dir="ltr" style="width:100%;table-layout:fixed;"><tr>
+          <td class="ar" style="width:11%;text-align:left;">تاريخ :</td>
+          <td class="ar" style="width:15.4%;">ايصال رقم ( ) :</td>
+          <td class="ar" style="width:11.8%;">تاريخ :</td>
+          <td class="ar" style="width:18.6%;">بشيك رقم :</td>
+          <td class="ar" style="width:43.2%;">طريقة الدفع : ( ) مجاناً ( ) نقداً ( ) بشيك رقم</td>
+        </tr></table>
+      </td>
+    </tr>
+    <tr class="mrow-en seam-merge">
+      <td style="padding-left:7.5pt;padding-right:7.5pt;">
+        <table class="inner" dir="ltr" style="width:100%;table-layout:fixed;"><tr>
+          <td class="lbl" style="width:16.8%;">Mode of payment:</td>
+          <td class="lbl" style="width:5.7%;">Free</td>
+          <td class="lbl" style="width:6.5%;">Cash</td>
+          <td class="lbl" style="width:22%;">Cheque No.</td>
+          <td class="lbl" style="width:16.7%;">Date</td>
+          <td class="lbl" style="width:16.9%;">No.</td>
+          <td class="lbl" style="width:15.4%;">Date</td>
+        </tr></table>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
 {{-- ── MAHRAM / DESTINATION (6-col grid 25/12.5/12.5/25/12.5/12.5) ───────────
      Reference: صلته and the relationship value start at the 25% line; اسم
@@ -426,7 +462,7 @@
     </tr>
     <tr>
       <td class="lbl" colspan="2" style="border-right:0;text-align:right;">Dependents traveling in the same passport</td>
-      <td colspan="2" class="ar" style="border-left:0;text-align:left;">إصاحبات تخص أفراد العائلة المنتقلين في نفس جواز السفر :</td>
+      <td colspan="2" class="ar" style="border-left:0;text-align:left;">إيضاحات تخص أفراد العائلة (المضافين) على نفس جواز السفر :</td>
     </tr>
     <tr>
       <td class="val" style="padding-top:3pt;padding-bottom:3pt;"><span class="ar"><strong>نوع الصلة</strong></span><br>Relationship</td>
@@ -434,17 +470,8 @@
       <td class="val" style="padding-top:3pt;padding-bottom:3pt;"><span class="ar"><strong>الجنس</strong></span><br>Sex</td>
       <td class="val" style="padding-top:3pt;padding-bottom:3pt;"><span class="ar"><strong>الاسم الكامل</strong></span><br>Full Name</td>
     </tr>
-    <tr>
-      <td>&nbsp;</td>
-      <td class="val">CITY: {{ $work_city ?: '' }}, K.S.A</td>
-      <td>&nbsp;</td>
-      <td>&nbsp;</td>
-    </tr>
-    <tr>
-      <td>&nbsp;</td>
-      <td class="val">TEL:</td>
-      <td>&nbsp;</td><td>&nbsp;</td>
-    </tr>
+    <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+    <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
     <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
     {{-- seam-merge: the kingdom table below supplies the single seam line. --}}
     <tr class="seam-merge"><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
@@ -536,7 +563,7 @@
   <tr>
     <td class="lbl" style="padding-left:7pt;">Date:</td>
     <td class="ar">التاريخ :</td>
-    <td class="lbl" style="padding-left:7pt;">Id Number:</td>
+    <td class="lbl" style="padding-left:7pt;">Authorization:</td>
     <td class="val" style="text-align:left;"><span class="blk">{{ $sponsor_id ?: '' }}</span></td>
     <td class="ar" style="padding-right:7pt;">أشير برقم :</td>
   </tr>
