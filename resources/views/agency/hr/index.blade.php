@@ -129,7 +129,8 @@
         {{-- ── Desktop table ───────────────────────────────────── --}}
         @php
             $pill = 'inline-flex items-center gap-1 whitespace-nowrap rounded-md px-2 py-1 text-[0.8rem] font-bold uppercase tracking-wide text-white shadow-sm transition';
-            $mono = 'font-mono text-xs';
+            // Numbers (MOFA / passport / visa / sponsor ID): readable 14px.
+            $mono = 'whitespace-nowrap text-sm font-semibold tracking-wide';
         @endphp
         <div class="hidden overflow-x-auto lg:block">
             <table class="w-full text-sm">
@@ -174,19 +175,20 @@
                                 </div>
                             </td>
                             <td class="px-3 py-3">
+                                {{-- Arabic sponsor name only (English only as a fallback when Arabic is missing) --}}
                                 @if($hr->visa?->sponsor_name_ar)
-                                    <div class="max-w-[12rem] text-sm font-medium text-rose-700" dir="rtl" lang="ar">{{ $hr->visa->sponsor_name_ar }}</div>
+                                    <div class="max-w-[14rem] text-base font-semibold text-rose-700" dir="rtl" lang="ar">{{ $hr->visa->sponsor_name_ar }}</div>
+                                @elseif($hr->visa?->sponsor_name)
+                                    <div class="max-w-[14rem] text-sm font-medium text-slate-700">{{ $hr->visa->sponsor_name }}</div>
+                                @else
+                                    <span class="text-slate-300">—</span>
                                 @endif
-                                @if($hr->visa?->sponsor_name && $hr->visa?->sponsor_name !== $hr->visa?->sponsor_name_ar)
-                                    <div class="max-w-[12rem] text-xs text-slate-500">{{ $hr->visa->sponsor_name }}</div>
-                                @endif
-                                @if(! $hr->visa?->sponsor_name_ar && ! $hr->visa?->sponsor_name)<span class="text-slate-300">—</span>@endif
                             </td>
                             <td class="px-3 py-3">
-                                <div class="max-w-[10rem] text-sm text-slate-700">{{ $hr->visa?->profession_en ?: '—' }}</div>
-                                @if($hr->visa?->profession_ar)<div class="max-w-[10rem] text-xs text-amber-700" dir="rtl" lang="ar">{{ $hr->visa->profession_ar }}</div>@endif
+                                {{-- English profession only (Arabic only as a fallback when English is missing) --}}
+                                <div class="max-w-[12rem] text-sm font-medium text-slate-700" @if(! $hr->visa?->profession_en && $hr->visa?->profession_ar) dir="rtl" lang="ar" @endif>{{ $hr->visa?->profession_en ?: ($hr->visa?->profession_ar ?: '—') }}</div>
                             </td>
-                            <td class="px-3 py-3 text-slate-600">{{ $hr->agent?->name ?? 'N/A' }}</td>
+                            <td class="px-3 py-3 font-medium text-slate-700">{{ $hr->agent?->name ?? 'N/A' }}</td>
                         </tr>
                     @empty
                         <tr><td colspan="10" class="p-0">
@@ -225,14 +227,14 @@
                         </div>
                     </div>
                 </div>
-                <dl class="mt-3 grid grid-cols-2 gap-y-2 text-xs">
+                <dl class="mt-3 grid grid-cols-2 gap-y-2 text-sm">
                     <div><dt class="text-slate-400">MOFA ID</dt><dd class="font-mono text-slate-700">{{ $hr->mofa_new ?: ($hr->mofa_old ?: '—') }}</dd></div>
                     <div><dt class="text-slate-400">Passport No</dt><dd class="font-mono text-slate-700">{{ $hr->passport?->passport_number ?: '—' }}</dd></div>
                     <div><dt class="text-slate-400">Agent</dt><dd class="font-medium text-slate-700">{{ $hr->agent?->name ?? '—' }}</dd></div>
                     <div><dt class="text-slate-400">Visa No</dt><dd class="font-mono text-slate-700">{{ $hr->visa?->visa_number ?: '—' }}</dd></div>
                     <div><dt class="text-slate-400">Sponsor ID</dt><dd class="font-mono text-slate-700">{{ $hr->visa?->sponsor_id ?: '—' }}</dd></div>
-                    <div><dt class="text-slate-400">Sponsor Name</dt><dd class="font-medium text-slate-700">{{ $hr->visa?->sponsor_name_ar ?: ($hr->visa?->sponsor_name ?: '—') }}</dd></div>
-                    <div class="col-span-2"><dt class="text-slate-400">Profession</dt><dd class="font-medium text-slate-700">{{ $hr->visa?->profession_en ?: '—' }}@if($hr->visa?->profession_ar) <span class="text-amber-700" dir="rtl" lang="ar">· {{ $hr->visa->profession_ar }}</span>@endif</dd></div>
+                    <div><dt class="text-slate-400">Sponsor Name</dt><dd class="font-semibold text-rose-700" @if($hr->visa?->sponsor_name_ar) dir="rtl" lang="ar" @endif>{{ $hr->visa?->sponsor_name_ar ?: ($hr->visa?->sponsor_name ?: '—') }}</dd></div>
+                    <div class="col-span-2"><dt class="text-slate-400">Profession</dt><dd class="font-medium text-slate-700">{{ $hr->visa?->profession_en ?: ($hr->visa?->profession_ar ?: '—') }}</dd></div>
                 </dl>
                 @php $mBtn = 'flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold ring-1 ring-inset transition'; @endphp
                 <div class="mt-3 flex gap-2 border-t border-slate-100 pt-3">
