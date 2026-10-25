@@ -103,11 +103,11 @@
             <div id="bulkBar" class="hidden items-center gap-2 border-b border-brand-100 bg-brand-50/70 px-4 py-2.5">
                 <span class="text-xs font-semibold text-brand-700"><span id="bulkCount">0</span> selected</span>
                 <span class="hidden text-xs text-slate-400 sm:inline">· set category for all selected:</span>
-                <select id="bulkCategory" class="h-8 rounded-lg border-slate-300 text-xs focus:border-brand-400 focus:ring-brand-400">
+                <select id="bulkCategory" class="h-9 w-36 rounded-lg border-slate-300 bg-white py-1 pl-3 pr-8 text-sm font-medium leading-5 text-slate-700 focus:border-brand-400 focus:ring-brand-400">
                     @foreach($categories as $val => $label)<option value="{{ $val }}">{{ $label }}</option>@endforeach
                 </select>
-                <button type="button" id="bulkApply" class="inline-flex h-8 items-center gap-1.5 rounded-lg bg-brand-600 px-3 text-xs font-semibold text-white transition hover:bg-brand-700"><i class="bi bi-lightning-charge"></i> Apply</button>
-                <button type="button" id="bulkRemove" class="ml-auto inline-flex h-8 items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 text-xs font-semibold text-rose-600 transition hover:bg-rose-50"><i class="bi bi-trash3"></i> Remove selected</button>
+                <button type="button" id="bulkApply" class="inline-flex h-9 items-center gap-1.5 rounded-lg bg-brand-600 px-3 text-xs font-semibold text-white transition hover:bg-brand-700"><i class="bi bi-lightning-charge"></i> Apply</button>
+                <button type="button" id="bulkRemove" class="ml-auto inline-flex h-9 items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 text-xs font-semibold text-rose-600 transition hover:bg-rose-50"><i class="bi bi-trash3"></i> Remove selected</button>
             </div>
 
             <div class="p-4">
@@ -161,7 +161,7 @@
                                     <td class="px-3 py-3"><span class="font-mono text-xs text-slate-600">{{ $hr->passport?->passport_number ?? '—' }}</span></td>
                                     <td class="px-3 py-3 text-slate-500">{{ $hr->agent?->name ?? '—' }}</td>
                                     <td class="px-3 py-3">
-                                        <select class="category-select h-8 rounded-lg border-slate-300 text-xs focus:border-brand-400 focus:ring-brand-400 {{ $preCategory ? '' : 'hidden' }}">
+                                        <select class="category-select h-9 w-36 rounded-lg border-slate-300 bg-white py-1 pl-3 pr-8 text-sm font-medium leading-5 text-slate-700 focus:border-brand-400 focus:ring-brand-400 {{ $preCategory ? '' : 'hidden' }}">
                                             @foreach($categories as $val => $label)
                                                 <option value="{{ $val }}" {{ $preCategory === $val ? 'selected' : '' }}>{{ $label }}</option>
                                             @endforeach
