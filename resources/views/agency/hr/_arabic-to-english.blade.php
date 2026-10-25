@@ -79,7 +79,12 @@
         'مساعد': 'Helper', 'مساعد طباخ': 'Assistant Cook', 'مساعد فني': 'Assistant Technician', 'مساعد سائق': 'Driver Helper',
         'مشغل': 'Operator', 'مشغل الة': 'Machine Operator', 'مشغل معدات ثقيلة': 'Heavy Equipment Operator',
         'مشغل حفار': 'Excavator Operator', 'مشغل رافعة': 'Crane Operator', 'مشغل ماكينة': 'Machine Operator',
-        'صياد': 'Fisherman', 'صياد اسماك': 'Fisherman', 'غواص': 'Diver', 'ممرض منزلي': 'Home Nurse'
+        'صياد': 'Fisherman', 'صياد اسماك': 'Fisherman', 'غواص': 'Diver', 'ممرض منزلي': 'Home Nurse',
+        // Livestock / herding (as printed on Saudi visas)
+        'راعي ماشية': 'Cattle Herder', 'راعي مواشي': 'Cattle Herder', 'راعي اغنام': 'Shepherd', 'راعي بقر': 'Cowherd',
+        'راعي جمال': 'Camel Herder', 'راعي ابقار': 'Cowherd', 'عامل مواشي': 'Livestock Worker', 'عامل ماشية': 'Livestock Worker',
+        'عامل رعي': 'Grazing Worker', 'عامل دواجن': 'Poultry Worker', 'عامل حظيرة': 'Barn Worker',
+        'منسق منتجات': 'Product Coordinator'
     };
 
     // ── 2. Word glossary (profession / qualification / company words) ──
@@ -106,6 +111,9 @@
         'مغسلة': 'Laundry', 'ملابس': 'Clothes', 'اغذية': 'Food', 'غذائية': 'Food', 'مواد': 'Materials', 'مبيعات': 'Sales',
         'امن': 'Security', 'حراسة': 'Security', 'محطة': 'Station', 'وقود': 'Fuel', 'بنزين': 'Petrol', 'رافعة': 'Crane',
         'شوكية': 'Forklift', 'حفار': 'Excavator', 'ابل': 'Camel', 'غنم': 'Sheep', 'مواشي': 'Livestock', 'اسماك': 'Fish',
+        'ماشية': 'Livestock', 'اغنام': 'Sheep', 'بقر': 'Cattle', 'ابقار': 'Cattle', 'جمال': 'Camel', 'دواجن': 'Poultry',
+        'رعي': 'Grazing', 'حظيرة': 'Barn', 'منتجات': 'Product', 'منتج': 'Product',
+        'كابلات': 'Cables', 'الكابلات': 'Cables', 'كيابل': 'Cables',
         'مختبر': 'Laboratory', 'اسنان': 'Dental', 'اشعة': 'Radiology', 'كمبيوتر': 'Computer', 'حاسب': 'Computer',
         'شبكات': 'Network', 'الكترونيات': 'Electronics', 'مدني': 'Civil', 'معماري': 'Architectural', 'ميكانيكي': 'Mechanical',
         'اطفال': 'Children', 'قهوة': 'Coffee', 'شاي': 'Tea', 'حلويات': 'Sweets', 'خضار': 'Vegetables', 'فواكه': 'Fruits',
@@ -147,7 +155,7 @@
         'بندر': 'Bandar', 'نايف': 'Naif', 'نواف': 'Nawaf', 'بدر': 'Badr', 'راشد': 'Rashed', 'حمد': 'Hamad',
         'حامد': 'Hamed', 'مبارك': 'Mubarak', 'عادل': 'Adel', 'عيسى': 'Eisa', 'يوسف': 'Yousef', 'ابراهيم': 'Ibrahim',
         'اسماعيل': 'Ismail', 'يحيى': 'Yahya', 'يحيي': 'Yahya', 'زكريا': 'Zakaria', 'موسى': 'Musa', 'موسي': 'Musa',
-        'هادي': 'Hadi', 'فالح': 'Falih', 'فلاح': 'Fallah', 'مانع': 'Mane', 'مشاري': 'Mishari', 'طلال': 'Talal',
+        'هادي': 'Hadi', 'مطلق': 'Mutlaq', 'مطلك': 'Mutlaq', 'فالح': 'Falih', 'فلاح': 'Fallah', 'مانع': 'Mane', 'مشاري': 'Mishari', 'طلال': 'Talal',
         'وليد': 'Waleed', 'هشام': 'Hisham', 'ياسر': 'Yasser', 'عماد': 'Emad', 'رياض': 'Riyadh', 'زياد': 'Ziyad',
         'عبدالله': 'Abdullah', 'عبدالرحمن': 'Abdulrahman', 'عبدالعزيز': 'Abdulaziz', 'عبدالمحسن': 'Abdulmohsen',
         'عبدالكريم': 'Abdulkarim', 'عبدالرحيم': 'Abdulrahim', 'عبدالمجيد': 'Abdulmajeed', 'عبدالاله': 'Abdulelah',
@@ -203,8 +211,12 @@
     }
 
     // Look a single word up in a map, also trying without ال / لل / ل / و prefixes.
+    // Arabic often ends a word with ه instead of ة (and vice-versa) — try both.
+    function endVariant(w) { return /ة$/.test(w) ? w.slice(0, -1) + 'ه' : (/ه$/.test(w) ? w.slice(0, -1) + 'ة' : ''); }
     function lookupWord(map, w) {
         if (map[w]) return { en: map[w] };
+        var alt = endVariant(w);
+        if (alt && map[alt]) return { en: map[alt] };
         if (/^و../.test(w)) { var r = lookupWord(map, w.slice(1)); if (r) return { en: 'and ' + r.en }; }
         if (/^ال../.test(w) && map[w.slice(2)]) return { en: map[w.slice(2)] };
         if (/^لل../.test(w) && map[w.slice(2)]) return { en: map[w.slice(2)] };
@@ -218,6 +230,8 @@
         var v = norm(value);
         if (!v) return '';
         if (PROFESSION[v]) return PROFESSION[v];
+        var vAlt = v.split(' ').map(function (t) { return endVariant(t) || t; }).join(' ');
+        if (PROFESSION[vAlt]) return PROFESSION[vAlt];
         var tokens = v.split(' '), units = [];
         tokens.forEach(function (t) {
             var hit = lookupWord(WORDS, t) || lookupWord(PROFESSION, t);
@@ -325,7 +339,10 @@
         } catch (e) { return ''; }
     }
 
-    function professionExact(value) { return PROFESSION[norm(value)] || ''; }
+    function professionExact(value) {
+        var v = norm(value);
+        return PROFESSION[v] || PROFESSION[v.split(' ').map(function (t) { return endVariant(t) || t; }).join(' ')] || '';
+    }
 
     window.HrArEn = { professionExact: professionExact, profession: profession, name: name, phrase: phrase, date: date, toHijri: toHijri, toLatin: toLatin, norm: norm };
 })();
