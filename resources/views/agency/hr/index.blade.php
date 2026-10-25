@@ -1,6 +1,8 @@
 @extends('layouts.agency-app')
 @section('title', 'HR / Candidates')
 @section('page-title', 'HR / Candidates')
+{{-- Wide 10-column table: use the full screen width so values stay on one line. --}}
+@section('full-width', '1')
 
 @php
     $active      = $statusCounts['active'] ?? 0;
@@ -128,67 +130,69 @@
 
         {{-- ── Desktop table ───────────────────────────────────── --}}
         @php
-            $pill = 'inline-flex items-center gap-1 whitespace-nowrap rounded-md px-2 py-1 text-[0.8rem] font-bold uppercase tracking-wide text-white shadow-sm transition';
+            // Icon-only action buttons (name on hover) keep the 10 columns on one line.
+            $pill = 'grid h-7 w-7 place-items-center rounded-md text-sm text-white shadow-sm transition';
             // Numbers (MOFA / passport / visa / sponsor ID): readable 14px.
-            $mono = 'whitespace-nowrap text-sm font-semibold tracking-wide';
+            $mono = 'text-sm font-semibold';
         @endphp
         <div class="hidden overflow-x-auto lg:block">
             <table class="w-full text-sm">
                 <thead>
-                    <tr class="border-b border-slate-200 bg-slate-50 text-left text-[0.8rem] font-bold uppercase tracking-wider text-slate-500">
-                        <th class="px-3 py-3">#</th>
-                        <th class="px-3 py-3">Name</th>
-                        <th class="px-3 py-3">MOFA ID</th>
-                        <th class="px-3 py-3">Passport No</th>
-                        <th class="px-3 py-3">Visa No</th>
-                        <th class="px-3 py-3">Sponsor ID</th>
-                        <th class="px-3 py-3">Action</th>
-                        <th class="px-3 py-3">Sponsor Name</th>
-                        <th class="px-3 py-3">Profession</th>
-                        <th class="px-3 py-3">Agent</th>
+                    <tr class="border-b border-slate-200 bg-slate-50 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
+                        <th class="whitespace-nowrap px-1.5 py-3">#</th>
+                        <th class="whitespace-nowrap px-1.5 py-3">Name</th>
+                        <th class="whitespace-nowrap px-1.5 py-3">MOFA ID</th>
+                        <th class="whitespace-nowrap px-1.5 py-3">Passport No</th>
+                        <th class="whitespace-nowrap px-1.5 py-3">Visa No</th>
+                        <th class="whitespace-nowrap px-1.5 py-3">Sponsor ID</th>
+                        <th class="whitespace-nowrap px-1.5 py-3">Action</th>
+                        <th class="whitespace-nowrap px-1.5 py-3">Sponsor Name</th>
+                        <th class="whitespace-nowrap px-1.5 py-3">Profession</th>
+                        <th class="whitespace-nowrap px-1.5 py-3">Agent</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($hrProfiles as $hr)
                         <tr class="align-middle transition-colors hover:bg-brand-50/40">
-                            <td class="px-3 py-3">
+                            <td class="whitespace-nowrap px-1.5 py-3">
                                 <span class="grid h-6 w-6 place-items-center rounded-full bg-slate-100 text-xs font-semibold text-slate-500">{{ $hrProfiles->firstItem() + $loop->index }}</span>
                             </td>
-                            <td class="px-3 py-3">
-                                <a href="{{ route('hr.show', $hr) }}" @click.prevent="openPreview(@js($previewData($hr)))" class="block max-w-[14rem] break-words text-left font-bold uppercase text-slate-800 hover:text-brand-600">{{ $hr->full_name_en }}</a>
+                            <td class="whitespace-nowrap px-1.5 py-3">
+                                <a href="{{ route('hr.show', $hr) }}" @click.prevent="openPreview(@js($previewData($hr)))" class="block text-left font-bold uppercase text-slate-800 hover:text-brand-600">{{ $hr->full_name_en }}</a>
                             </td>
-                            <td class="px-3 py-3 {{ $mono }} text-rose-600">{{ $hr->mofa_new ?: ($hr->mofa_old ?: '—') }}</td>
-                            <td class="px-3 py-3 {{ $mono }} text-rose-600">{{ $hr->passport?->passport_number ?: '—' }}</td>
-                            <td class="px-3 py-3 {{ $mono }} text-slate-700">{{ $hr->visa?->visa_number ?: '—' }}</td>
-                            <td class="px-3 py-3 {{ $mono }} text-slate-700">{{ $hr->visa?->sponsor_id ?: '—' }}</td>
-                            <td class="px-3 py-3">
+                            <td class="whitespace-nowrap px-1.5 py-3 {{ $mono }} text-rose-600">{{ $hr->mofa_new ?: ($hr->mofa_old ?: '—') }}</td>
+                            <td class="whitespace-nowrap px-1.5 py-3 {{ $mono }} text-rose-600">{{ $hr->passport?->passport_number ?: '—' }}</td>
+                            <td class="whitespace-nowrap px-1.5 py-3 {{ $mono }} text-slate-700">{{ $hr->visa?->visa_number ?: '—' }}</td>
+                            <td class="whitespace-nowrap px-1.5 py-3 {{ $mono }} text-slate-700">{{ $hr->visa?->sponsor_id ?: '—' }}</td>
+                            <td class="whitespace-nowrap px-1.5 py-3">
                                 <div class="flex flex-nowrap gap-1">
-                                    <a href="{{ route('hr.print.full-file', $hr) }}" target="_blank" class="{{ $pill }} bg-blue-600 hover:bg-blue-700"><i class="bi bi-printer"></i> Print</a>
-                                    <a href="{{ route('hr.contract', $hr) }}" class="{{ $pill }} bg-emerald-600 hover:bg-emerald-700"><i class="bi bi-file-earmark-text"></i> Contract</a>
+                                    <a href="{{ route('hr.print.full-file', $hr) }}" target="_blank" class="{{ $pill }} bg-blue-600 hover:bg-blue-700" title="Print full file" aria-label="Print full file"><i class="bi bi-printer"></i></a>
+                                    <a href="{{ route('hr.contract', $hr) }}" class="{{ $pill }} bg-emerald-600 hover:bg-emerald-700" title="Contract" aria-label="Contract"><i class="bi bi-file-earmark-text"></i></a>
                                     @can('update', $hr)
-                                        <a href="{{ route('hr.edit', $hr) }}" class="{{ $pill }} bg-amber-500 hover:bg-amber-600"><i class="bi bi-pencil"></i> Edit</a>
+                                        <a href="{{ route('hr.edit', $hr) }}" class="{{ $pill }} bg-amber-500 hover:bg-amber-600" title="Edit" aria-label="Edit"><i class="bi bi-pencil"></i></a>
                                     @endcan
                                     @can('delete', $hr)
-                                        <button type="button" class="{{ $pill }} bg-rose-600 hover:bg-rose-700"
-                                            x-on:click="del.open = true; del.name = @js($hr->full_name_en); del.action = '{{ route('hr.destroy', $hr) }}'"><i class="bi bi-trash"></i> Delete</button>
+                                        <button type="button" class="{{ $pill }} bg-rose-600 hover:bg-rose-700" title="Delete" aria-label="Delete"
+                                            x-on:click="del.open = true; del.name = @js($hr->full_name_en); del.action = '{{ route('hr.destroy', $hr) }}'"><i class="bi bi-trash"></i></button>
                                     @endcan
                                 </div>
                             </td>
-                            <td class="px-3 py-3">
-                                {{-- Arabic sponsor name only (English only as a fallback when Arabic is missing) --}}
+                            <td class="whitespace-nowrap px-1.5 py-3">
+                                {{-- Arabic sponsor name only (English only as a fallback when Arabic is missing).
+                                     One line: long names end in "…", full name on hover. --}}
                                 @if($hr->visa?->sponsor_name_ar)
-                                    <div class="max-w-[14rem] text-base font-semibold text-rose-700" dir="rtl" lang="ar">{{ $hr->visa->sponsor_name_ar }}</div>
+                                    <div class="max-w-[12rem] truncate text-sm font-semibold text-rose-700" dir="rtl" lang="ar" title="{{ $hr->visa->sponsor_name_ar }}">{{ $hr->visa->sponsor_name_ar }}</div>
                                 @elseif($hr->visa?->sponsor_name)
-                                    <div class="max-w-[14rem] text-sm font-medium text-slate-700">{{ $hr->visa->sponsor_name }}</div>
+                                    <div class="max-w-[12rem] truncate text-sm font-medium text-slate-700" title="{{ $hr->visa->sponsor_name }}">{{ $hr->visa->sponsor_name }}</div>
                                 @else
                                     <span class="text-slate-300">—</span>
                                 @endif
                             </td>
-                            <td class="px-3 py-3">
+                            <td class="whitespace-nowrap px-1.5 py-3">
                                 {{-- English profession only (Arabic only as a fallback when English is missing) --}}
-                                <div class="max-w-[12rem] text-sm font-medium text-slate-700" @if(! $hr->visa?->profession_en && $hr->visa?->profession_ar) dir="rtl" lang="ar" @endif>{{ $hr->visa?->profession_en ?: ($hr->visa?->profession_ar ?: '—') }}</div>
+                                <div class="max-w-[10rem] truncate text-sm font-medium text-slate-700" title="{{ $hr->visa?->profession_en ?: $hr->visa?->profession_ar }}" @if(! $hr->visa?->profession_en && $hr->visa?->profession_ar) dir="rtl" lang="ar" @endif>{{ $hr->visa?->profession_en ?: ($hr->visa?->profession_ar ?: '—') }}</div>
                             </td>
-                            <td class="px-3 py-3 font-medium text-slate-700">{{ $hr->agent?->name ?? 'N/A' }}</td>
+                            <td class="whitespace-nowrap px-1.5 py-3 font-medium text-slate-700"><div class="max-w-[10rem] truncate" title="{{ $hr->agent?->name }}">{{ $hr->agent?->name ?? 'N/A' }}</div></td>
                         </tr>
                     @empty
                         <tr><td colspan="10" class="p-0">

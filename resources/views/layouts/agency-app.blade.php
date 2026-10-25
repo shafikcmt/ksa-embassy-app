@@ -26,7 +26,8 @@
     <x-app-header />
 
     {{-- Page content --}}
-    <main class="mx-auto max-w-[1600px] p-4 sm:p-6">
+    {{-- Pages with wide tables opt in to the full screen width with @section('full-width', '1'). --}}
+    <main class="mx-auto @hasSection('full-width') max-w-none p-3 sm:p-4 @else max-w-[1600px] p-4 sm:p-6 @endif">
         @if(session('success'))
             <div x-data="{ show: true }" x-show="show" class="mb-4 flex items-start gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
                 <i class="bi bi-check-circle-fill mt-0.5 text-emerald-500"></i>
