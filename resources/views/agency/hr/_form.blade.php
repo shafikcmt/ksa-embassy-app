@@ -534,8 +534,8 @@
     .hr-grid > .hr-wide { grid-column: 1 / -1; }
     .hr-grid > div > label:first-child { white-space: nowrap; }
     .hr-nat > .grid { column-gap: 1.5rem; }
-    /* English | Arabic pairs: Arabic box gets the wider share so long text is fully visible. */
-    @media (min-width: 640px) { .hr-pair { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); } }
+    /* English | Arabic pairs: equal 50/50 width. */
+    @media (min-width: 640px) { .hr-pair { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     /* Save bar stays reachable without scrolling to the end. */
     .hr-actions { position: sticky; bottom: 0; z-index: 20; padding: .6rem 0;
         background: rgba(248, 250, 252, .92); backdrop-filter: blur(4px); border-top: 1px solid #e2e8f0; }
