@@ -1,21 +1,23 @@
 {{--
-    ERP auto-fill for the HR form. The three boxes on top (Passport / Visa / MOFA) take a number; after a short
+    ERP auto-fill for the HR form. The box on top takes a Passport number; after a short
     pause the ERP is searched (agency-scoped, JSON) and the form below is filled directly — EMPTY fields only,
     everything stays editable. No buttons, and nothing is listed under the boxes. The form's own Passport / Visa /
     MOFA fields trigger the same lookup. The picker (#hrErpPick) appears ONLY if one number matches several people.
 --}}
-<fieldset id="hrErpLookup" class="hr-sec" aria-labelledby="hrErpTitle">
-    <legend id="hrErpTitle" class="hr-legend">Find in ERP</legend>
-    <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:end">
-        @foreach(['passport' => 'Passport No', 'visa' => 'Visa No / Serial', 'mofa' => 'MOFA No'] as $key => $label)
-            <div style="flex:1 1 220px;min-width:0">
-                <label for="hrErp-{{ $key }}" class="block text-xs font-medium text-slate-600">{{ $label }}</label>
-                <input id="hrErp-{{ $key }}" data-erp-key="{{ $key }}" type="text" maxlength="100" autocomplete="off" class="{{ $inp }}">
-            </div>
-        @endforeach
+<section id="hrErpLookup" class="hr-erp" aria-labelledby="hrErpTitle">
+    <div class="hr-erp-head">
+        <span class="hr-erp-icon"><i class="bi bi-search"></i></span>
+        <div>
+            <h3 id="hrErpTitle" class="hr-erp-title">Find in ERP</h3>
+            <p class="hr-erp-sub">Type the passport number — matching ERP data fills the form automatically.</p>
+        </div>
+    </div>
+    <div class="hr-erp-box">
+        <i class="bi bi-passport hr-erp-box-icon"></i>
+        <input id="hrErp-passport" data-erp-key="passport" type="text" maxlength="100" autocomplete="off" placeholder="Enter Passport No" aria-label="Passport No" class="hr-erp-input">
     </div>
     <div id="hrErpPick" hidden class="mt-3 space-y-2 text-sm text-slate-700" role="group" aria-label="More than one person found — choose one"></div>
-</fieldset>
+</section>
 
 @push('scripts')
 <script>

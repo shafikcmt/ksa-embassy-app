@@ -539,6 +539,46 @@
     /* Save bar stays reachable without scrolling to the end. */
     .hr-actions { position: sticky; bottom: 0; z-index: 20; padding: .6rem 0;
         background: rgba(248, 250, 252, .92); backdrop-filter: blur(4px); border-top: 1px solid #e2e8f0; }
+
+    /* ── Modern card look ─────────────────────────────────────────────── */
+    .hr-form.space-y-4 > * + * { margin-top: 1.1rem; }
+    .hr-form .hr-sec { border: 1px solid #e5e7eb; border-radius: 1rem; background: #fff; padding: 0 1.25rem 1.25rem;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 6px 18px -10px rgba(15, 23, 42, .12); }
+    .hr-form .hr-sec > .hr-legend { float: left; width: 100%; display: flex; align-items: center; gap: .55rem; padding: .95rem 0 .8rem;
+        margin: 0 0 1rem; border-bottom: 1px solid #f1f5f9; font-size: .82rem; font-weight: 700; letter-spacing: .06em; color: #0f172a; }
+    .hr-form .hr-sec > .hr-legend::before { content: ""; width: 4px; height: 1.05rem; border-radius: 4px; background: linear-gradient(#3b82f6, #6366f1); }
+    .hr-form .hr-sec > .hr-legend + * { clear: both; }
+    .hr-form .hr-note { margin: -.5rem 0 .9rem; font-size: .75rem; color: #94a3b8; }
+    .hr-grid { column-gap: 1.25rem; row-gap: 1rem; }
+    .hr-form .hr-grid > div > label:first-child,
+    .hr-form .hr-nat label:first-child { margin-bottom: .35rem; font-size: .72rem; font-weight: 600; letter-spacing: .04em;
+        text-transform: uppercase; color: #475569; }
+    .hr-form .hr-sec input:not([type=radio]):not([type=checkbox]):not([type=hidden]):not([type=file]),
+    .hr-form .hr-sec select { height: 2.6rem; border-radius: .65rem; border: 1px solid #e2e8f0; background-color: #f8fafc;
+        padding-left: .85rem; padding-right: .85rem; font-size: .9rem; color: #0f172a; box-shadow: none; transition: border-color .15s, box-shadow .15s, background-color .15s; }
+    .hr-form .hr-sec select { padding-right: 2.25rem; }
+    .hr-form .hr-sec textarea { border-radius: .65rem; border: 1px solid #e2e8f0; background-color: #f8fafc; padding: .6rem .85rem; font-size: .9rem; box-shadow: none; }
+    .hr-form .hr-sec input:hover:not(:focus):not([readonly]), .hr-form .hr-sec select:hover:not(:focus), .hr-form .hr-sec textarea:hover:not(:focus) { border-color: #cbd5e1; }
+    .hr-form .hr-sec input:focus, .hr-form .hr-sec select:focus, .hr-form .hr-sec textarea:focus {
+        outline: none; background-color: #fff; border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99, 102, 241, .15); }
+    .hr-form .hr-sec input::placeholder, .hr-form .hr-sec textarea::placeholder { color: #94a3b8; }
+    .hr-form .hr-sec input.\!border-rose-400 { border-color: #fb7185 !important; background-color: #fff1f2; }
+    .hr-form .hr-radios { min-height: 2.6rem; display: flex; align-items: center; }
+
+    /* ERP passport search */
+    .hr-erp { border: 1px solid #fed7aa; border-radius: 1rem; padding: 1.1rem 1.25rem 1.25rem;
+        background: linear-gradient(135deg, #fff7ed 0%, #fffbeb 55%, #ffffff 100%); }
+    .hr-erp-head { display: flex; align-items: center; gap: .75rem; margin-bottom: .9rem; }
+    .hr-erp-icon { width: 2.4rem; height: 2.4rem; flex: none; display: flex; align-items: center; justify-content: center;
+        border-radius: .75rem; background: #f97316; color: #fff; font-size: 1rem; box-shadow: 0 6px 14px -6px rgba(249, 115, 22, .7); }
+    .hr-erp-title { margin: 0; font-size: .95rem; font-weight: 700; color: #0f172a; }
+    .hr-erp-sub { margin: .1rem 0 0; font-size: .78rem; color: #78716c; }
+    .hr-erp-box { position: relative; max-width: 32rem; }
+    .hr-erp-box-icon { position: absolute; left: .9rem; top: 50%; transform: translateY(-50%); color: #a8a29e; pointer-events: none; }
+    .hr-erp-input { width: 100%; height: 2.85rem; padding: 0 1rem 0 2.5rem; border-radius: .75rem; border: 1px solid #fdba74;
+        background: #fff; font-size: .95rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: #0f172a; }
+    .hr-erp-input::placeholder { text-transform: none; letter-spacing: 0; font-weight: 400; color: #a8a29e; }
+    .hr-erp-input:focus { outline: none; border-color: #f97316; box-shadow: 0 0 0 3px rgba(249, 115, 22, .18); }
 </style>
 {{-- Standard, premium Arabic typography for every RTL field on the HR form --}}
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700&family=Noto+Naskh+Arabic:wght@500;600;700&display=swap" rel="stylesheet">
