@@ -207,6 +207,7 @@
                 </div>
             </div>
 
+            <p class="border-t border-slate-100 px-4 py-2 text-[0.72rem] text-slate-400"><i class="bi bi-grip-vertical"></i> Drag (or use ▲ ▼) to set the serial order</p>
             <div id="selectedList" class="max-h-[360px] overflow-y-auto border-t border-slate-100">
                 <div id="emptyMsg" class="px-5 py-10 text-center text-sm text-slate-400">
                     <i class="bi bi-person-plus mb-1 block text-2xl opacity-40"></i>
@@ -323,16 +324,26 @@
         selectedList.querySelectorAll('.selected-item').forEach(el => el.remove());
         ids().map(id => [id, selected[id]]).forEach(([hrId, item], idx) => {
             const div = document.createElement('div');
-            div.className = 'selected-item flex items-center justify-between gap-2 border-b border-slate-100 px-4 py-2.5 last:border-0';
+            div.className = 'selected-item flex items-center justify-between gap-2 border-b border-slate-100 bg-white px-3 py-2.5 last:border-0';
+            div.draggable = true;
+            div.dataset.hrId = hrId;
+            div.title = 'Drag to change the serial';
+            const last = idx === order.length - 1;
+            const mv = 'move-btn grid h-6 w-6 place-items-center rounded-md text-slate-400 transition hover:bg-brand-50 hover:text-brand-600';
             div.innerHTML =
-                '<div class="flex min-w-0 items-start gap-2.5">' +
+                '<div class="flex min-w-0 items-start gap-2">' +
+                    '<span class="drag-handle mt-0.5 grid h-6 w-4 shrink-0 place-items-center text-slate-300" style="cursor:grab"><i class="bi bi-grip-vertical"></i></span>' +
                     '<span class="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-50 text-xs font-bold text-brand-700">' + (idx + 1) + '</span>' +
                     '<div class="min-w-0">' +
                     '<div class="truncate text-sm font-semibold text-slate-700">' + item.name + '</div>' +
                     '<span class="mt-1 inline-block rounded-full px-2 py-0.5 text-[0.78rem] font-semibold ' + catBadge(item.category) + '">' + catLabel(item.category) + '</span>' +
                     '</div>' +
                 '</div>' +
-                '<button type="button" class="remove-btn grid h-7 w-7 shrink-0 place-items-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-500" title="Remove" data-hr-id="' + hrId + '"><i class="bi bi-x-lg text-xs"></i></button>';
+                '<div class="flex shrink-0 items-center gap-0.5">' +
+                    '<button type="button" class="' + mv + '" data-dir="-1" data-hr-id="' + hrId + '" title="Move up"' + (idx === 0 ? ' disabled style="visibility:hidden"' : '') + '><i class="bi bi-chevron-up text-xs"></i></button>' +
+                    '<button type="button" class="' + mv + '" data-dir="1" data-hr-id="' + hrId + '" title="Move down"' + (last ? ' disabled style="visibility:hidden"' : '') + '><i class="bi bi-chevron-down text-xs"></i></button>' +
+                    '<button type="button" class="remove-btn grid h-7 w-7 place-items-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-500" title="Remove" data-hr-id="' + hrId + '"><i class="bi bi-x-lg text-xs"></i></button>' +
+                '</div>';
             selectedList.insertBefore(div, emptyMsg);
         });
     }
@@ -409,6 +420,44 @@
 
     // Editing a draft: restore the saved order (sort_order) for pre-selected rows.
     preOrder.forEach(id => { if (id in selected && !order.includes(id)) order.push(id); });
+
+    // ── Re-order the selected list (serial) ─────────────────────
+    // Drag & drop (desktop) + ▲/▼ buttons (touch / keyboard). The new order is what
+    // gets saved as sort_order and printed as the serial.
+    function setOrderFrom(newIds) { order.length = 0; newIds.forEach(id => order.push(String(id))); markDirty(); sync(); }
+
+    let dragEl = null;
+    selectedList.addEventListener('dragstart', function (e) {
+        dragEl = e.target.closest('.selected-item');
+        if (!dragEl) return;
+        e.dataTransfer.effectAllowed = 'move';
+        try { e.dataTransfer.setData('text/plain', dragEl.dataset.hrId); } catch (_) {}
+        setTimeout(() => { if (dragEl) { dragEl.style.opacity = '.4'; dragEl.style.background = '#eef2ff'; } }, 0);
+    });
+    selectedList.addEventListener('dragover', function (e) {
+        if (!dragEl) return;
+        e.preventDefault();
+        const over = e.target.closest('.selected-item');
+        if (!over || over === dragEl) return;
+        const r = over.getBoundingClientRect();
+        selectedList.insertBefore(dragEl, (e.clientY - r.top) > r.height / 2 ? over.nextSibling : over);
+    });
+    selectedList.addEventListener('drop', e => { if (dragEl) e.preventDefault(); });
+    selectedList.addEventListener('dragend', function () {
+        if (!dragEl) return;
+        dragEl.style.opacity = ''; dragEl.style.background = '';
+        dragEl = null;
+        const domOrder = Array.from(selectedList.querySelectorAll('.selected-item')).map(el => el.dataset.hrId);
+        if (domOrder.join() !== ids().join()) { setOrderFrom(domOrder); toast('Serial updated', 'info'); }
+    });
+    selectedList.addEventListener('click', function (e) {
+        const btn = e.target.closest('.move-btn');
+        if (!btn) return;
+        const cur = ids(), i = cur.indexOf(btn.dataset.hrId), j = i + parseInt(btn.dataset.dir, 10);
+        if (i < 0 || j < 0 || j >= cur.length) return;
+        [cur[i], cur[j]] = [cur[j], cur[i]];
+        setOrderFrom(cur);
+    });
 
     // remove from selected panel
     selectedList.addEventListener('click', function (e) {
