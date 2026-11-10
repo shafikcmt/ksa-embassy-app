@@ -511,7 +511,7 @@
             <button type="reset" class="inline-flex h-9 items-center gap-2 rounded-lg bg-rose-500 px-5 text-sm font-bold uppercase text-white shadow-sm hover:bg-rose-600">
                 <i class="bi bi-arrow-counterclockwise"></i> Reset
             </button>
-            <button type="submit" name="after_save" value="view" class="inline-flex h-9 items-center gap-2 rounded-lg bg-brand-600 px-6 text-sm font-bold uppercase text-white shadow-sm hover:bg-brand-700">
+            <button type="submit" class="inline-flex h-9 items-center gap-2 rounded-lg bg-brand-600 px-6 text-sm font-bold uppercase text-white shadow-sm hover:bg-brand-700">
                 <i class="bi bi-check-lg"></i> {{ $mode === 'create' ? 'Save' : 'Save Changes' }}
             </button>
         </div>

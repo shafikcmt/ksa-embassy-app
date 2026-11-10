@@ -245,16 +245,11 @@ class HrProfileController extends Controller
     }
 
     /**
-     * Redirect after a successful save, honouring the wizard's "after_save" choice:
-     * save & view (default), save & add another, or save & generate documents.
+     * After a successful save, go straight back to the HR list.
      */
     private function afterSaveRedirect(Request $request, HrProfile $hr, string $message)
     {
-        return match ($request->input('after_save')) {
-            'add_another' => redirect()->route('hr.create')->with('success', $message.' Add another below.'),
-            'documents'   => redirect()->route('hr.documents', $hr)->with('success', $message),
-            default       => redirect()->route('hr.show', $hr)->with('success', $message),
-        };
+        return redirect()->route('hr.index')->with('success', $message);
     }
 
     /**
