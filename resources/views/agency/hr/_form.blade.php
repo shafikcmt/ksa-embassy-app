@@ -284,7 +284,7 @@
                     <input type="text" id="visa_issue_date" name="visa_issue_date" required autocomplete="off" dir="ltr" placeholder="As printed · e.g. 1447/03/15" value="{{ old('visa_issue_date', $visa?->issue_date) }}" class="{{ $inp }} @error('visa_issue_date') !border-rose-400 @enderror">
                     <span id="visaDatePreview" class="mt-1 hidden items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600" aria-live="polite"></span>
                 </x-ui.field>
-                <x-ui.field label="Sponsor Name" name="sponsor_name_ar" :required="true">
+                <x-ui.field label="Sponsor Name" name="sponsor_name_ar" :required="true" class="sm:col-span-2 hr-wide">
                     <input type="hidden" id="sponsor_name" name="sponsor_name" value="{{ $rel($visa, 'sponsor_name') }}" data-ar-source="sponsor_name_ar" data-ar-dict="generic">
                     <input type="text" id="sponsor_name_ar" name="sponsor_name_ar" required dir="rtl" lang="ar" placeholder="اسم الكفيل بالعربي" value="{{ $rel($visa, 'sponsor_name_ar') }}" class="{{ $inp }} ar-target ar-input @error('sponsor_name') !border-rose-400 @enderror">
                     @error('sponsor_name')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
@@ -294,7 +294,7 @@
                 </x-ui.field>
 
                 @if($on('visa_issue_place'))
-                    <x-ui.field label="Place of Issue" name="visa_issue_place" class="hr-w2">
+                    <x-ui.field label="Place of Issue" name="visa_issue_place" class="sm:col-span-2 hr-wide">
                         <div class="hr-pair grid grid-cols-1 gap-2">
                             <input type="text" name="visa_issue_place" placeholder="English" value="{{ $rel($visa, 'issue_place') }}" data-ar-source="visa_issue_place_ar" data-ar-dict="city" class="{{ $inp }}">
                             <div class="flex gap-1 min-w-0">
@@ -308,7 +308,7 @@
                 @endif
 
                 @if($on('qualification'))
-                    <x-ui.field label="Qualification" name="qualification_en" class="hr-w2">
+                    <x-ui.field label="Qualification" name="qualification_en" class="sm:col-span-2 hr-wide">
                         <div class="hr-pair grid grid-cols-1 gap-2">
                             <input type="text" name="qualification_en" placeholder="English" value="{{ $rel($visa, 'qualification_en') }}" data-ar-source="qualification_ar" data-ar-dict="qualification" class="{{ $inp }}">
                             <div class="flex gap-1 min-w-0">
@@ -321,7 +321,7 @@
                     <input type="hidden" name="qualification_ar" value="{{ $rel($visa, 'qualification_ar') }}">
                 @endif
 
-                <x-ui.field label="Profession" name="profession_en" :required="true" class="hr-w2">
+                <x-ui.field label="Profession" name="profession_en" :required="true" class="sm:col-span-2 hr-wide">
                     <div class="hr-pair grid grid-cols-1 gap-2">
                         <input type="text" name="profession_en" required placeholder="English" value="{{ $rel($visa, 'profession_en') }}" data-ar-source="profession_ar" data-ar-dict="profession" class="{{ $inp }} @error('profession_en') !border-rose-400 @enderror">
                         <div class="flex gap-1 min-w-0">
@@ -433,7 +433,7 @@
             <p class="hr-note">Arabic box accepts Arabic or Hijri dates</p>
             <div class="hr-grid hr-dense">
                 @if($showDuration)
-                    <x-ui.field label="Duration of Stay" name="duration_stay_en" class="hr-w2">
+                    <x-ui.field label="Duration of Stay" name="duration_stay_en" class="sm:col-span-2 hr-wide">
                         <div class="hr-pair grid grid-cols-1 gap-2">
                             <input type="text" name="duration_stay_en" placeholder="English" value="{{ $rel($other, 'duration_stay_en', '02 Years') }}" data-ar-source="duration_stay_ar" data-ar-dict="duration" class="{{ $inp }}">
                             <div class="flex gap-1 min-w-0">
@@ -455,7 +455,7 @@
                 @endif
 
                 @if($showArrival)
-                    <x-ui.field label="Date of Arrival" name="arrival_date" class="hr-w2">
+                    <x-ui.field label="Date of Arrival" name="arrival_date" class="sm:col-span-2 hr-wide">
                         <div class="hr-pair grid grid-cols-1 gap-2">
                             <input type="date" name="arrival_date" value="{{ $dt($other, 'arrival_date') }}" data-ar-source="arrival_date_ar" data-ar-dict="date" class="{{ $inp }}">
                             <div class="flex gap-1 min-w-0">
@@ -469,7 +469,7 @@
                 @endif
 
                 @if($showDeparture)
-                    <x-ui.field label="Date of Departure" name="departure_date" class="hr-w2">
+                    <x-ui.field label="Date of Departure" name="departure_date" class="sm:col-span-2 hr-wide">
                         <div class="hr-pair grid grid-cols-1 gap-2">
                             <input type="date" name="departure_date" value="{{ $dt($other, 'departure_date') }}" data-ar-source="departure_date_ar" data-ar-dict="date" class="{{ $inp }}">
                             <div class="flex gap-1 min-w-0">
@@ -547,6 +547,10 @@
     }
     /* English | Arabic pairs: Arabic box gets the wider share so long text is fully visible. */
     @media (min-width: 1024px) { .hr-pair { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); } }
+    /* Full-width bilingual rows: larger, clearer inputs. */
+    .hr-grid > .hr-wide .hr-pair input,
+    .hr-grid > .hr-wide > input.ar-input { height: 2.6rem; font-size: 1rem; padding-left: .85rem; padding-right: .85rem; }
+    .hr-grid > .hr-wide .ar-input { font-size: 1.1rem; }
     /* Save bar stays reachable without scrolling to the end. */
     .hr-actions { position: sticky; bottom: 0; z-index: 20; padding: .6rem 0;
         background: rgba(248, 250, 252, .92); backdrop-filter: blur(4px); border-top: 1px solid #e2e8f0; }
