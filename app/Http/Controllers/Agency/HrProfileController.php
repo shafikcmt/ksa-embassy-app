@@ -250,7 +250,8 @@ class HrProfileController extends Controller
      */
     private function afterSaveRedirect(Request $request, HrProfile $hr, string $message)
     {
-        return redirect()->route('hr.index')->with('success', $message)->with('saved_hr_id', $hr->id);
+        // The list's "Saved" card shows this message (no separate layout flash → no duplicate).
+        return redirect()->route('hr.index')->with('saved_message', $message)->with('saved_hr_id', $hr->id);
     }
 
     /**

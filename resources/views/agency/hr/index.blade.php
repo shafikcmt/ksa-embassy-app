@@ -64,13 +64,16 @@
     {{-- Just saved → offer the two print options right away. Looked up inside the
          agency-scoped list query only, so another agency's id can never resolve. --}}
     @php $savedHr = session('saved_hr_id') ? \App\Models\HrProfile::query()->where('agency_id', auth()->user()->agency_id)->find(session('saved_hr_id')) : null; @endphp
+    @if(! $savedHr && session('saved_message'))
+        <div class="mb-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800"><i class="bi bi-check-circle-fill mr-1.5 text-emerald-500"></i>{{ session('saved_message') }}</div>
+    @endif
     @if($savedHr)
         <div x-data="{ show: true }" x-show="show" class="mb-5 flex flex-col gap-3 rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
             <div class="flex items-center gap-3">
                 <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-500 text-white shadow-sm"><i class="bi bi-check2-circle text-lg"></i></span>
                 <div class="min-w-0">
-                    <p class="text-sm font-bold text-slate-900">Saved: <span class="uppercase">{{ $savedHr->full_name_en }}</span></p>
-                    <p class="text-xs text-slate-500">Print the application now?</p>
+                    <p class="text-sm font-bold text-slate-900">{{ session('saved_message', 'Saved successfully.') }}</p>
+                    <p class="text-xs text-slate-500"><span class="font-semibold uppercase text-slate-700">{{ $savedHr->full_name_en }}</span> · print the application now?</p>
                 </div>
             </div>
             <div class="flex flex-wrap items-center gap-2">

@@ -255,7 +255,14 @@
 <script>
 (function () {
     const selected     = {};
+    // Selection ORDER (click order). JS objects iterate integer keys ascending, so the
+    // order is kept separately — the list is saved/printed in the order the user ticked.
+    const order        = [];
+    const put  = (id, item) => { id = String(id); if (!(id in selected)) order.push(id); selected[id] = item; };
+    const drop = id => { id = String(id); delete selected[id]; const i = order.indexOf(id); if (i > -1) order.splice(i, 1); };
+    const ids  = () => order.filter(id => id in selected);
     const preSelected  = @json($preSelected);
+    const preOrder     = @json(array_map('strval', array_keys($preSelected)));
     const selectedList = document.getElementById('selectedList');
     const emptyMsg     = document.getElementById('emptyMsg');
     const hiddenInputs = document.getElementById('hiddenInputs');
@@ -314,13 +321,16 @@
 
     function renderSelectedList() {
         selectedList.querySelectorAll('.selected-item').forEach(el => el.remove());
-        Object.entries(selected).forEach(([hrId, item]) => {
+        ids().map(id => [id, selected[id]]).forEach(([hrId, item], idx) => {
             const div = document.createElement('div');
             div.className = 'selected-item flex items-center justify-between gap-2 border-b border-slate-100 px-4 py-2.5 last:border-0';
             div.innerHTML =
-                '<div class="min-w-0">' +
+                '<div class="flex min-w-0 items-start gap-2.5">' +
+                    '<span class="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-50 text-xs font-bold text-brand-700">' + (idx + 1) + '</span>' +
+                    '<div class="min-w-0">' +
                     '<div class="truncate text-sm font-semibold text-slate-700">' + item.name + '</div>' +
                     '<span class="mt-1 inline-block rounded-full px-2 py-0.5 text-[0.78rem] font-semibold ' + catBadge(item.category) + '">' + catLabel(item.category) + '</span>' +
+                    '</div>' +
                 '</div>' +
                 '<button type="button" class="remove-btn grid h-7 w-7 shrink-0 place-items-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-500" title="Remove" data-hr-id="' + hrId + '"><i class="bi bi-x-lg text-xs"></i></button>';
             selectedList.insertBefore(div, emptyMsg);
@@ -330,7 +340,7 @@
     function rebuildHiddenInputs() {
         hiddenInputs.innerHTML = '';
         let i = 0;
-        Object.entries(selected).forEach(([hrId, item]) => {
+        ids().map(id => [id, selected[id]]).forEach(([hrId, item], idx) => {
             hiddenInputs.innerHTML +=
                 '<input type="hidden" name="items[' + i + '][hr_profile_id]" value="' + hrId + '">' +
                 '<input type="hidden" name="items[' + i + '][category]" value="' + item.category + '">';
@@ -356,7 +366,7 @@
         row.classList.add('bg-brand-50');
         catSelect.classList.remove('hidden');
         if (category) catSelect.value = category;
-        selected[hrId] = { name, category: catSelect.value };
+        put(hrId, { name, category: catSelect.value });
         markDirty();
     }
 
@@ -367,7 +377,7 @@
             row.classList.remove('bg-brand-50');
             row.querySelector('.category-select').classList.add('hidden');
         }
-        delete selected[hrId];
+        drop(hrId);
         markDirty();
     }
 
@@ -396,6 +406,9 @@
             cb.dispatchEvent(new Event('change'));
         });
     });
+
+    // Editing a draft: restore the saved order (sort_order) for pre-selected rows.
+    preOrder.forEach(id => { if (id in selected && !order.includes(id)) order.push(id); });
 
     // remove from selected panel
     selectedList.addEventListener('click', function (e) {
@@ -506,9 +519,9 @@
     document.getElementById('clearAllBtn').addEventListener('click', clearAll);
 
     function clearAll() {
-        const n = Object.keys(selected).length;
+        const n = ids().length;
         if (!n) return;
-        Object.keys(selected).slice().forEach(deselectRow);
+        ids().slice().forEach(deselectRow);
         sync();
         toast(n + ' candidate(s) removed', 'info');
     }
@@ -516,7 +529,7 @@
     // bulk category apply
     document.getElementById('bulkApply').addEventListener('click', function () {
         const cat = document.getElementById('bulkCategory').value;
-        const ids = Object.keys(selected);
+        const ids = ids();
         if (!ids.length) return;
         ids.forEach(hrId => {
             selected[hrId].category = cat;
@@ -577,7 +590,7 @@
                 if (rowFor(hrId)) {
                     selectRow(hrId, cat);
                 } else {
-                    selected[hrId] = { name, category: cat };  // off-page candidate
+                    put(hrId, { name, category: cat });  // off-page candidate
                     markDirty();
                 }
                 sync();
