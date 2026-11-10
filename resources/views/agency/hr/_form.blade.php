@@ -530,23 +530,12 @@
     @media (min-width: 768px) { .hr-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     .hr-grid > .hr-wfull { grid-column: 1 / -1; }
     .hr-form .hr-radios { min-height: 2.25rem; }
-    @media (min-width: 640px) {
-        /* label-left rows */
-        .hr-grid > div:not(.hr-nat):not(.hr-wfull) { display: grid; grid-template-columns: 10.5rem minmax(0, 1fr); column-gap: .75rem; align-items: center; }
-        .hr-grid > div:not(.hr-nat):not(.hr-wfull) > label:first-child { grid-column: 1; grid-row: 1 / span 4; margin: 0; align-self: center; }
-        .hr-grid > div:not(.hr-nat):not(.hr-wfull) > :not(label:first-child) { grid-column: 2; }
-        .hr-grid > div:not(.hr-nat):not(.hr-wfull) > label:first-child::after { content: " :"; color: #64748b; }
-        .hr-grid > .hr-wide { grid-column: 1 / -1; grid-template-columns: 10.5rem minmax(0, 1fr); }
-        /* nationality pair (custom label row with the "Same as present" chip) */
-        .hr-nat > .grid { column-gap: 1.5rem; }
-        .hr-grid label:first-child { white-space: nowrap; }
-        .hr-nat > .grid > div { display: grid; grid-template-columns: 10.5rem minmax(0, 1fr); column-gap: .75rem; align-items: center; }
-        .hr-nat > .grid > div > :first-child { grid-column: 1; grid-row: 1 / span 3; height: auto; margin: 0; flex-direction: column; align-items: flex-start; gap: .2rem; }
-        .hr-nat > .grid > div > :first-child > label:first-child::after { content: " :"; color: #64748b; }
-        .hr-nat > .grid > div > :not(:first-child) { grid-column: 2; }
-    }
+    /* Labels sit ABOVE their inputs (reference style) so each input gets the full cell width. */
+    .hr-grid > .hr-wide { grid-column: 1 / -1; }
+    .hr-grid > div > label:first-child { white-space: nowrap; }
+    .hr-nat > .grid { column-gap: 1.5rem; }
     /* English | Arabic pairs: Arabic box gets the wider share so long text is fully visible. */
-    @media (min-width: 1024px) { .hr-pair { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); } }
+    @media (min-width: 640px) { .hr-pair { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); } }
     /* Save bar stays reachable without scrolling to the end. */
     .hr-actions { position: sticky; bottom: 0; z-index: 20; padding: .6rem 0;
         background: rgba(248, 250, 252, .92); backdrop-filter: blur(4px); border-top: 1px solid #e2e8f0; }
