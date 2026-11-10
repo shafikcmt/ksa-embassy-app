@@ -407,5 +407,6 @@
     });
 </script>
 @stack('scripts')
+@include('partials.date-format')
 </body>
 </html>
