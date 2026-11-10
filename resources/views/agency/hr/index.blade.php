@@ -61,6 +61,30 @@
         @endcan
     </div>
 
+    {{-- Just saved → offer the two print options right away. Looked up inside the
+         agency-scoped list query only, so another agency's id can never resolve. --}}
+    @php $savedHr = session('saved_hr_id') ? \App\Models\HrProfile::query()->where('agency_id', auth()->user()->agency_id)->find(session('saved_hr_id')) : null; @endphp
+    @if($savedHr)
+        <div x-data="{ show: true }" x-show="show" class="mb-5 flex flex-col gap-3 rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex items-center gap-3">
+                <span class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-500 text-white shadow-sm"><i class="bi bi-check2-circle text-lg"></i></span>
+                <div class="min-w-0">
+                    <p class="text-sm font-bold text-slate-900">Saved: <span class="uppercase">{{ $savedHr->full_name_en }}</span></p>
+                    <p class="text-xs text-slate-500">Print the application now?</p>
+                </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+                <a href="{{ route('hr.print.application', $savedHr) }}" target="_blank" class="inline-flex items-center gap-2 rounded-xl border border-brand-200 bg-white px-4 py-2 text-sm font-semibold text-brand-700 shadow-sm transition hover:bg-brand-50">
+                    <i class="bi bi-file-earmark"></i> Single Page <span class="rounded-md bg-brand-50 px-1.5 text-xs">Page 1</span>
+                </a>
+                <a href="{{ route('hr.print.full-file', $savedHr) }}" target="_blank" class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-brand-600/30 transition hover:shadow-md">
+                    <i class="bi bi-files"></i> Full Document <span class="rounded-md bg-white/20 px-1.5 text-xs">4 Pages</span>
+                </a>
+                <button type="button" @click="show = false" title="Dismiss" class="grid h-9 w-9 place-items-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"><i class="bi bi-x-lg"></i></button>
+            </div>
+        </div>
+    @endif
+
     {{-- Stat cards --}}
     <div class="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <x-ui.stat class="js-fade-card" accentLeft icon="bi-people" tone="brand" label="Total" :value="$totalHr" />
@@ -131,53 +155,61 @@
         {{-- ── Desktop table ───────────────────────────────────── --}}
         @php
             // Icon-only action buttons (name on hover) keep the 10 columns on one line.
-            $pill = 'grid h-7 w-7 place-items-center rounded-md text-sm text-white shadow-sm transition';
+            $pill = 'grid h-8 w-8 place-items-center rounded-lg text-sm ring-1 ring-inset transition';
             // Numbers (MOFA / passport / visa / sponsor ID): readable 14px.
-            $mono = 'text-sm font-semibold';
+            $mono = 'inline-block rounded-md px-2 py-0.5 font-mono text-[0.8rem] font-semibold tracking-wide';
         @endphp
         <div class="hidden overflow-x-auto lg:block">
             <table class="w-full text-sm">
                 <thead>
-                    <tr class="border-b border-slate-200 bg-slate-50 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
-                        <th class="whitespace-nowrap px-1.5 py-3">#</th>
-                        <th class="whitespace-nowrap px-1.5 py-3">Name</th>
-                        <th class="whitespace-nowrap px-1.5 py-3">MOFA ID</th>
-                        <th class="whitespace-nowrap px-1.5 py-3">Passport No</th>
-                        <th class="whitespace-nowrap px-1.5 py-3">Visa No</th>
-                        <th class="whitespace-nowrap px-1.5 py-3">Sponsor ID</th>
-                        <th class="whitespace-nowrap px-1.5 py-3">Action</th>
-                        <th class="whitespace-nowrap px-1.5 py-3">Sponsor Name</th>
-                        <th class="whitespace-nowrap px-1.5 py-3">Profession</th>
-                        <th class="whitespace-nowrap px-1.5 py-3">Agent</th>
+                    <tr class="border-b border-slate-200 bg-slate-50/80 text-left text-[0.7rem] font-bold uppercase tracking-wider text-slate-500">
+                        <th class="whitespace-nowrap px-3 py-3.5">#</th>
+                        <th class="whitespace-nowrap px-3 py-3.5">Name</th>
+                        <th class="whitespace-nowrap px-3 py-3.5">MOFA ID</th>
+                        <th class="whitespace-nowrap px-3 py-3.5">Passport No</th>
+                        <th class="whitespace-nowrap px-3 py-3.5">Visa No</th>
+                        <th class="whitespace-nowrap px-3 py-3.5">Sponsor ID</th>
+                        <th class="whitespace-nowrap px-3 py-3.5">Action</th>
+                        <th class="whitespace-nowrap px-3 py-3.5">Sponsor Name</th>
+                        <th class="whitespace-nowrap px-3 py-3.5">Profession</th>
+                        <th class="whitespace-nowrap px-3 py-3.5">Agent</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($hrProfiles as $hr)
-                        <tr class="align-middle transition-colors hover:bg-brand-50/40">
-                            <td class="whitespace-nowrap px-1.5 py-3">
-                                <span class="grid h-6 w-6 place-items-center rounded-full bg-slate-100 text-xs font-semibold text-slate-500">{{ $hrProfiles->firstItem() + $loop->index }}</span>
+                        <tr class="align-middle transition-colors hover:bg-brand-50/50 {{ $savedHr && $savedHr->id === $hr->id ? 'bg-emerald-50/70' : '' }}">
+                            <td class="whitespace-nowrap px-3 py-3">
+                                <span class="text-xs font-semibold text-slate-400">{{ $hrProfiles->firstItem() + $loop->index }}</span>
                             </td>
-                            <td class="whitespace-nowrap px-1.5 py-3">
-                                <a href="{{ route('hr.show', $hr) }}" @click.prevent="openPreview(@js($previewData($hr)))" class="block text-left font-bold uppercase text-slate-800 hover:text-brand-600">{{ $hr->full_name_en }}</a>
+                            <td class="whitespace-nowrap px-3 py-3">
+                                <div class="flex items-center gap-2.5">
+                                    <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-indigo-600 text-sm font-bold text-white shadow-sm">{{ strtoupper(mb_substr($hr->full_name_en, 0, 1)) }}</span>
+                                    <div class="min-w-0">
+                                        <a href="{{ route('hr.show', $hr) }}" @click.prevent="openPreview(@js($previewData($hr)))" class="block max-w-[15rem] truncate text-left font-bold uppercase text-slate-800 hover:text-brand-600" title="{{ $hr->full_name_en }}">{{ $hr->full_name_en }}</a>
+                                        @php $st = $hr->status ?: 'active'; @endphp
+                                        <span class="mt-0.5 inline-flex items-center gap-1 text-[0.7rem] font-semibold capitalize {{ $st === 'active' ? 'text-emerald-600' : ($st === 'blacklisted' ? 'text-rose-600' : 'text-slate-400') }}"><span class="h-1.5 w-1.5 rounded-full {{ $st === 'active' ? 'bg-emerald-500' : ($st === 'blacklisted' ? 'bg-rose-500' : 'bg-slate-300') }}"></span>{{ $st }}</span>
+                                    </div>
+                                </div>
                             </td>
-                            <td class="whitespace-nowrap px-1.5 py-3 {{ $mono }} text-rose-600">{{ $hr->mofa_new ?: ($hr->mofa_old ?: '—') }}</td>
-                            <td class="whitespace-nowrap px-1.5 py-3 {{ $mono }} text-rose-600">{{ $hr->passport?->passport_number ?: '—' }}</td>
-                            <td class="whitespace-nowrap px-1.5 py-3 {{ $mono }} text-slate-700">{{ $hr->visa?->visa_number ?: '—' }}</td>
-                            <td class="whitespace-nowrap px-1.5 py-3 {{ $mono }} text-slate-700">{{ $hr->visa?->sponsor_id ?: '—' }}</td>
-                            <td class="whitespace-nowrap px-1.5 py-3">
+                            <td class="whitespace-nowrap px-3 py-3 ">@if($m = $hr->mofa_new ?: $hr->mofa_old)<span class="{{ $mono }} bg-rose-50 text-rose-700">{{ $m }}</span>@else<span class="text-slate-300">—</span>@endif</td>
+                            <td class="whitespace-nowrap px-3 py-3 ">@if($hr->passport?->passport_number)<span class="{{ $mono }} bg-indigo-50 text-indigo-700">{{ $hr->passport->passport_number }}</span>@else<span class="text-slate-300">—</span>@endif</td>
+                            <td class="whitespace-nowrap px-3 py-3 ">@if($hr->visa?->visa_number)<span class="{{ $mono }} bg-slate-100 text-slate-700">{{ $hr->visa->visa_number }}</span>@else<span class="text-slate-300">—</span>@endif</td>
+                            <td class="whitespace-nowrap px-3 py-3 ">@if($hr->visa?->sponsor_id)<span class="{{ $mono }} bg-slate-100 text-slate-700">{{ $hr->visa->sponsor_id }}</span>@else<span class="text-slate-300">—</span>@endif</td>
+                            <td class="whitespace-nowrap px-3 py-3">
                                 <div class="flex flex-nowrap gap-1">
-                                    <a href="{{ route('hr.print.full-file', $hr) }}" target="_blank" class="{{ $pill }} bg-blue-600 hover:bg-blue-700" title="Print full file" aria-label="Print full file"><i class="bi bi-printer"></i></a>
-                                    <a href="{{ route('hr.contract', $hr) }}" class="{{ $pill }} bg-emerald-600 hover:bg-emerald-700" title="Contract" aria-label="Contract"><i class="bi bi-file-earmark-text"></i></a>
+                                    <a href="{{ route('hr.print.application', $hr) }}" target="_blank" class="{{ $pill }} bg-sky-50 text-sky-700 ring-sky-200 hover:bg-sky-100" title="Print page 1 (application)" aria-label="Print page 1"><i class="bi bi-file-earmark"></i></a>
+                                    <a href="{{ route('hr.print.full-file', $hr) }}" target="_blank" class="{{ $pill }} bg-blue-50 text-blue-700 ring-blue-200 hover:bg-blue-100" title="Print full file (4 pages)" aria-label="Print full file"><i class="bi bi-printer"></i></a>
+                                    <a href="{{ route('hr.contract', $hr) }}" class="{{ $pill }} bg-emerald-50 text-emerald-700 ring-emerald-200 hover:bg-emerald-100" title="Contract" aria-label="Contract"><i class="bi bi-file-earmark-text"></i></a>
                                     @can('update', $hr)
-                                        <a href="{{ route('hr.edit', $hr) }}" class="{{ $pill }} bg-amber-500 hover:bg-amber-600" title="Edit" aria-label="Edit"><i class="bi bi-pencil"></i></a>
+                                        <a href="{{ route('hr.edit', $hr) }}" class="{{ $pill }} bg-amber-50 text-amber-700 ring-amber-200 hover:bg-amber-100" title="Edit" aria-label="Edit"><i class="bi bi-pencil"></i></a>
                                     @endcan
                                     @can('delete', $hr)
-                                        <button type="button" class="{{ $pill }} bg-rose-600 hover:bg-rose-700" title="Delete" aria-label="Delete"
+                                        <button type="button" class="{{ $pill }} bg-rose-50 text-rose-700 ring-rose-200 hover:bg-rose-100" title="Delete" aria-label="Delete"
                                             x-on:click="del.open = true; del.name = @js($hr->full_name_en); del.action = '{{ route('hr.destroy', $hr) }}'"><i class="bi bi-trash"></i></button>
                                     @endcan
                                 </div>
                             </td>
-                            <td class="whitespace-nowrap px-1.5 py-3">
+                            <td class="whitespace-nowrap px-3 py-3">
                                 {{-- Arabic sponsor name only (English only as a fallback when Arabic is missing).
                                      One line: long names end in "…", full name on hover. --}}
                                 @if($hr->visa?->sponsor_name_ar)
@@ -188,11 +220,11 @@
                                     <span class="text-slate-300">—</span>
                                 @endif
                             </td>
-                            <td class="whitespace-nowrap px-1.5 py-3">
+                            <td class="whitespace-nowrap px-3 py-3">
                                 {{-- English profession only (Arabic only as a fallback when English is missing) --}}
                                 <div class="max-w-[10rem] truncate text-sm font-medium text-slate-700" title="{{ $hr->visa?->profession_en ?: $hr->visa?->profession_ar }}" @if(! $hr->visa?->profession_en && $hr->visa?->profession_ar) dir="rtl" lang="ar" @endif>{{ $hr->visa?->profession_en ?: ($hr->visa?->profession_ar ?: '—') }}</div>
                             </td>
-                            <td class="whitespace-nowrap px-1.5 py-3 font-medium text-slate-700"><div class="max-w-[10rem] truncate" title="{{ $hr->agent?->name }}">{{ $hr->agent?->name ?? 'N/A' }}</div></td>
+                            <td class="whitespace-nowrap px-3 py-3 font-medium text-slate-700"><div class="max-w-[10rem] truncate" title="{{ $hr->agent?->name }}">{{ $hr->agent?->name ?? 'N/A' }}</div></td>
                         </tr>
                     @empty
                         <tr><td colspan="10" class="p-0">
@@ -242,7 +274,8 @@
                 </dl>
                 @php $mBtn = 'flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold ring-1 ring-inset transition'; @endphp
                 <div class="mt-3 flex gap-2 border-t border-slate-100 pt-3">
-                    <a href="{{ route('hr.print.full-file', $hr) }}" target="_blank" class="{{ $mBtn }} bg-blue-50 text-blue-700 ring-blue-200 hover:bg-blue-100"><i class="bi bi-printer"></i> Print</a>
+                    <a href="{{ route('hr.print.application', $hr) }}" target="_blank" class="{{ $mBtn }} bg-sky-50 text-sky-700 ring-sky-200 hover:bg-sky-100" title="Page 1"><i class="bi bi-file-earmark"></i> P1</a>
+                    <a href="{{ route('hr.print.full-file', $hr) }}" target="_blank" class="{{ $mBtn }} bg-blue-50 text-blue-700 ring-blue-200 hover:bg-blue-100" title="Full file (4 pages)"><i class="bi bi-printer"></i> Full</a>
                     <a href="{{ route('hr.contract', $hr) }}" class="{{ $mBtn }} bg-emerald-50 text-emerald-700 ring-emerald-200 hover:bg-emerald-100"><i class="bi bi-file-earmark-text"></i> Contract</a>
                     @can('update', $hr)
                         <a href="{{ route('hr.edit', $hr) }}" class="{{ $mBtn }} bg-amber-50 text-amber-700 ring-amber-200 hover:bg-amber-100"><i class="bi bi-pencil"></i> Edit</a>

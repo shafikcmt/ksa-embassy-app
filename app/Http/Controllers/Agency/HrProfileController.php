@@ -245,11 +245,12 @@ class HrProfileController extends Controller
     }
 
     /**
-     * After a successful save, go straight back to the HR list.
+     * After a successful save, go straight back to the HR list. The saved record's
+     * id is flashed so the list can offer "Print Page 1" / "Print Full File".
      */
     private function afterSaveRedirect(Request $request, HrProfile $hr, string $message)
     {
-        return redirect()->route('hr.index')->with('success', $message);
+        return redirect()->route('hr.index')->with('success', $message)->with('saved_hr_id', $hr->id);
     }
 
     /**
