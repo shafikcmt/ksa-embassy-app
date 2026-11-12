@@ -18,6 +18,7 @@
 @endphp
 
 @section('content')
+@include('partials.saudi-arabic-font')
 <div x-data="{ delOpen: false }">
 
     {{-- Header --}}

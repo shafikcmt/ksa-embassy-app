@@ -3,6 +3,7 @@
 @section('page-title', 'HR Profiles')
 
 @section('content')
+@include('partials.saudi-arabic-font')
 
 <x-ui.page-header title="HR / Candidates" subtitle="All profiles across agencies" icon="bi-person-vcard" />
 

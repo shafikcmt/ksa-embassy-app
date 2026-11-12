@@ -30,6 +30,7 @@
 @endphp
 
 @section('content')
+@include('partials.saudi-arabic-font')
 <div x-data="{
         del: { open: false, name: '', action: '' },
         preview: {

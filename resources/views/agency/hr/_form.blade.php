@@ -518,6 +518,7 @@
     </div>
 </div>
 
+@include('partials.saudi-arabic-font')
 @push('styles')
 <style>
     /* HR form — bordered sections with the title in the border, label on the
@@ -584,11 +585,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700&family=Noto+Naskh+Arabic:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
     .ar-input {
-        font-family: "Noto Naskh Arabic", "Cairo", "Tajawal", "Segoe UI", Tahoma, Arial, sans-serif;
+        font-family: var(--saudi-ar, "Noto Naskh Arabic"), serif;
         font-weight: 700;
         direction: rtl;
         text-align: right;
-        font-size: 0.95rem;
     }
     .ar-input::placeholder { font-family: inherit; font-weight: 400; text-align: right; opacity: .55; }
 </style>
