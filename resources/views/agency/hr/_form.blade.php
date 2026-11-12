@@ -99,6 +99,10 @@
             <legend class="hr-legend">Passport Info</legend>
 
             <div class="hr-grid hr-grid-5">
+
+                <x-ui.field label="Passport No" name="passport_number" :required="true">
+                    <input type="text" name="passport_number" required value="{{ $rel($passport, 'passport_number') }}" class="{{ $inp }} @error('passport_number') !border-rose-400 @enderror">
+                </x-ui.field>
                 @if($on('passport_issue_place'))
                     <x-ui.field label="Passport Issue Place" name="passport_issue_place">
                         <input type="text" name="passport_issue_place" value="{{ $rel($passport, 'issue_place', 'DHAKA') }}" class="{{ $inp }}">
@@ -106,10 +110,6 @@
                 @elseif($isEdit)
                     <input type="hidden" name="passport_issue_place" value="{{ $rel($passport, 'issue_place') }}">
                 @endif
-
-                <x-ui.field label="Passport No" name="passport_number" :required="true">
-                    <input type="text" name="passport_number" required value="{{ $rel($passport, 'passport_number') }}" class="{{ $inp }} @error('passport_number') !border-rose-400 @enderror">
-                </x-ui.field>
                 <x-ui.field label="Passport Issue Date" name="passport_issue_date" :required="true">
                     <input type="text" id="passport_issue_date" name="passport_issue_date" required inputmode="numeric" placeholder="dd-mm-yyyy" autocomplete="off" value="{{ old('passport_issue_date', optional($passport?->issue_date)?->format('d-m-Y')) }}" class="{{ $inp }} js-date-text @error('passport_issue_date') !border-rose-400 @enderror">
                 </x-ui.field>

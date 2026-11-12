@@ -81,11 +81,11 @@
         @csrf
         <input type="hidden" name="confirm_duplicate" value="0" x-ref="confirm">
         <x-erp.section icon="bi-plus-circle" title="Add Double MOFA">
-            <x-erp.field label="Full Name" for="dm_full_name" required :name="$addErr ? 'full_name' : null">
-                <input id="dm_full_name" type="text" name="full_name" value="{{ old('full_name') }}" required class="{{ $fi }} {{ $bd('full_name') }}">
-            </x-erp.field>
             <x-erp.field label="Passport Number" for="doubleMofaPassport" required :name="$addErr ? 'passport_no' : null">
                 <input type="text" id="doubleMofaPassport" name="passport_no" value="{{ old('passport_no') }}" required class="{{ $fi }} {{ $bd('passport_no') }}" x-ref="passport" x-on:blur="onBlur()">
+            </x-erp.field>
+            <x-erp.field label="Full Name" for="dm_full_name" required :name="$addErr ? 'full_name' : null">
+                <input id="dm_full_name" type="text" name="full_name" value="{{ old('full_name') }}" required class="{{ $fi }} {{ $bd('full_name') }}">
             </x-erp.field>
             <x-erp.field label="Old MOFA Number" for="dm_old_mofa_number" :name="$addErr ? 'old_mofa_number' : null">
                 <input id="dm_old_mofa_number" type="text" name="old_mofa_number" value="{{ old('old_mofa_number') }}" class="{{ $fi }} {{ $bd('old_mofa_number') }}">
@@ -331,11 +331,11 @@
     <x-erp.modal show="editing" close="editing = false" icon="bi-files" title-id="double-mofa-edit-title"
                  title="'Edit Double MOFA'" edit="true" action="updateBase + '/' + form.id" method="PUT">
         <x-erp.section icon="bi-person-vcard" title="Candidate Information">
-            <x-erp.field label="Full Name" for="dme_full_name" required>
-                <input id="dme_full_name" type="text" name="full_name" x-model="form.full_name" required class="{{ $eb }}">
-            </x-erp.field>
             <x-erp.field label="Passport Number" for="dme_passport_no" required>
                 <input id="dme_passport_no" type="text" name="passport_no" x-model="form.passport_no" required class="{{ $eb }}">
+            </x-erp.field>
+            <x-erp.field label="Full Name" for="dme_full_name" required>
+                <input id="dme_full_name" type="text" name="full_name" x-model="form.full_name" required class="{{ $eb }}">
             </x-erp.field>
         </x-erp.section>
         <x-erp.section icon="bi-files" title="MOFA & Billing">

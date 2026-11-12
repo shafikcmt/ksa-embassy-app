@@ -336,11 +336,11 @@
     <x-erp.modal show="editing" close="editing = false" icon="bi-truck" title-id="delivery-edit-title"
                  title="'Edit Delivery'" edit="true" action="updateBase + '/' + form.id" method="PUT">
         <x-erp.section icon="bi-person-vcard" title="Candidate Information">
-            <x-erp.field label="Full Name" for="dle_full_name" required>
-                <input id="dle_full_name" type="text" name="full_name" x-model="form.full_name" required class="{{ $eb }}">
-            </x-erp.field>
             <x-erp.field label="Passport Number" for="dle_passport_no" required>
                 <input id="dle_passport_no" type="text" name="passport_no" x-model="form.passport_no" required class="{{ $eb }}">
+            </x-erp.field>
+            <x-erp.field label="Full Name" for="dle_full_name" required>
+                <input id="dle_full_name" type="text" name="full_name" x-model="form.full_name" required class="{{ $eb }}">
             </x-erp.field>
         </x-erp.section>
         <x-erp.section icon="bi-truck" title="Delivery Details">

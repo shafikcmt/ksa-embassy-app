@@ -46,15 +46,6 @@
 
         {{-- Section 1 — Personal --}}
         <x-erp.section id="sec-personal" icon="bi-person-vcard" title="Personal Information">
-            <x-erp.field label="Full Name" for="md_full_name" required error="fieldError('full_name')" error-id="err-full_name">
-                <input id="md_full_name" type="text" maxlength="255" autocomplete="off" x-model="f.full_name" x-on:input="touch('full_name')" x-on:blur="touch('full_name')"
-                       class="{{ $inp }}" {!! $state('full_name') !!}>
-            </x-erp.field>
-            <x-erp.field label="Father's Name" for="md_father_name" required error="fieldError('father_name')" error-id="err-father_name">
-                <input id="md_father_name" type="text" maxlength="255" autocomplete="off" x-model="f.father_name" x-on:input="touch('father_name')" x-on:blur="touch('father_name')"
-                       class="{{ $inp }}" {!! $state('father_name') !!}>
-            </x-erp.field>
-
             {{-- Passport → cross-module ERP auto-fill (Medical → MOFA → Stamping → BMET, HR fallback) --}}
             <x-erp.field label="Passport No" for="md_passport_no" required error="fieldError('passport_no')" error-id="err-passport_no">
                 <div class="relative">
@@ -74,6 +65,15 @@
                     'map'         => ['full_name' => 'full_name', 'father_name' => 'father_name', 'date_of_birth' => 'date_of_birth', 'mobile_no' => 'mobile_no', 'reference' => 'reference'],
                 ])
             </x-erp.field>
+            <x-erp.field label="Full Name" for="md_full_name" required error="fieldError('full_name')" error-id="err-full_name">
+                <input id="md_full_name" type="text" maxlength="255" autocomplete="off" x-model="f.full_name" x-on:input="touch('full_name')" x-on:blur="touch('full_name')"
+                       class="{{ $inp }}" {!! $state('full_name') !!}>
+            </x-erp.field>
+            <x-erp.field label="Father's Name" for="md_father_name" required error="fieldError('father_name')" error-id="err-father_name">
+                <input id="md_father_name" type="text" maxlength="255" autocomplete="off" x-model="f.father_name" x-on:input="touch('father_name')" x-on:blur="touch('father_name')"
+                       class="{{ $inp }}" {!! $state('father_name') !!}>
+            </x-erp.field>
+
 
             <x-erp.field label="Date of Birth" for="md_dob" required error="fieldError('date_of_birth')" error-id="err-date_of_birth">
                 <input id="md_dob" type="date" x-model="f.date_of_birth" x-bind:max="yesterday" x-on:change="touch('date_of_birth')" x-on:blur="touch('date_of_birth')"

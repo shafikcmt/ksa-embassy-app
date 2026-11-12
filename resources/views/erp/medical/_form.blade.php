@@ -56,20 +56,6 @@
 
     {{-- Row 1 — identity --}}
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div>
-            <label class="{{ $lbl }}" for="m_full_name">Full Name {!! $req !!}</label>
-            <input id="m_full_name" type="text" name="full_name" maxlength="255" x-model="f.full_name" x-on:blur="touch('full_name')"
-                   class="{{ $inp }}" x-bind:class="bad('full_name') && 'border-rose-400'">
-            <p class="{{ $err }}" x-show="bad('full_name')" x-text="errs.full_name" x-cloak></p>
-            @error('full_name')<p class="{{ $err }}" x-show="!touched.full_name">{{ $message }}</p>@enderror
-        </div>
-        <div>
-            <label class="{{ $lbl }}" for="m_father_name">Father's Name {!! $req !!}</label>
-            <input id="m_father_name" type="text" name="father_name" maxlength="255" x-model="f.father_name" x-on:blur="touch('father_name')"
-                   class="{{ $inp }}" x-bind:class="bad('father_name') && 'border-rose-400'">
-            <p class="{{ $err }}" x-show="bad('father_name')" x-text="errs.father_name" x-cloak></p>
-            @error('father_name')<p class="{{ $err }}" x-show="!touched.father_name">{{ $message }}</p>@enderror
-        </div>
         <div class="relative">
             <label class="{{ $lbl }}" for="m_passport_no">Passport No {!! $req !!}</label>
             <div class="relative">
@@ -103,6 +89,20 @@
                     <button type="button" x-on:click="applySuggestion()" class="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"><i class="bi bi-magic"></i> Use these details</button>
                 </div>
             </div>
+        </div>
+        <div>
+            <label class="{{ $lbl }}" for="m_full_name">Full Name {!! $req !!}</label>
+            <input id="m_full_name" type="text" name="full_name" maxlength="255" x-model="f.full_name" x-on:blur="touch('full_name')"
+                   class="{{ $inp }}" x-bind:class="bad('full_name') && 'border-rose-400'">
+            <p class="{{ $err }}" x-show="bad('full_name')" x-text="errs.full_name" x-cloak></p>
+            @error('full_name')<p class="{{ $err }}" x-show="!touched.full_name">{{ $message }}</p>@enderror
+        </div>
+        <div>
+            <label class="{{ $lbl }}" for="m_father_name">Father's Name {!! $req !!}</label>
+            <input id="m_father_name" type="text" name="father_name" maxlength="255" x-model="f.father_name" x-on:blur="touch('father_name')"
+                   class="{{ $inp }}" x-bind:class="bad('father_name') && 'border-rose-400'">
+            <p class="{{ $err }}" x-show="bad('father_name')" x-text="errs.father_name" x-cloak></p>
+            @error('father_name')<p class="{{ $err }}" x-show="!touched.father_name">{{ $message }}</p>@enderror
         </div>
     </div>
 

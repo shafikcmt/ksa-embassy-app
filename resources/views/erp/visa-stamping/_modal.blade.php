@@ -43,11 +43,6 @@
 
         {{-- Section 1 — Candidate --}}
         <x-erp.section id="vs-sec-main" icon="bi-person-badge" title="Candidate Information">
-            <x-erp.field label="Full Name" for="vs_full_name" required error="fieldError('full_name')" error-id="vs-err-full_name">
-                <input id="vs_full_name" type="text" maxlength="100" autocomplete="off" x-model="f.full_name" x-on:input="touch('full_name')" x-on:blur="touch('full_name')"
-                       class="{{ $inp }}" {!! $state('full_name') !!}>
-            </x-erp.field>
-
             {{-- Passport → cross-module ERP auto-fill (Medical → MOFA → Stamping → BMET, HR fallback) --}}
             <x-erp.field label="Passport Number" for="vs_passport" required error="fieldError('passport_number')" error-id="vs-err-passport_number">
                 <div class="relative">
@@ -73,6 +68,11 @@
                     ],
                 ])
             </x-erp.field>
+            <x-erp.field label="Full Name" for="vs_full_name" required error="fieldError('full_name')" error-id="vs-err-full_name">
+                <input id="vs_full_name" type="text" maxlength="100" autocomplete="off" x-model="f.full_name" x-on:input="touch('full_name')" x-on:blur="touch('full_name')"
+                       class="{{ $inp }}" {!! $state('full_name') !!}>
+            </x-erp.field>
+
 
 
 
@@ -97,7 +97,7 @@
         </x-erp.section>
 
         {{-- Section 2 — Passport & visa details (+ status): filled automatically when the ERP/HR already knows the passport, otherwise typed --}}
-        <x-erp.section id="vs-sec-auto" icon="bi-card-checklist" title="Passport & Visa Details">
+        <x-erp.section id="vs-sec-auto" icon="bi-card-checklist" title="Visa Details">
             <x-slot:actions>
                 <span x-show="mofa.linked" x-cloak class="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700 ring-1 ring-inset ring-brand-200">
                     <i class="bi bi-link-45deg" aria-hidden="true"></i> <span x-text="'Linked to MOFA ' + (mofa.number || '')"></span>
