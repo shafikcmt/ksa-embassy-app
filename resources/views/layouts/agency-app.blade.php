@@ -52,6 +52,5 @@
     </main>
 
 @stack('scripts')
-@include('partials.date-format')
 </body>
 </html>

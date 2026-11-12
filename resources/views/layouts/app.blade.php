@@ -32,6 +32,5 @@
                 {{ $slot }}
             </main>
         </div>
-    @include('partials.date-format')
-</body>
+    </body>
 </html>
