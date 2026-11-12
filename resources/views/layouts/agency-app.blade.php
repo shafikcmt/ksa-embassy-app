@@ -52,5 +52,6 @@
     </main>
 
 @stack('scripts')
+@include('partials.date-dmy')
 </body>
 </html>

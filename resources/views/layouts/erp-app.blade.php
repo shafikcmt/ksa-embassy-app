@@ -189,5 +189,6 @@
     </div>
 
 @stack('scripts')
+@include('partials.date-dmy')
 </body>
 </html>
