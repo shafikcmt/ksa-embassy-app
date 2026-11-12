@@ -74,22 +74,8 @@
                 ])
             </x-erp.field>
 
-            <x-erp.field label="Visa Number" for="vs_visa" error="fieldError('visa_number')" error-id="vs-err-visa_number">
-                <input id="vs_visa" type="text" maxlength="100" x-model="f.visa_number" class="{{ $inp }}" {!! $state('visa_number') !!}>
-            </x-erp.field>
-            <x-erp.field label="ID Number" for="vs_id" error="fieldError('id_number')" error-id="vs-err-id_number">
-                <input id="vs_id" type="text" maxlength="100" x-model="f.id_number" class="{{ $inp }}" {!! $state('id_number') !!}>
-            </x-erp.field>
-        </x-erp.section>
 
-        {{-- Section 2 — Passport & visa details: filled automatically when the ERP/HR already knows the passport, otherwise typed --}}
-        <x-erp.section id="vs-sec-auto" icon="bi-card-checklist" title="Passport & Visa Details">
-            <x-slot:actions>
-                <span x-show="mofa.linked" x-cloak class="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700 ring-1 ring-inset ring-brand-200">
-                    <i class="bi bi-link-45deg" aria-hidden="true"></i> <span x-text="'Linked to MOFA ' + (mofa.number || '')"></span>
-                </span>
-                <span x-show="mofa.checked && !mofa.linked" x-cloak class="text-xs text-slate-500">No MOFA entry for this passport</span>
-            </x-slot:actions>
+
 
             <x-erp.field label="Father's Name" for="vs_father" error="fieldError('father_name')" error-id="vs-err-father_name">
                 <input id="vs_father" type="text" maxlength="100" x-model="f.father_name" class="{{ $inp }}" {!! $state('father_name') !!}>
@@ -102,6 +88,37 @@
             </x-erp.field>
             <x-erp.field label="Age" for="vs_age" auto>
                 <input id="vs_age" type="text" readonly tabindex="-1" x-bind:value="age()" placeholder="—" class="{{ \App\Support\ErpForm::READONLY }}">
+            </x-erp.field>
+            {{-- The one agent field: pick an agent (or auto-filled from the passport's other records).
+                 The server derives agent_id from the name, so list filters and agent balances keep working. --}}
+            <x-erp.field class="sm:col-span-2 lg:col-span-3" label="Reference" for="vs_reference" error="fieldError('reference')" error-id="vs-err-reference">
+                <x-erp.select-search id="vs_reference" :agents="$agentOptions ?? []" x-model="f.reference" error="fieldError('reference')" />
+            </x-erp.field>
+        </x-erp.section>
+
+        {{-- Section 2 — Passport & visa details (+ status): filled automatically when the ERP/HR already knows the passport, otherwise typed --}}
+        <x-erp.section id="vs-sec-auto" icon="bi-card-checklist" title="Passport & Visa Details">
+            <x-slot:actions>
+                <span x-show="mofa.linked" x-cloak class="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700 ring-1 ring-inset ring-brand-200">
+                    <i class="bi bi-link-45deg" aria-hidden="true"></i> <span x-text="'Linked to MOFA ' + (mofa.number || '')"></span>
+                </span>
+                <span x-show="mofa.checked && !mofa.linked" x-cloak class="text-xs text-slate-500">No MOFA entry for this passport</span>
+            </x-slot:actions>
+
+
+
+
+
+
+
+
+
+
+            <x-erp.field label="Visa Number" for="vs_visa" error="fieldError('visa_number')" error-id="vs-err-visa_number">
+                <input id="vs_visa" type="text" maxlength="100" x-model="f.visa_number" class="{{ $inp }}" {!! $state('visa_number') !!}>
+            </x-erp.field>
+            <x-erp.field label="ID Number" for="vs_id" error="fieldError('id_number')" error-id="vs-err-id_number">
+                <input id="vs_id" type="text" maxlength="100" x-model="f.id_number" class="{{ $inp }}" {!! $state('id_number') !!}>
             </x-erp.field>
             <x-erp.field label="MOFA Number" for="vs_mofa_no" error="fieldError('mofa_number')" error-id="vs-err-mofa_number">
                 <input id="vs_mofa_no" type="text" maxlength="100" x-model="f.mofa_number" class="{{ $inp }}" {!! $state('mofa_number') !!}>
@@ -116,14 +133,6 @@
             <x-erp.field label="Issued Date" for="vs_issued_date" error="fieldError('issued_date') || fieldError('expiry_date')" error-id="vs-err-issued_date">
                 <input id="vs_issued_date" type="date" x-model="f.issued_date" class="{{ $inp }}" {!! $state('issued_date') !!}>
             </x-erp.field>
-        </x-erp.section>
-
-        {{-- Section 3 — Stamping date & status --}}
-        <x-erp.section id="vs-sec-status" icon="bi-calendar2-check" title="Stamping Date & Status" cols="2">
-            <x-erp.field label="Stamping Date" for="vs_stamp_date" required error="fieldError('stamping_date')" error-id="vs-err-stamping_date">
-                <input id="vs_stamp_date" type="date" x-model="f.stamping_date" x-bind:max="cfg.today" x-on:change="touch('stamping_date')" x-on:blur="touch('stamping_date')"
-                       class="{{ $inp }}" {!! $state('stamping_date') !!}>
-            </x-erp.field>
             <x-erp.field label="Status" for="vs_status" required error="fieldError('status')" error-id="vs-err-status">
                 <select id="vs_status" x-model="f.status" class="{{ $inp }}" {!! $state('status') !!}>
                     @foreach($statuses as $key => $label)<option value="{{ $key }}">{{ $label }}</option>@endforeach
@@ -131,13 +140,11 @@
             </x-erp.field>
         </x-erp.section>
 
-        {{-- Section 4 — Additional --}}
-        <x-erp.section id="vs-sec-extra" icon="bi-journal-text" title="Additional Info" cols="2">
-            {{-- The one agent field: pick an agent (or auto-filled from the passport's other records).
-                 The server derives agent_id from the name, so list filters and agent balances keep working. --}}
-            <x-erp.field label="Reference" for="vs_reference" error="fieldError('reference')" error-id="vs-err-reference">
-                <x-erp.select-search id="vs_reference" :agents="$agentOptions ?? []" x-model="f.reference" error="fieldError('reference')" />
-            </x-erp.field>
+        {{-- Stamping Date is not shown: it is still sent (today on Add, the saved value on Edit). --}}
+
+        {{-- Section 3 — Remarks --}}
+        <x-erp.section id="vs-sec-extra" icon="bi-journal-text" title="Remarks" cols="2">
+
             <x-erp.textarea label="Remarks" id="vs_remarks" maxlength="1000" x-model="f.remarks"
                             error="fieldError('remarks')" error-id="vs-err-remarks" />
         </x-erp.section>
@@ -162,14 +169,15 @@
         const REQUIRED = {
             full_name: 'Full name is required',
             passport_number: 'Passport number is required',
-            stamping_date: 'Stamping date is required',
             status: 'Status is required',
         };
+        // New entry: Issued Date = today, Expiry = today + 90 days (same rule as the issued_date watcher).
+        const plusDays = (ymd, days) => { const t = Date.parse(ymd + 'T00:00:00Z'); return Number.isNaN(t) ? '' : new Date(t + days * 86400000).toISOString().slice(0, 10); };
         const blank = () => ({
             full_name: '', passport_number: '', visa_number: '', id_number: '',
             stamping_date: cfg.today, status: 'pending', reference: '',
             father_name: '', mother_name: '', date_of_birth: '', mofa_number: '', mofa_date: '',
-            issued_visa_number: '', issued_date: '', expiry_date: '', remarks: '',
+            issued_visa_number: '', issued_date: cfg.today, expiry_date: plusDays(cfg.today, cfg.validDays), remarks: '',
         });
         const dayMs = 86400000;
 
