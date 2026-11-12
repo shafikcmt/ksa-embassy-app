@@ -28,9 +28,16 @@ class HrProfileController extends Controller
             'passport' => ['nullable', 'string', 'max:100', 'required_without_all:visa,mofa'],
             'visa' => ['nullable', 'string', 'max:100', 'required_without_all:passport,mofa'],
             'mofa' => ['nullable', 'string', 'max:100', 'required_without_all:passport,visa'],
+            'exclude' => ['nullable', 'integer'],
         ]);
+        $exclude = isset($criteria['exclude']) ? (int) $criteria['exclude'] : null;
+        unset($criteria['exclude']);
 
-        return response()->json(['candidates' => $lookup->search($agencyId, $criteria)]);
+        return response()->json([
+            'candidates' => $lookup->search($agencyId, array_filter($criteria, fn ($v) => $v !== null && $v !== '')),
+            // Same visa number → visa/sponsor details from an existing HR record (or ERP sponsor ID).
+            'visa' => ! empty($criteria['visa']) ? $lookup->visaDetails($agencyId, $criteria['visa'], $exclude) : [],
+        ]);
     }
 
     public function index(Request $request)

@@ -66,4 +66,57 @@ class HrErpLookupService
         ksort($candidates);
         return array_values($candidates);
     }
+
+    /**
+     * Visa-level details for a visa number (same visa ⇒ same sponsor, visa date, place, profession…).
+     * 1) the agency's latest HR record with that visa number, 2) ERP (BMET Clearance) for the
+     * sponsor ID. Keys are the HR form's input names; only non-empty values are returned. Agency-scoped.
+     *
+     * @return array<string, array{value: string, source: string}>
+     */
+    public function visaDetails(int $agencyId, string $visaNumber, ?int $excludeHrId = null): array
+    {
+        $needle = PassportRecordFinder::normalize($visaNumber);
+        if ($needle === '') {
+            return [];
+        }
+        $fields = [];
+        $put = function (string $field, $value, string $source) use (&$fields) {
+            if ($value !== null && trim((string) $value) !== '' && ! isset($fields[$field])) {
+                $fields[$field] = ['value' => trim((string) $value), 'source' => $source];
+            }
+        };
+
+        $visa = \App\Models\Visa::query()
+            ->whereRaw('UPPER(TRIM(visa_number)) = ?', [$needle])
+            ->whereHas('hrProfile', function ($q) use ($agencyId, $excludeHrId) {
+                $q->forAgency($agencyId);
+                if ($excludeHrId) {
+                    $q->whereKeyNot($excludeHrId);
+                }
+            })
+            ->latest('updated_at')->latest('id')->first();
+        if ($visa) {
+            foreach ([
+                'visa_issue_date' => 'issue_date', 'sponsor_name' => 'sponsor_name', 'sponsor_name_ar' => 'sponsor_name_ar',
+                'sponsor_id' => 'sponsor_id', 'visa_issue_place' => 'issue_place', 'visa_issue_place_ar' => 'issue_place_ar',
+                'profession_en' => 'profession_en', 'profession_ar' => 'profession_ar',
+                'qualification_en' => 'qualification_en', 'qualification_ar' => 'qualification_ar',
+                'travel_purpose' => 'travel_purpose', 'wakala_no' => 'wakala_no', 'musaned_no' => 'musaned_no',
+            ] as $field => $column) {
+                $put($field, $visa->{$column}, 'HR Record');
+            }
+        }
+
+        // ERP: only BMET's id_number is a proven sponsor ID (same rule as search()).
+        if (! isset($fields['sponsor_id'])) {
+            $bmet = \App\Models\ManpowerCompletion::query()->where('agency_id', $agencyId)
+                ->whereRaw('UPPER(TRIM(visa_number)) = ?', [$needle])
+                ->whereNotNull('id_number')->where('id_number', '!=', '')
+                ->latest('updated_at')->first(['id', 'id_number']);
+            $put('sponsor_id', $bmet?->id_number, 'BMET Clearance');
+        }
+
+        return $fields;
+    }
 }

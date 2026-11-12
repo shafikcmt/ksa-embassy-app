@@ -88,7 +88,7 @@ class HrErpLookupTest extends TestCase
             ->assertJsonPath('candidates.0.passport', 'AB1234567');
         $this->lookup(['visa' => 'shared', 'mofa' => 'mofa-one'])->assertJsonCount(1, 'candidates');
         $this->lookup(['passport' => 'ab1234567', 'visa' => 'shared', 'mofa' => 'mofa-one'])->assertJsonCount(1, 'candidates');
-        $this->lookup(['passport' => 'ZZ7654321', 'visa' => 'shared', 'mofa' => 'mofa-one'])->assertExactJson(['candidates' => []]);
+        $this->lookup(['passport' => 'ZZ7654321', 'visa' => 'shared', 'mofa' => 'mofa-one'])->assertExactJson(['candidates' => [], 'visa' => []]);
     }
 
     public function test_newest_nonempty_mapping_dates_and_identity_whitelist(): void
@@ -122,8 +122,8 @@ class HrErpLookupTest extends TestCase
         $other = Agency::create(['name' => 'Other', 'slug' => 'other-hr', 'status' => 'active']);
         $this->record('deliveries', ['visa_serial' => 'LOCAL']);
         $this->record('mofa_entries', ['agency_id' => $other->id, 'mofa_number' => 'SECRET', 'full_name' => 'Secret Person']);
-        $this->lookup(['mofa' => 'SECRET'])->assertExactJson(['candidates' => []]);
-        $this->lookup(['visa' => 'LOCAL', 'mofa' => 'SECRET'])->assertExactJson(['candidates' => []]);
+        $this->lookup(['mofa' => 'SECRET'])->assertExactJson(['candidates' => [], 'visa' => []]);
+        $this->lookup(['visa' => 'LOCAL', 'mofa' => 'SECRET'])->assertExactJson(['candidates' => [], 'visa' => []]);
         $this->lookup(['passport' => 'AB1234567'])->assertJsonCount(1, 'candidates.0.records')->assertDontSee('Secret Person');
     }
 
@@ -133,7 +133,7 @@ class HrErpLookupTest extends TestCase
         $this->lookup(['passport' => ' ', 'visa' => '', 'mofa' => ' '])->assertUnprocessable();
         $this->lookup(['visa' => ['invalid']])->assertUnprocessable();
         $this->lookup(['mofa' => str_repeat('x', 101)])->assertUnprocessable();
-        $this->lookup(['passport' => 'NOTFOUND'])->assertOk()->assertExactJson(['candidates' => []]);
+        $this->lookup(['passport' => 'NOTFOUND'])->assertOk()->assertExactJson(['candidates' => [], 'visa' => []]);
         $this->assertFalse($this->user->can('access_erp'));
         $this->user->revokePermissionTo('access_hr');
         $this->lookup(['passport' => 'AB1234567'])->assertRedirect(route('dashboard'));
@@ -154,7 +154,7 @@ class HrErpLookupTest extends TestCase
     public function test_soft_deleted_rows_are_not_searchable(): void
     {
         $this->record('mofa_entries', ['deleted_at' => now()]);
-        $this->lookup(['passport' => 'AB1234567'])->assertExactJson(['candidates' => []]);
+        $this->lookup(['passport' => 'AB1234567'])->assertExactJson(['candidates' => [], 'visa' => []]);
     }
 
     public function test_numeric_passports_keep_leading_zero_identities_separate(): void
@@ -183,5 +183,30 @@ class HrErpLookupTest extends TestCase
         $this->assertStringNotContainsString('hrErpMessage', $html);
         $this->assertStringContainsString("['passport_number', 'passport']", $html);
         $this->assertStringContainsString(route('hr.erp-lookup'), str_replace('\\/', '/', $html));
+    }
+
+    public function test_visa_number_returns_visa_details_from_hr_record_and_bmet(): void
+    {
+        $profile = HrProfile::create(['agency_id' => $this->agency->id, 'full_name_en' => 'First Worker', 'nationality' => 'BANGLADESH', 'date_of_birth' => '1990-01-01', 'gender' => 'male']);
+        \App\Models\Visa::create(['hr_profile_id' => $profile->id, 'visa_number' => ' 1305822096 ', 'issue_date' => '1447/03/15',
+            'sponsor_name' => 'Faisal', 'sponsor_name_ar' => 'فيصل', 'sponsor_id' => '7049190486',
+            'profession_en' => 'Driver', 'profession_ar' => 'سائق', 'wakala_no' => 'W-1']);
+        $other = Agency::create(['name' => 'Other', 'slug' => 'other-visa', 'status' => 'active']);
+        $foreign = HrProfile::create(['agency_id' => $other->id, 'full_name_en' => 'Foreign', 'nationality' => 'BANGLADESH', 'date_of_birth' => '1990-01-01', 'gender' => 'male']);
+        \App\Models\Visa::create(['hr_profile_id' => $foreign->id, 'visa_number' => '9999999999', 'sponsor_name_ar' => 'سري']);
+
+        $this->lookup(['visa' => '1305822096'])->assertOk()
+            ->assertJsonPath('visa.sponsor_name_ar', ['value' => 'فيصل', 'source' => 'HR Record'])
+            ->assertJsonPath('visa.sponsor_id.value', '7049190486')
+            ->assertJsonPath('visa.visa_issue_date.value', '1447/03/15')
+            ->assertJsonPath('visa.profession_en.value', 'Driver')
+            ->assertJsonPath('visa.wakala_no.value', 'W-1');
+        // Editing that same HR record: its own visa is not offered back.
+        $this->lookup(['visa' => '1305822096', 'exclude' => $profile->id])->assertJsonPath('visa', []);
+        // Other agency's visa is never visible.
+        $this->lookup(['visa' => '9999999999'])->assertJsonPath('visa', [])->assertDontSee('سري');
+        // ERP fallback: BMET id_number as sponsor ID.
+        $this->record('manpower_completions', ['visa_number' => 'BMET-VISA', 'id_number' => 'SPONSOR-77']);
+        $this->lookup(['visa' => 'bmet-visa'])->assertJsonPath('visa.sponsor_id', ['value' => 'SPONSOR-77', 'source' => 'BMET Clearance']);
     }
 }

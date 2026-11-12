@@ -66,6 +66,44 @@
             container.append(line);
         });
     }
+    // Same visa number → fill the Visa Info block (sponsor, visa date, place, profession, wakala…)
+    // from the agency's latest HR record with that visa (sponsor ID can also come from ERP).
+    // EMPTY fields only; English/Arabic pairs are set directly so neither side is re-translated.
+    const PAIRS = {visa_issue_place: 'visa_issue_place_ar', profession_en: 'profession_ar', qualification_en: 'qualification_ar', sponsor_name: 'sponsor_name_ar'};
+    function fillVisa(fields) {
+        const done = [];
+        Object.entries(fields).forEach(([name, data]) => {
+            const input = form.elements.namedItem(name);
+            if (!input || input.disabled || input.readOnly || String(input.value).trim()) return;
+            if (input.type === 'hidden' && name !== 'sponsor_name') return; // field switched off for this agency
+            if (input.tagName === 'SELECT' && ![...input.options].some(o => o.value === data.value)) {
+                input.add(new Option(data.value, data.value));
+            }
+            input.value = data.value;
+            input.dataset.touched = '1';
+            input.classList.remove('!border-rose-400');
+            done.push(name);
+        });
+        // A pair where only one side was known: let the form's own EN⇄AR helper fill the other side.
+        Object.entries(PAIRS).forEach(([en, ar]) => {
+            const enEl = form.elements.namedItem(en), arEl = form.elements.namedItem(ar);
+            if (!enEl || !arEl) return;
+            if (done.includes(en) && !String(arEl.value).trim()) enEl.dispatchEvent(new Event('change', {bubbles: true}));
+            else if (done.includes(ar) && !String(enEl.value).trim()) arEl.dispatchEvent(new Event('change', {bubbles: true}));
+        });
+        const visaInput = form.elements.namedItem('visa_number');
+        if (!visaInput) return;
+        let note = document.getElementById('hrVisaFillNote');
+        if (!note) {
+            note = document.createElement('p');
+            note.id = 'hrVisaFillNote';
+            note.className = 'mt-1 text-xs font-medium text-emerald-600';
+            visaInput.insertAdjacentElement('afterend', note);
+        }
+        const sources = [...new Set(done.map(name => fields[name].source))].join(', ');
+        note.textContent = done.length ? 'Filled ' + done.length + ' visa field(s) from ' + sources + ' — please check.' : '';
+    }
+
     async function lookup(params) {
         reset();
         const requestId = sequence;
@@ -73,8 +111,11 @@
         try {
             const response = await fetch(@json(route('hr.erp-lookup')) + '?' + params.toString(), {headers: {'Accept': 'application/json'}, signal: pending.signal});
             if (!response.ok || response.redirected || !(response.headers.get('content-type') || '').includes('application/json')) return;
-            const candidates = (await response.json()).candidates;
-            if (requestId !== sequence || !candidates.length) return;
+            const payload = await response.json();
+            if (requestId !== sequence) return;
+            fillVisa(payload.visa || {});
+            const candidates = payload.candidates || [];
+            if (!candidates.length) return;
             if (candidates.length === 1) {
                 fill(candidates[0]);
                 // Another HR record already exists for this passport → keep the warning (the only thing shown).
@@ -135,7 +176,10 @@
             reset();
             schedule(() => {
                 const value = normalize(field.value);
-                return value.length >= MIN[key] ? new URLSearchParams({[key]: value}) : null;
+                if (value.length < MIN[key]) return null;
+                const params = new URLSearchParams({[key]: value});
+                if (currentHr) params.set('exclude', currentHr);
+                return params;
             });
         });
     });
