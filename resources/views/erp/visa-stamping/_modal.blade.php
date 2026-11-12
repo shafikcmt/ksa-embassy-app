@@ -89,11 +89,6 @@
             <x-erp.field label="Age" for="vs_age" auto>
                 <input id="vs_age" type="text" readonly tabindex="-1" x-bind:value="age()" placeholder="—" class="{{ \App\Support\ErpForm::READONLY }}">
             </x-erp.field>
-            {{-- The one agent field: pick an agent (or auto-filled from the passport's other records).
-                 The server derives agent_id from the name, so list filters and agent balances keep working. --}}
-            <x-erp.field class="sm:col-span-2 lg:col-span-3" label="Reference" for="vs_reference" error="fieldError('reference')" error-id="vs-err-reference">
-                <x-erp.select-search id="vs_reference" :agents="$agentOptions ?? []" x-model="f.reference" error="fieldError('reference')" />
-            </x-erp.field>
         </x-erp.section>
 
         {{-- Section 2 — Passport & visa details (+ status): filled automatically when the ERP/HR already knows the passport, otherwise typed --}}
@@ -129,14 +124,27 @@
             <x-erp.field label="Issued Visa Number" for="vs_issued_visa" error="fieldError('issued_visa_number')" error-id="vs-err-issued_visa_number">
                 <input id="vs_issued_visa" type="text" maxlength="100" x-model="f.issued_visa_number" class="{{ $inp }}" {!! $state('issued_visa_number') !!}>
             </x-erp.field>
-            {{-- Expiry (= Issued + 90 days) and Left Day are worked out for you — no fields to fill. --}}
+            {{-- Expiry (= Issued + 90 days) is shown read-only below; Left Day counts down from today. --}}
             <x-erp.field label="Issued Date" for="vs_issued_date" error="fieldError('issued_date') || fieldError('expiry_date')" error-id="vs-err-issued_date">
                 <input id="vs_issued_date" type="date" x-model="f.issued_date" class="{{ $inp }}" {!! $state('issued_date') !!}>
+            </x-erp.field>
+            {{-- Expiry = Issued Date + 90 days (auto). Days left count down from today. --}}
+            <x-erp.field label="Expiry Date" for="vs_expiry" auto>
+                <div class="relative">
+                    <input id="vs_expiry" type="text" readonly tabindex="-1" x-bind:value="fmtDate(f.expiry_date)" placeholder="—" class="{{ \App\Support\ErpForm::READONLY }}" style="padding-right:6.5rem">
+                    <span x-show="leftDay() !== ''" x-cloak class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold"
+                          x-bind:class="leftLow() ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'" x-text="leftDay() + ' days left'"></span>
+                </div>
             </x-erp.field>
             <x-erp.field label="Status" for="vs_status" required error="fieldError('status')" error-id="vs-err-status">
                 <select id="vs_status" x-model="f.status" class="{{ $inp }}" {!! $state('status') !!}>
                     @foreach($statuses as $key => $label)<option value="{{ $key }}">{{ $label }}</option>@endforeach
                 </select>
+            </x-erp.field>
+            {{-- The one agent field: pick an agent (or auto-filled from the passport's other records).
+                 The server derives agent_id from the name, so list filters and agent balances keep working. --}}
+            <x-erp.field label="Reference" for="vs_reference" error="fieldError('reference')" error-id="vs-err-reference">
+                <x-erp.select-search id="vs_reference" :agents="$agentOptions ?? []" x-model="f.reference" error="fieldError('reference')" />
             </x-erp.field>
         </x-erp.section>
 
@@ -260,10 +268,15 @@
                 const y = parseInt((this.f.date_of_birth || '').slice(0, 4), 10);
                 return Number.isFinite(y) ? Math.max(0, new Date().getFullYear() - y) : '';
             },
+            // Days left: today → expiry (same as the list's Left Day; counts down daily).
             leftDay() {
-                if (!this.f.issued_date || !this.f.expiry_date) return '';
-                const a = Date.parse(this.f.issued_date + 'T00:00:00Z'), b = Date.parse(this.f.expiry_date + 'T00:00:00Z');
+                if (!this.f.expiry_date) return '';
+                const a = Date.parse(cfg.today + 'T00:00:00Z'), b = Date.parse(this.f.expiry_date + 'T00:00:00Z');
                 return Number.isFinite(a) && Number.isFinite(b) ? Math.round((b - a) / dayMs) : '';
+            },
+            fmtDate(ymd) {
+                const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(ymd || '');
+                return m ? m[3] + '-' + m[2] + '-' + m[1] : '';
             },
             addDays(ymd, days) {
                 const t = Date.parse(ymd + 'T00:00:00Z');

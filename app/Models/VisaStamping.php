@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * Visa Stamping interface over the existing `stampings` log (no duplicate
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * Aliases: passport_number ↔ passport_no, stamping_date ↔ stamp_date.
  * Age and Left Day are computed on read (never stored, never stale):
  *   age      = YEAR(today) − YEAR(date_of_birth)   (reference-sheet formula)
- *   left_day = days from issued_date to expiry_date
+ *   left_day = days from TODAY (Dhaka) to expiry_date — counts down daily, negative once expired
  */
 class VisaStamping extends Stamping
 {
@@ -108,11 +109,20 @@ class VisaStamping extends Stamping
         return $this->date_of_birth ? max(0, today()->year - $this->date_of_birth->year) : null;
     }
 
+    /**
+     * Days left on the stamped visa, counted from today's Dhaka calendar date to the
+     * expiry date (Issued + 90 days when no expiry is stored). Decreases by one each
+     * day; negative once expired. Same rule as MofaEntry::left_day.
+     */
     public function getLeftDayAttribute(): ?int
     {
-        return $this->issued_date && $this->expiry_date
-            ? (int) $this->issued_date->diffInDays($this->expiry_date, false)
-            : null;
+        $expiry = $this->expiry_date ?? $this->issued_date?->copy()->addDays(self::VISA_VALID_DAYS);
+        if (! $expiry) {
+            return null;
+        }
+        $today = Carbon::createFromFormat('!Y-m-d', Carbon::now(MofaEntry::LEFT_DAY_TIMEZONE)->format('Y-m-d'));
+
+        return (int) $today->diffInDays(Carbon::createFromFormat('!Y-m-d', $expiry->format('Y-m-d')), false);
     }
 
     public function leftDayIsLow(): bool
