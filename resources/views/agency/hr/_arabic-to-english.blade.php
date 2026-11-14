@@ -84,7 +84,49 @@
         'راعي ماشية': 'Cattle Herder', 'راعي مواشي': 'Cattle Herder', 'راعي اغنام': 'Shepherd', 'راعي بقر': 'Cowherd',
         'راعي جمال': 'Camel Herder', 'راعي ابقار': 'Cowherd', 'عامل مواشي': 'Livestock Worker', 'عامل ماشية': 'Livestock Worker',
         'عامل رعي': 'Grazing Worker', 'عامل دواجن': 'Poultry Worker', 'عامل حظيرة': 'Barn Worker',
-        'منسق منتجات': 'Product Coordinator'
+        'منسق منتجات': 'Product Coordinator',
+        // More professions as printed on Saudi work visas
+        'عامل نظافة عامة': 'General Cleaning Worker', 'عامل نظافة مباني': 'Building Cleaning Worker',
+        'عامل خدمات عامة': 'General Services Worker', 'عامل خدمات': 'Services Worker', 'عامل خدمات فندقية': 'Hotel Services Worker',
+        'عامل تغليف': 'Packing Worker', 'عامل تعبئة': 'Packing Worker', 'عامل تعبئة وتغليف': 'Packing and Wrapping Worker',
+        'عامل شحن وتفريغ': 'Loading and Unloading Worker', 'عامل تحميل وتفريغ': 'Loading and Unloading Worker', 'عامل شحن': 'Shipping Worker',
+        'عامل نقل': 'Transport Worker', 'عامل توصيل': 'Delivery Worker', 'مندوب توصيل': 'Delivery Representative',
+        'عامل صب خرسانة': 'Concrete Pouring Worker', 'عامل خرسانة': 'Concrete Worker', 'عامل حفريات': 'Excavation Worker',
+        'عامل ري': 'Irrigation Worker', 'عامل زراعة': 'Agriculture Worker', 'عامل نخيل': 'Palm Tree Worker', 'عامل مشتل': 'Nursery Worker',
+        'عامل مخبز': 'Bakery Worker', 'عامل مقهى': 'Cafe Worker', 'عامل بوفيه': 'Buffet Worker', 'عامل مطبعة': 'Printing Press Worker',
+        'عامل نجارة': 'Carpentry Worker', 'عامل حدادة': 'Blacksmith Worker', 'عامل لحام': 'Welding Worker', 'عامل دهان': 'Painting Worker',
+        'عامل كهرباء': 'Electrical Worker', 'عامل سباكة': 'Plumbing Worker', 'عامل بلاط': 'Tiling Worker', 'عامل تبليط': 'Tiling Worker',
+        'عامل الومنيوم': 'Aluminium Worker', 'عامل زجاج': 'Glass Worker', 'عامل اثاث': 'Furniture Worker', 'عامل تركيب اثاث': 'Furniture Installation Worker',
+        'عامل محل': 'Shop Worker', 'عامل محل تجاري': 'Commercial Shop Worker', 'عامل سوبر ماركت': 'Supermarket Worker', 'عامل بقالة': 'Grocery Worker',
+        'عامل مسلخ': 'Slaughterhouse Worker', 'عامل مطاحن': 'Mill Worker', 'عامل منجم': 'Mine Worker', 'عامل كسارة': 'Crusher Worker',
+        'عامل تمديدات صحية': 'Sanitary Installation Worker', 'عامل عزل': 'Insulation Worker', 'عامل جبس': 'Gypsum Worker', 'عامل ديكور': 'Decoration Worker',
+        'عامل اطارات': 'Tire Worker', 'عامل غسيل ملابس': 'Laundry Worker', 'عامل كي ملابس': 'Ironing Worker', 'مكوجي': 'Ironer',
+        'سائق عام': 'General Driver', 'سائق نقل': 'Transport Driver', 'سائق نقل عام': 'Public Transport Driver', 'سائق دراجة نارية': 'Motorcycle Driver',
+        'سائق حافلة كبيرة': 'Large Bus Driver', 'سائق حافلة صغيرة': 'Small Bus Driver', 'سائق شيول': 'Loader Driver', 'سائق بلدوزر': 'Bulldozer Driver',
+        'سائق ونش': 'Winch Driver', 'سائق صهريج': 'Tanker Driver', 'سائق وايت': 'Water Tanker Driver', 'سائق تريلا': 'Trailer Driver', 'سائق قلاب': 'Dump Truck Driver',
+        'مشغل معدات': 'Equipment Operator', 'مشغل الات': 'Machine Operator', 'مشغل الات خياطة': 'Sewing Machine Operator', 'مشغل الات انتاج': 'Production Machine Operator',
+        'مشغل شيول': 'Loader Operator', 'مشغل بلدوزر': 'Bulldozer Operator', 'مشغل كسارة': 'Crusher Operator', 'مشغل مولد': 'Generator Operator',
+        'فني لحام': 'Welding Technician', 'فني سباكة': 'Plumbing Technician', 'فني نجارة': 'Carpentry Technician', 'فني دهانات': 'Painting Technician',
+        'فني الومنيوم': 'Aluminium Technician', 'فني زجاج': 'Glass Technician', 'فني بلاط': 'Tile Technician', 'فني ميكانيكا': 'Mechanical Technician',
+        'فني ميكانيكا سيارات': 'Auto Mechanic Technician', 'فني كهرباء سيارات': 'Auto Electrical Technician', 'فني صيانة مباني': 'Building Maintenance Technician',
+        'فني صيانة عامة': 'General Maintenance Technician', 'فني مضخات': 'Pump Technician', 'فني اتصالات': 'Telecommunication Technician', 'فني جوالات': 'Mobile Technician',
+        'كهربائي عام': 'General Electrician', 'كهربائي صيانة': 'Maintenance Electrician', 'سباك عام': 'General Plumber', 'نجار عام': 'General Carpenter',
+        'نجار مسلح عام': 'General Formwork Carpenter', 'حداد عام': 'General Blacksmith', 'حداد تسليح': 'Steel Fixer', 'لحام عام': 'General Welder', 'لحام كهرباء': 'Electric Welder',
+        'دهان عام': 'General Painter', 'دهان مباني': 'Building Painter', 'مبلط سيراميك': 'Ceramic Tiler', 'مبلط رخام': 'Marble Tiler', 'مبلط عام': 'General Tiler',
+        'بناء عام': 'General Mason', 'بناء بلوك': 'Block Mason', 'لياس عام': 'General Plasterer', 'جبس': 'Gypsum Worker', 'مليس عام': 'General Plasterer',
+        'طباخ عام': 'General Cook', 'طباخ مطعم': 'Restaurant Cook', 'طباخ وجبات سريعة': 'Fast Food Cook', 'معد شاي وقهوة': 'Tea and Coffee Maker',
+        'معد وجبات سريعة': 'Fast Food Preparer', 'معد شاورما': 'Shawarma Maker', 'خباز عام': 'General Baker', 'خباز افران': 'Oven Baker', 'معجنات': 'Pastry Maker',
+        'بائع عام': 'General Salesman', 'بائع تجزئة': 'Retail Salesman', 'بائع خضار': 'Vegetable Seller', 'بائع خضار وفواكه': 'Vegetable and Fruit Seller',
+        'بائع ملابس': 'Clothes Salesman', 'بائع مواد غذائية': 'Food Stuff Salesman', 'مسوق مبيعات': 'Sales Marketer', 'امين مخزن': 'Store Keeper', 'امين مستودعات': 'Warehouse Keeper',
+        'حارس عام': 'General Guard', 'حارس منزل': 'House Guard', 'حارس مزرعة': 'Farm Guard', 'حارس مدرسة': 'School Guard', 'حارس استراحة': 'Rest House Guard',
+        'مزارع عام': 'General Farmer', 'مزارع نخيل': 'Palm Farmer', 'مزارع خضار': 'Vegetable Farmer', 'عامل بيوت محمية': 'Greenhouse Worker',
+        'راعي عام': 'General Shepherd', 'حلاق عام': 'General Barber', 'خياط عام': 'General Tailor', 'خياط ملابس رجالية': 'Mens Tailor', 'خياط ملابس نسائية': 'Ladies Tailor',
+        'مدبر منزل': 'Housekeeper', 'عاملة نظافة': 'Cleaner', 'مربية منزلية': 'House Nanny', 'ممرضة منزلية': 'Home Nurse', 'طباخة منزلية': 'House Cook',
+        'سائق خاص منزلي': 'Private House Driver', 'عامل منزلي عام': 'General Domestic Worker', 'مزارع منزلي': 'House Farmer', 'حارس منزلي': 'House Guard',
+        'محاسب عام': 'General Accountant', 'كاتب عام': 'General Clerk', 'كاتب حسابات': 'Accounts Clerk', 'موظف مبيعات': 'Sales Employee', 'مدير مبيعات': 'Sales Manager',
+        'مدير مشروع': 'Project Manager', 'مهندس صيانة': 'Maintenance Engineer', 'مهندس كهرباء': 'Electrical Engineer', 'مهندس ميكانيكا': 'Mechanical Engineer',
+        'عامل تغليف مواد غذائية': 'Foodstuff Packing Worker', 'عامل مواد غذائية': 'Foodstuff Worker', 'عامل زخرفة': 'Decoration Worker',
+        'مهندس برمجيات': 'Software Engineer', 'رسام': 'Draftsman', 'مصور': 'Photographer', 'مبرمج': 'Programmer', 'مترجم': 'Translator', 'سكرتير تنفيذي': 'Executive Secretary'
     };
 
     // ── 2. Word glossary (profession / qualification / company words) ──
@@ -122,6 +164,14 @@
         'زاويه': 'Zawiya', 'زاوية': 'Zawiya', 'تحفه': 'Tuhfa', 'تحفة': 'Tuhfa', 'نجمة': 'Najma', 'الصحراء': 'Al Sahra',
         'مكيفات': 'AC', 'مكيف': 'AC', 'تكييف': 'Air Conditioning', 'ثلاجات': 'Refrigerator', 'غسالات': 'Washing Machine',
         'اول': 'First', 'ثاني': 'Second', 'رئيس': 'Head', 'كبير': 'Senior',
+        'خدمات': 'Services', 'تغليف': 'Packing', 'تعبئة': 'Packing', 'شحن': 'Shipping', 'خرسانة': 'Concrete', 'حفريات': 'Excavation',
+        'ري': 'Irrigation', 'زراعة': 'Agriculture', 'نخيل': 'Palm', 'مخبز': 'Bakery', 'مقهى': 'Cafe', 'مطبعة': 'Printing Press',
+        'تركيب': 'Installation', 'تبليط': 'Tiling', 'سيراميك': 'Ceramic', 'رخام': 'Marble', 'بلوك': 'Block', 'جبس': 'Gypsum', 'عزل': 'Insulation',
+        'ديكور': 'Decoration', 'اطارات': 'Tire', 'كي': 'Ironing', 'دراجة': 'Motorcycle', 'صهريج': 'Tanker', 'تريلا': 'Trailer',
+        'قلاب': 'Dump Truck', 'شيول': 'Loader', 'بلدوزر': 'Bulldozer', 'ونش': 'Winch', 'مولد': 'Generator', 'مضخات': 'Pump', 'اتصالات': 'Telecommunication',
+        'جوالات': 'Mobile', 'ميكانيكا': 'Mechanical', 'تسليح': 'Steel Fixing', 'سريعة': 'Fast', 'وجبات': 'Meals', 'تجزئة': 'Retail', 'فواكه': 'Fruits',
+        'مدرسة': 'School', 'استراحة': 'Rest House', 'محمية': 'Protected', 'بيوت': 'Houses', 'رجالية': 'Mens', 'نسائية': 'Ladies', 'حسابات': 'Accounts',
+        'مشروع': 'Project', 'تنفيذي': 'Executive', 'كبيرة': 'Large', 'صغيرة': 'Small', 'صحية': 'Sanitary', 'تمديدات': 'Installation', 'عادي': 'Ordinary',
         // qualification
         'ابتدائي': 'Primary', 'ابتدائية': 'Primary', 'متوسط': 'Intermediate', 'متوسطة': 'Intermediate',
         'ثانوي': 'Secondary', 'ثانوية': 'Secondary', 'جامعي': 'University', 'جامعية': 'University', 'دبلوم': 'Diploma',
@@ -224,23 +274,67 @@
         return null;
     }
 
-    // Profession / qualification: phrase → else glossary in English order
-    // (Arabic head-first "عامل تنظيف مركبات" → English head-last "Vehicle Cleaning Worker").
+    // ── Learned pairs: Arabic ⇄ English professions this agency already saved (window.HR_PROFESSION_PAIRS,
+    // most-used first). They win over the built-in lists, so the office's own wording is reused. ──
+    var LEARNED = {}, LEARNED_EN = {};
+    (window.HR_PROFESSION_PAIRS || []).forEach(function (p) {
+        var ar = norm(p[0]), en = String(p[1] || '').trim();
+        if (!ar || !en || /[\u0600-\u06FF]/.test(en)) return;
+        if (!(ar in LEARNED)) LEARNED[ar] = en;
+        var k = en.toLowerCase().replace(/\s+/g, ' ');
+        if (!(k in LEARNED_EN)) LEARNED_EN[k] = String(p[0]).trim().replace(/\s+/g, ' ');
+    });
+
+    // Profession / qualification Arabic → English: learned/known phrase, else the glossary in English
+    // order (Arabic head-first "عامل تنظيف مركبات" → English head-last "Vehicle Cleaning Worker").
+    // Returns '' when any word is unknown — a wrong/phonetic guess is never filled in.
     function profession(value) {
         var v = norm(value);
         if (!v) return '';
-        if (PROFESSION[v]) return PROFESSION[v];
         var vAlt = v.split(' ').map(function (t) { return endVariant(t) || t; }).join(' ');
+        if (LEARNED[v]) return LEARNED[v];
+        if (LEARNED[vAlt]) return LEARNED[vAlt];
+        if (PROFESSION[v]) return PROFESSION[v];
         if (PROFESSION[vAlt]) return PROFESSION[vAlt];
-        var tokens = v.split(' '), units = [];
+        var tokens = v.split(' '), units = [], unknown = false;
         tokens.forEach(function (t) {
             var hit = lookupWord(WORDS, t) || lookupWord(PROFESSION, t);
-            var en = hit ? hit.en : toLatin(t.replace(/^ال/, ''));
+            if (!hit) { unknown = true; return; }
+            var en = hit.en;
             // Keep "X and Y" together (e.g. تحميل وتنزيل → "Loading and Unloading").
             if (/^and /.test(en) && units.length) units[units.length - 1] += ' ' + en;
             else units.push(en);
         });
-        return title(units.reverse().join(' '));
+        return unknown ? '' : title(units.reverse().join(' '));
+    }
+
+    // English → Arabic for professions: learned/known phrase, else word-by-word in Arabic order
+    // ("Vehicle Cleaning Worker" → "عامل تنظيف مركبات"). '' when any word is unknown.
+    var EN_AR = {}, EN_WORD_AR = {};
+    Object.keys(PROFESSION).forEach(function (ar) { var k = PROFESSION[ar].toLowerCase(); if (!(k in EN_AR)) EN_AR[k] = ar; });
+    Object.keys(WORDS).forEach(function (ar) {
+        var en = WORDS[ar];
+        if (!en || /^and /.test(en) || ar.indexOf('ال') === 0 || ar.indexOf('و') === 0) return;
+        var k = en.toLowerCase();
+        if (!(k in EN_WORD_AR)) EN_WORD_AR[k] = ar;
+    });
+    function professionToAr(value) {
+        var k = String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
+        if (!k) return '';
+        if (LEARNED_EN[k]) return LEARNED_EN[k];
+        if (EN_AR[k]) return EN_AR[k];
+        var words = k.split(' '), units = [], unknown = false;
+        for (var i = 0; i < words.length; i++) {
+            if (words[i] === 'and' && units.length && words[i + 1]) {
+                var nxt = EN_WORD_AR[words[i + 1]] || EN_AR[words[i + 1]];
+                if (!nxt) { unknown = true; break; }
+                units[units.length - 1] += ' و' + nxt; i++; continue;
+            }
+            var ar = EN_WORD_AR[words[i]] || EN_AR[words[i]];
+            if (!ar) { unknown = true; break; }
+            units.push(ar);
+        }
+        return unknown ? '' : units.reverse().join(' ');
     }
 
     // Person / company name: known names, company words, "ال…" → "Al …".
@@ -341,9 +435,9 @@
 
     function professionExact(value) {
         var v = norm(value);
-        return PROFESSION[v] || PROFESSION[v.split(' ').map(function (t) { return endVariant(t) || t; }).join(' ')] || '';
+        return LEARNED[v] || PROFESSION[v] || PROFESSION[v.split(' ').map(function (t) { return endVariant(t) || t; }).join(' ')] || '';
     }
 
-    window.HrArEn = { professionExact: professionExact, profession: profession, name: name, phrase: phrase, date: date, toHijri: toHijri, toLatin: toLatin, norm: norm };
+    window.HrArEn = { professionExact: professionExact, profession: profession, professionToAr: professionToAr, name: name, phrase: phrase, date: date, toHijri: toHijri, toLatin: toLatin, norm: norm };
 })();
 </script>

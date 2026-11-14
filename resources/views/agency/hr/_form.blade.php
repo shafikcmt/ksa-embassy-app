@@ -321,12 +321,11 @@
                     <input type="hidden" name="qualification_ar" value="{{ $rel($visa, 'qualification_ar') }}">
                 @endif
 
-                {{-- Profession: no auto-translation — type/paste English and Arabic separately (exactly as on the visa). --}}
-                <x-ui.field label="Profession" name="profession_en" :required="true" class="hr-w2" hint="Type or paste English and Arabic separately — no auto-translate">
+                <x-ui.field label="Profession" name="profession_en" :required="true" class="hr-w2">
                     <div class="hr-pair grid grid-cols-1 gap-2">
-                        <input type="text" name="profession_en" required placeholder="English (type / paste)" autocomplete="off" value="{{ $rel($visa, 'profession_en') }}" class="{{ $inp }} @error('profession_en') !border-rose-400 @enderror">
+                        <input type="text" name="profession_en" required placeholder="English" value="{{ $rel($visa, 'profession_en') }}" data-ar-source="profession_ar" data-ar-dict="profession" class="{{ $inp }} @error('profession_en') !border-rose-400 @enderror">
                         <div class="flex gap-1 min-w-0">
-                            <input type="text" id="profession_ar" name="profession_ar" dir="rtl" lang="ar" placeholder="المهنة بالعربي" autocomplete="off" value="{{ $rel($visa, 'profession_ar') }}" class="{{ $inp }} ar-input">
+                            <input type="text" id="profession_ar" name="profession_ar" dir="rtl" lang="ar" placeholder="عربي" value="{{ $rel($visa, 'profession_ar') }}" class="{{ $inp }} ar-target ar-input">
                         </div>
                     </div>
                 </x-ui.field>
@@ -596,6 +595,19 @@
 @endpush
 
 @push('scripts')
+{{-- Professions this agency already saved in both languages (most-used first) — the translator
+     reuses them, so the office's own wording is filled automatically. Agency-scoped. --}}
+@php
+    $professionPairs = \App\Models\Visa::query()
+        ->whereHas('hrProfile', fn ($q) => $q->forAgency((int) auth()->user()->agency_id))
+        ->whereNotNull('profession_en')->where('profession_en', '!=', '')
+        ->whereNotNull('profession_ar')->where('profession_ar', '!=', '')
+        ->selectRaw('TRIM(profession_ar) AS ar, TRIM(profession_en) AS en, COUNT(*) AS uses')
+        ->groupByRaw('TRIM(profession_ar), TRIM(profession_en)')
+        ->orderByDesc('uses')->limit(2000)->get()
+        ->map(fn ($r) => [$r->ar, $r->en])->values();
+@endphp
+<script>window.HR_PROFESSION_PAIRS = @json($professionPairs);</script>
 {{-- Arabic → English dictionary + Arabic/Hijri date parser (window.HrArEn). --}}
 @include('agency.hr._arabic-to-english')
 <script>
@@ -830,6 +842,8 @@
         var v = (value || '').trim();
         if (!v) return '';
         if (dict === 'date') return toArabicDate(v);
+        // Profession: real translation only (learned → known phrase → word glossary); never phonetic letters.
+        if (dict === 'profession' && window.HrArEn) return window.HrArEn.professionToAr(v) || (DICT.profession[v.toLowerCase()] || '');
         var hit = DICT[dict] && DICT[dict][v.toLowerCase()];
         if (hit) return hit;
         if (allowTranslit && FREE[dict]) return translit(v);
@@ -889,6 +903,8 @@
         if (!force && target.dataset.touched === '1' && target.value.trim() !== '') return;
         var ar = translate(src.dataset.arDict || 'generic', src.value, force || (opts && opts.translit));
         if (ar) { target.value = ar; delete target.dataset.touched; }
+        // Profession: no translation for the current text → drop the stale auto-filled value (never a user's own).
+        else if (src.dataset.arDict === 'profession' && target.dataset.touched !== '1') target.value = '';
     }
 
     function fillReverse(arField, opts) {
@@ -899,6 +915,7 @@
         var dict = src.dataset.arDict || 'generic';
         var en = translateReverse(dict, arField.value, true);
         if (en) { src.value = en; delete src.dataset.touched; }
+        else if (dict === 'profession' && src.dataset.touched !== '1') src.value = '';
         if (dict === 'date') {
             var parsed = window.HrArEn && window.HrArEn.date(arField.value);
             dateNote(arField, parsed && parsed.hijri
