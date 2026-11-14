@@ -321,11 +321,12 @@
                     <input type="hidden" name="qualification_ar" value="{{ $rel($visa, 'qualification_ar') }}">
                 @endif
 
-                <x-ui.field label="Profession" name="profession_en" :required="true" class="hr-w2">
+                {{-- Profession: no auto-translation — type/paste English and Arabic separately (exactly as on the visa). --}}
+                <x-ui.field label="Profession" name="profession_en" :required="true" class="hr-w2" hint="Type or paste English and Arabic separately — no auto-translate">
                     <div class="hr-pair grid grid-cols-1 gap-2">
-                        <input type="text" name="profession_en" required placeholder="English" value="{{ $rel($visa, 'profession_en') }}" data-ar-source="profession_ar" data-ar-dict="profession" class="{{ $inp }} @error('profession_en') !border-rose-400 @enderror">
+                        <input type="text" name="profession_en" required placeholder="English (type / paste)" autocomplete="off" value="{{ $rel($visa, 'profession_en') }}" class="{{ $inp }} @error('profession_en') !border-rose-400 @enderror">
                         <div class="flex gap-1 min-w-0">
-                            <input type="text" id="profession_ar" name="profession_ar" dir="rtl" lang="ar" placeholder="عربي" value="{{ $rel($visa, 'profession_ar') }}" class="{{ $inp }} ar-target ar-input">
+                            <input type="text" id="profession_ar" name="profession_ar" dir="rtl" lang="ar" placeholder="المهنة بالعربي" autocomplete="off" value="{{ $rel($visa, 'profession_ar') }}" class="{{ $inp }} ar-input">
                         </div>
                     </div>
                 </x-ui.field>
