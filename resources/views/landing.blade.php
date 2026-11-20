@@ -301,6 +301,10 @@
   .hero-fixed .slide-copy>*:nth-child(4){animation-delay:.24s}.hero-fixed .slide-copy>*:nth-child(5){animation-delay:.32s}
   .hero-fixed .hero-title{font-size:50px}
   .slide::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,rgba(4,24,40,.72),rgba(4,24,40,.25) 65%,transparent)}
+  .btn-wa{background:#25D366;color:#073b1c;border-color:transparent}.btn-wa:hover{background:#1ebe5b;transform:translateY(-1px)}
+  .wa-float{position:fixed;right:18px;bottom:18px;z-index:60;display:inline-flex;align-items:center;gap:8px;height:52px;padding:0 18px;border-radius:999px;background:#25D366;color:#073b1c;font-weight:700;font-size:14px;box-shadow:0 10px 24px -8px rgba(0,0,0,.45)}
+  .wa-float svg{width:24px;height:24px}
+  @media(max-width:560px){.wa-float span{display:none}.wa-float{width:54px;height:54px;padding:0;justify-content:center}}
   .btn-lg{height:52px;padding:0 28px;font-size:16px;font-weight:700;border-radius:10px}
   .hero-fixed .btn-white{box-shadow:0 12px 28px -10px rgba(0,0,0,.55)}
   .hero-fixed .btn-light{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.4)}
@@ -390,6 +394,14 @@
 @php
   // Resolve a safe destination for already-authenticated visitors.
   $dashUrl = url('/dashboard');
+  $site = \App\Support\SiteSettings::all();
+  $waUrl = \App\Support\SiteSettings::whatsappUrl();
+  $fbUrl = \App\Support\SiteSettings::url('site_facebook_url');
+  $ytUrl = \App\Support\SiteSettings::url('site_youtube_url');
+  $heroTitle = e($site['site_hero_title']);
+  $hl = e($site['site_hero_highlight']);
+  if ($hl !== '' && str_contains($heroTitle, $hl)) { $heroTitle = str_replace($hl, '<span class="grad">'.$hl.'</span>', $heroTitle); }
+  $waIcon = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20.5 3.5A11.8 11.8 0 0 0 12 0C5.4 0 .1 5.3.1 11.8c0 2.1.6 4.1 1.600 5.9L0 24l6.500-1.700a11.900 11.900 0 0 0 5.600 1.400c6.500 0 11.900-5.300 11.900-11.800 0-3.100-1.200-6.100-3.500-8.400zM12 21.700c-1.800 0-3.600-.5-5.100-1.400l-.4-.2-3.800 1 1-3.700-.2-.4a9.800 9.800 0 0 1-1.500-5.200C2.100 6.400 6.600 2 12 2c2.600 0 5.100 1 6.900 2.900a9.700 9.700 0 0 1 2.900 6.900c0 5.400-4.400 9.900-9.800 9.900zm5.400-7.400c-.3-.1-1.800-.9-2-1-.3-.1-.5-.1-.7.1l-1 1.200c-.2.200-.4.200-.7.100-.3-.1-1.200-.5-2.300-1.400-.9-.8-1.400-1.700-1.600-2-.2-.3 0-.5.100-.6l.5-.5.300-.5c.1-.2 0-.4 0-.5l-.9-2.200c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.400-.3.300-1 1-1 2.500s1.100 2.900 1.200 3.100c.2.200 2.100 3.300 5.200 4.600.7.300 1.300.5 1.700.6.700.2 1.400.2 1.900.1.600-.1 1.800-.7 2-1.400.3-.7.300-1.300.2-1.400-.1-.1-.3-.2-.6-.3z"/></svg>';
 @endphp
 
 {{-- ===================== NAVBAR ===================== --}}
@@ -488,20 +500,21 @@
   <div class="hero-fixed">
     <div class="wrap slide-grid has-mock">
       <div class="slide-copy">
-        <span class="eyebrow"><span class="dot"></span> Built for Saudi recruiting &amp; manpower agencies</span>
-        <h1 class="hero-title">Prepare KSA embassy files in <span class="grad">minutes, not hours</span></h1>
-        <p class="lead">Type the candidate once. VisaDeskPro generates the Application, Forwarding, Agreement and Checklist in the official KSA A4 format — with barcode and photo placed correctly.</p>
+        <span class="eyebrow"><span class="dot"></span> {{ $site['site_hero_eyebrow'] }}</span>
+        <h1 class="hero-title">{!! $heroTitle !!}</h1>
+        <p class="lead">{{ $site['site_hero_lead'] }}</p>
         <div class="hero-cta">
           @auth
             <a href="{{ $dashUrl }}" class="btn btn-white btn-lg">Go to Dashboard</a>
           @else
             @if (Route::has('register'))
-              <a href="{{ route('register') }}" class="btn btn-white btn-lg" data-track="cta-register">Start Now — Create Account
+              <a href="{{ route('register') }}" class="btn btn-white btn-lg" data-track="cta-register">{{ $site['site_cta_text'] }}
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
               </a>
             @endif
             <a href="{{ route('login') }}" class="btn btn-light btn-lg">Login to Dashboard</a>
           @endauth
+          @if($waUrl)<a href="{{ $waUrl }}" target="_blank" rel="noopener" class="btn btn-wa btn-lg" data-track="whatsapp-hero">{!! $waIcon !!} WhatsApp Us</a>@endif
           <a href="#features" class="hero-link on-dark">See how it works
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </a>
@@ -796,24 +809,20 @@
 
 {{-- ===================== TRUSTED BY / STATS STRIP ===================== --}}
 {{-- NOTE: replace these figures with real metrics before launch --}}
+@if($site['site_show_trust'] === '1')
 <div class="trust">
   <div class="wrap">
     <p class="trust-eyebrow">Trusted by recruiting &amp; manpower agencies</p>
     <div class="trust-grid">
-      @php
-        $trust = [
-          ['500+','Embassy files generated'],
-          ['40+','Agencies onboard'],
-          ['4','Documents per candidate'],
-          ['1-click','A4 PDF export'],
-        ];
-      @endphp
-      @foreach($trust as $t)
-        <div class="trust-stat"><b>{{ $t[0] }}</b><small>{{ $t[1] }}</small></div>
+      @foreach(range(1,4) as $n)
+        @if(trim($site["site_trust_{$n}_value"]) !== '')
+          <div class="trust-stat"><b>{{ $site["site_trust_{$n}_value"] }}</b><small>{{ $site["site_trust_{$n}_label"] }}</small></div>
+        @endif
       @endforeach
     </div>
   </div>
 </div>
+@endif
 
 {{-- ===================== FOOTER ===================== --}}
 <footer id="contact">
@@ -843,16 +852,25 @@
       <div class="foot-col">
         <h4>Contact</h4>
         <span>Support &amp; sales</span>
-        <a href="mailto:mdshafiqulislam822@gmail.com">mdshafiqulislam822@gmail.com</a>
-        <span>Sat–Thu, 9am–6pm</span>
+        @php($supMail = \App\Models\Setting::get('support_email', null, '') ?: 'mdshafiqulislam822@gmail.com')
+        <a href="mailto:{{ $supMail }}">{{ $supMail }}</a>
+        @if($site['site_phone'] !== '')<a href="tel:{{ preg_replace('/[^\d+]/', '', $site['site_phone']) }}">{{ $site['site_phone'] }}</a>@endif
+        @if($waUrl)<a href="{{ $waUrl }}" target="_blank" rel="noopener">WhatsApp chat</a>@endif
+        @if($fbUrl)<a href="{{ $fbUrl }}" target="_blank" rel="noopener">Facebook</a>@endif
+        @if($ytUrl)<a href="{{ $ytUrl }}" target="_blank" rel="noopener">YouTube</a>@endif
+        <span>{{ $site['site_business_hours'] }}</span>
       </div>
     </div>
     <div class="foot-bottom">
       <span>&copy; {{ date('Y') }} {{ config('app.name', 'VisaDeskPro') }}. All rights reserved.</span>
-      <span>Agency, HR &amp; visa document management.</span>
+      <span>Agency, HR &amp; visa document management. &middot; Developed by <a href="http://shafiqul.dev/" target="_blank" rel="noopener" style="color:#e2e8f0;font-weight:600">এমডি শফিকুল ইসলাম</a></span>
     </div>
   </div>
 </footer>
+
+@if($waUrl)
+<a href="{{ $waUrl }}" target="_blank" rel="noopener" class="wa-float" aria-label="Chat on WhatsApp" data-track="whatsapp-float">{!! $waIcon !!}<span>Chat on WhatsApp</span></a>
+@endif
 
 {{-- No-JS fallback: reveal cards if JavaScript is disabled. Reveal logic is bundled via Vite in resources/js/landing.js --}}
 <noscript><style>.reveal-up{opacity:1;transform:none}</style></noscript>

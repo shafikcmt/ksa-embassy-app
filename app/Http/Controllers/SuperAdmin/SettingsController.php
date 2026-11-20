@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Plan;
 use App\Models\Setting;
 use App\Support\HrFieldControls;
+use App\Support\SiteSettings;
 use Illuminate\Http\Request;
 
 class SettingsController extends Controller
@@ -31,7 +32,10 @@ class SettingsController extends Controller
         $hrFieldGroups   = HrFieldControls::grouped();
         $hrFieldStatuses = HrFieldControls::statusesForScope(null);
 
+        $site = SiteSettings::all();
+
         return view('super-admin.settings.index', compact(
+            'site',
             'plans', 'systemName', 'defaultPlanId', 'maintenanceMode', 'supportEmail',
             'renewalAmount', 'bkashNumber', 'nagadNumber', 'bankDetails', 'renewalInstructions',
             'hrFieldGroups', 'hrFieldStatuses'
@@ -45,6 +49,24 @@ class SettingsController extends Controller
             HrFieldControls::save($request->input('fields', []), null);
 
             return back()->with('success', 'Default HR form field settings saved.');
+        }
+
+        // Public website content: WhatsApp, contact, social, pixel, hero text, trust numbers.
+        if ($request->input('section') === 'website') {
+            $rules = ['site_show_trust' => 'nullable|boolean'];
+            foreach (SiteSettings::FIELDS as $key => [$default, $max]) {
+                if ($key !== 'site_show_trust') {
+                    $rules[$key] = 'nullable|string|max:'.$max;
+                }
+            }
+            $rules['site_facebook_url'] = 'nullable|url|max:300';
+            $rules['site_youtube_url']  = 'nullable|url|max:300';
+            $rules['site_meta_pixel_id'] = ['nullable', 'regex:/^\d{5,20}$/'];
+            $request->validate($rules);
+
+            SiteSettings::save($request->all());
+
+            return back()->with('success', 'Website & marketing settings saved.');
         }
 
         // License renewal / payment details (own form/section).

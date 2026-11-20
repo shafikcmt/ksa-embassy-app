@@ -88,6 +88,11 @@
                     </button>
                 </form>
 
+                @php($waUrl = \App\Support\SiteSettings::whatsappUrl())
+                @if($waUrl)
+                    <p class="mt-5 text-center text-sm text-slate-600">Need help? <a href="{{ $waUrl }}" target="_blank" rel="noopener" class="font-semibold text-emerald-700 hover:underline">Chat on WhatsApp</a></p>
+                @endif
+
                 @if (Route::has('register'))
                     <p class="mt-6 text-center text-sm text-slate-600">New to VisaDeskPro?
                         <a href="{{ route('register') }}" class="font-semibold text-brand-700 underline-offset-2 hover:underline">Create an account</a>

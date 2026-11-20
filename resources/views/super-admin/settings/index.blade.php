@@ -63,6 +63,136 @@
             </div>
         </div>
 
+        {{-- Public website: WhatsApp, contact, social, Facebook Pixel, hero text, trust numbers --}}
+        <div class="card mt-4">
+            <div class="card-header py-2">
+                <i class="bi bi-megaphone me-1"></i> Website &amp; Marketing (Home, Login, Register)
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-3">
+                    Controls the public home page. Leave WhatsApp / social / pixel blank to hide them.
+                    Blank text fields fall back to the default wording.
+                </p>
+                <form method="POST" action="{{ route('super-admin.settings.update') }}">
+                    @csrf @method('PUT')
+                    <input type="hidden" name="section" value="website">
+
+                    <div class="text-uppercase text-muted fw-semibold mb-2" style="font-size:.68rem;letter-spacing:.04em;">Contact &amp; Social</div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-semibold">WhatsApp Number</label>
+                            <input type="text" name="site_whatsapp_number" class="form-control form-control-sm @error('site_whatsapp_number') is-invalid @enderror" value="{{ old('site_whatsapp_number', $site['site_whatsapp_number']) }}" placeholder="8801XXXXXXXXX">
+                            <div class="form-text">With country code, digits only. Shows a WhatsApp button + floating chat button.</div>
+                            @error('site_whatsapp_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-semibold">WhatsApp Pre-filled Message</label>
+                            <input type="text" name="site_whatsapp_message" class="form-control form-control-sm @error('site_whatsapp_message') is-invalid @enderror" value="{{ old('site_whatsapp_message', $site['site_whatsapp_message']) }}" placeholder="">
+                            
+                            @error('site_whatsapp_message')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-semibold">Phone (optional)</label>
+                            <input type="text" name="site_phone" class="form-control form-control-sm @error('site_phone') is-invalid @enderror" value="{{ old('site_phone', $site['site_phone']) }}" placeholder="+8801XXXXXXXXX">
+                            
+                            @error('site_phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-semibold">Business Hours</label>
+                            <input type="text" name="site_business_hours" class="form-control form-control-sm @error('site_business_hours') is-invalid @enderror" value="{{ old('site_business_hours', $site['site_business_hours']) }}" placeholder="">
+                            
+                            @error('site_business_hours')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-semibold">Facebook Page URL</label>
+                            <input type="text" name="site_facebook_url" class="form-control form-control-sm @error('site_facebook_url') is-invalid @enderror" value="{{ old('site_facebook_url', $site['site_facebook_url']) }}" placeholder="https://facebook.com/yourpage">
+                            
+                            @error('site_facebook_url')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-semibold">YouTube URL</label>
+                            <input type="text" name="site_youtube_url" class="form-control form-control-sm @error('site_youtube_url') is-invalid @enderror" value="{{ old('site_youtube_url', $site['site_youtube_url']) }}" placeholder="https://youtube.com/@yourchannel">
+                            
+                            @error('site_youtube_url')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                    </div>
+
+                    <div class="text-uppercase text-muted fw-semibold mb-2 mt-2" style="font-size:.68rem;letter-spacing:.04em;">Facebook Ads Tracking</div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-semibold">Meta (Facebook) Pixel ID</label>
+                            <input type="text" name="site_meta_pixel_id" class="form-control form-control-sm @error('site_meta_pixel_id') is-invalid @enderror" value="{{ old('site_meta_pixel_id', $site['site_meta_pixel_id']) }}" placeholder="123456789012345">
+                            <div class="form-text">Digits only. Tracks PageView, CTA clicks and registration Lead. Overrides META_PIXEL_ID in .env.</div>
+                            @error('site_meta_pixel_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                    </div>
+
+                    <div class="text-uppercase text-muted fw-semibold mb-2 mt-2" style="font-size:.68rem;letter-spacing:.04em;">Home Hero</div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-semibold">Small badge text</label>
+                            <input type="text" name="site_hero_eyebrow" class="form-control form-control-sm @error('site_hero_eyebrow') is-invalid @enderror" value="{{ old('site_hero_eyebrow', $site['site_hero_eyebrow']) }}" placeholder="">
+                            
+                            @error('site_hero_eyebrow')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-semibold">Main button text</label>
+                            <input type="text" name="site_cta_text" class="form-control form-control-sm @error('site_cta_text') is-invalid @enderror" value="{{ old('site_cta_text', $site['site_cta_text']) }}" placeholder="">
+                            
+                            @error('site_cta_text')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-semibold">Headline</label>
+                            <input type="text" name="site_hero_title" class="form-control form-control-sm @error('site_hero_title') is-invalid @enderror" value="{{ old('site_hero_title', $site['site_hero_title']) }}" placeholder="">
+                            
+                            @error('site_hero_title')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-semibold">Highlighted words (must be part of the headline)</label>
+                            <input type="text" name="site_hero_highlight" class="form-control form-control-sm @error('site_hero_highlight') is-invalid @enderror" value="{{ old('site_hero_highlight', $site['site_hero_highlight']) }}" placeholder="">
+                            
+                            @error('site_hero_highlight')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div class="col-12 mb-3">
+                            <label class="form-label small fw-semibold">Sub-headline</label>
+                            <textarea name="site_hero_lead" rows="3" class="form-control form-control-sm @error('site_hero_lead') is-invalid @enderror">{{ old('site_hero_lead', $site['site_hero_lead']) }}</textarea>
+                            @error('site_hero_lead')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                    </div>
+
+                    <div class="text-uppercase text-muted fw-semibold mb-2 mt-2" style="font-size:.68rem;letter-spacing:.04em;">Trust Numbers</div>
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" name="site_show_trust" value="1" id="site_show_trust" {{ old('site_show_trust', $site['site_show_trust']) ? 'checked' : '' }}>
+                        <label class="form-check-label small" for="site_show_trust">Show "Trusted by" numbers on home page</label>
+                    </div>
+                    <div class="form-text mb-2">Use only real figures — shown publicly and visible to Facebook ad reviewers.</div>
+                    <div class="row">
+                        <div class="col-6 col-md-3 mb-3">
+                            <input type="text" name="site_trust_1_value" class="form-control form-control-sm mb-1" value="{{ old('site_trust_1_value', $site['site_trust_1_value']) }}" placeholder="Number">
+                            <input type="text" name="site_trust_1_label" class="form-control form-control-sm" value="{{ old('site_trust_1_label', $site['site_trust_1_label']) }}" placeholder="Label">
+                        </div>
+                        <div class="col-6 col-md-3 mb-3">
+                            <input type="text" name="site_trust_2_value" class="form-control form-control-sm mb-1" value="{{ old('site_trust_2_value', $site['site_trust_2_value']) }}" placeholder="Number">
+                            <input type="text" name="site_trust_2_label" class="form-control form-control-sm" value="{{ old('site_trust_2_label', $site['site_trust_2_label']) }}" placeholder="Label">
+                        </div>
+                        <div class="col-6 col-md-3 mb-3">
+                            <input type="text" name="site_trust_3_value" class="form-control form-control-sm mb-1" value="{{ old('site_trust_3_value', $site['site_trust_3_value']) }}" placeholder="Number">
+                            <input type="text" name="site_trust_3_label" class="form-control form-control-sm" value="{{ old('site_trust_3_label', $site['site_trust_3_label']) }}" placeholder="Label">
+                        </div>
+                        <div class="col-6 col-md-3 mb-3">
+                            <input type="text" name="site_trust_4_value" class="form-control form-control-sm mb-1" value="{{ old('site_trust_4_value', $site['site_trust_4_value']) }}" placeholder="Number">
+                            <input type="text" name="site_trust_4_label" class="form-control form-control-sm" value="{{ old('site_trust_4_label', $site['site_trust_4_label']) }}" placeholder="Label">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="bi bi-floppy me-1"></i> Save Website Settings
+                    </button>
+                </form>
+            </div>
+        </div>
+
         {{-- License renewal / payment details (shown read-only to agencies) --}}
         <div class="card mt-4">
             <div class="card-header py-2">

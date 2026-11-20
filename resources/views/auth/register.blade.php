@@ -91,6 +91,11 @@
                     <span>🔒 Secure &amp; private</span><span>✓ Official KSA formats</span><span>✓ Set up in minutes</span>
                 </p>
 
+                @php($waUrl = \App\Support\SiteSettings::whatsappUrl())
+                @if($waUrl)
+                    <p class="mt-5 text-center text-sm text-slate-600">Need help? <a href="{{ $waUrl }}" target="_blank" rel="noopener" class="font-semibold text-emerald-700 hover:underline">Chat on WhatsApp</a></p>
+                @endif
+
                 <p class="mt-6 text-center text-sm text-slate-600">Already have an account?
                     <a href="{{ route('login') }}" class="font-semibold text-brand-700 underline-offset-2 hover:underline">Sign In here</a>
                 </p>
