@@ -53,7 +53,12 @@ Route::middleware('auth')->group(function () {
     Route::post('confirm-password', [ConfirmablePasswordController::class, 'store']);
 
     Route::put('password', [PasswordController::class, 'update'])->name('password.update');
-
-    Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
-        ->name('logout');
 });
+
+// Logout works even when the session has already expired (guest), so it never bounces to an error page.
+Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
+    ->name('logout');
+
+// Opening /logout directly (address bar, bookmark, back/refresh) must not show "405 Method Not Allowed".
+// It never logs anyone out by GET (CSRF-safe) — it just sends the visitor to the login page.
+Route::get('logout', fn () => redirect()->route('login'));
