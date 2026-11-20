@@ -62,6 +62,7 @@ class SettingsController extends Controller
             }
             $rules['site_facebook_url'] = 'nullable|url|max:300';
             $rules['site_youtube_url']  = 'nullable|url|max:300';
+            $rules['site_dev_url'] = 'nullable|url|max:300';
             $rules['site_meta_pixel_id'] = ['nullable', 'regex:/^\d{5,20}$/'];
             $request->validate($rules);
 

@@ -128,6 +128,24 @@
                         </div>
                     </div>
 
+                    <div class="text-uppercase text-muted fw-semibold mb-2 mt-2" style="font-size:.68rem;letter-spacing:.04em;">Footer Developer Credit</div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label small fw-semibold">Label</label>
+                            <input type="text" name="site_dev_label" class="form-control form-control-sm" value="{{ old('site_dev_label', $site['site_dev_label']) }}" placeholder="Developed by">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label small fw-semibold">Name (any language)</label>
+                            <input type="text" name="site_dev_name" class="form-control form-control-sm" value="{{ old('site_dev_name', $site['site_dev_name']) }}">
+                            <div class="form-text">Leave blank to hide the credit.</div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label small fw-semibold">Link URL</label>
+                            <input type="text" name="site_dev_url" class="form-control form-control-sm @error('site_dev_url') is-invalid @enderror" value="{{ old('site_dev_url', $site['site_dev_url']) }}" placeholder="https://">
+                            @error('site_dev_url')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                    </div>
+
                     <div class="text-uppercase text-muted fw-semibold mb-2 mt-2" style="font-size:.68rem;letter-spacing:.04em;">Facebook Ads Tracking</div>
                     <div class="row">
                         <div class="col-md-6 mb-3">

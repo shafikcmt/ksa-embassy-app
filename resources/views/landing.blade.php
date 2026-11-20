@@ -39,7 +39,7 @@
   ],
 ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
 <link rel="preconnect" href="https://fonts.bunny.net">
-<link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800" rel="stylesheet" />
+<link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800|noto-sans-bengali:400,500,600" rel="stylesheet" />
 <style>
   :root{
     --navy:#15497E; --navy-d:#0E3358; --navy-l:#EAF1F8;
@@ -52,7 +52,7 @@
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth}
   section[id],[id="top"]{scroll-margin-top:84px}
-  body{font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);background:var(--bg);line-height:1.6;-webkit-font-smoothing:antialiased}
+  body{font-family:'Inter','Noto Sans Bengali',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);background:var(--bg);line-height:1.6;-webkit-font-smoothing:antialiased}
   a{text-decoration:none;color:inherit}
   a,button,.btn,label{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
   img,svg{display:block}
@@ -299,7 +299,13 @@
   .hero-fixed .slide-copy>*{animation:riseIn .7s cubic-bezier(.16,1,.3,1) both}
   .hero-fixed .slide-copy>*:nth-child(2){animation-delay:.08s}.hero-fixed .slide-copy>*:nth-child(3){animation-delay:.16s}
   .hero-fixed .slide-copy>*:nth-child(4){animation-delay:.24s}.hero-fixed .slide-copy>*:nth-child(5){animation-delay:.32s}
-  .hero-fixed .hero-title{font-size:50px}
+  .hero-fixed .hero-title{font-size:46px;text-wrap:balance;max-width:600px;margin-bottom:16px}
+  .hero-fixed .slide-copy p.lead{font-size:17px;max-width:520px;margin-bottom:26px}
+  .hero-fixed .hero-cta{flex-wrap:nowrap;margin-bottom:22px}
+  .hero-fixed .eyebrow{margin-bottom:18px}
+  .hero-fixed .float.f1{left:auto;right:-18px;top:-26px}
+  .dev-credit{color:#e2e8f0;font-weight:500}.dev-credit:hover{color:#fff;text-decoration:underline}
+  footer{padding-bottom:96px}
   .slide::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,rgba(4,24,40,.72),rgba(4,24,40,.25) 65%,transparent)}
   .btn-wa{background:#25D366;color:#073b1c;border-color:transparent}.btn-wa:hover{background:#1ebe5b;transform:translateY(-1px)}
   .wa-float{position:fixed;right:18px;bottom:18px;z-index:60;display:inline-flex;align-items:center;gap:8px;height:52px;padding:0 18px;border-radius:999px;background:#25D366;color:#073b1c;font-weight:700;font-size:14px;box-shadow:0 10px 24px -8px rgba(0,0,0,.45)}
@@ -327,7 +333,7 @@
     .hero-slider .mock{display:none}
     .slide-scene{height:44%}
   }
-  @media(max-width:560px){.hero-fixed .hero-title{font-size:32px}.hero-fixed .slide-grid{padding:44px 20px 96px}.hero-fixed .btn-lg{flex:1 1 100%}.slide{min-height:740px}.hero-slider .hero-cta .btn{flex:1 1 100%}}
+  @media(max-width:560px){.hero-fixed .hero-title{font-size:32px}.hero-fixed .slide-grid{padding:44px 20px 96px}.hero-fixed .hero-cta{flex-wrap:wrap}.hero-fixed .btn-lg{flex:1 1 100%}.slide{min-height:740px}.hero-slider .hero-cta .btn{flex:1 1 100%}}
   @media (prefers-reduced-motion:reduce){.slide,.slide.is-active{transition:none}.slide.is-active .slide-copy>*,.slide.is-active .slide-scene svg{animation:none}}
 
   /* ERP section */
@@ -397,6 +403,7 @@
   $site = \App\Support\SiteSettings::all();
   $waUrl = \App\Support\SiteSettings::whatsappUrl();
   $fbUrl = \App\Support\SiteSettings::url('site_facebook_url');
+  $devUrl = \App\Support\SiteSettings::url('site_dev_url');
   $ytUrl = \App\Support\SiteSettings::url('site_youtube_url');
   $heroTitle = e($site['site_hero_title']);
   $hl = e($site['site_hero_highlight']);
@@ -514,13 +521,9 @@
             @endif
             <a href="{{ route('login') }}" class="btn btn-light btn-lg">Login to Dashboard</a>
           @endauth
-          @if($waUrl)<a href="{{ $waUrl }}" target="_blank" rel="noopener" class="btn btn-wa btn-lg" data-track="whatsapp-hero">{!! $waIcon !!} WhatsApp Us</a>@endif
-          <a href="#features" class="hero-link on-dark">See how it works
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-          </a>
         </div>
         <div class="hero-mini on-dark">
-          @foreach(['Official KSA format', 'Auto barcode & photo', 'Preview before print', 'Each agency sees only its own data'] as $t)<span>{!! $tick !!} {{ $t }}</span>@endforeach
+          @foreach(['Official KSA format', 'Auto barcode & photo', 'Preview before print'] as $t)<span>{!! $tick !!} {{ $t }}</span>@endforeach
         </div>
       </div>
       <div class="mock">
@@ -863,7 +866,7 @@
     </div>
     <div class="foot-bottom">
       <span>&copy; {{ date('Y') }} {{ config('app.name', 'VisaDeskPro') }}. All rights reserved.</span>
-      <span>Agency, HR &amp; visa document management. &middot; Developed by <a href="http://shafiqul.dev/" target="_blank" rel="noopener" style="color:#e2e8f0;font-weight:600">এমডি শফিকুল ইসলাম</a></span>
+      <span>Agency, HR &amp; visa document management. @if(trim($site['site_dev_name']) !== '')&middot; {{ $site['site_dev_label'] }} @if($devUrl)<a href="{{ $devUrl }}" target="_blank" rel="noopener" class="dev-credit">{{ $site['site_dev_name'] }}</a>@else<span class="dev-credit">{{ $site['site_dev_name'] }}</span>@endif @endif</span>
     </div>
   </div>
 </footer>

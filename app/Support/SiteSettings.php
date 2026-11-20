@@ -20,10 +20,13 @@ class SiteSettings
         'site_facebook_url'     => ['', 300],
         'site_youtube_url'      => ['', 300],
         'site_meta_pixel_id'    => ['', 30],
+        'site_dev_label'        => ['Developed by', 40],
+        'site_dev_name'         => ['এমডি শফিকুল ইসলাম', 100],
+        'site_dev_url'          => ['http://shafiqul.dev/', 300],
         'site_hero_eyebrow'     => ['Built for Saudi recruiting & manpower agencies', 120],
         'site_hero_title'       => ['Prepare KSA embassy files in minutes, not hours', 160],
         'site_hero_highlight'   => ['minutes, not hours', 80],
-        'site_hero_lead'        => ['Type the candidate once. VisaDeskPro generates the Application, Forwarding, Agreement and Checklist in the official KSA A4 format — with barcode and photo placed correctly.', 400],
+        'site_hero_lead'        => ['Type the candidate once — get the Application, Forwarding, Agreement and Checklist in the official KSA A4 format.', 400],
         'site_cta_text'         => ['Start Now — Create Account', 60],
         'site_show_trust'       => ['1', 1],
         'site_trust_1_value'    => ['500+', 20], 'site_trust_1_label' => ['Embassy files generated', 60],
@@ -96,7 +99,7 @@ class SiteSettings
 
     private static function allowsBlank(string $key): bool
     {
-        return in_array($key, ['site_whatsapp_number', 'site_phone', 'site_facebook_url', 'site_youtube_url', 'site_meta_pixel_id', 'site_show_trust'], true);
+        return in_array($key, ['site_whatsapp_number', 'site_phone', 'site_facebook_url', 'site_youtube_url', 'site_meta_pixel_id', 'site_show_trust', 'site_dev_name', 'site_dev_url'], true);
     }
 
     public static function save(array $input): void
