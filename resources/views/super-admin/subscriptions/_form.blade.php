@@ -14,10 +14,10 @@
     </div>
     <div class="col-md-6">
         <label class="form-label fw-semibold">Plan <span class="text-danger">*</span></label>
-        <select name="plan_id" class="form-select @error('plan_id') is-invalid @enderror" required>
+        <select name="plan_id" id="sub_plan" class="form-select @error('plan_id') is-invalid @enderror" required>
             <option value="">— Select Plan —</option>
             @foreach($plans as $plan)
-                <option value="{{ $plan->id }}"
+                <option value="{{ $plan->id }}" data-currency="{{ $plan->currency ?: 'BDT' }}" data-symbol="{{ trim(\App\Support\Money::symbol($plan->currency)) }}"
                     @selected(old('plan_id', $subscription->plan_id ?? '') == $plan->id)>
                     {{ $plan->name }} — {{ $plan->priceLabel('') }}
                 </option>
@@ -38,7 +38,7 @@
         @error('end_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
     </div>
     <div class="col-md-4">
-        <label class="form-label fw-semibold">Amount (USD)</label>
+        <label class="form-label fw-semibold">Amount <span id="sub_cur" class="text-muted fw-normal"></span></label>
         <input type="number" name="amount" class="form-control" step="0.01" min="0"
             value="{{ old('amount', $subscription->amount ?? 0) }}">
     </div>
@@ -69,3 +69,15 @@
         <textarea name="notes" class="form-control" rows="2">{{ old('notes', $subscription->notes ?? '') }}</textarea>
     </div>
 </div>
+
+<script>
+(function () {
+    var sel = document.getElementById('sub_plan'), out = document.getElementById('sub_cur');
+    if (!sel || !out) return;
+    function sync() {
+        var o = sel.options[sel.selectedIndex];
+        out.textContent = o && o.dataset.currency ? '(' + o.dataset.currency + ')' : '';
+    }
+    sel.addEventListener('change', sync); sync();
+})();
+</script>

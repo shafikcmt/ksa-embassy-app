@@ -32,10 +32,23 @@ class DashboardController extends Controller
 
         // Money (BDT) — what the platform has collected and what is still waiting for a payment.
         $monthStart = now()->startOfMonth();
+        // Amounts are grouped by the plan's currency — different currencies are never added together.
+        $byCurrency = function (string $status, $since = null): array {
+            $q = Subscription::query()
+                ->join('plans', 'plans.id', '=', 'subscriptions.plan_id')
+                ->where('subscriptions.payment_status', $status);
+            if ($since) {
+                $q->where('subscriptions.created_at', '>=', $since);
+            }
+
+            return $q->selectRaw('plans.currency as cur, SUM(subscriptions.amount) as total')
+                ->groupBy('plans.currency')->pluck('total', 'cur')
+                ->map(fn ($v) => (float) $v)->filter(fn ($v) => $v > 0)->all();
+        };
         $money = [
-            'total'          => (float) Subscription::where('payment_status', 'paid')->sum('amount'),
-            'this_month'     => (float) Subscription::where('payment_status', 'paid')->where('created_at', '>=', $monthStart)->sum('amount'),
-            'pending_amount' => (float) Subscription::where('payment_status', 'pending')->sum('amount'),
+            'total'          => $byCurrency('paid'),
+            'this_month'     => $byCurrency('paid', $monthStart),
+            'pending_amount' => $byCurrency('pending'),
             'pending_count'  => Subscription::where('payment_status', 'pending')->count(),
         ];
         $pendingPayments = Subscription::with(['agency', 'plan'])

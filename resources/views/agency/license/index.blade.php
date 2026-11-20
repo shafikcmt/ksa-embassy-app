@@ -94,7 +94,7 @@
                 @isset($payment['amount'])
                     <div class="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-4">
                         <span class="text-sm font-semibold text-emerald-800">Renewal Amount</span>
-                        <span class="text-2xl font-extrabold tracking-tight text-emerald-700">৳ {{ $payment['amount'] }}</span>
+                        <span class="text-2xl font-extrabold tracking-tight text-emerald-700">{{ trim(\App\Support\Money::symbol(null)) }} {{ $payment['amount'] }}</span>
                     </div>
                 @endisset
 

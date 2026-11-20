@@ -27,11 +27,20 @@
     </div>
 </div>
 
-{{-- ── Money (৳) ── --}}
+{{-- ── Money (multi-currency: shown per plan currency, never mixed) ── --}}
+@php
+    $fmtMoney = function (array $byCur) {
+        if (! $byCur) { return \App\Support\Money::format(0); }
+        $def = \App\Support\Money::defaultCode();
+        uksort($byCur, fn ($a, $b) => ($b === $def) <=> ($a === $def));
+
+        return collect($byCur)->map(fn ($v, $cur) => \App\Support\Money::format($v, $cur))->implode(' + ');
+    };
+@endphp
 <div class="mb-4 grid grid-cols-2 gap-4 xl:grid-cols-4">
-    <x-ui.stat icon="bi-cash-coin" tone="green" accentLeft label="Total collected" bn="মোট আদায়" :value="Bd::taka($money['total'])" sub="paid subscriptions" />
-    <x-ui.stat icon="bi-calendar-check" tone="brand" accentLeft label="This month" bn="এই মাসের আয়" :value="Bd::taka($money['this_month'])" :sub="Bd::dhaka()->format('F Y')" />
-    <x-ui.stat :href="route('super-admin.subscriptions.index', ['payment_status' => 'pending'])" icon="bi-hourglass-split" tone="amber" accentLeft label="Payment pending" bn="পেমেন্ট বাকি" :value="Bd::taka($money['pending_amount'])" :sub="$money['pending_count'].' subscription'.($money['pending_count'] === 1 ? '' : 's')" subTone="amber" />
+    <x-ui.stat icon="bi-cash-coin" tone="green" accentLeft label="Total collected" bn="মোট আদায়" :value="$fmtMoney($money['total'])" sub="paid subscriptions" />
+    <x-ui.stat icon="bi-calendar-check" tone="brand" accentLeft label="This month" bn="এই মাসের আয়" :value="$fmtMoney($money['this_month'])" :sub="Bd::dhaka()->format('F Y')" />
+    <x-ui.stat :href="route('super-admin.subscriptions.index', ['payment_status' => 'pending'])" icon="bi-hourglass-split" tone="amber" accentLeft label="Payment pending" bn="পেমেন্ট বাকি" :value="$fmtMoney($money['pending_amount'])" :sub="$money['pending_count'].' subscription'.($money['pending_count'] === 1 ? '' : 's')" subTone="amber" />
     <x-ui.stat icon="bi-patch-exclamation" tone="red" accentLeft label="Licenses due ≤ 30 days" bn="লাইসেন্স নবায়ন বাকি" :value="$licenseDueCount" sub="renewal follow-up" subTone="red" />
 </div>
 
@@ -72,7 +81,7 @@
                     <div class="truncate text-sm font-semibold text-slate-900">{{ $sub->agency?->name ?? '—' }}</div>
                     <div class="text-sm text-slate-500">{{ $sub->plan?->name ?? '—' }} · {{ Bd::dhaka($sub->created_at)->format('d M Y') }}</div>
                 </div>
-                <span class="shrink-0 text-base font-extrabold text-amber-600">{{ Bd::taka($sub->amount) }}</span>
+                <span class="shrink-0 text-base font-extrabold text-amber-600">{{ $sub->money() }}</span>
             </a>
         @empty
             <x-ui.empty icon="bi-check2-circle" title="কোনো পেমেন্ট বাকি নেই · All payments are settled" />

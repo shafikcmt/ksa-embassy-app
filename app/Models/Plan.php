@@ -19,7 +19,11 @@ class Plan extends Model
     ];
 
     /** Map of currency code → display symbol. */
-    public const CURRENCY_SYMBOLS = ['BDT' => '৳', 'USD' => '$', 'SAR' => 'SAR '];
+    public const CURRENCY_SYMBOLS = [
+        'BDT' => '৳', 'USD' => '$', 'SAR' => 'SAR ', 'AED' => 'AED ', 'INR' => '₹', 'PKR' => 'PKR ',
+        'NPR' => 'NPR ', 'LKR' => 'LKR ', 'PHP' => '₱', 'MYR' => 'RM ', 'QAR' => 'QAR ', 'KWD' => 'KWD ',
+        'OMR' => 'OMR ', 'EUR' => '€', 'GBP' => '£',
+    ];
 
     public function subscriptions(): \Illuminate\Database\Eloquent\Relations\HasMany
     {

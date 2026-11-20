@@ -27,6 +27,17 @@ class Subscription extends Model
         return $this->belongsTo(Plan::class);
     }
 
+    /** A subscription is billed in its plan's currency. */
+    public function currencyCode(): string
+    {
+        return $this->plan?->currency ?: \App\Support\Money::defaultCode();
+    }
+
+    public function money(?int $decimals = null): string
+    {
+        return \App\Support\Money::format($this->amount, $this->currencyCode(), $decimals);
+    }
+
     public function isActive(): bool
     {
         return in_array($this->status, ['active', 'trial'])

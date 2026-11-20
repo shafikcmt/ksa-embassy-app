@@ -14,9 +14,9 @@
         <label class="form-label fw-semibold">Currency</label>
         @php $planCurrency = old('currency', $plan->currency ?? 'BDT'); @endphp
         <select name="currency" class="form-select">
-            <option value="BDT" @selected($planCurrency === 'BDT')>BDT (৳)</option>
-            <option value="USD" @selected($planCurrency === 'USD')>USD ($)</option>
-            <option value="SAR" @selected($planCurrency === 'SAR')>SAR</option>
+            @foreach(\App\Support\Money::options() as $code => $label)
+                <option value="{{ $code }}" @selected($planCurrency === $code)>{{ $label }}</option>
+            @endforeach
         </select>
     </div>
     <div class="col-md-2">

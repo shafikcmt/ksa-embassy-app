@@ -67,7 +67,7 @@
                             @php $pc = $sub->payment_status; @endphp
                             <x-ui.badge :tone="$pc === 'paid' ? 'green' : ($pc === 'pending' ? 'amber' : 'slate')">{{ ucfirst($pc) }}</x-ui.badge>
                         </td>
-                        <td class="px-4 py-3 font-medium text-slate-700">${{ number_format($sub->amount, 2) }}</td>
+                        <td class="px-4 py-3 font-medium text-slate-700">{{ $sub->money(2) }}</td>
                         <td class="px-4 py-3">
                             <div class="flex items-center justify-end gap-1 whitespace-nowrap">
                                 @if($sub->payment_status === 'pending')

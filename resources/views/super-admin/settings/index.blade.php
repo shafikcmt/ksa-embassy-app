@@ -23,6 +23,17 @@
                     </div>
 
                     <div class="mb-3">
+                        <label class="form-label small fw-semibold">Default Currency <span class="text-danger">*</span></label>
+                        <select name="default_currency" class="form-select form-select-sm @error('default_currency') is-invalid @enderror">
+                            @foreach(\App\Support\Money::options() as $code => $label)
+                                <option value="{{ $code }}" @selected(old('default_currency', $defaultCurrency) === $code)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                        <div class="form-text">Used for the license renewal amount and as the fallback when a plan has no currency. Each plan keeps its own currency; amounts in different currencies are never added together.</div>
+                        @error('default_currency')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+
+                    <div class="mb-3">
                         <label class="form-label small fw-semibold">Support Email</label>
                         <input type="email" name="support_email" class="form-control form-control-sm @error('support_email') is-invalid @enderror"
                             value="{{ old('support_email', $supportEmail) }}"
@@ -212,19 +223,19 @@
                         <label class="form-label small fw-semibold">Renewal Amount</label>
                         <input type="text" name="renewal_amount" class="form-control form-control-sm @error('renewal_amount') is-invalid @enderror"
                             value="{{ old('renewal_amount', $renewalAmount) }}" placeholder="e.g. 5000">
-                        <div class="form-text">Shown to agencies as ৳ (BDT).</div>
+                        <div class="form-text">Shown to agencies in the default currency ({{ \App\Support\Money::symbol($defaultCurrency) }}).</div>
                         @error('renewal_amount')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-semibold">bKash Number</label>
+                            <label class="form-label small fw-semibold">bKash Number <span class="text-muted fw-normal">(Bangladesh, optional)</span></label>
                             <input type="text" name="bkash_number" class="form-control form-control-sm @error('bkash_number') is-invalid @enderror"
                                 value="{{ old('bkash_number', $bkashNumber) }}" placeholder="01XXXXXXXXX">
                             @error('bkash_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-semibold">Nagad Number</label>
+                            <label class="form-label small fw-semibold">Nagad Number <span class="text-muted fw-normal">(Bangladesh, optional)</span></label>
                             <input type="text" name="nagad_number" class="form-control form-control-sm @error('nagad_number') is-invalid @enderror"
                                 value="{{ old('nagad_number', $nagadNumber) }}" placeholder="01XXXXXXXXX">
                             @error('nagad_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
