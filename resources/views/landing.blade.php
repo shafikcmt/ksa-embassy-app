@@ -292,6 +292,19 @@
   .hero-mini.on-dark{color:rgba(255,255,255,.88)}
   .hero-mini.on-dark .check{color:#6ee7b7}
   .hero-slider .mock{position:relative;z-index:2;color:var(--ink);text-shadow:none}
+  /* Fixed hero copy (message never changes while background scenes rotate) */
+  .hero-fixed{position:absolute;inset:0;z-index:3;display:flex;align-items:center;pointer-events:none}
+  .hero-fixed .slide-grid{padding:64px 20px 104px;pointer-events:none}
+  .hero-fixed a,.hero-fixed .mock{pointer-events:auto}
+  .hero-fixed .slide-copy>*{animation:riseIn .7s cubic-bezier(.16,1,.3,1) both}
+  .hero-fixed .slide-copy>*:nth-child(2){animation-delay:.08s}.hero-fixed .slide-copy>*:nth-child(3){animation-delay:.16s}
+  .hero-fixed .slide-copy>*:nth-child(4){animation-delay:.24s}.hero-fixed .slide-copy>*:nth-child(5){animation-delay:.32s}
+  .hero-fixed .hero-title{font-size:50px}
+  .slide::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,rgba(4,24,40,.72),rgba(4,24,40,.25) 65%,transparent)}
+  .btn-lg{height:52px;padding:0 28px;font-size:16px;font-weight:700;border-radius:10px}
+  .hero-fixed .btn-white{box-shadow:0 12px 28px -10px rgba(0,0,0,.55)}
+  .hero-fixed .btn-light{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.4)}
+  @media (prefers-reduced-motion:reduce){.hero-fixed .slide-copy>*{animation:none}}
   .hs-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:5;width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.14);color:#fff;display:grid;place-items:center;cursor:pointer;backdrop-filter:blur(6px);transition:background .18s ease,transform .18s ease}
   .hs-arrow:hover{background:rgba(255,255,255,.28)}
   .hs-arrow:focus-visible,.hs-dots button:focus-visible{outline:3px solid #6ee7b7;outline-offset:2px}
@@ -302,6 +315,7 @@
   .hs-progress{position:absolute;left:0;right:0;bottom:0;height:4px;background:rgba(255,255,255,.15);z-index:5}
   .hs-progress i{display:block;height:100%;width:0;background:#34d399}
   @media(max-width:1000px){.hs-arrow{display:none}}
+  @media(max-width:1000px){.hero-fixed .slide-grid.has-mock{grid-template-columns:1fr}.hero-fixed .mock{display:none}}
   @media(max-width:860px){
     .slide{min-height:640px}
     .slide-grid.has-mock{grid-template-columns:1fr}
@@ -309,7 +323,7 @@
     .hero-slider .mock{display:none}
     .slide-scene{height:44%}
   }
-  @media(max-width:560px){.slide{min-height:620px}.hero-slider .hero-cta .btn{flex:1 1 100%}}
+  @media(max-width:560px){.hero-fixed .hero-title{font-size:32px}.hero-fixed .slide-grid{padding:44px 20px 96px}.hero-fixed .btn-lg{flex:1 1 100%}.slide{min-height:740px}.hero-slider .hero-cta .btn{flex:1 1 100%}}
   @media (prefers-reduced-motion:reduce){.slide,.slide.is-active{transition:none}.slide.is-active .slide-copy>*,.slide.is-active .slide-scene svg{animation:none}}
 
   /* ERP section */
@@ -369,6 +383,7 @@
   }
 </style>
 @vite(['resources/js/landing.js'])
+@include('partials.meta-pixel')
 </head>
 <body>
 
@@ -467,63 +482,62 @@
       <div class="slide theme-{{ $s['theme'] }} {{ $i === 0 ? 'is-active' : '' }}" data-slide role="group" aria-roledescription="slide" aria-label="{{ $i + 1 }} of {{ count($slides) }}" @if($i) aria-hidden="true" @endif>
         @if($hasPhoto)<div class="slide-photo"><img src="{{ asset($photoFile) }}" alt="{{ $s['alt'] }}" width="1920" height="900" decoding="async" @if($i === 0) fetchpriority="high" @else loading="lazy" @endif></div>@endif
         <div class="slide-scene" role="img" aria-label="{{ $s['alt'] }}">@include('landing._hero-scenes', ['scene' => $s['scene']])</div>
-        <div class="wrap slide-grid {{ ($s['mock'] ?? false) ? 'has-mock' : '' }}">
-          <div class="slide-copy">
-            <span class="eyebrow"><span class="dot"></span> {{ $s['eyebrow'] }}</span>
-            @if($i === 0)<h1 class="hero-title">{!! $s['title'] !!}</h1>@else<h2 class="hero-title">{!! $s['title'] !!}</h2>@endif
-            <p class="lead">{{ $s['lead'] }}</p>
-            <div class="hero-cta">
-              @auth
-                <a href="{{ $dashUrl }}" class="btn btn-white">Login to Dashboard</a>
-              @else
-                @if (Route::has('register'))
-                  <a href="{{ route('register') }}" class="btn btn-white">Get Started
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-                  </a>
-                @endif
-                <a href="{{ route('login') }}" class="btn btn-light">Login to Dashboard</a>
-              @endauth
-              <a href="#features" class="hero-link on-dark">View Features
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-              </a>
-            </div>
-            <div class="hero-mini on-dark">
-              @foreach($s['tags'] as $t)<span>{!! $tick !!} {{ $t }}</span>@endforeach
-            </div>
-          </div>
-
-          @if($s['mock'] ?? false)
-          <div class="mock">
-            <div class="float f1">
-              <span class="ic ic-emerald"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5a1 1 0 0 1 1-1h2M4 17v2a1 1 0 0 0 1 1h2M20 7V5a1 1 0 0 0-1-1h-2M20 17v2a1 1 0 0 1-1 1h-2"/><path d="M7 8v8M10 8v8M13 8v8M16 8v8"/></svg></span>
-              <div>Auto Barcode<small>VS &amp; Passport No.</small></div>
-            </div>
-            <div class="float f2">
-              <span class="ic ic-indigo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span>
-              <div>4 Documents<small>Ready to print</small></div>
-            </div>
-            <div class="mock-card">
-              <div class="mock-top"><i></i><i></i><i></i><b>Embassy Application — Preview</b></div>
-              <div class="mock-body">
-                <div class="doc-head">
-                  <div class="doc-photo">Photo</div>
-                  <div style="flex:1"><div class="barcode"></div><div class="barcode-no">1306141188</div></div>
-                  <div class="doc-title">E817745856<br><span style="font-weight:600;color:var(--muted)">EMBASSY OF<br>SAUDI ARABIA</span></div>
-                </div>
-                <div class="doc-rows">
-                  <div class="drow"><span>Full Name</span><span>MD Saydul Khan</span></div>
-                  <div class="drow"><span>Passport No.</span><span>A19101335</span></div>
-                  <div class="drow"><span>Profession</span><span>Load &amp; Unload Worker</span></div>
-                  <div class="drow"><span>Visa No.</span><span>1306141188</span></div>
-                </div>
-                <div class="mock-foot"><span class="pill indigo">Application</span><span class="pill indigo">Forwarding</span><span class="pill">Agreement</span><span class="pill">Checklist</span></div>
-              </div>
-            </div>
-          </div>
-          @endif
-        </div>
       </div>
     @endforeach
+  </div>
+  <div class="hero-fixed">
+    <div class="wrap slide-grid has-mock">
+      <div class="slide-copy">
+        <span class="eyebrow"><span class="dot"></span> Built for Saudi recruiting &amp; manpower agencies</span>
+        <h1 class="hero-title">Prepare KSA embassy files in <span class="grad">minutes, not hours</span></h1>
+        <p class="lead">Type the candidate once. VisaDeskPro generates the Application, Forwarding, Agreement and Checklist in the official KSA A4 format — with barcode and photo placed correctly.</p>
+        <div class="hero-cta">
+          @auth
+            <a href="{{ $dashUrl }}" class="btn btn-white btn-lg">Go to Dashboard</a>
+          @else
+            @if (Route::has('register'))
+              <a href="{{ route('register') }}" class="btn btn-white btn-lg" data-track="cta-register">Start Now — Create Account
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              </a>
+            @endif
+            <a href="{{ route('login') }}" class="btn btn-light btn-lg">Login to Dashboard</a>
+          @endauth
+          <a href="#features" class="hero-link on-dark">See how it works
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+        </div>
+        <div class="hero-mini on-dark">
+          @foreach(['Official KSA format', 'Auto barcode & photo', 'Preview before print', 'Each agency sees only its own data'] as $t)<span>{!! $tick !!} {{ $t }}</span>@endforeach
+        </div>
+      </div>
+      <div class="mock">
+        <div class="float f1">
+          <span class="ic ic-emerald"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5a1 1 0 0 1 1-1h2M4 17v2a1 1 0 0 0 1 1h2M20 7V5a1 1 0 0 0-1-1h-2M20 17v2a1 1 0 0 1-1 1h-2"/><path d="M7 8v8M10 8v8M13 8v8M16 8v8"/></svg></span>
+          <div>Auto Barcode<small>VS &amp; Passport No.</small></div>
+        </div>
+        <div class="float f2">
+          <span class="ic ic-indigo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span>
+          <div>4 Documents<small>Ready to print</small></div>
+        </div>
+        <div class="mock-card">
+          <div class="mock-top"><i></i><i></i><i></i><b>Embassy Application — Preview</b></div>
+          <div class="mock-body">
+            <div class="doc-head">
+              <div class="doc-photo">Photo</div>
+              <div style="flex:1"><div class="barcode"></div><div class="barcode-no">1306141188</div></div>
+              <div class="doc-title">E817745856<br><span style="font-weight:600;color:var(--muted)">EMBASSY OF<br>SAUDI ARABIA</span></div>
+            </div>
+            <div class="doc-rows">
+              <div class="drow"><span>Full Name</span><span>MD Saydul Khan</span></div>
+              <div class="drow"><span>Passport No.</span><span>A19101335</span></div>
+              <div class="drow"><span>Profession</span><span>Load &amp; Unload Worker</span></div>
+              <div class="drow"><span>Visa No.</span><span>1306141188</span></div>
+            </div>
+            <div class="mock-foot"><span class="pill indigo">Application</span><span class="pill indigo">Forwarding</span><span class="pill">Agreement</span><span class="pill">Checklist</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <button type="button" class="hs-arrow hs-prev" data-hs-prev aria-label="Previous slide"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>

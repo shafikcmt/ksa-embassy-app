@@ -1,99 +1,101 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login — VisaDeskPro</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Login — {{ config('app.name', 'VisaDeskPro') }}</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,600,700,800&display=swap" rel="stylesheet">
-    <style>
-        body {
-            background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
-            min-height: 100vh; display: flex; align-items: center; justify-content: center;
-            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
-        }
-        .login-card {
-            width: 100%; max-width: 420px;
-            background: #fff; border-radius: 12px;
-            box-shadow: 0 25px 50px rgba(0,0,0,.35);
-            overflow: hidden;
-        }
-        .login-header {
-            background: #0f172a; padding: 2rem 2rem 1.5rem; text-align: center;
-        }
-        .login-header .logo-icon {
-            width: 56px; height: 56px; background: #1e40af;
-            border-radius: 12px; display: inline-flex; align-items: center;
-            justify-content: center; margin-bottom: .75rem;
-        }
-        .login-header h1 { color: #fff; font-size: 1.35rem; font-weight: 700; margin: 0; letter-spacing: -.01em; }
-        .login-header h1 .pro { color: #38bdf8; }
-        .login-header .tagline { color: #cbd5e1; font-size: .82rem; margin: .35rem 0 0; font-weight: 500; }
-        .login-header p  { color: #94a3b8; font-size: .76rem; margin: .5rem 0 0; line-height: 1.5; }
-        .login-foot { text-align: center; padding: 0 2rem 1.5rem; color: #94a3b8; font-size: .72rem; }
-        .login-body { padding: 1.75rem 2rem 2rem; }
-        .form-control { border-radius: 8px; }
-        .btn-login {
-            border-radius: 8px; padding: .65rem; font-weight: 600;
-            background: #1e40af; border: none;
-        }
-        .btn-login:hover { background: #1d4ed8; }
-    </style>
+    <link href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700,800&display=swap" rel="stylesheet" />
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @include('partials.meta-pixel')
 </head>
-<body>
-<div class="login-card">
-    <div class="login-header">
-        <div class="logo-icon">
-            <i class="bi bi-building text-white fs-4"></i>
-        </div>
-        <h1>VisaDesk<span class="pro">Pro</span></h1>
-        <p class="tagline">Agency, HR &amp; Visa Document Management System</p>
-        <p>Manage HR records, agency workflow, application documents, payment requests, and print-ready files from one secure dashboard.</p>
-    </div>
-    <div class="login-body">
-        @if(session('status'))
-            <div class="alert alert-info py-2 mb-3">{{ session('status') }}</div>
-        @endif
-        @if($errors->any())
-            <div class="alert alert-danger py-2 mb-3">{{ $errors->first() }}</div>
-        @endif
+<body class="font-sans text-slate-900 antialiased">
+@php
+    $field = 'block w-full';
+    $label = 'mb-1.5 block text-sm font-semibold text-slate-700';
+    $err   = 'mt-1.5 text-sm font-medium text-rose-600';
+@endphp
+<div class="grid min-h-screen lg:grid-cols-[1fr_1.1fr]">
 
-        <form method="POST" action="{{ route('login') }}">
-            @csrf
-            <div class="mb-3">
-                <label class="form-label fw-semibold" for="email">Email Address</label>
-                <div class="input-group">
-                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                    <input id="email" type="email" name="email"
-                        class="form-control @error('email') is-invalid @enderror"
-                        value="{{ old('email') }}" required autofocus autocomplete="username"
-                        placeholder="you@example.com">
-                </div>
+    {{-- Brand panel (same as Register) --}}
+    <aside class="relative hidden overflow-hidden bg-gradient-to-br from-[#06233f] via-[#0e3a66] to-[#0b6b66] p-12 text-white lg:flex lg:flex-col lg:justify-between">
+        <a href="/" class="flex items-center gap-3 text-xl font-extrabold tracking-tight">
+            <span class="grid h-10 w-10 place-items-center rounded-xl bg-white/15 ring-1 ring-white/25">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+            </span>
+            VisaDesk<span class="text-emerald-300">Pro</span>
+        </a>
+
+        <div class="relative z-10 max-w-md">
+            <h2 class="text-4xl font-extrabold leading-tight tracking-tight">Welcome back to your agency dashboard</h2>
+            <p class="mt-4 text-base leading-relaxed text-white/85">Manage HR records, MOFA, medical, stamping, delivery, invoices and print-ready KSA documents from one secure place.</p>
+            <ul class="mt-8 space-y-3 text-base font-medium">
+                @foreach(['Official KSA application formats', 'Type once — auto-fill everywhere', 'Every agency sees only its own data'] as $point)
+                    <li class="flex items-center gap-3">
+                        <span class="grid h-6 w-6 place-items-center rounded-full bg-emerald-400/90 text-[#06233f]"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+                        {{ $point }}
+                    </li>
+                @endforeach
+            </ul>
+        </div>
+
+        <div class="relative z-10 text-sm text-white/70">&copy; {{ date('Y') }} VisaDeskPro. All rights reserved.</div>
+
+        <div class="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 opacity-30">@include('landing._hero-scenes', ['scene' => 'haram'])</div>
+        <style>aside svg{width:100%;height:100%}</style>
+    </aside>
+
+    {{-- Form --}}
+    <main class="flex items-center justify-center bg-slate-50 px-5 py-10 sm:px-8">
+        <div class="w-full max-w-md">
+            <a href="/" class="mb-6 flex items-center justify-center gap-2 text-2xl font-extrabold tracking-tight lg:hidden">VisaDesk<span class="text-sky-500">Pro</span></a>
+
+            <div class="rounded-2xl border border-slate-200 bg-white p-7 shadow-sm sm:p-9">
+                <h1 class="text-2xl font-extrabold tracking-tight text-slate-900">Sign in</h1>
+                <p class="mt-1 text-base text-slate-600">Agency, HR &amp; Visa Document Management System</p>
+
+                @if(session('status'))
+                    <div class="mt-5 rounded-lg border border-sky-200 bg-sky-50 px-4 py-2.5 text-sm font-medium text-sky-800">{{ session('status') }}</div>
+                @endif
+                @if($errors->any())
+                    <div class="mt-5 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-medium text-rose-700">{{ $errors->first() }}</div>
+                @endif
+
+                <form method="POST" action="{{ route('login') }}" class="mt-6 grid gap-y-5">
+                    @csrf
+                    <div>
+                        <label for="email" class="{{ $label }}">Email Address</label>
+                        <input id="email" name="email" type="email" value="{{ old('email') }}" required autofocus autocomplete="username" placeholder="you@example.com" class="{{ $field }}">
+                        @error('email')<p class="{{ $err }}">{{ $message }}</p>@enderror
+                    </div>
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <label for="password" class="{{ $label }}">Password</label>
+                            @if (Route::has('password.request'))
+                                <a href="{{ route('password.request') }}" class="mb-1.5 text-sm font-semibold text-brand-700 hover:underline">Forgot password?</a>
+                            @endif
+                        </div>
+                        <input id="password" name="password" type="password" required autocomplete="current-password" placeholder="••••••••" class="{{ $field }}">
+                        @error('password')<p class="{{ $err }}">{{ $message }}</p>@enderror
+                    </div>
+                    <label for="remember_me" class="flex items-center gap-2 text-sm text-slate-600">
+                        <input id="remember_me" type="checkbox" name="remember" class="rounded border-slate-300"> Remember me
+                    </label>
+                    <button type="submit" class="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-brand-600 text-base font-semibold text-white shadow-sm transition hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2">
+                        Sign In
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    </button>
+                </form>
+
+                @if (Route::has('register'))
+                    <p class="mt-6 text-center text-sm text-slate-600">New to VisaDeskPro?
+                        <a href="{{ route('register') }}" class="font-semibold text-brand-700 underline-offset-2 hover:underline">Create an account</a>
+                    </p>
+                @endif
             </div>
-            <div class="mb-3">
-                <label class="form-label fw-semibold" for="password">Password</label>
-                <div class="input-group">
-                    <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                    <input id="password" type="password" name="password"
-                        class="form-control @error('password') is-invalid @enderror"
-                        required autocomplete="current-password" placeholder="••••••••">
-                </div>
-            </div>
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <div class="form-check mb-0">
-                    <input class="form-check-input" type="checkbox" name="remember" id="remember_me">
-                    <label class="form-check-label text-muted small" for="remember_me">Remember me</label>
-                </div>
-            </div>
-            <button type="submit" class="btn btn-primary btn-login w-100">
-                <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
-            </button>
-        </form>
-    </div>
-    <div class="login-foot">&copy; 2026 VisaDeskPro. All rights reserved.</div>
+        </div>
+    </main>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

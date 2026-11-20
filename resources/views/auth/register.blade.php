@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700,800&display=swap" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @include('partials.meta-pixel')
 </head>
 <body class="font-sans text-slate-900 antialiased">
 @php
@@ -52,10 +53,10 @@
             <a href="/" class="mb-6 flex items-center justify-center gap-2 text-2xl font-extrabold tracking-tight lg:hidden">VisaDesk<span class="text-sky-500">Pro</span></a>
 
             <div class="rounded-2xl border border-slate-200 bg-white p-7 shadow-sm sm:p-9">
-                <h1 class="text-2xl font-extrabold tracking-tight text-slate-900">Create your account</h1>
+                <h1 class="text-2xl font-extrabold tracking-tight text-slate-900">Create your agency account</h1>
                 <p class="mt-1 text-base text-slate-600">Agency, HR &amp; Visa Document Management System</p>
 
-                <form method="POST" action="{{ route('register') }}" class="mt-7">
+                <form method="POST" action="{{ route('register') }}" class="mt-7" data-track-submit="Lead">
                     @csrf
                     <div class="grid gap-x-5 gap-y-5 sm:grid-cols-2">
                         <div>
@@ -85,6 +86,10 @@
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
                     </button>
                 </form>
+
+                <p class="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs font-medium text-slate-500">
+                    <span>🔒 Secure &amp; private</span><span>✓ Official KSA formats</span><span>✓ Set up in minutes</span>
+                </p>
 
                 <p class="mt-6 text-center text-sm text-slate-600">Already have an account?
                     <a href="{{ route('login') }}" class="font-semibold text-brand-700 underline-offset-2 hover:underline">Sign In here</a>

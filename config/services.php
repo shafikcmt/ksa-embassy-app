@@ -14,6 +14,9 @@ return [
     |
     */
 
+    // Facebook/Meta Pixel ID for ad tracking (leave empty to disable).
+    'meta_pixel_id' => env('META_PIXEL_ID'),
+
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],
